@@ -2,9 +2,10 @@
   "name": "@pulse-ts/core",
   "version": "0.0.1",
   "scripts": {
+    "test": "jest",
+    "build": "tsc"
   },
   "dependencies": {
-  },
-  "devDependencies": {
+    "uuid": "^11.1.0"
   }
 }
