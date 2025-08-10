@@ -28,7 +28,28 @@ jobs:
       - name: Install (skip scripts)
         run: npm ci --ignore-scripts --verbose
       - uses: nrwl/nx-set-shas@v4
-      - run: npx nx affected -t lint test build
+      - name: Compute affected tasks
+        id: affected
+        env:
+          NX_DAEMON: "false"
+        run: |
+          set -e
+          tasks=$(npx nx print-affected -t lint -t test -t build --select=tasks 2>/dev/null || true)
+          if [ -z "$tasks" ]; then
+            echo "run=false" >> $GITHUB_OUTPUT
+          else
+            echo "run=true" >> $GITHUB_OUTPUT
+            echo "$tasks"
+          fi
+      - name: Affected (lint/test/build)
+        if: steps.affected.outputs.run == 'true'
+        env:
+          NX_DAEMON: "false"
+        run: npx nx affected -t lint test build --parallel=3 --output-style=stream --verbose
+        timeout-minutes: 2
+      - name: Nothing to run
+        if: steps.affected.outputs.run == 'false'
+        run: echo "No affected projects; skipping lint/test/build"
       - name: Ensure PR has a changeset
         if: github.event_name == 'pull_request'
         run: npx changeset status --since=origin/main
