@@ -18,7 +18,7 @@ jobs:
         with:
           node-version: 22
           cache: npm
-      - run: npm ci
+      - run: npm ci --verbose
       - uses: nrwl/nx-set-shas@v4
       - run: npx nx affected -t lint test build --parallel=3
       - name: Ensure PR has a changeset
