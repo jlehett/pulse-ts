@@ -1,0 +1,26 @@
+name: CI
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - uses: nrwl/nx-set-shas@v4
+      - run: npx nx affected -t lint test build --parallel=3
+      - name: Ensure PR has a changeset
+        if: github.event_name == 'pull_request'
+        run: npx changeset status --since=origin/main
