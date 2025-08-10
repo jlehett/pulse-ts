@@ -15,7 +15,7 @@ concurrency:
 jobs:
   verify:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 5
     steps:
       - uses: actions/checkout@v4
         with:
@@ -25,7 +25,10 @@ jobs:
         with:
           node-version: 20
           cache: 'npm'
-      - run: npm ci --verbose
+      - name: Install (skip scripts)
+        run: npm ci --ignore-scripts --verbose
+      - name: Nx postinstall
+        run: node node_modules/nx/bin/post-install || true
       - uses: nrwl/nx-set-shas@v4
       - run: npx nx affected -t lint test build
       - name: Ensure PR has a changeset
