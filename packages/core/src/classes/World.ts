@@ -1,32 +1,6 @@
-import { Node, NodeConstructor } from './Node';
+import type { NodeConstructor, Node } from './Node';
 import { DynamicNode } from './DynamicNode';
-
-/**
- * A WeakMap that holds private or protected methods for the World class,
- * allowing module-level access to these methods without exposing them publicly.
- */
-export const WorldFriendMethods = new WeakMap<
-    World,
-    {
-        /**
-         * Removes a Node from this World.
-         *
-         * Does not handle the destruction of the Node itself, nor the severance of
-         * its parent-child relationships. This should be handled by the Node itself.
-         *
-         * @param node The Node to remove from the World.
-         */
-        removeNode: (node: Node) => void;
-    }
->();
-
-/**
- * Factory function for creating Nodes of a specified type and
- * placing them in a World instance.
- * @template P The properties type for the Node
- * @template T The Node type
- */
-export type NodeFactory<P, T extends Node> = (props: P) => T;
+import { removeNode } from './interfacing/friendSymbols';
 
 /**
  * Base class for a World, which manages Nodes and their lifecycle.
@@ -59,15 +33,6 @@ export class World {
      */
     get isRunning(): boolean {
         return this.running;
-    }
-
-    /**
-     * Creates a new World instance.
-     */
-    constructor() {
-        WorldFriendMethods.set(this, {
-            removeNode: (node: Node) => this.removeNode(node),
-        });
     }
 
     /**
@@ -158,7 +123,7 @@ export class World {
      *
      * @param node The Node to remove from the World.
      */
-    protected removeNode(node: Node) {
+    protected [removeNode](node: Node) {
         this.nodes = this.nodes.filter((n) => n !== node);
         if (node instanceof DynamicNode) {
             this.dynamicNodes = this.dynamicNodes.filter((n) => n !== node);

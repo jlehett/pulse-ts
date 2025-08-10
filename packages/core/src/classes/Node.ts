@@ -1,5 +1,6 @@
 import { v4 as uuidv4 } from 'uuid';
-import { NodeFactory, World, WorldFriendMethods } from './World';
+import type { World } from './World';
+import { removeNode } from './interfacing/friendSymbols';
 
 /**
  * A factory function type that creates a new Node of type T with the given properties P
@@ -11,6 +12,14 @@ export type NodeConstructor<P, T extends Node> = new (
     world: World,
     props: P,
 ) => T;
+
+/**
+ * Factory function for creating Nodes of a specified type and
+ * placing them in a World instance.
+ * @template P The properties type for the Node
+ * @template T The Node type
+ */
+export type NodeFactory<P, T extends Node> = (props: P) => T;
 
 /**
  * An abstract class representing a base Node in the PulseTS framework.
@@ -98,7 +107,7 @@ export abstract class Node {
         for (const child of this._children) {
             child.destroy();
         }
-        WorldFriendMethods.get(this.world)?.removeNode(this);
+        this.world[removeNode](this);
         if (this._parent) {
             this._parent.severChildRelationship(this);
         }
