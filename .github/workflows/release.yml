@@ -54,4 +54,4 @@ jobs:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
       - name: Skipped due to no-release label
         if: steps.gate.outputs.skip == 'true'
-        run: echo "Skip publishing: PR has the 'no-release' label."
+        run: echo "Skip publishing; PR has the 'no-release' label."
