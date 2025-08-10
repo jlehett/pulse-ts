@@ -28,8 +28,6 @@ jobs:
       - run: npm ci --verbose
       - uses: nrwl/nx-set-shas@v4
       - run: npx nx affected -t lint test build
-      - run: npx nx fix-ci
-        if: always()
       - name: Ensure PR has a changeset
         if: github.event_name == 'pull_request'
         run: npx changeset status --since=origin/main
