@@ -27,8 +27,6 @@ jobs:
           cache: 'npm'
       - name: Install (skip scripts)
         run: npm ci --ignore-scripts --verbose
-      - name: Nx postinstall
-        run: node node_modules/nx/bin/post-install || true
       - uses: nrwl/nx-set-shas@v4
       - run: npx nx affected -t lint test build
       - name: Ensure PR has a changeset
