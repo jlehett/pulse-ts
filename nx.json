@@ -1,0 +1,16 @@
+{
+    "$schema": "./node_modules/nx/schemas/nx-schema.json",
+    "targetDefaults": {
+        "build": {
+            "dependsOn": ["^build"],
+            "inputs": ["default", "^default"],
+            "outputs": ["{projectRoot}/dist"]
+        },
+        "test": {
+            "inputs": ["default", "^prod"]
+        },
+        "lint": {
+            "inputs": ["default"]
+        }
+    }
+}

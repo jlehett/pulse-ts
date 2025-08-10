@@ -1,13 +1,24 @@
 {
+  "name": "pulse-ts",
+  "private": true,
+  "workspaces": [
+    "packages/*"
+  ],
   "type": "module",
   "scripts": {
-    "lint": "eslint .",
-    "lint:fix": "eslint . --fix",
-    "test": "jest",
-    "format": "prettier --write \"**/*.{js,jsx,ts,tsx,json,md}\""
+    "build": "nx run-many --target=build --all --exclude=pulse-ts",
+    "test": "nx run-many --target=test --all --exclude=pulse-ts",
+    "lint": "nx run-many --target=lint --all --exclude=pulse-ts",
+    "format": "nx format:write --exclude=pulse-ts",
+    "version-packages": "changeset version && npm i --package-lock-only",
+    "release": "changeset publish"
   },
   "devDependencies": {
+    "@changesets/cli": "^2.29.5",
     "@eslint/js": "^9.32.0",
+    "@nx/eslint": "21.3.11",
+    "@nx/jest": "21.3.11",
+    "@nx/js": "^21.3.11",
     "@types/jest": "^30.0.0",
     "@typescript-eslint/eslint-plugin": "^8.38.0",
     "@typescript-eslint/parser": "^8.38.0",
@@ -18,9 +29,10 @@
     "globals": "^16.3.0",
     "jest": "^30.0.5",
     "jest-environment-jsdom": "^30.0.5",
+    "nx": "21.3.11",
     "prettier": "^3.6.2",
     "ts-jest": "^29.4.0",
-    "typescript": "^5.8.3",
-    "vite": "^7.0.6"
-  }
+    "typescript": "^5.8.3"
+  },
+  "nx": {}
 }
