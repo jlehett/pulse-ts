@@ -16,9 +16,9 @@ jobs:
           fetch-depth: 0
       - uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: 20
           cache: npm
-      - run: npm ci --verbose
+      - run: npm ci
       - uses: nrwl/nx-set-shas@v4
       - run: npx nx affected -t lint test build --parallel=3
       - name: Ensure PR has a changeset

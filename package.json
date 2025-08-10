@@ -34,5 +34,8 @@
     "ts-jest": "^29.4.0",
     "typescript": "^5.8.3"
   },
+  "overrides": {
+    "unrs-resolver": "1.10.x"
+  },
   "nx": {}
 }
