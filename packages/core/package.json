@@ -11,8 +11,5 @@
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "format": "prettier --write \"**/*.{js,jsx,ts,tsx,json,md}\""
-  },
-  "dependencies": {
-    "uuid": "^11.1.0"
   }
 }
