@@ -9,9 +9,8 @@
     "build": "nx run-many --target=build --all --exclude=pulse-ts",
     "test": "nx run-many --target=test --all --exclude=pulse-ts",
     "lint": "nx run-many --target=lint --all --exclude=pulse-ts",
-    "format": "nx format:write --exclude=pulse-ts",
-    "version-packages": "changeset version && npm i --package-lock-only",
-    "release": "changeset publish"
+    "release": "nx run-many --target=release --all --exclude=pulse-ts",
+    "format": "nx format:write --exclude=pulse-ts"
   },
   "dependencies": {
     "uuid": "^11.1.0"
