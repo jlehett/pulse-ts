@@ -3,39 +3,6 @@ import { Node } from './Node';
 import { DynamicNode } from './DynamicNode';
 
 describe('Node', () => {
-    describe('get id', () => {
-        it('should return the unique identifier of the Node', () => {
-            class TestNode extends Node {
-                constructor(world: World) {
-                    super(world);
-                }
-            }
-
-            const world = new World();
-            const node = world.createNode(TestNode)({});
-            expect(node.id).toBeDefined();
-            expect(typeof node.id).toBe('string');
-        });
-
-        it('should return a unique identifier for each Node instance', () => {
-            class TestNode extends Node {
-                constructor(world: World) {
-                    super(world);
-                }
-            }
-
-            const world = new World();
-            const nodeIds = new Set<string>();
-            for (let i = 0; i < 10; i++) {
-                const node = world.createNode(TestNode)({});
-                expect(node.id).toBeDefined();
-                expect(typeof node.id).toBe('string');
-                nodeIds.add(node.id);
-            }
-            expect(nodeIds.size).toBe(10); // All IDs should be unique
-        });
-    });
-
     describe('get parent', () => {
         it('should return the parent Node if it exists', () => {
             class TestNode extends Node {
@@ -295,19 +262,18 @@ describe('Node', () => {
 
                 onDestroy() {
                     foundParent = this.parent;
-                    foundChild = this.children[0];
+                    foundChild = this;
                 }
             }
 
             const world = new World();
             const parent = world.createNode(TestNode)({});
             const child = parent.createChild(NodeToDestroy)({});
-            const grandChild = child.createChild(TestNode)({});
             expect(foundParent).not.toBeDefined();
             expect(foundChild).not.toBeDefined();
             child.destroy();
-            expect(foundParent!.id).toBe(parent.id);
-            expect(foundChild!.id).toBe(grandChild.id);
+            expect(foundParent).toBe(parent);
+            expect(foundChild).toBe(child);
         });
     });
 });

@@ -1,6 +1,6 @@
 {
     "compilerOptions": {
-        "module": "NodeNext",
+        "module": "ESNext",
         "target": "ES2018",
         "jsx": "react",
         "strict": true,
@@ -8,5 +8,6 @@
         "skipLibCheck": true,
         "forceConsistentCasingInFileNames": true,
         "declaration": true,
+        "isolatedModules": true
     },
 }

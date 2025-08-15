@@ -1,5 +1,3 @@
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { Node } from './Node';
 import { DynamicNode } from './DynamicNode';
 import { World } from './World';
 

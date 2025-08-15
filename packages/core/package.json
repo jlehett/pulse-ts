@@ -1,15 +1,39 @@
 {
-  "name": "@pulse-ts/core",
-  "version": "0.0.1",
-  "publishConfig": {
-    "access": "public"
-  },
-  "scripts": {
-    "build": "tsc -p tsconfig.json",
-    "test": "jest",
-    "lint": "eslint .",
-    "lint:fix": "eslint . --fix",
-    "format": "prettier --write \"**/*.{js,jsx,ts,tsx,json,md}\"",
-    "release": "npm run build && npm publish"
-  }
+    "name": "@pulse-ts/core",
+    "version": "0.0.4",
+    "type": "module",
+    "publishConfig": {
+        "access": "public"
+    },
+    "main": "dist/index.cjs",
+    "module": "dist/index.js",
+    "types": "dist/index.d.ts",
+    "files": ["dist"],
+    "exports": {
+        ".": {
+            "types": "./dist/index.d.ts",
+            "import": "./dist/index.js",
+            "require": "./dist/index.cjs"
+        }
+    },
+    "scripts": {
+        "build": "tsup src/index.ts --dts --format esm,cjs --out-dir dist --clean",
+        "test": "jest",
+        "lint": "eslint .",
+        "lint:fix": "eslint . --fix",
+        "format": "prettier --write \"**/*.{js,jsx,ts,tsx,json,md}\"",
+        "release": "npm run build && npm publish"
+    },
+    "babel": {
+        "presets": [
+            [
+                "@babel/preset-env",
+                {
+                    "targets": { "node": "current" },
+                    "modules": "auto"
+                }
+            ],
+            "@babel/preset-typescript"
+        ]
+    }
 }

@@ -1,4 +1,3 @@
-import { v4 as uuidv4 } from 'uuid';
 import type { World } from './World';
 import { removeNode } from './interfacing/friendSymbols';
 
@@ -35,10 +34,6 @@ export abstract class Node {
      */
     protected world: World;
     /**
-     * A unique identifier for this Node.
-     */
-    private _id: string = uuidv4();
-    /**
      * The parent Node of this Node, if any.
      */
     private _parent: Node | null = null;
@@ -46,13 +41,6 @@ export abstract class Node {
      * The children Nodes of this Node.
      */
     private _children: Node[] = [];
-
-    /**
-     * Returns the unique identifier of this Node.
-     */
-    get id(): string {
-        return this._id;
-    }
 
     /**
      * Returns the parent Node of this Node, or null if it has no parent.
