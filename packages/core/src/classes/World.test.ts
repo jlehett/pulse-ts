@@ -174,4 +174,209 @@ describe('World', () => {
             });
         });
     });
+
+    describe('addTags', () => {
+        it('should add tags to a node', () => {
+            class TestNode extends Node {
+                constructor(world: World) {
+                    super(world);
+                }
+            }
+
+            const world = new World();
+            const node = world.createNode(TestNode)({});
+            world.addTags(node, ['test']);
+
+            expect(world.getNodesByTag('test')).toContain(node);
+        });
+
+        it('should result in a no-op if the tag already exists on the node', () => {
+            class TestNode extends Node {
+                constructor(world: World) {
+                    super(world);
+                }
+            }
+
+            const world = new World();
+            const node = world.createNode(TestNode)({});
+            world.addTags(node, ['test']);
+            expect(world.getNodesByTag('test')).toContain(node);
+
+            world.addTags(node, ['test']);
+            expect(world.getNodesByTag('test')).toContain(node);
+        });
+    });
+
+    describe('removeTags', () => {
+        it('should remove tags from a node', () => {
+            class TestNode extends Node {
+                constructor(world: World) {
+                    super(world);
+                }
+            }
+
+            const world = new World();
+            const node = world.createNode(TestNode)({});
+            world.addTags(node, ['test']);
+            expect(world.getNodesByTag('test')).toContain(node);
+
+            world.removeTags(node, ['test']);
+            expect(world.getNodesByTag('test')).not.toContain(node);
+        });
+
+        it('should result in a no-op if the tag does not exist on the node', () => {
+            class TestNode extends Node {
+                constructor(world: World) {
+                    super(world);
+                }
+            }
+
+            const world = new World();
+            const node = world.createNode(TestNode)({});
+            world.removeTags(node, ['test']);
+            expect(world.getNodesByTag('test')).not.toContain(node);
+        });
+    });
+
+    describe('queryNodes', () => {
+        it('should return nodes that match a simple OR query', () => {
+            class TestNode extends Node {
+                constructor(world: World) {
+                    super(world);
+                }
+            }
+
+            const world = new World();
+            const node1 = world.createNode(TestNode)({});
+            const node2 = world.createNode(TestNode)({});
+            const node3 = world.createNode(TestNode)({});
+
+            world.addTags(node1, ['test1']);
+            world.addTags(node2, ['test2']);
+            world.addTags(node3, ['test3']);
+
+            const result = world.queryNodes({ tags: ['test1', 'test2'] });
+            expect(result.nodes).toEqual([node1, node2]);
+            expect(result.count).toBe(2);
+            expect(result.executionTime).toBeGreaterThan(0);
+        });
+
+        it('should return nodes that match a simple AND query', () => {
+            class TestNode extends Node {
+                constructor(world: World) {
+                    super(world);
+                }
+            }
+
+            const world = new World();
+            const node1 = world.createNode(TestNode)({});
+            const node2 = world.createNode(TestNode)({});
+            const node3 = world.createNode(TestNode)({});
+
+            world.addTags(node1, ['test1', 'testA']);
+            world.addTags(node2, ['test2', 'testA']);
+            world.addTags(node3, ['test3', 'testA']);
+
+            const result = world.queryNodes({
+                tags: ['test1', 'test2'],
+                requireAllTags: true,
+            });
+            expect(result.nodes).toEqual([]);
+            expect(result.count).toBe(0);
+            expect(result.executionTime).toBeGreaterThan(0);
+
+            const result2 = world.queryNodes({
+                tags: ['test1', 'testA'],
+                requireAllTags: true,
+            });
+            expect(result2.nodes).toEqual([node1]);
+            expect(result2.count).toBe(1);
+            expect(result2.executionTime).toBeGreaterThan(0);
+        });
+
+        it('should return nodes that match a query with excludeTags', () => {
+            class TestNode extends Node {
+                constructor(world: World) {
+                    super(world);
+                }
+            }
+
+            const world = new World();
+            const node1 = world.createNode(TestNode)({});
+            const node2 = world.createNode(TestNode)({});
+            const node3 = world.createNode(TestNode)({});
+
+            world.addTags(node1, ['test1', 'testA']);
+            world.addTags(node2, ['test2', 'testA']);
+            world.addTags(node3, ['test3', 'testA']);
+
+            const result = world.queryNodes({
+                tags: ['testA'],
+                excludeTags: ['test3'],
+            });
+            expect(result.nodes).toEqual([node1, node2]);
+            expect(result.count).toBe(2);
+            expect(result.executionTime).toBeGreaterThan(0);
+        });
+
+        it('should return all nodes if no query is provided', () => {
+            class TestNode extends Node {
+                constructor(world: World) {
+                    super(world);
+                }
+            }
+
+            const world = new World();
+            const node1 = world.createNode(TestNode)({});
+            const node2 = world.createNode(TestNode)({});
+            const node3 = world.createNode(TestNode)({});
+
+            world.addTags(node1, ['test1', 'testA']);
+            world.addTags(node2, ['test2', 'testA']);
+            world.addTags(node3, ['test3', 'testA']);
+
+            const result = world.queryNodes({});
+            expect(result.nodes).toEqual([node1, node2, node3]);
+            expect(result.count).toBe(3);
+            expect(result.executionTime).toBeGreaterThan(0);
+        });
+    });
+
+    describe('getNodesByTag', () => {
+        it('should return nodes that have the specified tag', () => {
+            class TestNode extends Node {
+                constructor(world: World) {
+                    super(world);
+                }
+            }
+
+            const world = new World();
+            const node1 = world.createNode(TestNode)({});
+            const node2 = world.createNode(TestNode)({});
+            const node3 = world.createNode(TestNode)({});
+
+            world.addTags(node1, ['test1', 'testA']);
+            world.addTags(node2, ['test2', 'testA']);
+            world.addTags(node3, ['test3', 'testB']);
+
+            const result = world.getNodesByTag('testA');
+            expect(result).toEqual([node1, node2]);
+        });
+
+        it('should return an empty array if no nodes have the specified tag', () => {
+            class TestNode extends Node {
+                constructor(world: World) {
+                    super(world);
+                }
+            }
+
+            const world = new World();
+            world.createNode(TestNode)({});
+            world.createNode(TestNode)({});
+            world.createNode(TestNode)({});
+
+            const result = world.getNodesByTag('testA');
+            expect(result).toEqual([]);
+        });
+    });
 });

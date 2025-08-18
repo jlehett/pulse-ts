@@ -262,6 +262,7 @@ describe('Node', () => {
 
                 onDestroy() {
                     foundParent = this.parent;
+                    // eslint-disable-next-line @typescript-eslint/no-this-alias
                     foundChild = this;
                 }
             }
@@ -274,6 +275,69 @@ describe('Node', () => {
             child.destroy();
             expect(foundParent).toBe(parent);
             expect(foundChild).toBe(child);
+        });
+    });
+
+    describe('addTags', () => {
+        it('should add tags to the node', () => {
+            class TestNode extends Node {
+                constructor(world: World) {
+                    super(world);
+                }
+            }
+
+            const world = new World();
+            const node = world.createNode(TestNode)({});
+            node.addTags(['test']);
+
+            expect(world.getNodesByTag('test')).toContain(node);
+        });
+
+        it('should result in a no-op if the tag already exists on the node', () => {
+            class TestNode extends Node {
+                constructor(world: World) {
+                    super(world);
+                }
+            }
+
+            const world = new World();
+            const node = world.createNode(TestNode)({});
+            node.addTags(['test']);
+            expect(world.getNodesByTag('test')).toContain(node);
+
+            node.addTags(['test']);
+            expect(world.getNodesByTag('test')).toContain(node);
+        });
+    });
+
+    describe('removeTags', () => {
+        it('should remove tags from the node', () => {
+            class TestNode extends Node {
+                constructor(world: World) {
+                    super(world);
+                }
+            }
+
+            const world = new World();
+            const node = world.createNode(TestNode)({});
+            node.addTags(['test']);
+            expect(world.getNodesByTag('test')).toContain(node);
+
+            node.removeTags(['test']);
+            expect(world.getNodesByTag('test')).not.toContain(node);
+        });
+
+        it('should result in a no-op if the tag does not exist on the node', () => {
+            class TestNode extends Node {
+                constructor(world: World) {
+                    super(world);
+                }
+            }
+
+            const world = new World();
+            const node = world.createNode(TestNode)({});
+            node.removeTags(['test']);
+            expect(world.getNodesByTag('test')).not.toContain(node);
         });
     });
 });

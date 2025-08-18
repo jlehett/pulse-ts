@@ -1,5 +1,6 @@
 import type { World } from './World';
 import { removeNode } from './interfacing/friendSymbols';
+import type { Tag } from './types';
 
 /**
  * A factory function type that creates a new Node of type T with the given properties P
@@ -118,5 +119,19 @@ export abstract class Node {
         if (child._parent !== this) return;
         child._parent = null;
         this._children = this._children.filter((c) => c !== child);
+    }
+
+    /**
+     * Add tags to this node for efficient querying
+     */
+    addTags(tags: Tag[]): void {
+        this.world.addTags(this, tags);
+    }
+
+    /**
+     * Remove tags from this node
+     */
+    removeTags(tags: Tag[]): void {
+        this.world.removeTags(this, tags);
     }
 }

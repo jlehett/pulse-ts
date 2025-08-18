@@ -1,6 +1,8 @@
 import type { NodeConstructor, Node } from './Node';
 import { DynamicNode } from './DynamicNode';
 import { removeNode } from './interfacing/friendSymbols';
+import { TagSystem } from './TagSystem';
+import type { NodeQuery, QueryResult, Tag } from './types';
 
 /**
  * Base class for a World, which manages Nodes and their lifecycle.
@@ -17,6 +19,11 @@ export class World {
      * are updated on each tick of the World.
      */
     protected dynamicNodes: DynamicNode[] = [];
+
+    /**
+     * Tag system for efficient node querying
+     */
+    protected tagSystem = new TagSystem();
 
     /**
      * Indicates whether the World is currently running.
@@ -45,7 +52,7 @@ export class World {
         let lastTime = performance.now();
         const loop = (currentTime: number) => {
             if (!this.isRunning) return;
-            const delta = (currentTime - lastTime) / 1000; // Conver to seconds
+            const delta = (currentTime - lastTime) / 1000; // Convert to seconds
             lastTime = currentTime;
 
             this.update(delta);
@@ -128,5 +135,42 @@ export class World {
         if (node instanceof DynamicNode) {
             this.dynamicNodes = this.dynamicNodes.filter((n) => n !== node);
         }
+        // Remove from tag system
+        this.tagSystem.removeNode(node);
+    }
+
+    /**
+     * Add tags to a node for querying
+     */
+    addTags(node: Node, tags: Tag[]): void {
+        this.tagSystem.addTags(node, tags);
+    }
+
+    /**
+     * Remove tags from a node
+     */
+    removeTags(node: Node, tags: Tag[]): void {
+        this.tagSystem.removeTags(node, tags);
+    }
+
+    /**
+     * Query nodes based on various criteria
+     */
+    queryNodes(query: NodeQuery): QueryResult {
+        return this.tagSystem.query(query);
+    }
+
+    /**
+     * Get all nodes with a specific tag
+     */
+    getNodesByTag(tag: Tag): Node[] {
+        return this.tagSystem.query({ tags: [tag] }).nodes;
+    }
+
+    /**
+     * Get statistics about the tag system
+     */
+    getTagSystemStats() {
+        return this.tagSystem.getStats();
     }
 }
