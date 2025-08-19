@@ -76,13 +76,12 @@ export abstract class Node {
      */
     createChild<P, T extends Node>(
         NodeClass: NodeConstructor<P, T>,
-    ): NodeFactory<P, T> {
-        return (props: P): T => {
-            const childNode = this.world.createNode(NodeClass)(props);
-            childNode._parent = this;
-            this._children.push(childNode);
-            return childNode;
-        };
+        props: P,
+    ): T {
+        const childNode = this.world.createNode(NodeClass, props);
+        childNode._parent = this;
+        this._children.push(childNode);
+        return childNode;
     }
 
     /**

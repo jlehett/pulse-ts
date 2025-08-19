@@ -1,12 +1,17 @@
 import type { NodeConstructor, Node } from './Node';
 import { removeNode } from './interfacing/friendSymbols';
 import { TagSystem } from './TagSystem';
-import type { NodeQuery, QueryResult, Tag } from './types';
+import type { Module, NodeQuery, QueryResult, Tag } from './types';
 
 /**
  * Base class for a World, which manages Nodes and their lifecycle.
  */
 export class World {
+    /**
+     * The modules that are added to this World.
+     */
+    protected modules = new Map<string, Module>();
+
     /**
      * The array of all Nodes within by this World.
      */
@@ -32,6 +37,24 @@ export class World {
      */
     get isRunning(): boolean {
         return this.running;
+    }
+
+    /**
+     * Adds a module to the World.
+     * @param module The module to add to the World
+     */
+    addModule(moduleKey: string, module: Module) {
+        module.onInit(this);
+        this.modules.set(moduleKey, module);
+    }
+
+    /**
+     * Get a module by its key
+     * @param moduleKey The key of the module to get
+     * @returns The module, or undefined if it is not found
+     */
+    getModule(moduleKey: string): Module | undefined {
+        return this.modules.get(moduleKey);
     }
 
     /**
@@ -73,12 +96,11 @@ export class World {
      */
     createNode<P, T extends Node>(
         NodeClass: NodeConstructor<P, T>,
-    ): (props: P) => T {
-        return (props: P): T => {
-            const node = new NodeClass(this, props);
-            this.addNode(node);
-            return node;
-        };
+        props: P,
+    ): T {
+        const node = new NodeClass(this, props);
+        this.addNode(node);
+        return node;
     }
 
     /**
@@ -147,7 +169,7 @@ export class World {
      * Get all nodes with a specific tag
      */
     getNodesByTag(tag: Tag): Node[] {
-        return this.tagSystem.query({ tags: [tag] }).nodes;
+        return this.queryNodes({ tags: [tag] }).nodes;
     }
 
     /**

@@ -11,8 +11,8 @@ describe('Node', () => {
             }
 
             const world = new World();
-            const parent = world.createNode(TestNode)({});
-            const child = parent.createChild(TestNode)({});
+            const parent = world.createNode(TestNode, {});
+            const child = parent.createChild(TestNode, {});
             expect(child.parent).toBe(parent);
         });
 
@@ -24,7 +24,7 @@ describe('Node', () => {
             }
 
             const world = new World();
-            const node = world.createNode(TestNode)({});
+            const node = world.createNode(TestNode, {});
             expect(node.parent).toBeNull();
         });
     });
@@ -38,7 +38,7 @@ describe('Node', () => {
             }
 
             const world = new World();
-            const node = world.createNode(TestNode)({});
+            const node = world.createNode(TestNode, {});
             expect(node.children).toEqual([]);
         });
 
@@ -50,9 +50,9 @@ describe('Node', () => {
             }
 
             const world = new World();
-            const parent = world.createNode(TestNode)({});
-            const child1 = parent.createChild(TestNode)({});
-            const child2 = parent.createChild(TestNode)({});
+            const parent = world.createNode(TestNode, {});
+            const child1 = parent.createChild(TestNode, {});
+            const child2 = parent.createChild(TestNode, {});
             expect(parent.children).toEqual([child1, child2]);
         });
 
@@ -64,9 +64,9 @@ describe('Node', () => {
             }
 
             const world = new World();
-            const parent = world.createNode(TestNode)({});
-            const child1 = parent.createChild(TestNode)({});
-            const child2 = parent.createChild(TestNode)({});
+            const parent = world.createNode(TestNode, {});
+            const child1 = parent.createChild(TestNode, {});
+            const child2 = parent.createChild(TestNode, {});
             expect(parent.children).toEqual([child1, child2]);
             parent.children.push(new TestNode(world));
             expect(parent.children).toEqual([child1, child2]); // Should not modify original children array
@@ -82,8 +82,8 @@ describe('Node', () => {
             }
 
             const world = new World();
-            const parent = world.createNode(TestNode)({});
-            const child = parent.createChild(TestNode)({});
+            const parent = world.createNode(TestNode, {});
+            const child = parent.createChild(TestNode, {});
             expect(child).toBeInstanceOf(TestNode);
             expect(child.parent).toBe(parent);
             expect(parent.children).toContain(child);
@@ -111,8 +111,8 @@ describe('Node', () => {
             }
 
             const world = new TestWorld();
-            const parent = world.createNode(TestNode)({});
-            const child = parent.createChild(TestNode)({});
+            const parent = world.createNode(TestNode, {});
+            const child = parent.createChild(TestNode, {});
             expect(child._world).toBe(world);
             expect(world.getNodes()).toContain(child);
         });
@@ -127,8 +127,8 @@ describe('Node', () => {
             }
 
             const world = new World();
-            const parent = world.createNode(TestNode)({});
-            const child = parent.createChild(TestNode)({});
+            const parent = world.createNode(TestNode, {});
+            const child = parent.createChild(TestNode, {});
             expect(parent.children).toContain(child);
             child.destroy();
             expect(parent.children).not.toContain(child);
@@ -152,7 +152,7 @@ describe('Node', () => {
             }
 
             const world = new TestWorld();
-            const node = world.createNode(TestNode)({});
+            const node = world.createNode(TestNode, {});
             expect(world.getNodes()).toContain(node);
             node.destroy();
             expect(world.getNodes()).not.toContain(node);
@@ -176,9 +176,9 @@ describe('Node', () => {
             }
 
             const world = new TestWorld();
-            const parent = world.createNode(TestNode)({});
-            const child = parent.createChild(TestNode)({});
-            const grandChild = child.createChild(TestNode)({});
+            const parent = world.createNode(TestNode, {});
+            const child = parent.createChild(TestNode, {});
+            const grandChild = child.createChild(TestNode, {});
             expect(world.getNodes()).toContain(parent);
             expect(world.getNodes()).toContain(child);
             expect(world.getNodes()).toContain(grandChild);
@@ -202,7 +202,7 @@ describe('Node', () => {
             }
 
             const world = new World();
-            const node = world.createNode(TestNode)({});
+            const node = world.createNode(TestNode, {});
             expect(testFn).not.toHaveBeenCalled();
             node.destroy();
             expect(testFn).toHaveBeenCalled();
@@ -224,7 +224,7 @@ describe('Node', () => {
             }
 
             const world = new World();
-            const node = world.createNode(TestNode)({});
+            const node = world.createNode(TestNode, {});
             expect(testFn).not.toHaveBeenCalled();
             node.destroy();
             expect(testFn).toHaveBeenCalled();
@@ -252,8 +252,8 @@ describe('Node', () => {
             }
 
             const world = new World();
-            const parent = world.createNode(TestNode)({});
-            const child = parent.createChild(NodeToDestroy)({});
+            const parent = world.createNode(TestNode, {});
+            const child = parent.createChild(NodeToDestroy, {});
             expect(foundParent).not.toBeDefined();
             expect(foundChild).not.toBeDefined();
             child.destroy();
@@ -271,7 +271,7 @@ describe('Node', () => {
             }
 
             const world = new World();
-            const node = world.createNode(TestNode)({});
+            const node = world.createNode(TestNode, {});
             node.addTags(['test']);
 
             expect(world.getNodesByTag('test')).toContain(node);
@@ -285,7 +285,7 @@ describe('Node', () => {
             }
 
             const world = new World();
-            const node = world.createNode(TestNode)({});
+            const node = world.createNode(TestNode, {});
             node.addTags(['test']);
             expect(world.getNodesByTag('test')).toContain(node);
 
@@ -303,7 +303,7 @@ describe('Node', () => {
             }
 
             const world = new World();
-            const node = world.createNode(TestNode)({});
+            const node = world.createNode(TestNode, {});
             node.addTags(['test']);
             expect(world.getNodesByTag('test')).toContain(node);
 
@@ -319,7 +319,7 @@ describe('Node', () => {
             }
 
             const world = new World();
-            const node = world.createNode(TestNode)({});
+            const node = world.createNode(TestNode, {});
             node.removeTags(['test']);
             expect(world.getNodesByTag('test')).not.toContain(node);
         });

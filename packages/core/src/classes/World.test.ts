@@ -43,7 +43,7 @@ describe('World', () => {
             }
 
             const world = new World();
-            world.createNode(TestNode)({});
+            world.createNode(TestNode, {});
 
             expect(testFn).not.toHaveBeenCalled();
 
@@ -88,7 +88,7 @@ describe('World', () => {
             }
 
             const world = new World();
-            world.createNode(TestNode)({});
+            world.createNode(TestNode, {});
 
             world.start();
             let numTimesCalledBeforeStop = 0;
@@ -118,7 +118,7 @@ describe('World', () => {
                 }
             }
             const world = new World();
-            const node = world.createNode(TestNode)({});
+            const node = world.createNode(TestNode, {});
             expect(node).toBeInstanceOf(TestNode);
         });
 
@@ -140,7 +140,7 @@ describe('World', () => {
             }
 
             const world = new TestWorld();
-            const node = world.createNode(TestNode)({});
+            const node = world.createNode(TestNode, {});
             expect(node.getWorld()).toBe(world);
             expect(world.getNodes()).toContain(node);
         });
@@ -158,7 +158,7 @@ describe('World', () => {
                 }
             }
             const world = new World();
-            const node = world.createNode(TestNode)({});
+            const node = world.createNode(TestNode, {});
 
             expect(node).toBeInstanceOf(TestNode);
             expect(testFn).not.toHaveBeenCalled();
@@ -183,7 +183,7 @@ describe('World', () => {
             }
 
             const world = new World();
-            const node = world.createNode(TestNode)({});
+            const node = world.createNode(TestNode, {});
             world.addTags(node, ['test']);
 
             expect(world.getNodesByTag('test')).toContain(node);
@@ -197,7 +197,7 @@ describe('World', () => {
             }
 
             const world = new World();
-            const node = world.createNode(TestNode)({});
+            const node = world.createNode(TestNode, {});
             world.addTags(node, ['test']);
             expect(world.getNodesByTag('test')).toContain(node);
 
@@ -215,7 +215,7 @@ describe('World', () => {
             }
 
             const world = new World();
-            const node = world.createNode(TestNode)({});
+            const node = world.createNode(TestNode, {});
             world.addTags(node, ['test']);
             expect(world.getNodesByTag('test')).toContain(node);
 
@@ -231,7 +231,7 @@ describe('World', () => {
             }
 
             const world = new World();
-            const node = world.createNode(TestNode)({});
+            const node = world.createNode(TestNode, {});
             world.removeTags(node, ['test']);
             expect(world.getNodesByTag('test')).not.toContain(node);
         });
@@ -246,9 +246,9 @@ describe('World', () => {
             }
 
             const world = new World();
-            const node1 = world.createNode(TestNode)({});
-            const node2 = world.createNode(TestNode)({});
-            const node3 = world.createNode(TestNode)({});
+            const node1 = world.createNode(TestNode, {});
+            const node2 = world.createNode(TestNode, {});
+            const node3 = world.createNode(TestNode, {});
 
             world.addTags(node1, ['test1']);
             world.addTags(node2, ['test2']);
@@ -268,9 +268,9 @@ describe('World', () => {
             }
 
             const world = new World();
-            const node1 = world.createNode(TestNode)({});
-            const node2 = world.createNode(TestNode)({});
-            const node3 = world.createNode(TestNode)({});
+            const node1 = world.createNode(TestNode, {});
+            const node2 = world.createNode(TestNode, {});
+            const node3 = world.createNode(TestNode, {});
 
             world.addTags(node1, ['test1', 'testA']);
             world.addTags(node2, ['test2', 'testA']);
@@ -301,9 +301,9 @@ describe('World', () => {
             }
 
             const world = new World();
-            const node1 = world.createNode(TestNode)({});
-            const node2 = world.createNode(TestNode)({});
-            const node3 = world.createNode(TestNode)({});
+            const node1 = world.createNode(TestNode, {});
+            const node2 = world.createNode(TestNode, {});
+            const node3 = world.createNode(TestNode, {});
 
             world.addTags(node1, ['test1', 'testA']);
             world.addTags(node2, ['test2', 'testA']);
@@ -326,9 +326,9 @@ describe('World', () => {
             }
 
             const world = new World();
-            const node1 = world.createNode(TestNode)({});
-            const node2 = world.createNode(TestNode)({});
-            const node3 = world.createNode(TestNode)({});
+            const node1 = world.createNode(TestNode, {});
+            const node2 = world.createNode(TestNode, {});
+            const node3 = world.createNode(TestNode, {});
 
             world.addTags(node1, ['test1', 'testA']);
             world.addTags(node2, ['test2', 'testA']);
@@ -350,9 +350,9 @@ describe('World', () => {
             }
 
             const world = new World();
-            const node1 = world.createNode(TestNode)({});
-            const node2 = world.createNode(TestNode)({});
-            const node3 = world.createNode(TestNode)({});
+            const node1 = world.createNode(TestNode, {});
+            const node2 = world.createNode(TestNode, {});
+            const node3 = world.createNode(TestNode, {});
 
             world.addTags(node1, ['test1', 'testA']);
             world.addTags(node2, ['test2', 'testA']);
@@ -370,9 +370,8 @@ describe('World', () => {
             }
 
             const world = new World();
-            world.createNode(TestNode)({});
-            world.createNode(TestNode)({});
-            world.createNode(TestNode)({});
+            world.createNode(TestNode, {});
+            world.createNode(TestNode, {});
 
             const result = world.getNodesByTag('testA');
             expect(result).toEqual([]);
