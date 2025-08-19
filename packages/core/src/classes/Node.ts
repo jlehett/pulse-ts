@@ -103,6 +103,16 @@ export abstract class Node {
     }
 
     /**
+     * The lifecycle method that is called on each tick of the World.
+     *
+     * @param delta The time in seconds since the last update
+     */
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    onUpdate(_delta: number): void {
+        // No-op by default
+    }
+
+    /**
      * Lifecycle method called when the Node is about to be destroyed.
      *
      * The Node still exists in the World and its parent-child relationships

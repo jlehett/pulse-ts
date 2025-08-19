@@ -1,6 +1,7 @@
 {
     "compilerOptions": {
         "module": "ESNext",
+        "moduleResolution": "node",
         "target": "ES2018",
         "jsx": "react",
         "strict": true,
@@ -8,6 +9,10 @@
         "skipLibCheck": true,
         "forceConsistentCasingInFileNames": true,
         "declaration": true,
-        "isolatedModules": true
+        "isolatedModules": true,
+        "baseUrl": ".",
+        "paths": {
+            "@pulse-ts/core": ["packages/core/src/index.ts"]
+        }
     },
 }

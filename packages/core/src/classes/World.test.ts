@@ -1,4 +1,3 @@
-import { DynamicNode } from './DynamicNode';
 import { Node } from './Node';
 import { World } from './World';
 
@@ -33,7 +32,7 @@ describe('World', () => {
         it('should begin the update loop', (done) => {
             const testFn = jest.fn();
 
-            class TestNode extends DynamicNode {
+            class TestNode extends Node {
                 constructor(world: World) {
                     super(world);
                 }
@@ -78,7 +77,7 @@ describe('World', () => {
         it('should cancel the update loop', async () => {
             const testFn = jest.fn();
 
-            class TestNode extends DynamicNode {
+            class TestNode extends Node {
                 constructor(world: World) {
                     super(world);
                 }
@@ -149,7 +148,7 @@ describe('World', () => {
         it('should track dynamic nodes correctly for updates', async () => {
             const testFn = jest.fn();
 
-            class TestNode extends DynamicNode {
+            class TestNode extends Node {
                 constructor(world: World) {
                     super(world);
                 }

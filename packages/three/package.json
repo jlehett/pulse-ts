@@ -41,9 +41,16 @@
         ]
     },
     "devDependencies": {
-        "three": "^0.179.1"
+        "three": "^0.179.1",
+        "@pulse-ts/core": "file:../core",
+        "@types/three": "^0.178.1"
     },
     "peerDependencies": {
-        "three": "^0.179.1"
+        "three": "^0.179.1",
+        "@pulse-ts/core": "^0.0.4"
+    },
+    "peerDependenciesMeta": {
+        "three": { "optional": false },
+        "@pulse-ts/core": { "optional": false }
     }
 }

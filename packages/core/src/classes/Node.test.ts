@@ -1,6 +1,5 @@
 import { World } from './World';
 import { Node } from './Node';
-import { DynamicNode } from './DynamicNode';
 
 describe('Node', () => {
     describe('get parent', () => {
@@ -95,13 +94,9 @@ describe('Node', () => {
                 getNodes() {
                     return this.nodes;
                 }
-
-                getDynamicNodes() {
-                    return this.dynamicNodes;
-                }
             }
 
-            class TestNode extends DynamicNode {
+            class TestNode extends Node {
                 constructor(world: World) {
                     super(world);
                 }
@@ -120,7 +115,6 @@ describe('Node', () => {
             const child = parent.createChild(TestNode)({});
             expect(child._world).toBe(world);
             expect(world.getNodes()).toContain(child);
-            expect(world.getDynamicNodes()).toContain(child);
         });
     });
 
@@ -145,13 +139,9 @@ describe('Node', () => {
                 getNodes() {
                     return this.nodes;
                 }
-
-                getDynamicNodes() {
-                    return this.dynamicNodes;
-                }
             }
 
-            class TestNode extends DynamicNode {
+            class TestNode extends Node {
                 constructor(world: World) {
                     super(world);
                 }
@@ -164,10 +154,8 @@ describe('Node', () => {
             const world = new TestWorld();
             const node = world.createNode(TestNode)({});
             expect(world.getNodes()).toContain(node);
-            expect(world.getDynamicNodes()).toContain(node);
             node.destroy();
             expect(world.getNodes()).not.toContain(node);
-            expect(world.getDynamicNodes()).not.toContain(node);
         });
 
         it('should destroy all children Nodes recursively', () => {
@@ -175,13 +163,9 @@ describe('Node', () => {
                 getNodes() {
                     return this.nodes;
                 }
-
-                getDynamicNodes() {
-                    return this.dynamicNodes;
-                }
             }
 
-            class TestNode extends DynamicNode {
+            class TestNode extends Node {
                 constructor(world: World) {
                     super(world);
                 }
