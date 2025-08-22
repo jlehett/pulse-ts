@@ -88,6 +88,7 @@ export class World {
     private readonly scheduler: Scheduler;
     private isRunningFlag = false;
     private accumulatorMilliseconds = 0;
+    private lastInterpolationAlpha = 0;
     private fixedStepMilliseconds: number;
     private maxCatchupMilliseconds: number;
 
@@ -96,6 +97,11 @@ export class World {
     readonly onNodeRemoved = new Signal<Node>();
     readonly onTagAdded = new Signal<{ node: Node; tag: string }>();
     readonly onTagRemoved = new Signal<{ node: Node; tag: string }>();
+    readonly onParentChanged = new Signal<{
+        node: Node;
+        previousParent: Node | null;
+        nextParent: Node | null;
+    }>();
 
     constructor(options?: {
         fixedStepMs?: number;
@@ -147,6 +153,11 @@ export class World {
         );
     }
 
+    /** Interpolation factor from last tick (0..1). */
+    getInterpolationAlpha(): number {
+        return this.lastInterpolationAlpha;
+    }
+
     //#endregion
 
     //#region Core API
@@ -184,7 +195,8 @@ export class World {
     }
 
     /** Variable frame-step tick (deltaSeconds). */
-    stepFrame(deltaSeconds: number): void {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    stepFrame(deltaSeconds: number, _alpha?: number): void {
         this.flushAdds();
         this.isStepping = true;
         try {
@@ -239,6 +251,15 @@ export class World {
         }
     }
 
+    /** @internal: invoked by Node when parent changes. */
+    _notifyParentChanged(
+        node: Node,
+        previousParent: Node | null,
+        nextParent: Node | null,
+    ): void {
+        this.onParentChanged.emit({ node, previousParent, nextParent });
+    }
+
     //#endregion
 
     //#region Internals
@@ -256,8 +277,9 @@ export class World {
             this.accumulatorMilliseconds -= this.fixedStepMilliseconds;
         }
 
-        const frameDeltaSeconds = clamped / 1000;
-        this.stepFrame(frameDeltaSeconds);
+        const alpha = this.accumulatorMilliseconds / this.fixedStepMilliseconds;
+        this.lastInterpolationAlpha = alpha;
+        this.stepFrame(clamped / 1000, alpha);
     }
 
     private attachNow(node: Node): void {

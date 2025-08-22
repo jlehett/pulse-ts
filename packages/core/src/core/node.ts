@@ -26,18 +26,22 @@ export class Node {
     protected onRemovedFromWorld(): void {}
 
     addChild(child: Node): this {
-        if (child.parent) child.parent.removeChild(child);
+        const previousParent = child.parent;
+        if (previousParent) previousParent.removeChild(child);
         this.children.add(child);
         child.parent = this;
         if (this.world) this.world.add(child); // adopt into the same world
+        this.world?._notifyParentChanged(child, previousParent, this);
         return this;
     }
 
     removeChild(child: Node): this {
-        if (this.children.delete(child)) {
-            child.parent = null;
-            if (this.world) this.world.remove(child);
-        }
+        if (!this.children.has(child)) return this;
+        const previousParent = child.parent;
+        this.children.delete(child);
+        child.parent = null;
+        if (this.world) this.world.remove(child);
+        this.world?._notifyParentChanged(child, previousParent, null);
         return this;
     }
 
