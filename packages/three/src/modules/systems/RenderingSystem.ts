@@ -18,7 +18,6 @@ export class RenderingSystem extends Node {
         this.scene = new Three.Scene();
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     onUpdate(_delta: number): void {
         if (this.renderer && this.mainCamera) {
             this.renderer.render(this.scene, this.mainCamera);

@@ -9,7 +9,6 @@ export class RAFScheduler implements Scheduler {
 
     start(
         loop: (deltaMilliseconds: number) => void,
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         _targetStepMilliseconds: number,
     ): void {
         if (this.running) return;

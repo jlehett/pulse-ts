@@ -19,6 +19,10 @@ export class Node {
         return this.tagSet;
     }
 
+    constructor(world?: World) {
+        this.world = world ?? null;
+    }
+
     /** Called after the node is added to a World. */
     protected onAddedToWorld(): void {}
 

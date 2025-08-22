@@ -195,7 +195,6 @@ export class World {
     }
 
     /** Variable frame-step tick (deltaSeconds). */
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     stepFrame(deltaSeconds: number, _alpha?: number): void {
         this.flushAdds();
         this.isStepping = true;

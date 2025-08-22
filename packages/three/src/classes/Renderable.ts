@@ -36,7 +36,6 @@ export class Renderable extends Node implements SpatialNode {
         threeModule.addRenderable(this);
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     onUpdate(_delta: number) {
         const worldPosition = this.transform.worldPosition;
         const worldRotation = this.transform.worldRotation;
