@@ -19,17 +19,21 @@ const PHASES: UpdatePhase[] = [
 ];
 const KINDS: UpdateKind[] = ['fixed', 'frame'];
 
+export const internal_indexTagAdd = Symbol('world:indexTagAdd');
+export const internal_indexTagRemove = Symbol('world:indexTagRemove');
+export const internal_notifyParentChanged = Symbol('world:notifyParentChanged');
+
 /**
  * The World owns nodes, phase/kind schedules, tags, and the run loop.
  * Start/stop the world directly; bring your own Scheduler if you want.
  */
 export class World {
-    // #region Storage
+    // #region Fields
 
     /** All nodes by id (public for internal helpers; treat as internal). */
     readonly nodes = new Map<number, Node>();
 
-    // Membership sets per kind/phase
+    /* Membership sets per kind/phase. */
     private readonly kindPhaseMembership: Record<
         UpdateKind,
         Record<UpdatePhase, NodeSet>
@@ -46,7 +50,7 @@ export class World {
         },
     };
 
-    // Cached schedules (sorted arrays) and dirty flags
+    /* Cached dirty flags for schedules. */
     private readonly scheduleDirty: Record<
         UpdateKind,
         Record<UpdatePhase, boolean>
@@ -62,6 +66,8 @@ export class World {
             [UpdatePhase.Late]: true,
         },
     };
+
+    /* Cached schedules (sorted arrays). */
     private readonly schedule: Record<UpdateKind, Record<UpdatePhase, Node[]>> =
         {
             fixed: {
@@ -103,6 +109,8 @@ export class World {
         nextParent: Node | null;
     }>();
 
+    //#endregion
+
     constructor(options?: {
         fixedStepMs?: number;
         maxCatchupMs?: number;
@@ -113,11 +121,13 @@ export class World {
         this.scheduler = options?.scheduler ?? defaultScheduler();
     }
 
-    //#endregion
+    //#region Public Methods
 
-    //#region Run controls
+    //#region Run Controls
 
-    /** Start the world's run loop (fixed+frame). */
+    /**
+     * Start the world's run loop (fixed+frame).
+     */
     start(): void {
         if (this.isRunningFlag) return;
         this.isRunningFlag = true;
@@ -127,24 +137,35 @@ export class World {
         );
     }
 
-    /** Stop the world's run loop. */
+    /**
+     * Stop the world's run loop.
+     */
     stop(): void {
         if (!this.isRunningFlag) return;
         this.isRunningFlag = false;
         this.scheduler.stop();
     }
 
-    /** Whether the world is currently running. */
+    /**
+     * Get flag indicating whether the world is currently running.
+     * @returns True if the world is running; otherwise, false.
+     */
     isRunning(): boolean {
         return this.isRunningFlag;
     }
 
-    /** Manual advance by real-time delta (milliseconds). Handy for tests. */
+    /**
+     * Manual advance by real-time delta (milliseconds). Handy for tests.
+     * @param realDeltaMilliseconds The real-time delta in milliseconds.
+     */
     tickOnce(realDeltaMilliseconds: number): void {
         this.onTick(realDeltaMilliseconds);
     }
 
-    /** Change the fixed-step duration in milliseconds. */
+    /**
+     * Change the fixed-step duration in milliseconds.
+     * @param milliseconds The fixed-step duration in milliseconds.
+     */
     setFixedStepMs(milliseconds: number): void {
         this.fixedStepMilliseconds = Math.max(1, Math.floor(milliseconds));
         this.accumulatorMilliseconds = Math.min(
@@ -153,36 +174,18 @@ export class World {
         );
     }
 
-    /** Interpolation factor from last tick (0..1). */
+    /**
+     * Get the interpolation factor from last tick (0..1).
+     * @returns The interpolation factor from last tick (0..1).
+     */
     getInterpolationAlpha(): number {
         return this.lastInterpolationAlpha;
     }
 
-    //#endregion
-
-    //#region Core API
-
-    add<T extends Node>(node: T): T {
-        if (node.world && node.world !== this)
-            throw new Error('Node belongs to another World.');
-        if (this.isStepping) {
-            this.pendingAdds.push(node);
-            return node;
-        }
-        this.attachNow(node);
-        return node;
-    }
-
-    remove(node: Node): void {
-        if (node.world !== this) return;
-        if (this.isStepping) {
-            this.pendingRemoves.push(node);
-            return;
-        }
-        this.detachNow(node);
-    }
-
-    /** Deterministic fixed-step tick (deltaSeconds). */
+    /**
+     * Deterministic fixed-step tick (deltaSeconds).
+     * @param deltaSeconds The delta in seconds.
+     */
     stepFixed(deltaSeconds: number): void {
         this.flushAdds();
         this.isStepping = true;
@@ -194,7 +197,11 @@ export class World {
         this.flushRemoves();
     }
 
-    /** Variable frame-step tick (deltaSeconds). */
+    /**
+     * Variable frame-step tick (deltaSeconds).
+     * @param deltaSeconds The delta in seconds.
+     * @param _alpha The interpolation factor from last tick (0..1).
+     */
     stepFrame(deltaSeconds: number, _alpha?: number): void {
         this.flushAdds();
         this.isStepping = true;
@@ -206,31 +213,88 @@ export class World {
         this.flushRemoves();
     }
 
+    //#endregion
+
+    //#region Core API
+
+    /**
+     * Add a node to the world.
+     * @param node The node to add.
+     * @returns The node.
+     */
+    add<T extends Node>(node: T): T {
+        if (node.world && node.world !== this)
+            throw new Error('Node belongs to another World.');
+        if (this.isStepping) {
+            this.pendingAdds.push(node);
+            return node;
+        }
+        this.attachNow(node);
+        return node;
+    }
+
+    /**
+     * Remove a node from the world.
+     * @param node The node to remove.
+     */
+    remove(node: Node): void {
+        if (node.world !== this) return;
+        if (this.isStepping) {
+            this.pendingRemoves.push(node);
+            return;
+        }
+        this.detachNow(node);
+    }
+
+    /**
+     * Get the number of nodes in the world.
+     * @returns The number of nodes in the world.
+     */
     count(): number {
         return this.nodes.size;
     }
+
+    /**
+     * Get a node by id.
+     * @param id The id of the node to get.
+     * @returns The node, or undefined if not found.
+     */
     getById<T extends Node = Node>(id: number): T | undefined {
         return this.nodes.get(id) as T | undefined;
     }
 
-    /** Iterator over nodes by tag (use groups for live membership). */
+    /**
+     * Iterator over nodes by tag (use groups for live membership).
+     * @param tag The tag to query for.
+     * @returns An iterator over the nodes that carry the specified tag.
+     */
     *queryByTag(tag: string): IterableIterator<Node> {
         const set = this.tagIndex.get(tag);
         if (!set) return;
         for (const node of set) yield node;
     }
 
-    /** Create a live Group of nodes that match the predicate. */
+    /**
+     * Create a live Group of nodes that match the predicate.
+     * @param predicate The predicate to match nodes against.
+     * @returns A Group of nodes that match the predicate.
+     */
     group(predicate: (node: Node) => boolean): Group {
         return new Group(this, predicate);
     }
 
     //#endregion
 
-    //#region Internal Indexing (called by Node)
+    //#endregion
 
-    /** @internal: maintain the tag index; invoked by Node.addTag() */
-    _indexTagAdd(node: Node, tag: string): void {
+    //#region Internal Library Methods
+
+    /**
+     * @internal: maintain the tag index; invoked by Node.addTag()
+     * @param node The node to index.
+     * @param tag The tag to index.
+     */
+    [internal_indexTagAdd](node: Node, tag: string): void {
         let set = this.tagIndex.get(tag);
         if (!set) {
             set = new Set();
@@ -240,8 +304,12 @@ export class World {
         this.onTagAdded.emit({ node, tag });
     }
 
-    /** @internal: maintain the tag index; invoked by Node.removeTag() */
-    _indexTagRemove(node: Node, tag: string): void {
+    /**
+     * @internal: maintain the tag index; invoked by Node.removeTag()
+     * @param node The node to unindex.
+     * @param tag The tag to unindex.
+     */
+    [internal_indexTagRemove](node: Node, tag: string): void {
         const set = this.tagIndex.get(tag);
         if (!set) return;
         if (set.delete(node)) {
@@ -250,8 +318,13 @@ export class World {
         }
     }
 
-    /** @internal: invoked by Node when parent changes. */
-    _notifyParentChanged(
+    /**
+     * @internal: invoked by Node when parent changes.
+     * @param node The node whose parent changed.
+     * @param previousParent The previous parent of the node.
+     * @param nextParent The new parent of the node.
+     */
+    [internal_notifyParentChanged](
         node: Node,
         previousParent: Node | null,
         nextParent: Node | null,
@@ -261,8 +334,12 @@ export class World {
 
     //#endregion
 
-    //#region Internals
+    //#region Private Methods
 
+    /**
+     * Called by the scheduler to advance the world by one frame tick and one+ fixed steps.
+     * @param deltaMilliseconds The delta in milliseconds since the last tick.
+     */
     private onTick(deltaMilliseconds: number): void {
         // Clamp huge stalls to avoid doing too many fixed steps after a tab sleep
         const clamped = Math.min(
@@ -281,12 +358,16 @@ export class World {
         this.stepFrame(clamped / 1000, alpha);
     }
 
+    /**
+     * Attach a node to the world.
+     * @param node The node to attach.
+     */
     private attachNow(node: Node): void {
         node.world = this;
         this.nodes.set(node.id, node);
 
         // index tags
-        for (const tag of node.tags) this._indexTagAdd(node, tag);
+        for (const tag of node.tags) this[internal_indexTagAdd](node, tag);
 
         // index phase/kind membership based on instance metadata
         const metadata = getTickMetadata(node);
@@ -305,6 +386,10 @@ export class World {
         (node as any).onAddedToWorld?.();
     }
 
+    /**
+     * Detach a node from the world.
+     * @param node The node to detach.
+     */
     private detachNow(node: Node): void {
         // detach children first
         for (const child of Array.from(node.children)) node.removeChild(child);
@@ -319,7 +404,7 @@ export class World {
         }
 
         // unindex tags
-        for (const tag of node.tags) this._indexTagRemove(node, tag);
+        for (const tag of node.tags) this[internal_indexTagRemove](node, tag);
 
         this.nodes.delete(node.id);
         (node as any).onRemovedFromWorld?.();
@@ -328,6 +413,9 @@ export class World {
         this.onNodeRemoved.emit(node);
     }
 
+    /**
+     * Flush pending adds.
+     */
     private flushAdds(): void {
         if (this.pendingAdds.length === 0) return;
         const additions = this.pendingAdds;
@@ -335,6 +423,9 @@ export class World {
         for (const n of additions) this.attachNow(n);
     }
 
+    /**
+     * Flush pending removes.
+     */
     private flushRemoves(): void {
         if (this.pendingRemoves.length === 0) return;
         const removals = this.pendingRemoves;
@@ -342,6 +433,11 @@ export class World {
         for (const n of removals) this.detachNow(n);
     }
 
+    /**
+     * Build the schedule for a given kind and phase.
+     * @param kind The kind of update.
+     * @param phase The phase of update.
+     */
     private buildSchedule(kind: UpdateKind, phase: UpdatePhase): void {
         const list = Array.from(this.kindPhaseMembership[kind][phase]);
         list.sort(
@@ -352,6 +448,11 @@ export class World {
         this.scheduleDirty[kind][phase] = false;
     }
 
+    /**
+     * Run all phases of a kind of update (e.g., fixed or frame).
+     * @param kind The kind of update (e.g., fixed or frame).
+     * @param deltaSeconds The delta in seconds.
+     */
     private runKind(kind: UpdateKind, deltaSeconds: number): void {
         for (const phase of PHASES) {
             if (this.scheduleDirty[kind][phase])

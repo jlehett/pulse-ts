@@ -24,7 +24,7 @@ export {
     withTransform,
     hasTransform,
     getTransform,
-    maybeGetTransform
+    maybeGetTransform,
 } from './capabilities/transform';
 
 // Queries / helpers

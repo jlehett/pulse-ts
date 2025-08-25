@@ -2,6 +2,9 @@ import { Node } from './node';
 import { fixedLate } from '../capabilities/tick';
 import { maybeGetTransform } from '../capabilities/transform';
 
+/**
+ * Node that commits all transforms in the world at the end of the fixed late tick.
+ */
 export class TransformCommitter extends Node {
     @fixedLate({ order: Number.MIN_SAFE_INTEGER })
     commitAllTransforms(_dt: number): void {

@@ -19,6 +19,8 @@ import { Quat } from '../math/quat';
 const SYMBOL_TRANSFORM = Symbol('engine:transform');
 
 export class Transform {
+    //#region Fields
+
     /* Local position (relative to parent). */
     readonly localPosition = new Vec3();
     /* Local rotation (relative to parent). */
@@ -37,6 +39,10 @@ export class Transform {
      * Flag indicating whether the transform data has been modified.
      */
     private dirty = false;
+
+    //#endregion
+
+    //#region Public Methods
 
     /**
      * Mark the Transform data as modified.
@@ -104,6 +110,8 @@ export class Transform {
 
         return { position: pos, rotation: rot, scale: scl };
     }
+
+    //#endregion
 }
 
 /* Class decorator: attach a Transform to each instance. */

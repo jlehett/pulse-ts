@@ -3,10 +3,21 @@ import { nowMilliseconds } from './scheduler';
 
 /** requestAnimationFrame-based scheduler (browser). */
 export class RAFScheduler implements Scheduler {
+    //#region Fields
+
     private requestId: number | null = null;
     private running = false;
     private lastTimestamp = 0;
 
+    //#endregion
+
+    //#region Public Methods
+
+    /**
+     * Start the scheduler.
+     * @param loop The loop function to call.
+     * @param _targetStepMilliseconds The target step milliseconds; not used by this scheduler.
+     */
     start(
         loop: (deltaMilliseconds: number) => void,
         _targetStepMilliseconds: number,
@@ -27,6 +38,9 @@ export class RAFScheduler implements Scheduler {
         this.requestId = requestAnimationFrame(tick);
     }
 
+    /**
+     * Stop the scheduler.
+     */
     stop(): void {
         this.running = false;
         if (
@@ -38,7 +52,13 @@ export class RAFScheduler implements Scheduler {
         this.requestId = null;
     }
 
+    /**
+     * Check if the scheduler is running.
+     * @returns True if the scheduler is running; otherwise, false.
+     */
     isRunning(): boolean {
         return this.running;
     }
+
+    //#endregion
 }
