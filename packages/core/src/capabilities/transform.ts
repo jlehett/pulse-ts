@@ -118,6 +118,7 @@ export class Transform {
 export function withTransform<
     T extends abstract new (...args: any[]) => object,
 >(target: T, context: ClassDecoratorContext<T>) {
+    target.prototype[SYMBOL_TRANSFORM] = new Transform();
     context.addInitializer(function (this: any) {
         if (!(SYMBOL_TRANSFORM in this)) {
             Object.defineProperty(this, SYMBOL_TRANSFORM, {
@@ -129,6 +130,7 @@ export function withTransform<
                 writable: false,
             });
         }
+        console.log('withTransform', this, SYMBOL_TRANSFORM in this);
     });
 }
 
@@ -138,6 +140,7 @@ export function withTransform<
  * @returns True if the object has a `Transform` defined; otherwise, false.
  */
 export function hasTransform(obj: unknown): boolean {
+    console.log('hasTransform', obj, SYMBOL_TRANSFORM in (obj as any));
     return !!obj && typeof obj === 'object' && SYMBOL_TRANSFORM in (obj as any);
 }
 

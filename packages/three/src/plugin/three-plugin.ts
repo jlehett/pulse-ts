@@ -191,6 +191,7 @@ export class ThreePlugin {
         // Decide if we render the node: prefab OR has transform
         const prefab = getPrefab(node);
         const shouldRender = !!prefab || hasTransform(node);
+        console.log('attachIfRenderable', node, shouldRender);
         if (!shouldRender || this.objectMap.has(node)) return;
 
         const object: Object3D = prefab
