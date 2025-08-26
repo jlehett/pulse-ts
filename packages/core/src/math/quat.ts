@@ -1,8 +1,63 @@
+import { Vec3 } from './vec3';
+
 /**
  * Quaternion class.
  */
 export class Quat {
     //#region Public Static Methods
+
+    /**
+     * Multiply two quaternions.
+     * @param a The first quaternion.
+     * @param b The second quaternion.
+     * @param out The quaternion to store the result in. If not provided, a new quaternion is created.
+     * @returns The product of the two quaternions.
+     */
+    static multiply(a: Quat, b: Quat, out = new Quat()): Quat {
+        const ax = a.x,
+            ay = a.y,
+            az = a.z,
+            aw = a.w;
+        const bx = b.x,
+            by = b.y,
+            bz = b.z,
+            bw = b.w;
+        out.x = aw * bx + ax * bw + ay * bz - az * by;
+        out.y = aw * by - ax * bz + ay * bw + az * bx;
+        out.z = aw * bz + ax * by - ay * bx + az * bw;
+        out.w = aw * bw - ax * bx - ay * by - az * bz;
+        return out.normalize();
+    }
+
+    /**
+     * Rotate a vector by a quaternion.
+     * @param q The quaternion.
+     * @param v The vector to rotate.
+     * @param out The vector to store the result in. If not provided, a new vector is created.
+     * @returns The rotated vector.
+     */
+    static rotateVector(q: Quat, v: Vec3, out = new Vec3()): Vec3 {
+        // v' = q * (v,0) * q^{-1}
+        const x = v.x,
+            y = v.y,
+            z = v.z;
+        const qx = q.x,
+            qy = q.y,
+            qz = q.z,
+            qw = q.w;
+
+        // calculate quat * vec
+        const ix = qw * x + qy * z - qz * y;
+        const iy = qw * y + qz * x - qx * z;
+        const iz = qw * z + qx * y - qy * x;
+        const iw = -qx * x - qy * y - qz * z;
+
+        // calculate result * inverse quat
+        out.x = ix * qw + iw * -qx + iy * -qz - iz * -qy;
+        out.y = iy * qw + iw * -qy + iz * -qx - ix * -qz;
+        out.z = iz * qw + iw * -qz + ix * -qy - iy * -qx;
+        return out;
+    }
 
     /**
      * Create a quaternion from Euler angles.

@@ -148,6 +148,12 @@ export class ThreePlugin {
 
         const ctx = this.makeContext();
 
+        // Ensure every node has an Object3D if it should, and parent it correctly
+        for (const n of this.world.nodes.values()) {
+            if (!this.objectMap.get(n)) this.attachIfRenderable(n);
+            this.updateParentAttachment(n);
+        }
+
         // Sync TRS on every object that has Transform
         for (const n of this.world.nodes.values()) {
             const o = this.objectMap.get(n);
@@ -191,7 +197,6 @@ export class ThreePlugin {
         // Decide if we render the node: prefab OR has transform
         const prefab = getPrefab(node);
         const shouldRender = !!prefab || hasTransform(node);
-        console.log('attachIfRenderable', node, shouldRender);
         if (!shouldRender || this.objectMap.has(node)) return;
 
         const object: Object3D = prefab

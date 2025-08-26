@@ -18,6 +18,8 @@ import { Quat } from '../math/quat';
  */
 const SYMBOL_TRANSFORM = Symbol('engine:transform');
 
+export const internal_attachOwner = Symbol('engine:transform:attachOwner');
+
 export class Transform {
     //#region Fields
 
@@ -39,6 +41,9 @@ export class Transform {
      * Flag indicating whether the transform data has been modified.
      */
     private dirty = false;
+
+    /* Backref to owning node (set by @withTransform initializer). */
+    private owner: any | null = null;
 
     //#endregion
 
@@ -111,6 +116,89 @@ export class Transform {
         return { position: pos, rotation: rot, scale: scl };
     }
 
+    /**
+     * Get the world TRS of the transform.
+     * @param alpha The alpha value to use for interpolation.
+     * @returns The world TRS of the transform.
+     */
+    getWorldTRS(alpha = 0): { position: Vec3; rotation: Quat; scale: Vec3 } {
+        // Local at this alpha
+        const {
+            position: lp,
+            rotation: lr,
+            scale: ls,
+        } = alpha > 0
+            ? this.interpolateLocal(alpha)
+            : {
+                  position: this.localPosition,
+                  rotation: this.localRotation,
+                  scale: this.localScale,
+              };
+
+        const outP = lp.clone();
+        const outR = lr.clone();
+        const outS = ls.clone();
+
+        const parent = maybeGetTransform(this.owner?.parent) ?? null;
+        if (!parent) return { position: outP, rotation: outR, scale: outS };
+
+        // Compose with parent's world at same alpha
+        const pw = parent.getWorldTRS(alpha);
+        // worldScale = parentScale * localScale
+        outS.x *= pw.scale.x;
+        outS.y *= pw.scale.y;
+        outS.z *= pw.scale.z;
+        // worldRotation = parentRot * localRot
+        Quat.multiply(pw.rotation, outR, outR);
+        // worldPosition = parentPos + (parentRot * (localPos * parentScale))
+        const scaled = new Vec3(
+            lp.x * pw.scale.x,
+            lp.y * pw.scale.y,
+            lp.z * pw.scale.z,
+        );
+        const rotated = Quat.rotateVector(pw.rotation, scaled);
+        outP.x = pw.position.x + rotated.x;
+        outP.y = pw.position.y + rotated.y;
+        outP.z = pw.position.z + rotated.z;
+
+        return { position: outP, rotation: outR, scale: outS };
+    }
+
+    /**
+     * Get the world position of the transform.
+     * @param alpha The alpha value to use for interpolation.
+     * @returns The world position of the transform.
+     */
+    getWorldPosition(alpha = 0): Vec3 {
+        return this.getWorldTRS(alpha).position;
+    }
+
+    /**
+     * Get the world rotation of the transform.
+     * @param alpha The alpha value to use for interpolation.
+     * @returns The world rotation of the transform.
+     */
+    getWorldRotation(alpha = 0): Quat {
+        return this.getWorldTRS(alpha).rotation;
+    }
+
+    /**
+     * Get the world scale of the transform.
+     * @param alpha The alpha value to use for interpolation.
+     * @returns The world scale of the transform.
+     */
+    getWorldScale(alpha = 0): Vec3 {
+        return this.getWorldTRS(alpha).scale;
+    }
+
+    //#endregion
+
+    //#region Internal Library Methods
+
+    [internal_attachOwner](owner: any) {
+        this.owner = owner;
+    }
+
     //#endregion
 }
 
@@ -118,19 +206,18 @@ export class Transform {
 export function withTransform<
     T extends abstract new (...args: any[]) => object,
 >(target: T, context: ClassDecoratorContext<T>) {
-    target.prototype[SYMBOL_TRANSFORM] = new Transform();
+    // Add an initializer to the class to attach the transform to the instance
     context.addInitializer(function (this: any) {
-        if (!(SYMBOL_TRANSFORM in this)) {
-            Object.defineProperty(this, SYMBOL_TRANSFORM, {
-                value: new Transform(),
-                // We don't want the transform data to be interacted w/ directly outside
-                // of internal library usage
-                enumerable: false,
-                configurable: false,
-                writable: false,
-            });
-        }
-        console.log('withTransform', this, SYMBOL_TRANSFORM in this);
+        const t = new Transform();
+        t[internal_attachOwner](this);
+        Object.defineProperty(this, SYMBOL_TRANSFORM, {
+            value: t,
+            // We don't want the transform data to be interacted w/ directly outside
+            // of internal library usage
+            enumerable: false,
+            configurable: false,
+            writable: false,
+        });
     });
 }
 
@@ -140,7 +227,6 @@ export function withTransform<
  * @returns True if the object has a `Transform` defined; otherwise, false.
  */
 export function hasTransform(obj: unknown): boolean {
-    console.log('hasTransform', obj, SYMBOL_TRANSFORM in (obj as any));
     return !!obj && typeof obj === 'object' && SYMBOL_TRANSFORM in (obj as any);
 }
 
@@ -155,6 +241,7 @@ export function getTransform<T extends object>(obj: T): Transform {
     if (!t) {
         // Lazily attach if the decorator hasn't run yet (or was omitted)
         t = new Transform();
+        t[internal_attachOwner](obj);
         Object.defineProperty(obj, SYMBOL_TRANSFORM, {
             value: t,
             // We don't want the transform data to be interacted w/ directly outside
