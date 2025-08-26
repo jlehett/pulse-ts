@@ -142,17 +142,25 @@ export function hasTransform(obj: unknown): boolean {
 }
 
 /**
- * Get the `Transform` for the given object.
+ * Get the `Transform` for the given object. If the object does not have a `Transform` defined,
+ * it will be lazily attached.
  * @param obj The object to check.
  * @returns The object's `Transform`.
- * @throws {Error} If the object does not have a `Transform` defined.
  */
 export function getTransform<T extends object>(obj: T): Transform {
-    const t = (obj as any)[SYMBOL_TRANSFORM] as Transform | undefined;
-    if (!t)
-        throw new Error(
-            'Object does not have a Transform. Did you forget @withTransform?',
-        );
+    let t = (obj as any)[SYMBOL_TRANSFORM] as Transform | undefined;
+    if (!t) {
+        // Lazily attach if the decorator hasn't run yet (or was omitted)
+        t = new Transform();
+        Object.defineProperty(obj, SYMBOL_TRANSFORM, {
+            value: t,
+            // We don't want the transform data to be interacted w/ directly outside
+            // of internal library usage
+            enumerable: false,
+            configurable: false,
+            writable: false,
+        });
+    }
     return t;
 }
 
