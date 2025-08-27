@@ -1,5 +1,4 @@
 import type { Object3D } from 'three';
-import type { ThreeViewContext } from '../utils/types';
 import { getTransform } from '@pulse-ts/core';
 
 /**
@@ -8,20 +7,9 @@ import { getTransform } from '@pulse-ts/core';
  * @param object The object to apply the transform to.
  * @param ctx The context to use for the transform.
  */
-export function applyLocalTRSToObject3D(
-    node: object,
-    object: Object3D,
-    ctx: ThreeViewContext,
-): void {
+export function applyLocalTRSToObject3D(node: object, object: Object3D): void {
     const t = getTransform(node);
-    const { position, rotation, scale } =
-        ctx.alpha > 0
-            ? t.interpolateLocal(ctx.alpha)
-            : {
-                  position: t.localPosition,
-                  rotation: t.localRotation,
-                  scale: t.localScale,
-              };
+    const { position, rotation, scale } = t.getLocalTRS();
 
     object.position.set(position.x, position.y, position.z);
     object.quaternion.set(rotation.x, rotation.y, rotation.z, rotation.w);

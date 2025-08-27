@@ -98,6 +98,10 @@ export class World {
     private fixedStepMilliseconds: number;
     private maxCatchupMilliseconds: number;
 
+    // Ambient tick context
+    private currentTickKind: UpdateKind | null = null;
+    private currentTickPhase: UpdatePhase | null = null;
+
     // Signals (event bus)
     readonly onNodeAdded = new Signal<Node>();
     readonly onNodeRemoved = new Signal<Node>();
@@ -180,6 +184,32 @@ export class World {
      */
     getInterpolationAlpha(): number {
         return this.lastInterpolationAlpha;
+    }
+
+    /**
+     * Get the ambient kind of update.
+     * @returns The ambient kind of update.
+     */
+    getAmbientKind(): UpdateKind | null {
+        return this.currentTickKind;
+    }
+
+    /**
+     * Get the ambient phase of update.
+     * @returns The ambient phase of update.
+     */
+    getAmbientPhase(): UpdatePhase | null {
+        return this.currentTickPhase;
+    }
+
+    /**
+     * Get the interpolation factor from last tick (0..1). Only frame ticks interpolate; fixed/outside = 0.
+     * @returns The interpolation factor from last tick (0..1).
+     */
+    getAmbientAlpha(): number {
+        return this.currentTickKind === 'frame'
+            ? this.lastInterpolationAlpha
+            : 0;
     }
 
     /**
@@ -454,13 +484,24 @@ export class World {
      * @param deltaSeconds The delta in seconds.
      */
     private runKind(kind: UpdateKind, deltaSeconds: number): void {
+        // mark which kind we're in
+        this.currentTickKind = kind;
+
         for (const phase of PHASES) {
             if (this.scheduleDirty[kind][phase])
                 this.buildSchedule(kind, phase);
             const scheduled = this.schedule[kind][phase];
+
+            // mark which phase we're in
+            this.currentTickPhase = phase;
+
             for (const node of scheduled)
                 callTick(node, kind, phase, deltaSeconds);
         }
+
+        // clear after finishing this kind
+        this.currentTickPhase = null;
+        this.currentTickKind = null;
     }
 
     //#endregion

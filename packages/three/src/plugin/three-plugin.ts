@@ -146,8 +146,6 @@ export class ThreePlugin {
         if (!this.world) return;
         if (this.autoResize) this.resizeToCanvas();
 
-        const ctx = this.makeContext();
-
         // Ensure every node has an Object3D if it should, and parent it correctly
         for (const n of this.world.nodes.values()) {
             if (!this.objectMap.get(n)) this.attachIfRenderable(n);
@@ -159,7 +157,7 @@ export class ThreePlugin {
             const o = this.objectMap.get(n);
             if (!o) continue;
             try {
-                applyLocalTRSToObject3D(n, o, ctx);
+                applyLocalTRSToObject3D(n, o);
             } catch {
                 /* ignore nodes without transform */
             }
@@ -183,7 +181,6 @@ export class ThreePlugin {
             scene: this.scene,
             renderer: this.renderer,
             activeCamera: this.camera,
-            alpha: world.getInterpolationAlpha?.() ?? 0,
         };
     }
 
@@ -210,7 +207,7 @@ export class ThreePlugin {
 
         // Initial sync of TRS if node has transform
         try {
-            applyLocalTRSToObject3D(node, object, this.makeContext());
+            applyLocalTRSToObject3D(node, object);
         } catch {
             // okay if no transform
         }

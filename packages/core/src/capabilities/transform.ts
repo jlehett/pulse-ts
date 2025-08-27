@@ -24,18 +24,18 @@ export class Transform {
     //#region Fields
 
     /* Local position (relative to parent). */
-    readonly localPosition = new Vec3();
+    private readonly localPosition = new Vec3();
     /* Local rotation (relative to parent). */
-    readonly localRotation = new Quat();
+    private readonly localRotation = new Quat();
     /* Local scale (relative to parent). */
-    readonly localScale = new Vec3(1, 1, 1);
+    private readonly localScale = new Vec3(1, 1, 1);
 
     /* Previous local position (relative to parent); for interpolation. */
-    readonly previousLocalPosition = new Vec3();
+    private readonly previousLocalPosition = new Vec3();
     /* Previous local rotation (relative to parent); for interpolation. */
-    readonly previousLocalRotation = new Quat();
+    private readonly previousLocalRotation = new Quat();
     /* Previous local scale (relative to parent); for interpolation. */
-    readonly previousLocalScale = new Vec3(1, 1, 1);
+    private readonly previousLocalScale = new Vec3(1, 1, 1);
 
     /**
      * Flag indicating whether the transform data has been modified.
@@ -100,35 +100,25 @@ export class Transform {
         return this;
     }
 
-    /* Interpolate local TRS at alpha in [0,1]. */
-    interpolateLocal(
-        alpha: number,
-        out?: { position?: Vec3; rotation?: Quat; scale?: Vec3 },
-    ) {
-        const pos = out?.position ?? new Vec3();
-        const rot = out?.rotation ?? new Quat();
-        const scl = out?.scale ?? new Vec3();
-
-        Vec3.lerp(this.previousLocalPosition, this.localPosition, alpha, pos);
-        Quat.slerp(this.previousLocalRotation, this.localRotation, alpha, rot);
-        Vec3.lerp(this.previousLocalScale, this.localScale, alpha, scl);
-
-        return { position: pos, rotation: rot, scale: scl };
-    }
-
     /**
      * Get the world TRS of the transform.
-     * @param alpha The alpha value to use for interpolation.
+     * @param alpha The alpha value to use for interpolation; if not provided, the ambient alpha is used.
      * @returns The world TRS of the transform.
      */
-    getWorldTRS(alpha = 0): { position: Vec3; rotation: Quat; scale: Vec3 } {
+    getWorldTRS(alpha?: number): {
+        position: Vec3;
+        rotation: Quat;
+        scale: Vec3;
+    } {
+        const a = this.resolveAlpha(alpha);
+
         // Local at this alpha
         const {
             position: lp,
             rotation: lr,
             scale: ls,
-        } = alpha > 0
-            ? this.interpolateLocal(alpha)
+        } = a > 0
+            ? this.interpolateLocal(a)
             : {
                   position: this.localPosition,
                   rotation: this.localRotation,
@@ -143,7 +133,7 @@ export class Transform {
         if (!parent) return { position: outP, rotation: outR, scale: outS };
 
         // Compose with parent's world at same alpha
-        const pw = parent.getWorldTRS(alpha);
+        const pw = parent.getWorldTRS(a);
         // worldScale = parentScale * localScale
         outS.x *= pw.scale.x;
         outS.y *= pw.scale.y;
@@ -191,12 +181,91 @@ export class Transform {
         return this.getWorldTRS(alpha).scale;
     }
 
+    /**
+     * Get the local TRS of the transform.
+     * @param alpha The alpha value to use for interpolation; if not provided, the ambient alpha is used.
+     * @returns The local TRS of the transform.
+     */
+    getLocalTRS(alpha?: number): {
+        position: Vec3;
+        rotation: Quat;
+        scale: Vec3;
+    } {
+        const a = this.resolveAlpha(alpha);
+
+        return a > 0
+            ? this.interpolateLocal(a)
+            : {
+                  position: this.localPosition,
+                  rotation: this.localRotation,
+                  scale: this.localScale,
+              };
+    }
+
+    /**
+     * Get the local position of the transform.
+     * @param alpha The alpha value to use for interpolation; if not provided, the ambient alpha is used.
+     * @returns The local position of the transform.
+     */
+    getLocalPosition(alpha?: number): Vec3 {
+        return this.getLocalTRS(alpha).position;
+    }
+
+    /**
+     * Get the local rotation of the transform.
+     * @param alpha The alpha value to use for interpolation; if not provided, the ambient alpha is used.
+     * @returns The local rotation of the transform.
+     */
+    getLocalRotation(alpha?: number): Quat {
+        return this.getLocalTRS(alpha).rotation;
+    }
+
+    /**
+     * Get the local scale of the transform.
+     * @param alpha The alpha value to use for interpolation; if not provided, the ambient alpha is used.
+     * @returns The local scale of the transform.
+     */
+    getLocalScale(alpha?: number): Vec3 {
+        return this.getLocalTRS(alpha).scale;
+    }
+
     //#endregion
 
     //#region Internal Library Methods
 
     [internal_attachOwner](owner: any) {
         this.owner = owner;
+    }
+
+    //#endregion
+
+    //#region Private Methods
+
+    /**
+     * Resolve the alpha value to use for interpolation.
+     * @param alpha The alpha value to use for interpolation.
+     * @returns The alpha value to use for interpolation.
+     */
+    private resolveAlpha(alpha?: number): number {
+        if (alpha != null) return alpha;
+        const world = this.owner?.world;
+        return world ? world.getAmbientAlpha() : 0;
+    }
+
+    /* Interpolate local TRS at alpha in [0,1]. */
+    private interpolateLocal(
+        alpha: number,
+        out?: { position?: Vec3; rotation?: Quat; scale?: Vec3 },
+    ) {
+        const pos = out?.position ?? new Vec3();
+        const rot = out?.rotation ?? new Quat();
+        const scl = out?.scale ?? new Vec3();
+
+        Vec3.lerp(this.previousLocalPosition, this.localPosition, alpha, pos);
+        Quat.slerp(this.previousLocalRotation, this.localRotation, alpha, rot);
+        Vec3.lerp(this.previousLocalScale, this.localScale, alpha, scl);
+
+        return { position: pos, rotation: rot, scale: scl };
     }
 
     //#endregion

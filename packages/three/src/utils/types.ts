@@ -9,5 +9,4 @@ export interface ThreeViewContext {
     scene: Scene;
     renderer: WebGLRenderer;
     activeCamera: Camera;
-    alpha: number;
 }
