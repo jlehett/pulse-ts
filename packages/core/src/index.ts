@@ -1,38 +1,29 @@
-// Public API surface
-
-// Core
-export { World } from './core/world';
-export { Node } from './core/node';
-export { Group } from './core/group';
-export { Signal } from './core/signals';
-export { TransformCommitter } from './core/transform-committer';
-
-// Capabilities & decorators
-export {
-    UpdatePhase,
-    type UpdateKind,
-    tickEarly,
-    tickUpdate,
-    tickLate,
-    fixedEarly,
-    fixedUpdate,
-    fixedLate,
-} from './capabilities/tick';
-
-export {
-    Transform,
-    withTransform,
-    hasTransform,
-    getTransform,
-    maybeGetTransform,
-} from './capabilities/transform';
-
-// Queries / helpers
-export { groupByTag, groupByUpdate, groupWithTransform } from './core/queries';
-
-// Scheduler interface (only if a consumer wants to bring their own)
-export { type Scheduler, defaultScheduler } from './scheduler';
-
-// Math
+export * from './types';
 export { Vec3 } from './math/vec3';
 export { Quat } from './math/quat';
+export {
+    Transform,
+    attachTransform,
+    maybeGetTransform,
+    getTransform,
+} from './transform';
+export { Node } from './node';
+export { World, __worldRegisterTick } from './world';
+
+// FC API
+export type { FC } from './fc/runtime';
+export { mountFC as mount, __fcCurrent } from './fc/runtime';
+export {
+    useWorld,
+    useNode,
+    useInit,
+    useDestroy,
+    useTransform,
+    useFixedEarly,
+    useFixedUpdate,
+    useFixedLate,
+    useFrameEarly,
+    useFrameUpdate,
+    useFrameLate,
+    useChild,
+} from './fc/hooks';

@@ -7,7 +7,7 @@
             "outputs": ["{projectRoot}/dist"]
         },
         "test": {
-            "inputs": ["default", "^prod"]
+            "inputs": ["default", "^default"]
         },
         "lint": {
             "inputs": ["default"]

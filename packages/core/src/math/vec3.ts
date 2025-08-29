@@ -1,41 +1,22 @@
 /**
- * 3-dimensional vector class.
+ * A 3-dimensional vector.
  */
 export class Vec3 {
-    //#region Public Static Methods
-
-    /**
-     * Linear interpolation between two vectors.
-     * @param a The first vector.
-     * @param b The second vector.
-     * @param t The interpolation factor (0..1).
-     * @param out The vector to store the result in. If not provided, a new vector is created.
-     * @returns The interpolated vector.
-     */
-    static lerp(a: Vec3, b: Vec3, t: number, out = new Vec3()): Vec3 {
-        const s = 1 - t;
-        out.x = a.x * s + b.x * t;
-        out.y = a.y * s + b.y * t;
-        out.z = a.z * s + b.z * t;
-        return out;
-    }
-
-    //#endregion
-
     constructor(
         public x = 0,
         public y = 0,
         public z = 0,
     ) {}
 
-    //#region Public Methods
+    /**
+     * Returns a clone of the vector.
+     */
+    clone(): Vec3 {
+        return new Vec3(this.x, this.y, this.z);
+    }
 
     /**
-     * Set the components of the vector.
-     * @param x The x component.
-     * @param y The y component.
-     * @param z The z component.
-     * @returns The vector.
+     * Sets the vector to the given values.
      */
     set(x: number, y: number, z: number): this {
         this.x = x;
@@ -45,9 +26,18 @@ export class Vec3 {
     }
 
     /**
-     * Copy the components of another vector.
-     * @param v The vector to copy.
-     * @returns The vector.
+     * Normalizes the vector.
+     */
+    normalize(): this {
+        const l = Math.hypot(this.x, this.y, this.z) || 1;
+        this.x /= l;
+        this.y /= l;
+        this.z /= l;
+        return this;
+    }
+
+    /**
+     * Copies the values of the given vector.
      */
     copy(v: Vec3): this {
         this.x = v.x;
@@ -57,57 +47,33 @@ export class Vec3 {
     }
 
     /**
-     * Create a new vector with the same components.
-     * @returns The cloned vector.
+     * Adds a scaled vector to the vector.
      */
-    clone(): Vec3 {
-        return new Vec3(this.x, this.y, this.z);
-    }
-
-    /**
-     * Add another vector to this vector.
-     * @param v The vector to add.
-     * @returns The vector.
-     */
-    add(v: Vec3): this {
-        this.x += v.x;
-        this.y += v.y;
-        this.z += v.z;
+    addScaled(v: Vec3, s: number): this {
+        this.x += v.x * s;
+        this.y += v.y * s;
+        this.z += v.z * s;
         return this;
     }
 
     /**
-     * Subtract another vector from this vector.
-     * @param v The vector to subtract.
-     * @returns The vector.
+     * Multiplies the vector by the given vector.
      */
-    sub(v: Vec3): this {
-        this.x -= v.x;
-        this.y -= v.y;
-        this.z -= v.z;
+    multiply(v: Vec3): this {
+        this.x *= v.x;
+        this.y *= v.y;
+        this.z *= v.z;
         return this;
     }
 
     /**
-     * Scale the vector by a scalar.
-     * @param s The scalar to scale by.
-     * @returns The vector.
+     * Linearly interpolates between two vectors.
      */
-    scale(s: number): this {
-        this.x *= s;
-        this.y *= s;
-        this.z *= s;
-        return this;
+    static lerp(a: Vec3, b: Vec3, t: number): Vec3 {
+        return new Vec3(
+            a.x + (b.x - a.x) * t,
+            a.y + (b.y - a.y) * t,
+            a.z + (b.z - a.z) * t,
+        );
     }
-
-    /**
-     * Check if the vector is equal to another vector.
-     * @param v The vector to compare.
-     * @returns True if the vectors are equal; otherwise, false.
-     */
-    equals(v: Vec3): boolean {
-        return this.x === v.x && this.y === v.y && this.z === v.z;
-    }
-
-    //#endregion
 }
