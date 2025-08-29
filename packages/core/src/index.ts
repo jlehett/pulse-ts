@@ -6,9 +6,16 @@ export {
     attachTransform,
     maybeGetTransform,
     getTransform,
+    type TRS,
+    createTRS,
 } from './transform';
 export { Node } from './node';
-export { World, __worldRegisterTick } from './world';
+export {
+    World,
+    __worldRegisterTick,
+    __worldAddTransform,
+    __worldRemoveTransform,
+} from './world';
 
 // FC API
 export type { FC } from './fc/runtime';

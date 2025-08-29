@@ -8,9 +8,11 @@ import type {
     TickFn,
     TickRegistration,
 } from './types';
-import { maybeGetTransform } from './transform';
+import { maybeGetTransform, type Transform } from './transform';
 
 export const __worldRegisterTick = Symbol('pulse:world:registerTick');
+export const __worldAddTransform = Symbol('pulse:world:addTransform');
+export const __worldRemoveTransform = Symbol('pulse:world:removeTransform');
 
 /**
  * Options for the World class.
@@ -46,8 +48,6 @@ export class World {
     private maxFrameDtMs: number;
 
     private fixedStep = 1000 / 60;
-    private rafId: number | null = null;
-    private lastTime = 0;
     private accumulator = 0;
 
     private currentTickKind: UpdateKind | null = null;
@@ -63,8 +63,8 @@ export class World {
         frame: { early: [], update: [], late: [] },
     };
 
-    // optional service map (e.g., for Three plugin)
-    private services = new Map<symbol, any>();
+    // transforms present in this world
+    private transforms = new Set<Transform>();
 
     constructor(opts: WorldOptions = {}) {
         this.fixedStep = opts.fixedStepMs ?? 1000 / 60;
@@ -76,6 +76,12 @@ export class World {
             (typeof window !== 'undefined' && 'requestAnimationFrame' in window
                 ? new RafScheduler()
                 : new TimeoutScheduler(60));
+
+        // expose transform registry methods via symbols
+        (this as any)[__worldAddTransform] = (t: Transform) =>
+            this.transforms.add(t);
+        (this as any)[__worldRemoveTransform] = (t: Transform) =>
+            this.transforms.delete(t);
     }
 
     /**
@@ -97,12 +103,20 @@ export class World {
     add<T extends Node>(node: T): T {
         if (node.world && node.world !== this)
             throw new Error('Node already belongs to another World.');
-        // already added to this world
         if (node.world === this) return node;
+
         node.world = this;
         this.nodes.add(node);
+
+        // register an existing transform (if any)
+        const t = maybeGetTransform(node);
+        if (t) this.transforms.add(t);
+
         node.onInit?.();
-        for (const c of node.children) this.add(c); // ensure children get attached too
+
+        // ensure children are attached as well
+        for (const c of node.children) this.add(c);
+
         return node;
     }
 
@@ -113,7 +127,11 @@ export class World {
     remove(node: Node): void {
         if (!this.nodes.has(node)) return;
         this.nodes.delete(node);
+        // unregister transform if present
+        const t = maybeGetTransform(node);
+        if (t) this.transforms.delete(t);
         node.world = null;
+        // NOTE: We intentionally do not recurse; removing a parent does not auto-remove children.
     }
 
     /**
@@ -150,14 +168,14 @@ export class World {
             this.accumulator >= this.fixedStep &&
             steps < this.maxFixedStepsPerFrame
         ) {
-            // snapshot previous transforms before fixed update
-            for (const n of this.nodes) {
-                const t = maybeGetTransform(n);
-                if (t) t.snapshotPrevious();
-            }
-            this.runPhase('fixed', 'early', this.fixedStep / 1000);
-            this.runPhase('fixed', 'update', this.fixedStep / 1000);
-            this.runPhase('fixed', 'late', this.fixedStep / 1000);
+            // snapshot only nodes that actually have transforms
+            for (const t of this.transforms) t.snapshotPrevious();
+
+            const dt = this.fixedStep / 1000;
+            this.runPhase('fixed', 'early', dt);
+            this.runPhase('fixed', 'update', dt);
+            this.runPhase('fixed', 'late', dt);
+
             this.accumulator -= this.fixedStep;
             steps++;
         }
@@ -168,9 +186,10 @@ export class World {
         this.lastAlpha = this.accumulator / this.fixedStep;
 
         // frame phases
-        this.runPhase('frame', 'early', dtMs / 1000);
-        this.runPhase('frame', 'update', dtMs / 1000);
-        this.runPhase('frame', 'late', dtMs / 1000);
+        const dt = dtMs / 1000;
+        this.runPhase('frame', 'early', dt);
+        this.runPhase('frame', 'update', dt);
+        this.runPhase('frame', 'late', dt);
     }
 
     /**
@@ -220,7 +239,9 @@ export class World {
      * @param service The service.
      */
     setService<T>(key: symbol, service: T) {
-        this.services.set(key, service);
+        // biome: we allow undefined to remove
+        (this as any)._services ??= new Map<symbol, any>();
+        (this as any)._services.set(key, service);
     }
 
     /**
@@ -229,7 +250,7 @@ export class World {
      * @returns The service.
      */
     getService<T>(key: symbol): T | undefined {
-        return this.services.get(key);
+        return (this as any)._services?.get(key);
     }
 
     /**
@@ -241,17 +262,35 @@ export class World {
     private runPhase(kind: UpdateKind, phase: UpdatePhase, dt: number) {
         this.currentTickKind = kind;
         this.currentTickPhase = phase;
+
         const regs = this.schedule[kind][phase];
-        // run in-place; inactive regs are skipped
+        let inactiveSeen = 0;
+
         for (let i = 0; i < regs.length; i++) {
             const r = regs[i];
-            if (!r.active || !this.nodes.has(r.node)) continue;
+            if (!r.active || !this.nodes.has(r.node)) {
+                inactiveSeen++;
+                continue;
+            }
             try {
                 r.fn(dt);
             } catch (e) {
                 console.error(e);
             }
         }
+
+        // opportunistic compaction if the list has a bunch of inactive entries
+        if (
+            inactiveSeen &&
+            regs.length >= 64 &&
+            inactiveSeen / regs.length > 0.25
+        ) {
+            const compacted = regs.filter(
+                (r) => r.active && this.nodes.has(r.node),
+            );
+            this.schedule[kind][phase] = compacted;
+        }
+
         this.currentTickPhase = null;
         this.currentTickKind = null;
     }

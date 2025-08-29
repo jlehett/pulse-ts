@@ -1,11 +1,31 @@
 import { Vec3 } from './math/vec3';
 import { Quat } from './math/quat';
 import type { Node } from './node';
+import { __worldAddTransform } from './world';
 
 const SYM = Symbol('pulse:transform');
-
 const internal_owner = Symbol('pulse:transform:owner');
 const internal_dirty = Symbol('pulse:transform:dirty');
+
+/**
+ * Reusable container for position/rotation/scale triples.
+ */
+export interface TRS {
+    position: Vec3;
+    rotation: Quat;
+    scale: Vec3;
+}
+
+/**
+ * Creates a new TRS.
+ */
+export function createTRS(): TRS {
+    return {
+        position: new Vec3(),
+        rotation: new Quat(),
+        scale: new Vec3(1, 1, 1),
+    };
+}
 
 /**
  * Creates a proxy for a Vec3 that marks the transform as dirty when the vector is modified.
@@ -53,6 +73,10 @@ export class Transform {
     readonly localScale: Vec3;
     readonly previousLocalScale: Vec3;
 
+    // allocation-free scratch
+    private _scratchLocal = createTRS();
+    private _scratchParentWorld = createTRS();
+
     constructor() {
         this.localPosition = makeDirtyVec3(this, new Vec3());
         this.previousLocalPosition = new Vec3();
@@ -69,6 +93,8 @@ export class Transform {
         this.previousLocalPosition.copy(this.localPosition);
         this.previousLocalRotation.copy(this.localRotation);
         this.previousLocalScale.copy(this.localScale);
+        // we just committed current->previous; clear dirty
+        this[internal_dirty] = false;
     }
 
     /**
@@ -98,51 +124,76 @@ export class Transform {
 
     /**
      * Gets the local position, rotation, and scale.
+     * @param out The output TRS. If not provided, a new TRS will be created.
      * @param alpha The alpha value.
      * @returns The local position, rotation, and scale.
      */
-    getLocalTRS(alpha?: number) {
+    getLocalTRS(out?: TRS, alpha?: number) {
         const w = this[internal_owner].world;
         const a = alpha ?? (w ? w.getAmbientAlpha() : 0);
-        const local = this.interpolateLocal(a);
+        const o = out ?? createTRS();
 
-        let pos = local.position.clone();
-        let rot = local.rotation.clone();
-        let scale = local.scale.clone();
-
-        return { position: pos, rotation: rot, scale };
+        if (a > 0) {
+            Vec3.lerpInto(
+                this.previousLocalPosition,
+                this.localPosition,
+                a,
+                o.position,
+            );
+            Quat.slerpInto(
+                this.previousLocalRotation,
+                this.localRotation,
+                a,
+                o.rotation,
+            );
+            Vec3.lerpInto(this.previousLocalScale, this.localScale, a, o.scale);
+        } else {
+            o.position.copy(this.localPosition);
+            o.rotation.copy(this.localRotation);
+            o.scale.copy(this.localScale);
+        }
+        return o;
     }
 
     /**
      * Gets the world position, rotation, and scale.
+     * @param out The output TRS. If not provided, a new TRS will be created.
      * @param alpha The alpha value.
      * @returns The world position, rotation, and scale.
      */
-    getWorldTRS(alpha?: number) {
+    getWorldTRS(out?: TRS, alpha?: number) {
         const w = this[internal_owner].world;
         const a = alpha ?? (w ? w.getAmbientAlpha() : 0);
-        const local = this.interpolateLocal(a);
 
-        let pos = local.position.clone();
-        let rot = local.rotation.clone();
-        let scale = local.scale.clone();
+        // start with local
+        const local = this.getLocalTRS(this._scratchLocal, a);
+        const o = out ?? createTRS();
+        o.position.copy(local.position);
+        o.rotation.copy(local.rotation);
+        o.scale.copy(local.scale);
 
         const parent = this[internal_owner].parent;
-        if (!parent) return { position: pos, rotation: rot, scale };
+        if (!parent) return o;
 
         const pt = maybeGetTransform(parent);
-        if (!pt) return { position: pos, rotation: rot, scale };
+        if (!pt) return o;
 
-        const pw = pt.getWorldTRS(a);
+        // compose with parent world
+        const pw = pt.getWorldTRS(this._scratchParentWorld, a);
+
         // worldScale = parentScale * localScale
-        scale.multiply(pw.scale);
-        // worldRotation = parentRot * localRot
-        rot = Quat.multiply(pw.rotation, rot);
-        // worldPosition = parentPos + (parentRot * (localPos * parentScale))
-        const scaled = local.position.clone().multiply(pw.scale);
-        const r = Quat.rotateVector(pw.rotation, scaled);
-        pos.set(pw.position.x + r.x, pw.position.y + r.y, pw.position.z + r.z);
-        return { position: pos, rotation: rot, scale };
+        o.scale.multiply(pw.scale);
+        // worldRotation = parentRot * localRot (normalize inside)
+        Quat.multiply(pw.rotation, o.rotation, o.rotation);
+        // worldPosition = parentPos + rotate(parentRot, localPos * parentScale)
+        o.position.multiply(pw.scale);
+        Quat.rotateVector(pw.rotation, o.position, o.position);
+        o.position.set(
+            pw.position.x + o.position.x,
+            pw.position.y + o.position.y,
+            pw.position.z + o.position.z,
+        );
+        return o;
     }
 
     /**
@@ -165,36 +216,6 @@ export class Transform {
     get worldScale() {
         return this.getWorldTRS().scale;
     }
-
-    /**
-     * Interpolates the local position, rotation, and scale.
-     * @param alpha The alpha value.
-     * @returns The interpolated position, rotation, and scale.
-     */
-    private interpolateLocal(alpha: number) {
-        return {
-            position:
-                alpha > 0
-                    ? Vec3.lerp(
-                          this.previousLocalPosition,
-                          this.localPosition,
-                          alpha,
-                      )
-                    : this.localPosition,
-            rotation:
-                alpha > 0
-                    ? Quat.slerp(
-                          this.previousLocalRotation,
-                          this.localRotation,
-                          alpha,
-                      )
-                    : this.localRotation,
-            scale:
-                alpha > 0
-                    ? Vec3.lerp(this.previousLocalScale, this.localScale, alpha)
-                    : this.localScale,
-        };
-    }
 }
 
 /**
@@ -206,7 +227,11 @@ export function attachTransform(node: Node): Transform {
     if ((node as any)[SYM]) return (node as any)[SYM];
     const t = new Transform();
     Object.defineProperty(node, SYM, { value: t, enumerable: false });
-    t[internal_owner] = node;
+    (t as any)[internal_owner] = node;
+    // if already in a world, register this transform for snapshots
+    if (node.world && (node.world as any)[__worldAddTransform]) {
+        (node.world as any)[__worldAddTransform](t);
+    }
     return t;
 }
 

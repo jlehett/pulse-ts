@@ -76,4 +76,14 @@ export class Vec3 {
             a.z + (b.z - a.z) * t,
         );
     }
+
+    /**
+     * Linearly interpolates between two vectors and stores the result in the given output vector.
+     */
+    static lerpInto(a: Vec3, b: Vec3, t: number, out: Vec3): Vec3 {
+        out.x = a.x + (b.x - a.x) * t;
+        out.y = a.y + (b.y - a.y) * t;
+        out.z = a.z + (b.z - a.z) * t;
+        return out;
+    }
 }

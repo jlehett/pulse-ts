@@ -1,10 +1,16 @@
 import * as THREE from 'three';
 import type { World } from '@pulse-ts/core';
-import { maybeGetTransform, Node, __worldRegisterTick } from '@pulse-ts/core';
+import {
+    maybeGetTransform,
+    Node,
+    __worldRegisterTick,
+    createTRS,
+    type TRS,
+} from '@pulse-ts/core';
 
 export const THREE_SERVICE = Symbol('pulse:three');
 
-type RootRecord = { root: THREE.Object3D };
+type RootRecord = { root: THREE.Object3D; trs: TRS };
 
 export interface ThreePluginOptions {
     canvas: HTMLCanvasElement;
@@ -20,8 +26,8 @@ export class ThreePlugin {
 
     private world: World | null = null;
     private renderDriver: { dispose(): void } | null = null;
-
     private roots = new Map<object, RootRecord>();
+    private resizeObs: ResizeObserver | null = null;
 
     constructor(opts: ThreePluginOptions) {
         this.options = {
@@ -29,16 +35,24 @@ export class ThreePlugin {
             autoCommitTransforms: true,
             ...opts,
         };
+
         this.renderer = new THREE.WebGLRenderer({
             canvas: opts.canvas,
             antialias: true,
         });
-        this.renderer.setPixelRatio(devicePixelRatio);
+        if (typeof devicePixelRatio === 'number') {
+            this.renderer.setPixelRatio(devicePixelRatio);
+        }
 
         this.camera = new THREE.PerspectiveCamera(75, 1, 0.1, 10000);
         this.scene.background = new THREE.Color(this.options.clearColor);
 
         this.resizeToCanvas();
+        // observe size changes without per-frame reads
+        if ('ResizeObserver' in window) {
+            this.resizeObs = new ResizeObserver(() => this.resizeToCanvas());
+            this.resizeObs.observe(this.renderer.domElement);
+        }
     }
 
     attach(world: World) {
@@ -71,16 +85,20 @@ export class ThreePlugin {
         this.renderDriver = null;
         this.world.setService(THREE_SERVICE, undefined as any);
         this.world = null;
+
         // clean scene/roots
         for (const { root } of this.roots.values()) this.scene.remove(root);
         this.roots.clear();
+
+        this.resizeObs?.disconnect();
+        this.resizeObs = null;
     }
 
     private resizeToCanvas() {
         const c = this.renderer.domElement;
         const w = c.clientWidth | 0,
             h = c.clientHeight | 0;
-        if (c.width !== w || c.height !== h) {
+        if (w > 0 && h > 0 && (c.width !== w || c.height !== h)) {
             this.renderer.setSize(w, h, false);
             this.camera.aspect = w / (h || 1);
             this.camera.updateProjectionMatrix();
@@ -91,8 +109,8 @@ export class ThreePlugin {
         let rec = this.roots.get(node);
         if (!rec) {
             const group = new THREE.Group();
-            this.roots.set(node, { root: group });
-            rec = this.roots.get(node)!;
+            rec = { root: group, trs: createTRS() };
+            this.roots.set(node, rec);
         }
         // ensure parent root exists and re-parent immediately
         const parent = (node as any).parent;
@@ -126,15 +144,24 @@ export class ThreePlugin {
         for (const [node, rec] of this.roots) {
             const t = maybeGetTransform(node as any);
             if (!t) continue;
-            const { position, rotation, scale } = t.getLocalTRS();
-            rec.root.position.set(position.x, position.y, position.z);
-            rec.root.quaternion.set(
-                rotation.x,
-                rotation.y,
-                rotation.z,
-                rotation.w,
+            // write interpolated *local* TRS into our reusable container
+            t.getLocalTRS(rec.trs);
+            rec.root.position.set(
+                rec.trs.position.x,
+                rec.trs.position.y,
+                rec.trs.position.z,
             );
-            rec.root.scale.set(scale.x, scale.y, scale.z);
+            rec.root.quaternion.set(
+                rec.trs.rotation.x,
+                rec.trs.rotation.y,
+                rec.trs.rotation.z,
+                rec.trs.rotation.w,
+            );
+            rec.root.scale.set(
+                rec.trs.scale.x,
+                rec.trs.scale.y,
+                rec.trs.scale.z,
+            );
         }
     }
 
@@ -149,10 +176,12 @@ export class ThreePlugin {
 
     render(): void {
         if (!this.world) return;
-        this.resizeToCanvas();
-        // heal parenting and sync transforms
+        // parenting changes can happen outside Three; keep it consistent
         this.updateParenting();
-        this.syncTRS();
+
+        if (this.options.autoCommitTransforms) {
+            this.syncTRS();
+        }
         this.renderer.render(this.scene, this.camera);
     }
 }

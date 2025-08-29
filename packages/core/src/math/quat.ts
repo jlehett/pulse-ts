@@ -122,4 +122,38 @@ export class Quat {
             a.w * s1 + by.w * s2,
         );
     }
+
+    /**
+     * Spherically interpolates between two quaternions and stores the result in the given output quaternion.
+     */
+    static slerpInto(a: Quat, b: Quat, t: number, out: Quat): Quat {
+        let cos = a.x * b.x + a.y * b.y + a.z * b.z + a.w * b.w;
+        let bx = b.x,
+            by = b.y,
+            bz = b.z,
+            bw = b.w;
+        if (cos < 0) {
+            cos = -cos;
+            bx = -bx;
+            by = -by;
+            bz = -bz;
+            bw = -bw;
+        }
+        if (1 - cos < 1e-6) {
+            out.x = a.x + (bx - a.x) * t;
+            out.y = a.y + (by - a.y) * t;
+            out.z = a.z + (bz - a.z) * t;
+            out.w = a.w + (bw - a.w) * t;
+            return out.normalize();
+        }
+        const sin = Math.sqrt(1 - cos * cos);
+        const ang = Math.atan2(sin, cos);
+        const s1 = Math.sin((1 - t) * ang) / sin;
+        const s2 = Math.sin(t * ang) / sin;
+        out.x = a.x * s1 + bx * s2;
+        out.y = a.y * s1 + by * s2;
+        out.z = a.z * s1 + bz * s2;
+        out.w = a.w * s1 + bw * s2;
+        return out;
+    }
 }
