@@ -1,12 +1,12 @@
 import { Vec3 } from './math/vec3';
 import { Quat } from './math/quat';
 import type { Node } from './node';
+import { kTransformOwner, kTransformDirty } from './keys';
 import {
-    kWorldAddTransform,
-    kTransformOwner,
-    kTransformDirty,
-    kTransform,
-} from './keys';
+    createComponentToken,
+    getComponent,
+    ensureComponent,
+} from './components/registry';
 
 /**
  * Reusable container for position/rotation/scale triples.
@@ -318,14 +318,10 @@ export class Transform {
  * @returns The transform.
  */
 export function attachTransform(node: Node): Transform {
-    if ((node as any)[kTransform]) return (node as any)[kTransform];
-    const t = new Transform();
-    Object.defineProperty(node, kTransform, { value: t, enumerable: false });
+    const t = ensureComponent(node, TRANSFORM_TOKEN, () => new Transform());
     (t as Transform)[kTransformOwner] = node;
-    // if already in a world, register this transform for snapshots
-    if (node.world && (node.world as any)[kWorldAddTransform]) {
-        (node.world as any)[kWorldAddTransform](t);
-    }
+    if (node.world && (node.world as any).registerTransform)
+        (node.world as any).registerTransform(t);
     return t;
 }
 
@@ -335,7 +331,7 @@ export function attachTransform(node: Node): Transform {
  * @returns The transform, or undefined if no transform is attached.
  */
 export function maybeGetTransform(node: Node): Transform | undefined {
-    return (node as any)[kTransform] as Transform | undefined;
+    return getComponent(node, TRANSFORM_TOKEN);
 }
 
 /**
@@ -346,3 +342,7 @@ export function maybeGetTransform(node: Node): Transform | undefined {
 export function getTransform(node: Node): Transform {
     return attachTransform(node);
 }
+
+const TRANSFORM_TOKEN = createComponentToken<Transform>(
+    'pulse:component:transform',
+);

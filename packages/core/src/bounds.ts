@@ -2,8 +2,12 @@ import { Vec3 } from './math/vec3';
 import { Quat } from './math/quat';
 import type { Node } from './node';
 import { createTRS, type TRS, attachTransform } from './transform';
-import { kBounds, kBoundsOwner, kWorldAddBounds } from './keys';
-import { World } from './world';
+import { kBoundsOwner } from './keys';
+import {
+    createComponentToken,
+    ensureComponent,
+    getComponent,
+} from './components/registry';
 
 export interface AABB {
     min: Vec3;
@@ -148,16 +152,9 @@ export class Bounds {
  * @returns The bounds.
  */
 export function attachBounds(node: Node): Bounds {
-    if ((node as any)[kBounds]) return (node as any)[kBounds];
-    const b = new Bounds();
-    Object.defineProperty(node, kBounds, { value: b, enumerable: false });
+    const b = ensureComponent(node, BOUNDS_TOKEN, () => new Bounds());
     (b as any)[kBoundsOwner] = node;
-    if (node.world && (node.world as any)[kWorldAddBounds]) {
-        (node.world as any)[kWorldAddBounds](b);
-    } else {
-        // also try explicit method if available
-        (node.world as World)?.registerBounds?.(b);
-    }
+    (node.world as any)?.registerBounds?.(b);
     return b;
 }
 
@@ -167,5 +164,7 @@ export function attachBounds(node: Node): Bounds {
  * @returns The bounds, or undefined if no bounds is attached.
  */
 export function maybeGetBounds(node: Node): Bounds | undefined {
-    return (node as any)[kBounds] as Bounds | undefined;
+    return getComponent(node, BOUNDS_TOKEN);
 }
+
+const BOUNDS_TOKEN = createComponentToken<Bounds>('pulse:component:bounds');

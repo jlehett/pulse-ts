@@ -23,6 +23,12 @@ export { type ServiceKey, createServiceKey } from './keys';
 export { CULLING_CAMERA, type CullingCamera } from './world/culling';
 export { STATS_SERVICE, type StatsService } from './world/stats';
 export type { System } from './world/system';
+export {
+    createComponentToken,
+    getComponent,
+    setComponent as _setComponent,
+    ensureComponent as _ensureComponent,
+} from './components/registry';
 export { Visibility, attachVisibility, maybeGetVisibility } from './visibility';
 export {
     ancestors,

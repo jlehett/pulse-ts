@@ -92,7 +92,11 @@ export class World {
             this.unregisterTransform(t);
         (this as any)[kWorldAddBounds] = (b: Bounds) => this.registerBounds(b);
 
-        this.snapshotter = new Snapshotter(this.idToNode, this.transforms);
+        this.snapshotter = new Snapshotter(
+            this.idToNode,
+            this.transforms,
+            this.bounds,
+        );
 
         // decoupled time/tick loop
         this.loop = new EngineLoop(
@@ -453,6 +457,29 @@ export class World {
                 this.systems.splice(i, 1);
             }
         }
+    }
+
+    //#endregion
+
+    //#region Ticker Controls
+
+    /**
+     * Sets the enabled state of a node.
+     * @param node The node to set the enabled state of.
+     * @param enabled The enabled state of the node.
+     */
+    setNodeTicksEnabled(node: Node, enabled: boolean) {
+        this.ticker.setNodeEnabled(node, enabled);
+    }
+
+    /**
+     * Sets the enabled state of a phase.
+     * @param kind The kind of tick.
+     * @param phase The phase of the tick.
+     * @param enabled The enabled state of the phase.
+     */
+    setPhaseEnabled(kind: UpdateKind, phase: UpdatePhase, enabled: boolean) {
+        this.ticker.setPhaseEnabled(kind, phase, enabled);
     }
 
     //#endregion

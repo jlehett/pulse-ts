@@ -1,5 +1,10 @@
 import type { Node } from './node';
-import { kVisibility, kVisibilityOwner } from './keys';
+import { kVisibilityOwner } from './keys';
+import {
+    createComponentToken,
+    ensureComponent,
+    getComponent,
+} from './components/registry';
 
 /**
  * The visibility of a node.
@@ -15,9 +20,7 @@ export class Visibility {
  * @returns The visibility.
  */
 export function attachVisibility(node: Node): Visibility {
-    if ((node as any)[kVisibility]) return (node as any)[kVisibility];
-    const v = new Visibility();
-    Object.defineProperty(node, kVisibility, { value: v, enumerable: false });
+    const v = ensureComponent(node, VISIBILITY_TOKEN, () => new Visibility());
     (v as any)[kVisibilityOwner] = node;
     return v;
 }
@@ -28,5 +31,9 @@ export function attachVisibility(node: Node): Visibility {
  * @returns The visibility, or undefined if no visibility is attached.
  */
 export function maybeGetVisibility(node: Node): Visibility | undefined {
-    return (node as any)[kVisibility] as Visibility | undefined;
+    return getComponent(node, VISIBILITY_TOKEN);
 }
+
+const VISIBILITY_TOKEN = createComponentToken<Visibility>(
+    'pulse:component:visibility',
+);

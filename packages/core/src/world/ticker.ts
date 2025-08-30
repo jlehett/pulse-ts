@@ -87,6 +87,16 @@ export class Ticker {
         frame: { early: [], update: [], late: [] },
     };
 
+    private disabledPhases: Record<UpdateKind, Record<UpdatePhase, boolean>> = {
+        fixed: { early: false, update: false, late: false },
+        frame: { early: false, update: false, late: false },
+    };
+    private disabledNodes = new WeakSet<Node>();
+    private lastPhaseMs: Record<UpdateKind, Record<UpdatePhase, number>> = {
+        fixed: { early: 0, update: 0, late: 0 },
+        frame: { early: 0, update: 0, late: 0 },
+    };
+
     //#endregion
 
     //#region Public Methods
@@ -141,13 +151,22 @@ export class Ticker {
         dt: number,
         liveNodes: Set<Node>,
     ) {
+        if (this.disabledPhases[kind][phase]) {
+            this.lastPhaseMs[kind][phase] = 0;
+            return;
+        }
         const orders = this.orderKeys[kind][phase];
+        const t0 = (globalThis as any)?.performance?.now?.() ?? Date.now();
         for (let oi = 0; oi < orders.length; oi++) {
             const lane = this.buckets[kind][phase].get(orders[oi])!;
             const boundary = lane.tail;
             for (let r = lane.head; r; ) {
                 const next = r.next;
-                if (!r.active || !liveNodes.has(r.node)) {
+                if (
+                    !r.active ||
+                    !liveNodes.has(r.node) ||
+                    this.disabledNodes.has(r.node)
+                ) {
                     unlink(r);
                 } else {
                     try {
@@ -160,6 +179,8 @@ export class Ticker {
                 r = next;
             }
         }
+        const t1 = (globalThis as any)?.performance?.now?.() ?? Date.now();
+        this.lastPhaseMs[kind][phase] = t1 - t0;
     }
 
     /**
@@ -178,7 +199,13 @@ export class Ticker {
                     if (r.active && liveNodes.has(r.node)) active++;
                 }
             }
-            return { size, active, order: this.orderKeys[kind][phase].slice() };
+            return {
+                size,
+                active,
+                order: this.orderKeys[kind][phase].slice(),
+                ms: this.lastPhaseMs[kind][phase],
+                disabled: this.disabledPhases[kind][phase],
+            };
         };
         return {
             fixed: {
@@ -192,6 +219,26 @@ export class Ticker {
                 late: agg('frame', 'late'),
             },
         };
+    }
+
+    /**
+     * Sets the enabled state of a node.
+     * @param node The node to set the enabled state of.
+     * @param enabled The enabled state of the node.
+     */
+    setNodeEnabled(node: Node, enabled: boolean) {
+        if (enabled) this.disabledNodes.delete(node);
+        else this.disabledNodes.add(node);
+    }
+
+    /**
+     * Sets the enabled state of a phase.
+     * @param kind The kind of update.
+     * @param phase The phase of the update.
+     * @param enabled The enabled state of the phase.
+     */
+    setPhaseEnabled(kind: UpdateKind, phase: UpdatePhase, enabled: boolean) {
+        this.disabledPhases[kind][phase] = !enabled;
     }
 
     //#endregion

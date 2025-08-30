@@ -1,5 +1,7 @@
 import type { Node } from '../node';
 import { maybeGetTransform, type Transform } from '../transform';
+import { maybeGetBounds, type AABB, type Bounds } from '../bounds';
+import { Vec3 } from '../math/vec3';
 
 /**
  * The world snapshot.
@@ -15,6 +17,14 @@ export type WorldSnapshot = {
         s: [number, number, number];
     }>;
     /**
+     * Optional static bounds for nodes (local-space AABBs).
+     */
+    bounds?: Array<{
+        id: number;
+        min: [number, number, number];
+        max: [number, number, number];
+    }>;
+    /**
      * The accumulator value of the world at the time of the snapshot.
      */
     accumulator: number;
@@ -28,10 +38,12 @@ export class Snapshotter {
      * Constructs a new snapshotter.
      * @param idToNode The map of node IDs to nodes.
      * @param transforms The set of transforms.
+     * @param bounds The set of bounds.
      */
     constructor(
         private readonly idToNode: Map<number, Node>,
         private readonly transforms: Set<Transform>,
+        private readonly bounds: Set<Bounds>,
     ) {}
 
     /**
@@ -41,6 +53,7 @@ export class Snapshotter {
      */
     save(accumulator: number): WorldSnapshot {
         const transforms: WorldSnapshot['transforms'] = [];
+        const bounds: NonNullable<WorldSnapshot['bounds']> = [];
         for (const t of this.transforms) {
             const n = t.owner;
             transforms.push({
@@ -55,7 +68,20 @@ export class Snapshotter {
                 s: [t.localScale.x, t.localScale.y, t.localScale.z],
             });
         }
-        return { transforms, accumulator };
+        // Save bounds if present
+        for (const b of this.bounds) {
+            const n = b.owner as Node;
+            const local = b.getLocal();
+            if (!local) continue;
+            bounds.push({
+                id: n.id,
+                min: [local.min.x, local.min.y, local.min.z],
+                max: [local.max.x, local.max.y, local.max.z],
+            });
+        }
+        const snap: WorldSnapshot = { transforms, accumulator };
+        if (bounds.length) snap.bounds = bounds;
+        return snap;
     }
 
     /**
@@ -92,6 +118,23 @@ export class Snapshotter {
                 scale: { x: rec.s[0], y: rec.s[1], z: rec.s[2] },
             });
             if (opts?.resetPrevious) t.snapshotPrevious();
+        }
+        if (snap.bounds) {
+            for (const rec of snap.bounds) {
+                const node = this.idToNode.get(rec.id);
+                if (!node) {
+                    if (strict)
+                        throw new Error(
+                            `restoreSnapshot: missing node ${rec.id}`,
+                        );
+                    else continue;
+                }
+                const b = maybeGetBounds(node);
+                if (!b) continue;
+                const min = new Vec3(rec.min[0], rec.min[1], rec.min[2]);
+                const max = new Vec3(rec.max[0], rec.max[1], rec.max[2]);
+                b.setLocal(min, max);
+            }
         }
         return snap.accumulator;
     }

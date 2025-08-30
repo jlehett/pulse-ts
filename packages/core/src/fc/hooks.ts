@@ -4,6 +4,7 @@ import { World } from '../world';
 import { Node } from '../node';
 import { attachTransform, Transform } from '../transform';
 import { attachBounds, Bounds } from '../bounds';
+import { ComponentToken, ensureComponent } from '../components/registry';
 
 /**
  * Returns the `World` that is currently mounting the active function component.
