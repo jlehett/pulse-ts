@@ -45,21 +45,23 @@ export function mountFC<P>(
         world,
     };
     stack.push(bucket);
-    // parent first (so attach cascades)
-    if (opts?.parent) opts.parent.addChild(node);
-    world.add(node);
 
-    // run FC body to register hooks
+    // Add to world first so parent-change emits reliably when reparenting below
+    world.add(node);
+    if (opts?.parent) opts.parent.addChild(node);
+
+    // Run FC body to register hooks
     fc(props ?? ({} as P));
 
-    // run init hooks
+    // Run init hooks
     for (const fn of bucket.init) {
         const cleanup = fn();
         if (typeof cleanup === 'function') bucket.destroy.push(cleanup);
     }
     stack.pop();
 
-    // ensure cleanup/disposers run on node destruction
+    // Chain any existing onDestroy to avoid clobbering
+    const prior = node.onDestroy;
     node.onDestroy = () => {
         for (let i = bucket.disposers.length - 1; i >= 0; i--) {
             try {
@@ -75,6 +77,7 @@ export function mountFC<P>(
                 console.error(e);
             }
         }
+        prior?.();
     };
     return node;
 }

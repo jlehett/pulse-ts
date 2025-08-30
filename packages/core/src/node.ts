@@ -35,38 +35,57 @@ export class Node {
      * @returns The node.
      */
     addChild(child: Node): this {
+        if (child === this) throw new Error('Cannot parent a node to itself.');
+        // Prevent cycles: if `child` is an ancestor of `this`, reparenting would create a loop
+        for (let p: Node | null = this; p; p = p.parent) {
+            if (p === child)
+                throw new Error('Cannot reparent: target is an ancestor.');
+        }
+
         const oldParent = child.parent;
+        const newWorld = this.world;
+        const oldWorld = child.world;
+
         if (oldParent) {
             const i = oldParent.children.indexOf(child);
             if (i >= 0) oldParent.children.splice(i, 1);
             child.parent = null;
         }
 
+        // If moving across worlds, detach first to satisfy World.add() invariants
+        if (oldWorld && oldWorld !== newWorld) oldWorld.remove(child);
+
         this.children.push(child);
         child.parent = this;
 
-        // Ensure world membership, then emit a single parent-change event
-        if (this.world) this.world.add(child);
-        this.world?.[kWorldEmitNodeParentChanged](child, oldParent, this);
+        if (newWorld) newWorld.add(child);
+
+        // Emit exactly one event from the most relevant world context
+        const emitter = newWorld ?? oldWorld;
+        emitter?.[kWorldEmitNodeParentChanged](child, oldParent, this);
         return this;
     }
 
     /**
-     * Removes a child node from this node.
+     * Removes a child node from this node. Does not remove it from the world.
      * @param child The child node to remove.
      * @returns The node.
      */
     removeChild(child: Node): this {
         const i = this.children.indexOf(child);
-        if (i >= 0) this.children.splice(i, 1);
+
+        if (i < 0) return this;
+
+        this.children.splice(i, 1);
         const oldParent = this;
         child.parent = null;
-        this.world?.[kWorldEmitNodeParentChanged](child, oldParent, null);
+        const emitter = this.world ?? child.world;
+        emitter?.[kWorldEmitNodeParentChanged](child, oldParent, null);
         return this;
     }
 
     /**
-     * Destroys the node.
+     * Destroys the node and its subtree.
      */
     destroy(): void {
         for (const c of [...this.children]) c.destroy();

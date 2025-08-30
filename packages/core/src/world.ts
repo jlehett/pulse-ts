@@ -10,7 +10,7 @@ import type {
 } from './types';
 import { maybeGetTransform, type Transform } from './transform';
 import { Ticker } from './world/ticker';
-import { NodeParentEventBus } from './world/events';
+import { TypedEvent } from './event';
 import { Snapshotter, type WorldSnapshot } from './world/snapshots';
 import { ServiceRegistry } from './world/services';
 import {
@@ -20,6 +20,7 @@ import {
     type ServiceKey,
     kWorldEmitNodeParentChanged,
 } from './keys';
+import { ParentChange } from './world/events';
 
 /**
  * Options for the World class.
@@ -53,7 +54,7 @@ export class World {
     readonly nodes = new Set<Node>();
 
     private ticker = new Ticker();
-    private parentBus = new NodeParentEventBus();
+    private parentBus = new TypedEvent<ParentChange>();
     private services = new ServiceRegistry();
     private snapshotter!: Snapshotter;
 
@@ -64,7 +65,7 @@ export class World {
     private fixedStep = 1000 / 60;
     private accumulator = 0;
 
-    private currentTickKind: UpdateKind | null = null;
+    private currentTickKind: UpdateKind | null = null; // used by interpolation
     private lastAlpha = 0;
 
     private idToNode = new Map<number, Node>();
@@ -94,7 +95,7 @@ export class World {
         this.snapshotter = new Snapshotter(this.idToNode, this.transforms);
     }
 
-    //#region Public Methods
+    //#region Public API
 
     /**
      * Subscribes to node parent change events.
@@ -161,11 +162,18 @@ export class World {
         if (t) this.transforms.delete(t);
 
         this.idToNode.delete(node.id);
-
         node.world = null;
         // ticks owned by this node will be lazily unlinked during iteration
     }
 
+    /**
+     * Registers a system tick function.
+     * @param kind The kind of tick.
+     * @param phase The phase of the tick.
+     * @param fn The tick function.
+     * @param order The order of the tick.
+     * @returns The tick registration.
+     */
     registerSystemTick(
         kind: UpdateKind,
         phase: UpdatePhase,
@@ -225,9 +233,11 @@ export class World {
             for (const t of this.transforms) t.snapshotPrevious();
 
             const dt = this.fixedStep / 1000;
+            this.currentTickKind = 'fixed';
             this.runPhase('fixed', 'early', dt);
             this.runPhase('fixed', 'update', dt);
             this.runPhase('fixed', 'late', dt);
+            this.currentTickKind = null;
 
             this.accumulator -= this.fixedStep;
             steps++;
@@ -240,9 +250,11 @@ export class World {
 
         // frame phases
         const dt = dtMs / 1000;
+        this.currentTickKind = 'frame';
         this.runPhase('frame', 'early', dt);
         this.runPhase('frame', 'update', dt);
         this.runPhase('frame', 'late', dt);
+        this.currentTickKind = null;
     }
 
     /**
@@ -305,13 +317,17 @@ export class World {
         return this.services.get(key);
     }
 
+    /**
+     * Gets the frame ID.
+     * @returns The frame ID.
+     */
     getFrameId(): number {
         return this.frameId;
     }
 
     //#endregion
 
-    //#region Internal Methods
+    //#region Internal Bridge
 
     /**
      * Registers a tick function.
@@ -343,7 +359,7 @@ export class World {
         oldParent: Node | null,
         newParent: Node | null,
     ) {
-        this.parentBus.emit(node, oldParent, newParent);
+        this.parentBus.emit({ node, oldParent, newParent });
     }
 
     //#endregion

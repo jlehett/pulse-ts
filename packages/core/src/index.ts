@@ -8,9 +8,12 @@ export {
     getTransform,
     type TRS,
     createTRS,
+    type AABB,
+    createAABB,
 } from './transform';
 export { Node } from './node';
-export { World } from './world';
+export { World, type WorldOptions } from './world';
+export { TypedEvent, EventBus, type Listener } from './event';
 export {
     kWorldRegisterTick,
     kWorldAddTransform,

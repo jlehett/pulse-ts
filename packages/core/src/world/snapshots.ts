@@ -42,7 +42,7 @@ export class Snapshotter {
     save(accumulator: number): WorldSnapshot {
         const transforms: WorldSnapshot['transforms'] = [];
         for (const t of this.transforms) {
-            const n = (t as any).owner as Node;
+            const n = t.owner;
             transforms.push({
                 id: n.id,
                 p: [t.localPosition.x, t.localPosition.y, t.localPosition.z],

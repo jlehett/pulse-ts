@@ -99,17 +99,16 @@ export class Transform {
     // dirty/caching
     _localVersion = 0;
     private _worldVersion = 0;
-    private _cacheParentWorldVersion = -1;
-    private _cacheLocalVersion = -1;
-    private _cachedWorld = createTRS();
-
     private _cachedAncestryVersion = 0;
     private _treeQueryFrame = -1;
     private _cachedWorldTreeVersion = -1;
+    private _cachedWorld = createTRS();
 
     private _aabbLocal: AABB | null = null;
+    private _aabbLocalVersion = 0;
     private _aabbWorld = createAABB();
     private _aabbWorldTreeVersion = -1;
+    private _aabbWorldLocalVersion = -1;
     private _corners = [
         new Vec3(),
         new Vec3(),
@@ -271,6 +270,7 @@ export class Transform {
                 );
             }
         }
+
         if (this._cachedWorldTreeVersion === treeVersion) {
             o.position.copy(this._cachedWorld.position);
             o.rotation.copy(this._cachedWorld.rotation);
@@ -339,6 +339,7 @@ export class Transform {
         if (!this._aabbLocal) this._aabbLocal = createAABB();
         this._aabbLocal.min.copy(min);
         this._aabbLocal.max.copy(max);
+        this._aabbLocalVersion++;
         this._localVersion++; // AABB depends on local TRS for world; mark change
     }
 
@@ -359,13 +360,26 @@ export class Transform {
     getWorldAABB(out?: AABB, alpha?: number): AABB | null {
         if (!this._aabbLocal) return null;
 
-        const a =
-            alpha ??
-            (this.owner.world ? this.owner.world.getAmbientAlpha() : 0);
-        const trs = this.getWorldTRS(this._scratchLocal, a); // get world TRS
+        const w = this.owner.world;
+        const a = alpha ?? (w ? w.getAmbientAlpha() : 0);
+        const trs = this.getWorldTRS(this._scratchLocal, a);
 
-        // If no rotation and uniform scale, we can fast-path, but we'll do generic 8-corner transform
+        // Cache only when not interpolating
         const o = out ?? this._aabbWorld;
+        if (a === 0) {
+            const treeVersion = this._cachedWorldTreeVersion; // ensured up-to-date by getWorldTRS(..., 0)
+            if (
+                this._aabbWorldTreeVersion === treeVersion &&
+                this._aabbWorldLocalVersion === this._aabbLocalVersion
+            ) {
+                // copy cached into out if needed
+                if (o !== this._aabbWorld) {
+                    o.min.copy(this._aabbWorld.min);
+                    o.max.copy(this._aabbWorld.max);
+                }
+                return o;
+            }
+        }
 
         // Build 8 local corners
         const { min, max } = this._aabbLocal;
@@ -405,6 +419,13 @@ export class Transform {
         o.max.x = wmaxX;
         o.max.y = wmaxY;
         o.max.z = wmaxZ;
+
+        if (a === 0) {
+            this._aabbWorld.min.copy(o.min);
+            this._aabbWorld.max.copy(o.max);
+            this._aabbWorldTreeVersion = this._cachedWorldTreeVersion;
+            this._aabbWorldLocalVersion = this._aabbLocalVersion;
+        }
         return o;
     }
 

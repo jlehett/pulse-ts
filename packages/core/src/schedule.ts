@@ -33,7 +33,6 @@ export class TimeoutScheduler implements Scheduler {
     constructor(private fps = 60) {}
 
     private id: number | null = null;
-    private last = 0;
 
     start(loop: (now: number) => void) {
         const frameMs = 1000 / this.fps;
