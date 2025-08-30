@@ -39,6 +39,12 @@ export class ThreePlugin {
     private projView = new THREE.Matrix4();
     private pvArray = new Float32Array(16);
 
+    // stats overlay (optional)
+    private statsEl: HTMLDivElement | null = null;
+    private statsTick: { dispose(): void } | null = null;
+    private statsAcc = 0;
+    private statsInterval = 300; // ms
+
     constructor(opts: ThreePluginOptions) {
         this.options = {
             clearColor: 0x000000,
@@ -123,6 +129,8 @@ export class ThreePlugin {
 
         this.resizeObs?.disconnect();
         this.resizeObs = null;
+
+        this.disableStatsOverlay();
     }
 
     /**
@@ -191,6 +199,68 @@ export class ThreePlugin {
         }
 
         this.renderer.render(this.scene, this.camera);
+    }
+
+    /**
+     * Enable a stats overlay that displays the FPS and fixed SPS.
+     */
+    enableStatsOverlay(opts?: {
+        position?: 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right';
+        background?: string;
+        color?: string;
+        font?: string;
+        pad?: string;
+        zIndex?: string | number;
+        updateMs?: number; // default 300ms
+    }): void {
+        if (!this.world) return;
+        if (this.statsEl) return; // already enabled
+        const container =
+            this.renderer.domElement.parentElement ?? document.body;
+        if (getComputedStyle(container).position === 'static') {
+            (container as HTMLElement).style.position = 'relative';
+        }
+        const el = document.createElement('div');
+        const pos = opts?.position ?? 'top-left';
+        const bg = opts?.background ?? 'rgba(0,0,0,0.4)';
+        const color = opts?.color ?? '#0f0';
+        const font = opts?.font ?? '12px monospace';
+        const pad = opts?.pad ?? '2px 6px';
+        const z = String(opts?.zIndex ?? 1000);
+        Object.assign(el.style, {
+            position: 'absolute',
+            left: pos.endsWith('left') ? '4px' : '',
+            right: pos.endsWith('right') ? '4px' : '',
+            top: pos.startsWith('top') ? '4px' : '',
+            bottom: pos.startsWith('bottom') ? '4px' : '',
+            background: bg,
+            color,
+            font,
+            padding: pad,
+            zIndex: z,
+            pointerEvents: 'none',
+            whiteSpace: 'nowrap',
+        } as Partial<CSSStyleDeclaration>);
+        container.appendChild(el);
+        this.statsEl = el as HTMLDivElement;
+        this.statsInterval = Math.max(50, opts?.updateMs ?? 300);
+        this.statsAcc = 0;
+        this.statsTick = this.world.registerSystemTick(
+            'frame',
+            'late',
+            (dt) => this.updateStats(dt),
+            Number.MAX_SAFE_INTEGER - 1,
+        );
+    }
+
+    /**
+     * Disables the stats overlay.
+     */
+    disableStatsOverlay(): void {
+        this.statsTick?.dispose();
+        this.statsTick = null;
+        this.statsEl?.remove();
+        this.statsEl = null;
     }
 
     //#endregion
@@ -288,6 +358,21 @@ export class ThreePlugin {
         this.world.setService(CULLING_CAMERA, {
             projView: this.pvArray,
         } as CullingCamera);
+    }
+
+    /**
+     * Updates the stats overlay.
+     * @param dt The delta time.
+     */
+    private updateStats(dt: number): void {
+        if (!this.world || !this.statsEl) return;
+        this.statsAcc += dt * 1000;
+        if (this.statsAcc < this.statsInterval) return;
+        this.statsAcc = 0;
+        const perf = (this.world as any).getPerf?.();
+        if (!perf) return;
+        const { fps, fixedSps } = perf;
+        this.statsEl.textContent = `fps ${fps.toFixed(0)}  fixed ${fixedSps.toFixed(0)}`;
     }
 
     //#endregion
