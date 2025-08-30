@@ -2,8 +2,8 @@ import { Vec3 } from '../math/vec3';
 import { current } from './runtime';
 import { World } from '../world';
 import { Node } from '../node';
-import { kRegisterTick } from '../keys';
-import { attachTransform, getTransform, Transform } from '../transform';
+import { attachTransform, Transform } from '../transform';
+import { attachBounds, Bounds } from '../bounds';
 
 /**
  * Returns the `World` that is currently mounting the active function component.
@@ -68,6 +68,31 @@ export function useTransform(): Transform {
 }
 
 /**
+ * Ensures the current `Node` has a Bounds attached and returns it.
+ *
+ * - The Bounds is used for frustum culling.
+ *
+ * @param min The minimum point of the Bounds.
+ * @param max The maximum point of the Bounds.
+ */
+export function useBounds(
+    min: Readonly<Vec3 | [number, number, number]>,
+    max: Readonly<Vec3 | [number, number, number]>,
+): Bounds {
+    const b = attachBounds(current().node);
+    useInit(() => {
+        const minV = Array.isArray(min)
+            ? new Vec3(min[0], min[1], min[2])
+            : (min as Vec3);
+        const maxV = Array.isArray(max)
+            ? new Vec3(max[0], max[1], max[2])
+            : (max as Vec3);
+        b.setLocal(minV, maxV);
+    });
+    return b;
+}
+
+/**
  * Options for scheduling a tick.
  */
 type TickOpts = { order?: number };
@@ -81,10 +106,14 @@ function reg(
     fn: (dt: number) => void,
     order = 0,
 ) {
-    const { node } = current();
-    const dispose = node[kRegisterTick](kind, phase, fn, order);
+    const { node, world } = current();
+    if (!world)
+        throw new Error(
+            'Node must be added to a World before registering ticks.',
+        );
+    const reg = world.registerTick(node, kind, phase, fn, order);
+    const dispose = () => reg.dispose();
     current().disposers.push(dispose);
-    // auto cleanup
     useDestroy(dispose);
 }
 
@@ -179,29 +208,4 @@ export function useFrameLate(fn: (dt: number) => void, opts: TickOpts = {}) {
 export function useChild<P>(fc: (props: Readonly<P>) => void, props?: P): Node {
     const { world, node } = current();
     return world.mount(fc as any, props, { parent: node });
-}
-
-/**
- * Ensures the current `Node` has an AABB attached to its `Transform`.
- *
- * - The AABB is used for frustum culling.
- *
- * @param min The minimum point of the AABB.
- * @param max The maximum point of the AABB.
- */
-export function useAABB(
-    min: Readonly<Vec3 | [number, number, number]>,
-    max: Readonly<Vec3 | [number, number, number]>,
-): void {
-    const t = useTransform();
-
-    useInit(() => {
-        const minV = Array.isArray(min)
-            ? new Vec3(min[0], min[1], min[2])
-            : (min as Vec3);
-        const maxV = Array.isArray(max)
-            ? new Vec3(max[0], max[1], max[2])
-            : (max as Vec3);
-        t.setLocalAABB(minV, maxV);
-    });
 }

@@ -5,6 +5,9 @@ import {
     createTRS,
     type TRS,
     createServiceKey,
+    maybeGetBounds,
+    CULLING_CAMERA,
+    type CullingCamera,
 } from '@pulse-ts/core';
 
 export const THREE_SERVICE: ServiceKey<ThreePlugin> =
@@ -33,9 +36,8 @@ export class ThreePlugin {
 
     private offParent: (() => void) | null = null;
 
-    private frustum = new THREE.Frustum();
     private projView = new THREE.Matrix4();
-    private tmpBox = new THREE.Box3();
+    private pvArray = new Float32Array(16);
 
     constructor(opts: ThreePluginOptions) {
         this.options = {
@@ -65,17 +67,30 @@ export class ThreePlugin {
         }
     }
 
+    //#region Public Methods
+
+    /**
+     * Attaches the plugin to a world.
+     * @param world The world to attach the plugin to.
+     */
     attach(world: World) {
         if (this.world) throw new Error('ThreePlugin already attached.');
         this.world = world;
         world.setService(THREE_SERVICE, this);
 
-        // World-level system tick
+        // World-level system ticks
         this.sysTickDisposer = world.registerSystemTick(
             'frame',
             'late',
             () => this.render(),
             Number.MAX_SAFE_INTEGER,
+        );
+        // push camera PV before update phase so culling system can read
+        world.registerSystemTick(
+            'frame',
+            'early',
+            () => this.pushCameraPV(),
+            Number.MIN_SAFE_INTEGER,
         );
 
         // Event-driven parenting (no per-frame scan)
@@ -87,6 +102,10 @@ export class ThreePlugin {
         });
     }
 
+    /**
+     * Detaches the plugin from a world.
+     * @returns The plugin.
+     */
     detach() {
         if (!this.world) return;
         this.sysTickDisposer?.dispose();
@@ -106,17 +125,11 @@ export class ThreePlugin {
         this.resizeObs = null;
     }
 
-    private resizeToCanvas() {
-        const c = this.renderer.domElement;
-        const w = c.clientWidth | 0,
-            h = c.clientHeight | 0;
-        if (w > 0 && h > 0 && (c.width !== w || c.height !== h)) {
-            this.renderer.setSize(w, h, false);
-            this.camera.aspect = w / (h || 1);
-            this.camera.updateProjectionMatrix();
-        }
-    }
-
+    /**
+     * Ensures a root is attached to a node.
+     * @param node The node to ensure a root is attached to.
+     * @returns The root.
+     */
     ensureRoot(node: object): THREE.Object3D {
         let rec = this.roots.get(node);
         if (!rec) {
@@ -135,17 +148,72 @@ export class ThreePlugin {
         return rec.root;
     }
 
+    /**
+     * Attaches a child to a node.
+     * @param node The node to attach the child to.
+     * @param child The child to attach.
+     */
     attachChild(node: object, child: THREE.Object3D): void {
         const root = this.ensureRoot(node);
         root.add(child);
     }
 
+    /**
+     * Detaches a child from a node.
+     * @param node The node to detach the child from.
+     * @param child The child to detach.
+     */
     detachChild(node: object, child: THREE.Object3D): void {
         const rec = this.roots.get(node);
         if (!rec) return;
         rec.root.remove(child);
     }
 
+    /**
+     * Disposes a root.
+     * @param node The node to dispose the root of.
+     */
+    disposeRoot(node: object): void {
+        const rec = this.roots.get(node);
+        if (!rec) return;
+        if (rec.root.parent) rec.root.parent.remove(rec.root);
+        this.roots.delete(node);
+    }
+
+    /**
+     * Renders the scene.
+     */
+    render(): void {
+        if (!this.world) return;
+
+        if (this.options.autoCommitTransforms) {
+            this.syncTRS();
+        }
+
+        this.renderer.render(this.scene, this.camera);
+    }
+
+    //#endregion
+
+    //#region Private Methods
+
+    /**
+     * Resizes the canvas to the size of the renderer.
+     */
+    private resizeToCanvas() {
+        const c = this.renderer.domElement;
+        const w = c.clientWidth | 0,
+            h = c.clientHeight | 0;
+        if (w > 0 && h > 0 && (c.width !== w || c.height !== h)) {
+            this.renderer.setSize(w, h, false);
+            this.camera.aspect = w / (h || 1);
+            this.camera.updateProjectionMatrix();
+        }
+    }
+
+    /**
+     * Synchronizes the TRS of the roots.
+     */
     private syncTRS(): void {
         if (!this.world) return;
         const alpha = this.world.getAmbientAlpha();
@@ -154,21 +222,13 @@ export class ThreePlugin {
             const t = maybeGetTransform(node as any);
             if (!t) continue;
 
-            // Frustum culling (skip TRS sync when not visible)
+            // Visibility from core culling (if enabled)
             if (this.options.enableCulling) {
-                const aabb = t.getWorldAABB(
-                    undefined,
-                    this.world!.getAmbientAlpha(),
-                );
-                if (aabb) {
-                    this.tmpBox.min.set(aabb.min.x, aabb.min.y, aabb.min.z);
-                    this.tmpBox.max.set(aabb.max.x, aabb.max.y, aabb.max.z);
-                    const vis = this.frustum.intersectsBox(this.tmpBox);
-                    rec.root.visible = vis;
-                    if (!vis) continue;
-                } else {
-                    rec.root.visible = true; // no AABB -> assume visible
-                }
+                const b = maybeGetBounds(node as any);
+                rec.root.visible = b ? b.visible : true;
+                if (!rec.root.visible) continue;
+            } else {
+                rec.root.visible = true;
             }
 
             if (alpha === 0) {
@@ -211,29 +271,23 @@ export class ThreePlugin {
         }
     }
 
-    disposeRoot(node: object): void {
-        const rec = this.roots.get(node);
-        if (!rec) return;
-        if (rec.root.parent) rec.root.parent.remove(rec.root);
-        this.roots.delete(node);
-    }
-
-    render(): void {
+    /**
+     * Pushes the camera PV to the world.
+     */
+    private pushCameraPV(): void {
         if (!this.world) return;
-
-        if (this.options.enableCulling) {
-            this.camera.updateMatrixWorld();
-            this.projView.multiplyMatrices(
-                this.camera.projectionMatrix,
-                this.camera.matrixWorldInverse,
-            );
-            this.frustum.setFromProjectionMatrix(this.projView);
-        }
-
-        if (this.options.autoCommitTransforms) {
-            this.syncTRS();
-        }
-
-        this.renderer.render(this.scene, this.camera);
+        this.camera.updateMatrixWorld();
+        this.projView.multiplyMatrices(
+            this.camera.projectionMatrix,
+            this.camera.matrixWorldInverse,
+        );
+        // copy into Float32Array
+        const e = this.projView.elements as any as number[];
+        for (let i = 0; i < 16; i++) this.pvArray[i] = e[i];
+        this.world.setService(CULLING_CAMERA, {
+            projView: this.pvArray,
+        } as CullingCamera);
     }
+
+    //#endregion
 }

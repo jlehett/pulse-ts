@@ -9,22 +9,6 @@ import {
 } from './keys';
 
 /**
- * AABB helper interface.
- */
-export interface AABB {
-    min: Vec3;
-    max: Vec3;
-}
-
-/**
- * Creates a new AABB.
- * @returns A new AABB.
- */
-export function createAABB(): AABB {
-    return { min: new Vec3(), max: new Vec3() };
-}
-
-/**
  * Reusable container for position/rotation/scale triples.
  */
 export interface TRS {
@@ -104,22 +88,6 @@ export class Transform {
     private _cachedWorldTreeVersion = -1;
     private _cachedWorld = createTRS();
 
-    private _aabbLocal: AABB | null = null;
-    private _aabbLocalVersion = 0;
-    private _aabbWorld = createAABB();
-    private _aabbWorldTreeVersion = -1;
-    private _aabbWorldLocalVersion = -1;
-    private _corners = [
-        new Vec3(),
-        new Vec3(),
-        new Vec3(),
-        new Vec3(),
-        new Vec3(),
-        new Vec3(),
-        new Vec3(),
-        new Vec3(),
-    ];
-
     get owner(): Node {
         return this[kTransformOwner];
     }
@@ -133,6 +101,11 @@ export class Transform {
         this.previousLocalScale = new Vec3(1, 1, 1);
     }
 
+    /**
+     * Gets the ancestry version.
+     * @param frameId The frame id.
+     * @returns The ancestry version.
+     */
     getAncestryVersion(frameId: number): number {
         if (this._treeQueryFrame === frameId)
             return this._cachedAncestryVersion;
@@ -334,107 +307,6 @@ export class Transform {
      */
     getWorldVersion(): number {
         return this._worldVersion;
-    }
-
-    //#region AABB API
-
-    /**
-     * Sets the local AABB.
-     * @param min
-     * @param max
-     */
-    setLocalAABB(min: Vec3, max: Vec3): void {
-        if (!this._aabbLocal) this._aabbLocal = createAABB();
-        this._aabbLocal.min.copy(min);
-        this._aabbLocal.max.copy(max);
-        this._aabbLocalVersion++;
-        this._localVersion++; // AABB depends on local TRS for world; mark change
-    }
-
-    /**
-     * Gets the local AABB.
-     * @returns The local AABB.
-     */
-    getLocalAABB(): AABB | null {
-        return this._aabbLocal;
-    }
-
-    /**
-     * Gets the world AABB.
-     * @param out The output AABB.
-     * @param alpha The alpha value.
-     * @returns The world AABB.
-     */
-    getWorldAABB(out?: AABB, alpha?: number): AABB | null {
-        if (!this._aabbLocal) return null;
-
-        const w = this.owner.world;
-        const a = alpha ?? (w ? w.getAmbientAlpha() : 0);
-        const trs = this.getWorldTRS(this._scratchLocal, a);
-
-        // Cache only when not interpolating
-        const o = out ?? this._aabbWorld;
-        if (a === 0) {
-            const treeVersion = this._cachedWorldTreeVersion; // ensured up-to-date by getWorldTRS(..., 0)
-            if (
-                this._aabbWorldTreeVersion === treeVersion &&
-                this._aabbWorldLocalVersion === this._aabbLocalVersion
-            ) {
-                // copy cached into out if needed
-                if (o !== this._aabbWorld) {
-                    o.min.copy(this._aabbWorld.min);
-                    o.max.copy(this._aabbWorld.max);
-                }
-                return o;
-            }
-        }
-
-        // Build 8 local corners
-        const { min, max } = this._aabbLocal;
-        const cs = this._corners;
-        cs[0].set(min.x, min.y, min.z);
-        cs[1].set(max.x, min.y, min.z);
-        cs[2].set(min.x, max.y, min.z);
-        cs[3].set(max.x, max.y, min.z);
-        cs[4].set(min.x, min.y, max.z);
-        cs[5].set(max.x, min.y, max.z);
-        cs[6].set(min.x, max.y, max.z);
-        cs[7].set(max.x, max.y, max.z);
-
-        // Transform corners: scale -> rotate -> translate
-        let wminX = Infinity,
-            wminY = Infinity,
-            wminZ = Infinity;
-        let wmaxX = -Infinity,
-            wmaxY = -Infinity,
-            wmaxZ = -Infinity;
-        for (let i = 0; i < 8; i++) {
-            cs[i].multiply(trs.scale);
-            Quat.rotateVector(trs.rotation, cs[i], cs[i]);
-            cs[i].x += trs.position.x;
-            cs[i].y += trs.position.y;
-            cs[i].z += trs.position.z;
-            if (cs[i].x < wminX) wminX = cs[i].x;
-            if (cs[i].x > wmaxX) wmaxX = cs[i].x;
-            if (cs[i].y < wminY) wminY = cs[i].y;
-            if (cs[i].y > wmaxY) wmaxY = cs[i].y;
-            if (cs[i].z < wminZ) wminZ = cs[i].z;
-            if (cs[i].z > wmaxZ) wmaxZ = cs[i].z;
-        }
-        o.min.x = wminX;
-        o.min.y = wminY;
-        o.min.z = wminZ;
-        o.max.x = wmaxX;
-        o.max.y = wmaxY;
-        o.max.z = wmaxZ;
-
-        if (a === 0) {
-            this._aabbWorld.min.copy(o.min);
-            this._aabbWorld.max.copy(o.max);
-            this._aabbWorldTreeVersion = this._cachedWorldTreeVersion;
-            this._aabbWorldLocalVersion = this._aabbLocalVersion;
-        }
-        return o;
     }
 
     //#endregion

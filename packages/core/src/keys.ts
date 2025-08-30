@@ -18,18 +18,19 @@ export function createServiceKey<T>(desc: string): ServiceKey<T> {
 }
 
 // Internal world hooks
-export const kWorldRegisterTick = Symbol('pulse:world:registerTick');
 export const kWorldAddTransform = Symbol('pulse:world:addTransform');
 export const kWorldRemoveTransform = Symbol('pulse:world:removeTransform');
-export const kWorldEmitNodeParentChanged = Symbol(
-    'pulse:world:emitNodeParentChanged',
-);
+export const kWorldAddBounds = Symbol('pulse:world:addBounds');
+export const kWorldRemoveBounds = Symbol('pulse:world:removeBounds');
 
 // Internal node hooks
 export const kRegisteredTicks = Symbol('pulse:node:registeredTicks');
-export const kRegisterTick = Symbol('pulse:node:registerTick');
 
 // Internal transform hooks
 export const kTransform = Symbol('pulse:transform');
 export const kTransformOwner = Symbol('pulse:transform:owner');
 export const kTransformDirty = Symbol('pulse:transform:dirty');
+
+// Internal bounds hooks
+export const kBounds = Symbol('pulse:bounds');
+export const kBoundsOwner = Symbol('pulse:bounds:owner');

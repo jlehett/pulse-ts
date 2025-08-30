@@ -10,18 +10,19 @@ import type {
 } from './types';
 import { maybeGetTransform, type Transform } from './transform';
 import { Ticker } from './world/ticker';
-import { TypedEvent } from './event';
 import { Snapshotter, type WorldSnapshot } from './world/snapshots';
 import { ServiceRegistry } from './world/services';
 import { EngineLoop } from './world/loop';
 import {
-    kWorldRegisterTick,
     kWorldAddTransform,
     kWorldRemoveTransform,
     type ServiceKey,
-    kWorldEmitNodeParentChanged,
+    kWorldAddBounds,
+    kRegisteredTicks,
 } from './keys';
-import { ParentChange } from './world/events';
+import { SceneGraph } from './world/sceneGraph';
+import { Bounds } from './bounds';
+import { CullingSystem } from './world/culling';
 
 /**
  * Options for the World class.
@@ -55,12 +56,13 @@ export class World {
     readonly nodes = new Set<Node>();
 
     private ticker = new Ticker();
-    private parentBus = new TypedEvent<ParentChange>();
+    private scene = new SceneGraph();
     private services = new ServiceRegistry();
     private snapshotter!: Snapshotter;
 
     private idToNode = new Map<number, Node>();
     private transforms = new Set<Transform>();
+    private bounds = new Set<Bounds>();
     private loop!: EngineLoop;
     private systemNode: Node | null = null;
 
@@ -79,9 +81,10 @@ export class World {
 
         // expose transform registry methods via symbols
         (this as any)[kWorldAddTransform] = (t: Transform) =>
-            this.transforms.add(t);
+            this.registerTransform(t);
         (this as any)[kWorldRemoveTransform] = (t: Transform) =>
-            this.transforms.delete(t);
+            this.unregisterTransform(t);
+        (this as any)[kWorldAddBounds] = (b: Bounds) => this.registerBounds(b);
 
         this.snapshotter = new Snapshotter(this.idToNode, this.transforms);
 
@@ -101,6 +104,7 @@ export class World {
                 runPhase: (kind, phase, dt) => this.runPhase(kind, phase, dt),
             },
         );
+        new CullingSystem(this);
     }
 
     //#region Public API
@@ -117,7 +121,7 @@ export class World {
             newParent: Node | null;
         }) => void,
     ) {
-        return this.parentBus.on(fn);
+        return this.scene.onParentChanged(fn as any);
     }
 
     /**
@@ -175,6 +179,13 @@ export class World {
     }
 
     /**
+     * Reparents a child under a new parent (or detaches when null).
+     */
+    reparent(child: Node, newParent: Node | null): void {
+        this.scene.reparent(child, newParent);
+    }
+
+    /**
      * Registers a system tick function.
      * @param kind The kind of tick.
      * @param phase The phase of the tick.
@@ -192,14 +203,29 @@ export class World {
             this.systemNode = new Node();
             this.add(this.systemNode);
         }
-        const reg = (this as any)[kWorldRegisterTick](
-            this.systemNode,
-            kind,
-            phase,
-            fn,
-            order,
-        ) as TickRegistration;
+        const reg = this.registerTick(this.systemNode, kind, phase, fn, order);
         return { dispose: () => reg.dispose() };
+    }
+
+    /**
+     * Registers a tick on a node.
+     * @param node The node to register the tick on.
+     * @param kind The kind of tick.
+     * @param phase The phase of the tick.
+     * @param fn The tick function.
+     * @param order The order of the tick.
+     * @returns The tick registration.
+     */
+    registerTick(
+        node: Node,
+        kind: UpdateKind,
+        phase: UpdatePhase,
+        fn: TickFn,
+        order = 0,
+    ): TickRegistration {
+        const reg = this.ticker.register(node, kind, phase, fn, order);
+        (node as any)[kRegisteredTicks].push(reg);
+        return reg;
     }
 
     /**
@@ -294,39 +320,80 @@ export class World {
 
     //#endregion
 
-    //#region Internal Bridge
+    //#region Component registration (explicit + symbol bridge)
 
     /**
-     * Registers a tick function.
-     * @param node The node to register the tick function for.
-     * @param kind The kind of tick.
-     * @param phase The phase of the tick.
-     * @param fn The tick function.
-     * @param order The order of the tick.
-     * @returns The tick registration.
+     * Registers a transform.
+     * @param t The transform to register.
      */
-    [kWorldRegisterTick](
-        node: Node,
-        kind: UpdateKind,
-        phase: UpdatePhase,
-        fn: TickFn,
-        order = 0,
-    ): TickRegistration {
-        return this.ticker.register(node, kind, phase, fn, order);
+    registerTransform(t: Transform) {
+        this.transforms.add(t);
     }
 
     /**
-     * Internal; called by Node.addChild/removeChild
-     * @param node The node that changed parent.
-     * @param oldParent The old parent.
-     * @param newParent The new parent.
+     * Unregisters a transform.
+     * @param t The transform to unregister.
      */
-    [kWorldEmitNodeParentChanged](
-        node: Node,
-        oldParent: Node | null,
-        newParent: Node | null,
-    ) {
-        this.parentBus.emit({ node, oldParent, newParent });
+    unregisterTransform(t: Transform) {
+        this.transforms.delete(t);
+    }
+
+    /**
+     * Registers a bounds.
+     * @param b The bounds to register.
+     */
+    registerBounds(b: Bounds) {
+        this.bounds.add(b);
+    }
+
+    /**
+     * Unregisters a bounds.
+     * @param b The bounds to unregister.
+     */
+    unregisterBounds(b: Bounds) {
+        this.bounds.delete(b);
+    }
+
+    //#endregion
+
+    //#region Loop controls
+
+    /**
+     * Pauses the world.
+     */
+    pause() {
+        this.loop.pause();
+    }
+
+    /**
+     * Resumes the world.
+     */
+    resume() {
+        this.loop.resume();
+    }
+
+    /**
+     * Checks if the world is paused.
+     * @returns True if the world is paused, false otherwise.
+     */
+    isPaused() {
+        return this.loop.isPaused();
+    }
+
+    /**
+     * Sets the time scale of the world.
+     * @param scale The time scale.
+     */
+    setTimeScale(scale: number) {
+        this.loop.setTimeScale(scale);
+    }
+
+    /**
+     * Gets the time scale of the world.
+     * @returns The time scale.
+     */
+    getTimeScale() {
+        return this.loop.getTimeScale();
     }
 
     //#endregion

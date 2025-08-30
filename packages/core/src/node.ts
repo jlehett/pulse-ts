@@ -1,16 +1,6 @@
 import type { World } from './world';
-import type {
-    UpdateKind,
-    UpdatePhase,
-    TickFn,
-    TickRegistration,
-} from './types';
-import {
-    kWorldEmitNodeParentChanged,
-    kWorldRegisterTick,
-    kRegisteredTicks,
-    kRegisterTick,
-} from './keys';
+import type { TickRegistration } from './types';
+import { kRegisteredTicks } from './keys';
 
 let NEXT_ID = 1;
 
@@ -36,33 +26,25 @@ export class Node {
      */
     addChild(child: Node): this {
         if (child === this) throw new Error('Cannot parent a node to itself.');
-        // Prevent cycles: if `child` is an ancestor of `this`, reparenting would create a loop
+        if (this.world) {
+            this.world.reparent(child, this);
+            return this;
+        }
+        // Local tree change (no world yet)
         for (let p: Node | null = this; p; p = p.parent) {
             if (p === child)
                 throw new Error('Cannot reparent: target is an ancestor.');
         }
-
-        const oldParent = child.parent;
-        const newWorld = this.world;
-        const oldWorld = child.world;
-
-        if (oldParent) {
-            const i = oldParent.children.indexOf(child);
-            if (i >= 0) oldParent.children.splice(i, 1);
+        if (child.parent) {
+            const i = child.parent.children.indexOf(child);
+            if (i >= 0) child.parent.children.splice(i, 1);
             child.parent = null;
         }
-
-        // If moving across worlds, detach first to satisfy World.add() invariants
-        if (oldWorld && oldWorld !== newWorld) oldWorld.remove(child);
-
+        // detach from other world if exists
+        if (child.world && child.world !== this.world)
+            child.world.remove(child);
         this.children.push(child);
         child.parent = this;
-
-        if (newWorld) newWorld.add(child);
-
-        // Emit exactly one event from the most relevant world context
-        const emitter = newWorld ?? oldWorld;
-        emitter?.[kWorldEmitNodeParentChanged](child, oldParent, this);
         return this;
     }
 
@@ -72,15 +54,13 @@ export class Node {
      * @returns The node.
      */
     removeChild(child: Node): this {
+        if (this.world) {
+            this.world.reparent(child, null);
+            return this;
+        }
         const i = this.children.indexOf(child);
-
-        if (i < 0) return this;
-
-        this.children.splice(i, 1);
-        const oldParent = this;
-        child.parent = null;
-        const emitter = this.world ?? child.world;
-        emitter?.[kWorldEmitNodeParentChanged](child, oldParent, null);
+        if (i >= 0) this.children.splice(i, 1);
+        if (child.parent === this) child.parent = null;
         return this;
     }
 
@@ -110,39 +90,6 @@ export class Node {
      * Called when the node is destroyed.
      */
     onDestroy?(): void;
-
-    //#endregion
-
-    //#region Internal Methods
-
-    /**
-     * Registers a tick function.
-     * @param kind The kind of tick.
-     * @param phase The phase of the tick.
-     * @param fn The tick function.
-     * @param order The order of the tick.
-     * @returns A function to unregister the tick.
-     */
-    [kRegisterTick](
-        kind: UpdateKind,
-        phase: UpdatePhase,
-        fn: TickFn,
-        order = 0,
-    ): () => void {
-        if (!this.world)
-            throw new Error(
-                'Node must be added to a World before registering ticks.',
-            );
-        const reg = this.world[kWorldRegisterTick](
-            this,
-            kind,
-            phase,
-            fn,
-            order,
-        );
-        this[kRegisteredTicks].push(reg);
-        return () => reg.dispose();
-    }
 
     //#endregion
 }
