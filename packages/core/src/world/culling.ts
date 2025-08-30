@@ -2,6 +2,7 @@ import { Vec3 } from '../math/vec3';
 import type { World } from '../world';
 import { createServiceKey, type ServiceKey } from '../keys';
 import { maybeGetBounds } from '../bounds';
+import { attachVisibility } from '../visibility';
 import { attachTransform } from '../transform';
 
 /**
@@ -120,7 +121,7 @@ class Frustum {
 }
 
 /**
- * Iterates nodes with Bounds and updates Bounds.visible from camera frustum.
+ * Iterates nodes with Bounds and updates Visibility from camera frustum.
  */
 export class CullingSystem {
     private frustum = new Frustum();
@@ -144,12 +145,15 @@ export class CullingSystem {
             if (!b) continue;
             const aabb = b.getWorld();
             if (!aabb) {
-                b.visible = true;
+                attachVisibility(n).visible = true;
                 continue;
             }
             // ensure transform up-to-date for zero-alpha cache
             attachTransform(n).getWorldTRS(undefined, 0);
-            b.visible = this.frustum.intersectsBounds(aabb.min, aabb.max);
+            attachVisibility(n).visible = this.frustum.intersectsBounds(
+                aabb.min,
+                aabb.max,
+            );
         }
     }
 }

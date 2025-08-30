@@ -21,6 +21,14 @@ export { World, type WorldOptions } from './world';
 export { TypedEvent, EventBus, type Listener } from './event';
 export { type ServiceKey, createServiceKey } from './keys';
 export { CULLING_CAMERA, type CullingCamera } from './world/culling';
+export { Visibility, attachVisibility, maybeGetVisibility } from './visibility';
+export {
+    ancestors,
+    descendants,
+    traversePreOrder,
+    traversePostOrder,
+    siblings,
+} from './world/traversal';
 
 // FC API
 export type { FC } from './fc/runtime';

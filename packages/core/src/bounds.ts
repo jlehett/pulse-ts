@@ -38,8 +38,6 @@ export class Bounds {
         new Vec3(),
     ];
 
-    visible = true;
-
     get owner(): Node {
         return this[kBoundsOwner];
     }

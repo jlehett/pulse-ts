@@ -34,3 +34,7 @@ export const kTransformDirty = Symbol('pulse:transform:dirty');
 // Internal bounds hooks
 export const kBounds = Symbol('pulse:bounds');
 export const kBoundsOwner = Symbol('pulse:bounds:owner');
+
+// Internal visibility hooks
+export const kVisibility = Symbol('pulse:visibility');
+export const kVisibilityOwner = Symbol('pulse:visibility:owner');

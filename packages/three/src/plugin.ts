@@ -5,7 +5,7 @@ import {
     createTRS,
     type TRS,
     createServiceKey,
-    maybeGetBounds,
+    maybeGetVisibility,
     CULLING_CAMERA,
     type CullingCamera,
 } from '@pulse-ts/core';
@@ -224,9 +224,10 @@ export class ThreePlugin {
 
             // Visibility from core culling (if enabled)
             if (this.options.enableCulling) {
-                const b = maybeGetBounds(node as any);
-                rec.root.visible = b ? b.visible : true;
-                if (!rec.root.visible) continue;
+                const v = maybeGetVisibility(node as any);
+                const vis = v ? v.visible : true;
+                rec.root.visible = vis;
+                if (!vis) continue;
             } else {
                 rec.root.visible = true;
             }
