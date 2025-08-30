@@ -21,6 +21,8 @@ export { World, type WorldOptions } from './world';
 export { TypedEvent, EventBus, type Listener } from './event';
 export { type ServiceKey, createServiceKey } from './keys';
 export { CULLING_CAMERA, type CullingCamera } from './world/culling';
+export { STATS_SERVICE, type StatsService } from './world/stats';
+export type { System } from './world/system';
 export { Visibility, attachVisibility, maybeGetVisibility } from './visibility';
 export {
     ancestors,

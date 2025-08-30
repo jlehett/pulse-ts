@@ -37,7 +37,7 @@ export function createTRS(): TRS {
 function makeDirtyVec3(owner: Transform, v: Vec3): Vec3 {
     return new Proxy(v, {
         set(target, prop, value) {
-            (target as any)[prop] = value;
+            target[prop as keyof Vec3] = value;
             owner[kTransformDirty] = true;
             owner._localVersion++;
             return true;
@@ -54,7 +54,7 @@ function makeDirtyVec3(owner: Transform, v: Vec3): Vec3 {
 function makeDirtyQuat(owner: Transform, q: Quat): Quat {
     return new Proxy(q, {
         set(target, prop, value) {
-            (target as any)[prop] = value;
+            target[prop as keyof Quat] = value;
             owner[kTransformDirty] = true;
             owner._localVersion++;
             return true;
@@ -321,7 +321,7 @@ export function attachTransform(node: Node): Transform {
     if ((node as any)[kTransform]) return (node as any)[kTransform];
     const t = new Transform();
     Object.defineProperty(node, kTransform, { value: t, enumerable: false });
-    (t as any)[kTransformOwner] = node;
+    (t as Transform)[kTransformOwner] = node;
     // if already in a world, register this transform for snapshots
     if (node.world && (node.world as any)[kWorldAddTransform]) {
         (node.world as any)[kWorldAddTransform](t);

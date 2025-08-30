@@ -207,5 +207,5 @@ export function useFrameLate(fn: (dt: number) => void, opts: TickOpts = {}) {
  */
 export function useChild<P>(fc: (props: Readonly<P>) => void, props?: P): Node {
     const { world, node } = current();
-    return world.mount(fc as any, props, { parent: node });
+    return world.mount(fc, props, { parent: node });
 }

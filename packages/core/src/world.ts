@@ -23,6 +23,8 @@ import {
 import { SceneGraph } from './world/sceneGraph';
 import { Bounds } from './bounds';
 import { CullingSystem } from './world/culling';
+import type { System } from './world/system';
+import { STATS_SERVICE, WorldStats } from './world/stats';
 
 /**
  * Options for the World class.
@@ -65,6 +67,7 @@ export class World {
     private bounds = new Set<Bounds>();
     private loop!: EngineLoop;
     private systemNode: Node | null = null;
+    private systems: { sys: System; order: number }[] = [];
 
     //#endregion
 
@@ -104,7 +107,10 @@ export class World {
                 runPhase: (kind, phase, dt) => this.runPhase(kind, phase, dt),
             },
         );
-        new CullingSystem(this);
+        // Provide stats service for consumers
+        this.provide(STATS_SERVICE, new WorldStats(this));
+        // Install default systems
+        this.addSystem(new CullingSystem());
     }
 
     //#region Public API
@@ -121,7 +127,7 @@ export class World {
             newParent: Node | null;
         }) => void,
     ) {
-        return this.scene.onParentChanged(fn as any);
+        return this.scene.onParentChanged(fn);
     }
 
     /**
@@ -295,21 +301,20 @@ export class World {
     }
 
     /**
-     * Sets a service.
-     * @param key The key of the service.
-     * @param service The service.
-     */
-    setService<T>(key: ServiceKey<T>, service: T) {
-        this.services.set(key, service);
-    }
-
-    /**
      * Gets a service.
      * @param key The key of the service.
      * @returns The service.
      */
     getService<T>(key: ServiceKey<T>): T | undefined {
         return this.services.get(key);
+    }
+
+    /**
+     * Provides a service and returns a disposer to remove it.
+     */
+    provide<T>(key: ServiceKey<T>, service: T): () => void {
+        this.services.set(key, service);
+        return () => this.services.set(key, undefined);
     }
 
     /**
@@ -403,6 +408,36 @@ export class World {
      */
     getTimeScale() {
         return this.loop.getTimeScale();
+    }
+
+    //#endregion
+
+    //#region Systems Lifecycle
+
+    /**
+     * Adds a system to the world.
+     * @param sys The system to add.
+     * @param order The order of the system.
+     */
+    addSystem(sys: System, order = 0): void {
+        this.systems.push({ sys, order });
+        this.systems.sort((a, b) => a.order - b.order);
+        sys.attach(this);
+    }
+
+    /**
+     * Removes a system from the world.
+     * @param sys The system to remove.
+     */
+    removeSystem(sys: System): void {
+        const i = this.systems.findIndex((e) => e.sys === sys);
+        if (i >= 0) {
+            try {
+                this.systems[i].sys.detach?.(this);
+            } finally {
+                this.systems.splice(i, 1);
+            }
+        }
     }
 
     //#endregion

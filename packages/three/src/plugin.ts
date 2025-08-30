@@ -1,6 +1,7 @@
 import * as THREE from 'three';
-import type { World, ServiceKey } from '@pulse-ts/core';
 import {
+    type World,
+    type ServiceKey,
     maybeGetTransform,
     createTRS,
     type TRS,
@@ -8,7 +9,14 @@ import {
     maybeGetVisibility,
     CULLING_CAMERA,
     type CullingCamera,
+    Node,
 } from '@pulse-ts/core';
+import { ThreeCameraPVSystem } from './systems/cameraPV';
+import { ThreeTRSSyncSystem } from './systems/trsSync';
+import {
+    StatsOverlayOptions,
+    StatsOverlaySystem,
+} from './systems/statsOverlay';
 
 export const THREE_SERVICE: ServiceKey<ThreePlugin> =
     createServiceKey<ThreePlugin>('pulse:three');
@@ -30,8 +38,9 @@ export class ThreePlugin {
     readonly options: Required<ThreePluginOptions>;
 
     private world: World | null = null;
+    private serviceOff: (() => void) | null = null;
     private sysTickDisposer: { dispose(): void } | null = null;
-    private roots = new Map<object, RootRecord>();
+    private roots = new Map<Node, RootRecord>();
     private resizeObs: ResizeObserver | null = null;
 
     private offParent: (() => void) | null = null;
@@ -39,11 +48,10 @@ export class ThreePlugin {
     private projView = new THREE.Matrix4();
     private pvArray = new Float32Array(16);
 
-    // stats overlay (optional)
-    private statsEl: HTMLDivElement | null = null;
-    private statsTick: { dispose(): void } | null = null;
-    private statsAcc = 0;
-    private statsInterval = 300; // ms
+    // plugin-managed systems
+    private cameraPVSystem: ThreeCameraPVSystem | null = null;
+    private trsSyncSystem: ThreeTRSSyncSystem | null = null;
+    private statsSystem: StatsOverlaySystem | null = null;
 
     constructor(opts: ThreePluginOptions) {
         this.options = {
@@ -82,22 +90,29 @@ export class ThreePlugin {
     attach(world: World) {
         if (this.world) throw new Error('ThreePlugin already attached.');
         this.world = world;
-        world.setService(THREE_SERVICE, this);
+        this.serviceOff = world.provide(THREE_SERVICE, this);
 
-        // World-level system ticks
+        // World-level render tick
         this.sysTickDisposer = world.registerSystemTick(
             'frame',
             'late',
             () => this.render(),
             Number.MAX_SAFE_INTEGER,
         );
-        // push camera PV before update phase so culling system can read
-        world.registerSystemTick(
-            'frame',
-            'early',
-            () => this.pushCameraPV(),
+        // Camera PV system (frame:early)
+        this.cameraPVSystem = new ThreeCameraPVSystem(
+            this,
             Number.MIN_SAFE_INTEGER,
         );
+        world.addSystem(this.cameraPVSystem);
+        // TRS sync system (frame:late, before render)
+        if (this.options.autoCommitTransforms) {
+            this.trsSyncSystem = new ThreeTRSSyncSystem(
+                this,
+                Number.MAX_SAFE_INTEGER - 2,
+            );
+            world.addSystem(this.trsSyncSystem);
+        }
 
         // Event-driven parenting (no per-frame scan)
         this.offParent = world.onNodeParentChanged(({ node, newParent }) => {
@@ -120,8 +135,8 @@ export class ThreePlugin {
         this.offParent?.();
         this.offParent = null;
 
-        this.world.setService(THREE_SERVICE, undefined as any);
-        this.world = null;
+        this.serviceOff?.();
+        this.serviceOff = null;
 
         // clean scene/roots
         for (const { root } of this.roots.values()) this.scene.remove(root);
@@ -130,7 +145,22 @@ export class ThreePlugin {
         this.resizeObs?.disconnect();
         this.resizeObs = null;
 
-        this.disableStatsOverlay();
+        // remove systems
+        const w = this.world!;
+        if (this.cameraPVSystem) {
+            w.removeSystem(this.cameraPVSystem);
+            this.cameraPVSystem = null;
+        }
+        if (this.trsSyncSystem) {
+            w.removeSystem(this.trsSyncSystem);
+            this.trsSyncSystem = null;
+        }
+        if (this.statsSystem) {
+            w.removeSystem(this.statsSystem);
+            this.statsSystem = null;
+        }
+
+        this.world = null;
     }
 
     /**
@@ -138,7 +168,7 @@ export class ThreePlugin {
      * @param node The node to ensure a root is attached to.
      * @returns The root.
      */
-    ensureRoot(node: object): THREE.Object3D {
+    ensureRoot(node: Node): THREE.Object3D {
         let rec = this.roots.get(node);
         if (!rec) {
             const group = new THREE.Group();
@@ -149,7 +179,7 @@ export class ThreePlugin {
             this.roots.set(node, rec);
 
             // Attach under current parent (or scene)
-            const parent = (node as any).parent;
+            const parent = node.parent;
             const target = parent ? this.ensureRoot(parent) : this.scene;
             if (rec.root.parent !== target) target.add(rec.root);
         }
@@ -161,7 +191,7 @@ export class ThreePlugin {
      * @param node The node to attach the child to.
      * @param child The child to attach.
      */
-    attachChild(node: object, child: THREE.Object3D): void {
+    attachChild(node: Node, child: THREE.Object3D): void {
         const root = this.ensureRoot(node);
         root.add(child);
     }
@@ -171,7 +201,7 @@ export class ThreePlugin {
      * @param node The node to detach the child from.
      * @param child The child to detach.
      */
-    detachChild(node: object, child: THREE.Object3D): void {
+    detachChild(node: Node, child: THREE.Object3D): void {
         const rec = this.roots.get(node);
         if (!rec) return;
         rec.root.remove(child);
@@ -181,7 +211,7 @@ export class ThreePlugin {
      * Disposes a root.
      * @param node The node to dispose the root of.
      */
-    disposeRoot(node: object): void {
+    disposeRoot(node: Node): void {
         const rec = this.roots.get(node);
         if (!rec) return;
         if (rec.root.parent) rec.root.parent.remove(rec.root);
@@ -193,108 +223,42 @@ export class ThreePlugin {
      */
     render(): void {
         if (!this.world) return;
-
-        if (this.options.autoCommitTransforms) {
-            this.syncTRS();
-        }
-
+        // TRS sync happens via ThreeTRSSyncSystem when enabled
         this.renderer.render(this.scene, this.camera);
     }
 
-    /**
-     * Enable a stats overlay that displays the FPS and fixed SPS.
-     */
-    enableStatsOverlay(opts?: {
-        position?: 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right';
-        background?: string;
-        color?: string;
-        font?: string;
-        pad?: string;
-        zIndex?: string | number;
-        updateMs?: number; // default 300ms
-    }): void {
+    /** Enable a single stats overlay per plugin/world. */
+    enableStatsOverlay(opts?: StatsOverlayOptions): void {
         if (!this.world) return;
-        if (this.statsEl) return; // already enabled
-        const container =
-            this.renderer.domElement.parentElement ?? document.body;
-        if (getComputedStyle(container).position === 'static') {
-            (container as HTMLElement).style.position = 'relative';
-        }
-        const el = document.createElement('div');
-        const pos = opts?.position ?? 'top-left';
-        const bg = opts?.background ?? 'rgba(0,0,0,0.4)';
-        const color = opts?.color ?? '#0f0';
-        const font = opts?.font ?? '12px monospace';
-        const pad = opts?.pad ?? '2px 6px';
-        const z = String(opts?.zIndex ?? 1000);
-        Object.assign(el.style, {
-            position: 'absolute',
-            left: pos.endsWith('left') ? '4px' : '',
-            right: pos.endsWith('right') ? '4px' : '',
-            top: pos.startsWith('top') ? '4px' : '',
-            bottom: pos.startsWith('bottom') ? '4px' : '',
-            background: bg,
-            color,
-            font,
-            padding: pad,
-            zIndex: z,
-            pointerEvents: 'none',
-            whiteSpace: 'nowrap',
-        } as Partial<CSSStyleDeclaration>);
-        container.appendChild(el);
-        this.statsEl = el as HTMLDivElement;
-        this.statsInterval = Math.max(50, opts?.updateMs ?? 300);
-        this.statsAcc = 0;
-        this.statsTick = this.world.registerSystemTick(
-            'frame',
-            'late',
-            (dt) => this.updateStats(dt),
-            Number.MAX_SAFE_INTEGER - 1,
-        );
+        if (this.statsSystem) return;
+        this.statsSystem = new StatsOverlaySystem(this, opts);
+        this.world.addSystem(this.statsSystem);
     }
 
-    /**
-     * Disables the stats overlay.
-     */
     disableStatsOverlay(): void {
-        this.statsTick?.dispose();
-        this.statsTick = null;
-        this.statsEl?.remove();
-        this.statsEl = null;
+        if (!this.world || !this.statsSystem) return;
+        this.world.removeSystem(this.statsSystem);
+        this.statsSystem = null;
     }
 
     //#endregion
 
-    //#region Private Methods
-
-    /**
-     * Resizes the canvas to the size of the renderer.
-     */
-    private resizeToCanvas() {
-        const c = this.renderer.domElement;
-        const w = c.clientWidth | 0,
-            h = c.clientHeight | 0;
-        if (w > 0 && h > 0 && (c.width !== w || c.height !== h)) {
-            this.renderer.setSize(w, h, false);
-            this.camera.aspect = w / (h || 1);
-            this.camera.updateProjectionMatrix();
-        }
-    }
+    //#region System Methods
 
     /**
      * Synchronizes the TRS of the roots.
      */
-    private syncTRS(): void {
+    syncTRS(): void {
         if (!this.world) return;
         const alpha = this.world.getAmbientAlpha();
 
         for (const [node, rec] of this.roots) {
-            const t = maybeGetTransform(node as any);
+            const t = maybeGetTransform(node);
             if (!t) continue;
 
             // Visibility from core culling (if enabled)
             if (this.options.enableCulling) {
-                const v = maybeGetVisibility(node as any);
+                const v = maybeGetVisibility(node);
                 const vis = v ? v.visible : true;
                 rec.root.visible = vis;
                 if (!vis) continue;
@@ -305,10 +269,10 @@ export class ThreePlugin {
             if (alpha === 0) {
                 // if world TRS cached version unchanged, skip touching Three
                 t.getWorldTRS(rec.trs, 0); // fast when cached
-                if (rec.lastWorldVersion === (t as any).getWorldVersion?.()) {
+                if (rec.lastWorldVersion == t.getWorldVersion?.()) {
                     continue;
                 }
-                rec.lastWorldVersion = (t as any).getWorldVersion?.() ?? -1;
+                rec.lastWorldVersion = t.getWorldVersion?.() ?? -1;
 
                 // We still apply *local* TRS to Three (graph composes it)
                 // But rec.trs hold world; recompute local quickly:
@@ -345,7 +309,7 @@ export class ThreePlugin {
     /**
      * Pushes the camera PV to the world.
      */
-    private pushCameraPV(): void {
+    pushCameraPV(): void {
         if (!this.world) return;
         this.camera.updateMatrixWorld();
         this.projView.multiplyMatrices(
@@ -353,26 +317,29 @@ export class ThreePlugin {
             this.camera.matrixWorldInverse,
         );
         // copy into Float32Array
-        const e = this.projView.elements as any as number[];
+        const e = this.projView.elements as number[];
         for (let i = 0; i < 16; i++) this.pvArray[i] = e[i];
-        this.world.setService(CULLING_CAMERA, {
+        this.world.provide(CULLING_CAMERA, {
             projView: this.pvArray,
         } as CullingCamera);
     }
 
+    //#endregion
+
+    //#region Private Methods
+
     /**
-     * Updates the stats overlay.
-     * @param dt The delta time.
+     * Resizes the canvas to the size of the renderer.
      */
-    private updateStats(dt: number): void {
-        if (!this.world || !this.statsEl) return;
-        this.statsAcc += dt * 1000;
-        if (this.statsAcc < this.statsInterval) return;
-        this.statsAcc = 0;
-        const perf = (this.world as any).getPerf?.();
-        if (!perf) return;
-        const { fps, fixedSps } = perf;
-        this.statsEl.textContent = `fps ${fps.toFixed(0)}  fixed ${fixedSps.toFixed(0)}`;
+    private resizeToCanvas() {
+        const c = this.renderer.domElement;
+        const w = c.clientWidth | 0,
+            h = c.clientHeight | 0;
+        if (w > 0 && h > 0 && (c.width !== w || c.height !== h)) {
+            this.renderer.setSize(w, h, false);
+            this.camera.aspect = w / (h || 1);
+            this.camera.updateProjectionMatrix();
+        }
     }
 
     //#endregion

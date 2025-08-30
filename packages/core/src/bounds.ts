@@ -3,6 +3,7 @@ import { Quat } from './math/quat';
 import type { Node } from './node';
 import { createTRS, type TRS, attachTransform } from './transform';
 import { kBounds, kBoundsOwner, kWorldAddBounds } from './keys';
+import { World } from './world';
 
 export interface AABB {
     min: Vec3;
@@ -155,7 +156,7 @@ export function attachBounds(node: Node): Bounds {
         (node.world as any)[kWorldAddBounds](b);
     } else {
         // also try explicit method if available
-        (node.world as any)?.registerBounds?.(b);
+        (node.world as World)?.registerBounds?.(b);
     }
     return b;
 }

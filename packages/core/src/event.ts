@@ -73,7 +73,7 @@ export class TypedEvent<T> {
  * ```
  */
 export class EventBus<E extends Record<string, any>> {
-    private listeners: { [K in keyof E]?: Set<Listener<E[K]>> } = {} as any;
+    private listeners: { [K in keyof E]?: Set<Listener<E[K]>> } = {};
 
     /**
      * Subscribe to an event.

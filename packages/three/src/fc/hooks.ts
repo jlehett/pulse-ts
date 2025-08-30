@@ -37,7 +37,7 @@ export function useThreeContext(): {
  */
 export function useThreeRoot(): THREE.Object3D {
     const { plugin } = useThreeContext();
-    const { node, destroy } = __fcCurrent() as any;
+    const { node, destroy } = __fcCurrent();
     const root = plugin.ensureRoot(node);
     destroy?.push(() => {
         plugin.disposeRoot(node);
@@ -55,14 +55,14 @@ export function useThreeRoot(): THREE.Object3D {
  */
 export function useObject3D(object: THREE.Object3D): void {
     const { plugin } = useThreeContext();
-    const { node, destroy } = __fcCurrent() as any;
+    const { node, destroy } = __fcCurrent();
     plugin.attachChild(node, object);
     destroy?.push(() => plugin.detachChild(node, object));
 }
 
 export function useCulledObject3D(object: THREE.Object3D): void {
     const { plugin } = useThreeContext();
-    const { node } = __fcCurrent() as any;
+    const { node } = __fcCurrent();
     const root = plugin.ensureRoot(node);
 
     // Each frame, mirror the root's visibility decided by the ThreePlugin culler

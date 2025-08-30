@@ -1,5 +1,6 @@
 import { Vec3 } from '../math/vec3';
 import type { World } from '../world';
+import type { System } from './system';
 import { createServiceKey, type ServiceKey } from '../keys';
 import { maybeGetBounds } from '../bounds';
 import { attachVisibility } from '../visibility';
@@ -123,11 +124,23 @@ class Frustum {
 /**
  * Iterates nodes with Bounds and updates Visibility from camera frustum.
  */
-export class CullingSystem {
+export class CullingSystem implements System {
     private frustum = new Frustum();
+    private world!: World;
+    private tick?: { dispose(): void };
 
-    constructor(private world: World) {
-        world.registerSystemTick('frame', 'update', () => this.update());
+    attach(world: World): void {
+        this.world = world;
+        this.tick = world.registerSystemTick('frame', 'update', () =>
+            this.update(),
+        );
+    }
+
+    detach(): void {
+        this.tick?.dispose();
+        this.tick = undefined;
+        // @ts-expect-error clear
+        this.world = undefined;
     }
 
     /**
