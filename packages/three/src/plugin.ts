@@ -44,6 +44,7 @@ export class ThreePlugin {
     private resizeObs: ResizeObserver | null = null;
 
     private offParent: (() => void) | null = null;
+    private offRemoved: (() => void) | null = null;
 
     private projView = new THREE.Matrix4();
     private pvArray = new Float32Array(16);
@@ -121,6 +122,10 @@ export class ThreePlugin {
             const target = newParent ? this.ensureRoot(newParent) : this.scene;
             if (rec.root.parent !== target) target.add(rec.root);
         });
+        // Node lifecycle: dispose roots on removal
+        this.offRemoved = world.onNodeRemoved((node) => {
+            this.disposeRoot(node);
+        });
     }
 
     /**
@@ -134,6 +139,8 @@ export class ThreePlugin {
 
         this.offParent?.();
         this.offParent = null;
+        this.offRemoved?.();
+        this.offRemoved = null;
 
         this.serviceOff?.();
         this.serviceOff = null;

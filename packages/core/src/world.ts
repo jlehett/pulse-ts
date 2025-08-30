@@ -25,6 +25,7 @@ import { Bounds } from './bounds';
 import { CullingSystem } from './world/culling';
 import type { System } from './world/system';
 import { STATS_SERVICE, WorldStats } from './world/stats';
+import { TypedEvent } from './event';
 
 /**
  * Options for the World class.
@@ -68,6 +69,8 @@ export class World {
     private loop!: EngineLoop;
     private systemNode: Node | null = null;
     private systems: { sys: System; order: number }[] = [];
+    private nodeAddedBus = new TypedEvent<Node>();
+    private nodeRemovedBus = new TypedEvent<Node>();
 
     //#endregion
 
@@ -130,6 +133,16 @@ export class World {
         return this.scene.onParentChanged(fn);
     }
 
+    /** Subscribes to node added events. */
+    onNodeAdded(fn: (node: Node) => void) {
+        return this.nodeAddedBus.on(fn);
+    }
+
+    /** Subscribes to node removed events. */
+    onNodeRemoved(fn: (node: Node) => void) {
+        return this.nodeRemovedBus.on(fn);
+    }
+
     /**
      * Mounts a function component.
      * @param fc The function component to mount.
@@ -160,6 +173,7 @@ export class World {
         if (t) this.transforms.add(t);
 
         node.onInit?.();
+        this.nodeAddedBus.emit(node);
 
         // ensure children are attached as well
         for (const c of node.children) this.add(c);
@@ -182,6 +196,7 @@ export class World {
         this.idToNode.delete(node.id);
         node.world = null;
         // ticks owned by this node will be lazily unlinked during iteration
+        this.nodeRemovedBus.emit(node);
     }
 
     /**
