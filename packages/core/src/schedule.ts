@@ -1,8 +1,14 @@
+/**
+ * The scheduler interface.
+ */
 export interface Scheduler {
     start(loop: (nowMs: number) => void): void;
     stop(): void;
 }
 
+/**
+ * A scheduler that uses requestAnimationFrame.
+ */
 export class RafScheduler implements Scheduler {
     private id: number | null = null;
 
@@ -20,6 +26,9 @@ export class RafScheduler implements Scheduler {
     }
 }
 
+/**
+ * A scheduler that uses setTimeout.
+ */
 export class TimeoutScheduler implements Scheduler {
     constructor(private fps = 60) {}
 
@@ -46,6 +55,9 @@ export class TimeoutScheduler implements Scheduler {
     }
 }
 
+/**
+ * A scheduler that uses a manual loop.
+ */
 export class ManualScheduler implements Scheduler {
     private loop: ((now: number) => void) | null = null;
 

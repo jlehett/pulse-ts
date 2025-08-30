@@ -10,15 +10,15 @@ export {
     createTRS,
 } from './transform';
 export { Node } from './node';
+export { World } from './world';
 export {
-    World,
-    __worldRegisterTick,
-    __worldAddTransform,
-    __worldRemoveTransform,
+    kWorldRegisterTick,
+    kWorldAddTransform,
+    kWorldRemoveTransform,
+    kWorldEmitNodeParentChanged,
     type ServiceKey,
     createServiceKey,
-    type WorldSnapshot,
-} from './world';
+} from './keys';
 
 // FC API
 export type { FC } from './fc/runtime';

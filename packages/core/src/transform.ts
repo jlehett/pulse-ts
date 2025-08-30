@@ -1,11 +1,12 @@
 import { Vec3 } from './math/vec3';
 import { Quat } from './math/quat';
 import type { Node } from './node';
-import { __worldAddTransform } from './world';
-
-const SYM = Symbol('pulse:transform');
-const internal_owner = Symbol('pulse:transform:owner');
-const internal_dirty = Symbol('pulse:transform:dirty');
+import {
+    kWorldAddTransform,
+    kTransformOwner,
+    kTransformDirty,
+    kTransform,
+} from './keys';
 
 /**
  * AABB helper interface.
@@ -53,7 +54,7 @@ function makeDirtyVec3(owner: Transform, v: Vec3): Vec3 {
     return new Proxy(v, {
         set(target, prop, value) {
             (target as any)[prop] = value;
-            owner[internal_dirty] = true;
+            owner[kTransformDirty] = true;
             owner._localVersion++;
             return true;
         },
@@ -70,7 +71,7 @@ function makeDirtyQuat(owner: Transform, q: Quat): Quat {
     return new Proxy(q, {
         set(target, prop, value) {
             (target as any)[prop] = value;
-            owner[internal_dirty] = true;
+            owner[kTransformDirty] = true;
             owner._localVersion++;
             return true;
         },
@@ -81,8 +82,8 @@ function makeDirtyQuat(owner: Transform, q: Quat): Quat {
  * A transform.
  */
 export class Transform {
-    [internal_owner]!: Node;
-    [internal_dirty] = true;
+    [kTransformOwner]!: Node;
+    [kTransformDirty] = true;
 
     readonly localPosition: Vec3;
     readonly previousLocalPosition: Vec3;
@@ -121,7 +122,7 @@ export class Transform {
     ];
 
     get owner(): Node {
-        return this[internal_owner];
+        return this[kTransformOwner];
     }
 
     constructor() {
@@ -137,7 +138,7 @@ export class Transform {
         if (this._treeQueryFrame === frameId)
             return this._cachedAncestryVersion;
         let v = this._localVersion;
-        const parent = this[internal_owner].parent;
+        const parent = this[kTransformOwner].parent;
         if (parent) {
             const pt = maybeGetTransform(parent);
             if (pt) v = Math.max(v, pt.getAncestryVersion(frameId));
@@ -155,7 +156,7 @@ export class Transform {
         this.previousLocalRotation.copy(this.localRotation);
         this.previousLocalScale.copy(this.localScale);
         // we just committed current->previous; clear dirty
-        this[internal_dirty] = false;
+        this[kTransformDirty] = false;
     }
 
     /**
@@ -171,7 +172,7 @@ export class Transform {
         if (opts.rotationQuat)
             Object.assign(this.localRotation, opts.rotationQuat);
         if (opts.scale) Object.assign(this.localScale, opts.scale);
-        this[internal_dirty] = true;
+        this[kTransformDirty] = true;
         this._localVersion++;
     }
 
@@ -181,7 +182,7 @@ export class Transform {
      */
     editLocal(fn: (t: this) => void) {
         fn(this);
-        this[internal_dirty] = true;
+        this[kTransformDirty] = true;
         this._localVersion++;
     }
 
@@ -192,7 +193,7 @@ export class Transform {
      * @returns The local position, rotation, and scale.
      */
     getLocalTRS(out?: TRS, alpha?: number) {
-        const w = this[internal_owner].world;
+        const w = this[kTransformOwner].world;
         const a = alpha ?? (w ? w.getAmbientAlpha() : 0);
         const o = out ?? createTRS();
 
@@ -225,7 +226,7 @@ export class Transform {
      * @returns The world position, rotation, and scale.
      */
     getWorldTRS(out?: TRS, alpha?: number) {
-        const w = this[internal_owner].world;
+        const w = this[kTransformOwner].world;
         const a = alpha ?? (w ? w.getAmbientAlpha() : 0);
 
         // For a>0, interpolation changes every frame; don't cache
@@ -236,7 +237,7 @@ export class Transform {
             o.rotation.copy(local.rotation);
             o.scale.copy(local.scale);
 
-            const parent = this[internal_owner].parent;
+            const parent = this[kTransformOwner].parent;
             if (!parent) return o;
             const pt = maybeGetTransform(parent);
             if (!pt) return o;
@@ -258,7 +259,7 @@ export class Transform {
         const local = this.getLocalTRS(this._scratchLocal, 0);
         const o = out ?? createTRS();
 
-        const parent = this[internal_owner].parent;
+        const parent = this[kTransformOwner].parent;
         let treeVersion = this._localVersion;
         if (parent) {
             const pt = maybeGetTransform(parent);
@@ -416,13 +417,13 @@ export class Transform {
  * @returns The transform.
  */
 export function attachTransform(node: Node): Transform {
-    if ((node as any)[SYM]) return (node as any)[SYM];
+    if ((node as any)[kTransform]) return (node as any)[kTransform];
     const t = new Transform();
-    Object.defineProperty(node, SYM, { value: t, enumerable: false });
-    (t as any)[internal_owner] = node;
+    Object.defineProperty(node, kTransform, { value: t, enumerable: false });
+    (t as any)[kTransformOwner] = node;
     // if already in a world, register this transform for snapshots
-    if (node.world && (node.world as any)[__worldAddTransform]) {
-        (node.world as any)[__worldAddTransform](t);
+    if (node.world && (node.world as any)[kWorldAddTransform]) {
+        (node.world as any)[kWorldAddTransform](t);
     }
     return t;
 }
@@ -433,7 +434,7 @@ export function attachTransform(node: Node): Transform {
  * @returns The transform, or undefined if no transform is attached.
  */
 export function maybeGetTransform(node: Node): Transform | undefined {
-    return (node as any)[SYM] as Transform | undefined;
+    return (node as any)[kTransform] as Transform | undefined;
 }
 
 /**
@@ -444,8 +445,3 @@ export function maybeGetTransform(node: Node): Transform | undefined {
 export function getTransform(node: Node): Transform {
     return attachTransform(node);
 }
-
-/**
- * The symbol used to attach the transform to a node.
- */
-export const TRANSFORM_SYMBOL = SYM;

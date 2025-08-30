@@ -5,21 +5,29 @@ import type {
     TickFn,
     TickRegistration,
 } from './types';
-import { __worldRegisterTick } from './world';
+import {
+    kWorldEmitNodeParentChanged,
+    kWorldRegisterTick,
+    kRegisteredTicks,
+    kRegisterTick,
+} from './keys';
 
 let NEXT_ID = 1;
 
-const registeredTicks = Symbol('pulse:node:registeredTicks');
-export const registerTick = Symbol('pulse:node:registerTick');
-
 export class Node {
+    //#region Fields
+
     readonly id = NEXT_ID++;
     world: World | null = null;
 
     parent: Node | null = null;
     children: Node[] = [];
 
-    [registeredTicks]: TickRegistration[] = [];
+    [kRegisteredTicks]: TickRegistration[] = [];
+
+    //#endregion
+
+    //#region Public Methods
 
     /**
      * Adds a child node to this node.
@@ -39,7 +47,7 @@ export class Node {
 
         // Ensure world membership, then emit a single parent-change event
         if (this.world) this.world.add(child);
-        this.world?._emitNodeParentChanged(child, oldParent, this);
+        this.world?.[kWorldEmitNodeParentChanged](child, oldParent, this);
         return this;
     }
 
@@ -53,7 +61,7 @@ export class Node {
         if (i >= 0) this.children.splice(i, 1);
         const oldParent = this;
         child.parent = null;
-        this.world?._emitNodeParentChanged(child, oldParent, null);
+        this.world?.[kWorldEmitNodeParentChanged](child, oldParent, null);
         return this;
     }
 
@@ -66,12 +74,12 @@ export class Node {
         if (this.parent) this.parent.removeChild(this);
         this.world?.remove(this);
         // hard-unlink ticks O(1)
-        for (const r of this[registeredTicks]) {
+        for (const r of this[kRegisteredTicks]) {
             try {
                 r.dispose();
             } catch {}
         }
-        this[registeredTicks].length = 0;
+        this[kRegisteredTicks].length = 0;
     }
 
     /**
@@ -84,6 +92,10 @@ export class Node {
      */
     onDestroy?(): void;
 
+    //#endregion
+
+    //#region Internal Methods
+
     /**
      * Registers a tick function.
      * @param kind The kind of tick.
@@ -92,7 +104,7 @@ export class Node {
      * @param order The order of the tick.
      * @returns A function to unregister the tick.
      */
-    [registerTick](
+    [kRegisterTick](
         kind: UpdateKind,
         phase: UpdatePhase,
         fn: TickFn,
@@ -102,14 +114,16 @@ export class Node {
             throw new Error(
                 'Node must be added to a World before registering ticks.',
             );
-        const reg = this.world[__worldRegisterTick](
+        const reg = this.world[kWorldRegisterTick](
             this,
             kind,
             phase,
             fn,
             order,
         );
-        this[registeredTicks].push(reg);
+        this[kRegisteredTicks].push(reg);
         return () => reg.dispose();
     }
+
+    //#endregion
 }

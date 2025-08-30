@@ -2,8 +2,6 @@ import * as THREE from 'three';
 import type { World, ServiceKey } from '@pulse-ts/core';
 import {
     maybeGetTransform,
-    Node,
-    __worldRegisterTick,
     createTRS,
     type TRS,
     createServiceKey,

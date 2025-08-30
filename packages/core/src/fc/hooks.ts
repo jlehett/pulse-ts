@@ -1,7 +1,8 @@
 import { Vec3 } from '../math/vec3';
 import { current } from './runtime';
 import { World } from '../world';
-import { Node, registerTick } from '../node';
+import { Node } from '../node';
+import { kRegisterTick } from '../keys';
 import { attachTransform, getTransform, Transform } from '../transform';
 
 /**
@@ -81,7 +82,7 @@ function reg(
     order = 0,
 ) {
     const { node } = current();
-    const dispose = node[registerTick](kind, phase, fn, order);
+    const dispose = node[kRegisterTick](kind, phase, fn, order);
     current().disposers.push(dispose);
     // auto cleanup
     useDestroy(dispose);
