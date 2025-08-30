@@ -1,3 +1,4 @@
+import { Vec3 } from '../math/vec3';
 import { current } from './runtime';
 import { World } from '../world';
 import { Node, registerTick } from '../node';
@@ -177,4 +178,29 @@ export function useFrameLate(fn: (dt: number) => void, opts: TickOpts = {}) {
 export function useChild<P>(fc: (props: Readonly<P>) => void, props?: P): Node {
     const { world, node } = current();
     return world.mount(fc as any, props, { parent: node });
+}
+
+/**
+ * Ensures the current `Node` has an AABB attached to its `Transform`.
+ *
+ * - The AABB is used for frustum culling.
+ *
+ * @param min The minimum point of the AABB.
+ * @param max The maximum point of the AABB.
+ */
+export function useAABB(
+    min: Readonly<Vec3 | [number, number, number]>,
+    max: Readonly<Vec3 | [number, number, number]>,
+): void {
+    const t = useTransform();
+
+    useInit(() => {
+        const minV = Array.isArray(min)
+            ? new Vec3(min[0], min[1], min[2])
+            : (min as Vec3);
+        const maxV = Array.isArray(max)
+            ? new Vec3(max[0], max[1], max[2])
+            : (max as Vec3);
+        t.setLocalAABB(minV, maxV);
+    });
 }

@@ -36,4 +36,5 @@ export {
     useFrameUpdate,
     useFrameLate,
     useChild,
+    useAABB,
 } from './fc/hooks';

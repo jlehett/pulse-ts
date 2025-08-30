@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { __fcCurrent } from '@pulse-ts/core';
+import { __fcCurrent, useFrameLate } from '@pulse-ts/core';
 import { ThreePlugin, THREE_SERVICE } from '../plugin';
 
 /**
@@ -58,4 +58,15 @@ export function useObject3D(object: THREE.Object3D): void {
     const { node, destroy } = __fcCurrent() as any;
     plugin.attachChild(node, object);
     destroy?.push(() => plugin.detachChild(node, object));
+}
+
+export function useCulledObject3D(object: THREE.Object3D): void {
+    const { plugin } = useThreeContext();
+    const { node } = __fcCurrent() as any;
+    const root = plugin.ensureRoot(node);
+
+    // Each frame, mirror the root's visibility decided by the ThreePlugin culler
+    useFrameLate(() => {
+        object.visible = root.visible;
+    });
 }
