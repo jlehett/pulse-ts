@@ -328,6 +328,14 @@ export class Transform {
         return this.getWorldTRS().scale;
     }
 
+    /**
+     * A monotonically increasing version that changes whenever the cached world TRS updates.
+     * Useful for external sync systems to detect whether a recomposition occurred for alpha=0.
+     */
+    getWorldVersion(): number {
+        return this._worldVersion;
+    }
+
     //#region AABB API
 
     /**

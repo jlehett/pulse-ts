@@ -174,10 +174,10 @@ export class ThreePlugin {
             if (alpha === 0) {
                 // if world TRS cached version unchanged, skip touching Three
                 t.getWorldTRS(rec.trs, 0); // fast when cached
-                if (rec.lastWorldVersion === (t as any)._worldVersion) {
+                if (rec.lastWorldVersion === (t as any).getWorldVersion?.()) {
                     continue;
                 }
-                rec.lastWorldVersion = (t as any)._worldVersion;
+                rec.lastWorldVersion = (t as any).getWorldVersion?.() ?? -1;
 
                 // We still apply *local* TRS to Three (graph composes it)
                 // But rec.trs hold world; recompute local quickly:

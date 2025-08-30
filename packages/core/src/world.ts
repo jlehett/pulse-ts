@@ -13,6 +13,7 @@ import { Ticker } from './world/ticker';
 import { TypedEvent } from './event';
 import { Snapshotter, type WorldSnapshot } from './world/snapshots';
 import { ServiceRegistry } from './world/services';
+import { EngineLoop } from './world/loop';
 import {
     kWorldRegisterTick,
     kWorldAddTransform,
@@ -58,29 +59,19 @@ export class World {
     private services = new ServiceRegistry();
     private snapshotter!: Snapshotter;
 
-    private scheduler: Scheduler;
-    private maxFixedStepsPerFrame: number;
-    private maxFrameDtMs: number;
-
-    private fixedStep = 1000 / 60;
-    private accumulator = 0;
-
-    private currentTickKind: UpdateKind | null = null; // used by interpolation
-    private lastAlpha = 0;
-
     private idToNode = new Map<number, Node>();
     private transforms = new Set<Transform>();
-    private frameId = 0;
+    private loop!: EngineLoop;
     private systemNode: Node | null = null;
 
     //#endregion
 
     constructor(opts: WorldOptions = {}) {
-        this.fixedStep = opts.fixedStepMs ?? 1000 / 60;
-        this.maxFixedStepsPerFrame = opts.maxFixedStepsPerFrame ?? 8;
-        this.maxFrameDtMs = opts.maxFrameDtMs ?? 250;
+        const fixedStep = opts.fixedStepMs ?? 1000 / 60;
+        const maxFixedStepsPerFrame = opts.maxFixedStepsPerFrame ?? 8;
+        const maxFrameDtMs = opts.maxFrameDtMs ?? 250;
 
-        this.scheduler =
+        const scheduler: Scheduler =
             opts.scheduler ??
             (typeof window !== 'undefined' && 'requestAnimationFrame' in window
                 ? new RafScheduler()
@@ -93,6 +84,23 @@ export class World {
             this.transforms.delete(t);
 
         this.snapshotter = new Snapshotter(this.idToNode, this.transforms);
+
+        // decoupled time/tick loop
+        this.loop = new EngineLoop(
+            {
+                scheduler,
+                fixedStepMs: fixedStep,
+                maxFixedStepsPerFrame,
+                maxFrameDtMs,
+            },
+            {
+                beforeFixedStep: () => {
+                    // snapshot only nodes that actually have transforms
+                    for (const t of this.transforms) t.snapshotPrevious();
+                },
+                runPhase: (kind, phase, dt) => this.runPhase(kind, phase, dt),
+            },
+        );
     }
 
     //#region Public API
@@ -198,21 +206,14 @@ export class World {
      * Starts the world.
      */
     start(): void {
-        let last = performance?.now?.() ?? Date.now();
-        this.scheduler.start((now) => {
-            // clamp dt to avoid death spirals after tab throttling
-            const raw = now - last;
-            last = now;
-            const dtMs = Math.min(Math.max(raw, 0), this.maxFrameDtMs);
-            this.tick(dtMs);
-        });
+        this.loop.start();
     }
 
     /**
      * Stops the world.
      */
     stop(): void {
-        this.scheduler.stop();
+        this.loop.stop();
     }
 
     /**
@@ -220,41 +221,7 @@ export class World {
      * @param dtMs The delta time in milliseconds.
      */
     tick(dtMs: number): void {
-        this.frameId++;
-        this.accumulator += dtMs;
-
-        // fixed steps
-        let steps = 0;
-        while (
-            this.accumulator >= this.fixedStep &&
-            steps < this.maxFixedStepsPerFrame
-        ) {
-            // snapshot only nodes that actually have transforms
-            for (const t of this.transforms) t.snapshotPrevious();
-
-            const dt = this.fixedStep / 1000;
-            this.currentTickKind = 'fixed';
-            this.runPhase('fixed', 'early', dt);
-            this.runPhase('fixed', 'update', dt);
-            this.runPhase('fixed', 'late', dt);
-            this.currentTickKind = null;
-
-            this.accumulator -= this.fixedStep;
-            steps++;
-        }
-        // if we hit the guard, drop leftover time to prevent spiral
-        if (steps === this.maxFixedStepsPerFrame) this.accumulator = 0;
-
-        // frame alpha
-        this.lastAlpha = this.accumulator / this.fixedStep;
-
-        // frame phases
-        const dt = dtMs / 1000;
-        this.currentTickKind = 'frame';
-        this.runPhase('frame', 'early', dt);
-        this.runPhase('frame', 'update', dt);
-        this.runPhase('frame', 'late', dt);
-        this.currentTickKind = null;
+        this.loop.tick(dtMs);
     }
 
     /**
@@ -262,7 +229,7 @@ export class World {
      * @returns
      */
     saveSnapshot(): WorldSnapshot {
-        return this.snapshotter.save(this.accumulator);
+        return this.snapshotter.save(this.loop.getAccumulator());
     }
 
     /**
@@ -274,7 +241,8 @@ export class World {
         snap: WorldSnapshot,
         opts?: { strict?: boolean; resetPrevious?: boolean },
     ) {
-        this.accumulator = this.snapshotter.restore(snap, opts);
+        const acc = this.snapshotter.restore(snap, opts);
+        this.loop.setAccumulator(acc);
     }
 
     /**
@@ -283,7 +251,7 @@ export class World {
      */
     debugStats() {
         return {
-            frameId: this.frameId,
+            frameId: this.loop.getFrameId(),
             nodes: this.nodes.size,
             transforms: this.transforms.size,
             ticks: this.ticker.stats(this.nodes),
@@ -295,8 +263,7 @@ export class World {
      * @returns The ambient alpha.
      */
     getAmbientAlpha(): number {
-        // only during frame phases do we interpolate
-        return this.currentTickKind === 'frame' ? this.lastAlpha : 0;
+        return this.loop.getAmbientAlpha();
     }
 
     /**
@@ -322,7 +289,7 @@ export class World {
      * @returns The frame ID.
      */
     getFrameId(): number {
-        return this.frameId;
+        return this.loop.getFrameId();
     }
 
     //#endregion
