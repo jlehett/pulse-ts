@@ -38,6 +38,7 @@ function makeDirtyVec3(owner: Transform, v: Vec3): Vec3 {
         set(target, prop, value) {
             (target as any)[prop] = value;
             owner[internal_dirty] = true;
+            owner._localVersion++;
             return true;
         },
     });
@@ -54,6 +55,7 @@ function makeDirtyQuat(owner: Transform, q: Quat): Quat {
         set(target, prop, value) {
             (target as any)[prop] = value;
             owner[internal_dirty] = true;
+            owner._localVersion++;
             return true;
         },
     });
@@ -76,6 +78,13 @@ export class Transform {
     // allocation-free scratch
     private _scratchLocal = createTRS();
     private _scratchParentWorld = createTRS();
+
+    // dirty/caching
+    _localVersion = 0;
+    private _worldVersion = 0;
+    private _cacheParentWorldVersion = -1;
+    private _cacheLocalVersion = -1;
+    private _cachedWorld = createTRS();
 
     constructor() {
         this.localPosition = makeDirtyVec3(this, new Vec3());
@@ -111,6 +120,7 @@ export class Transform {
             Object.assign(this.localRotation, opts.rotationQuat);
         if (opts.scale) Object.assign(this.localScale, opts.scale);
         this[internal_dirty] = true;
+        this._localVersion++;
     }
 
     /**
@@ -120,6 +130,7 @@ export class Transform {
     editLocal(fn: (t: this) => void) {
         fn(this);
         this[internal_dirty] = true;
+        this._localVersion++;
     }
 
     /**
@@ -165,34 +176,84 @@ export class Transform {
         const w = this[internal_owner].world;
         const a = alpha ?? (w ? w.getAmbientAlpha() : 0);
 
-        // start with local
-        const local = this.getLocalTRS(this._scratchLocal, a);
+        // For a>0, interpolation changes every frame; don't cache
+        if (a > 0) {
+            const local = this.getLocalTRS(this._scratchLocal, a);
+            const o = out ?? createTRS();
+            o.position.copy(local.position);
+            o.rotation.copy(local.rotation);
+            o.scale.copy(local.scale);
+
+            const parent = this[internal_owner].parent;
+            if (!parent) return o;
+            const pt = maybeGetTransform(parent);
+            if (!pt) return o;
+
+            const pw = pt.getWorldTRS(this._scratchParentWorld, a);
+            o.scale.multiply(pw.scale);
+            Quat.multiply(pw.rotation, o.rotation, o.rotation);
+            o.position.multiply(pw.scale);
+            Quat.rotateVector(pw.rotation, o.position, o.position);
+            o.position.set(
+                pw.position.x + o.position.x,
+                pw.position.y + o.position.y,
+                pw.position.z + o.position.z,
+            );
+            return o;
+        }
+
+        // a === 0: can cache world composition until parent/local changes
+        const local = this.getLocalTRS(this._scratchLocal, 0);
         const o = out ?? createTRS();
+
+        const parent = this[internal_owner].parent;
+        let parentWorldVersion = 0;
+        if (parent) {
+            const pt = maybeGetTransform(parent);
+            if (pt) {
+                pt.getWorldTRS(this._scratchParentWorld, 0); // ensure parent world is up-to-date
+                parentWorldVersion = pt._worldVersion;
+            }
+        }
+
+        if (
+            this._cacheParentWorldVersion === parentWorldVersion &&
+            this._cacheLocalVersion === this._localVersion
+        ) {
+            // copy cached
+            o.position.copy(this._cachedWorld.position);
+            o.rotation.copy(this._cachedWorld.rotation);
+            o.scale.copy(this._cachedWorld.scale);
+            return o;
+        }
+
+        // recompute and cache
         o.position.copy(local.position);
         o.rotation.copy(local.rotation);
         o.scale.copy(local.scale);
 
-        const parent = this[internal_owner].parent;
-        if (!parent) return o;
+        if (parent) {
+            const pt = maybeGetTransform(parent);
+            if (pt) {
+                const pw = pt.getWorldTRS(this._scratchParentWorld, 0);
+                o.scale.multiply(pw.scale);
+                Quat.multiply(pw.rotation, o.rotation, o.rotation);
+                o.position.multiply(pw.scale);
+                Quat.rotateVector(pw.rotation, o.position, o.position);
+                o.position.set(
+                    pw.position.x + o.position.x,
+                    pw.position.y + o.position.y,
+                    pw.position.z + o.position.z,
+                );
+            }
+        }
 
-        const pt = maybeGetTransform(parent);
-        if (!pt) return o;
-
-        // compose with parent world
-        const pw = pt.getWorldTRS(this._scratchParentWorld, a);
-
-        // worldScale = parentScale * localScale
-        o.scale.multiply(pw.scale);
-        // worldRotation = parentRot * localRot (normalize inside)
-        Quat.multiply(pw.rotation, o.rotation, o.rotation);
-        // worldPosition = parentPos + rotate(parentRot, localPos * parentScale)
-        o.position.multiply(pw.scale);
-        Quat.rotateVector(pw.rotation, o.position, o.position);
-        o.position.set(
-            pw.position.x + o.position.x,
-            pw.position.y + o.position.y,
-            pw.position.z + o.position.z,
-        );
+        this._cachedWorld.position.copy(o.position);
+        this._cachedWorld.rotation.copy(o.rotation);
+        this._cachedWorld.scale.copy(o.scale);
+        this._cacheParentWorldVersion = parentWorldVersion;
+        this._cacheLocalVersion = this._localVersion;
+        this._worldVersion++;
         return o;
     }
 

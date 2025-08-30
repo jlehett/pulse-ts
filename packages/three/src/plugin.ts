@@ -1,21 +1,24 @@
 import * as THREE from 'three';
-import type { World } from '@pulse-ts/core';
+import type { World, ServiceKey } from '@pulse-ts/core';
 import {
     maybeGetTransform,
     Node,
     __worldRegisterTick,
     createTRS,
     type TRS,
+    createServiceKey,
 } from '@pulse-ts/core';
 
-export const THREE_SERVICE = Symbol('pulse:three');
+export const THREE_SERVICE: ServiceKey<ThreePlugin> =
+    createServiceKey<ThreePlugin>('pulse:three');
 
-type RootRecord = { root: THREE.Object3D; trs: TRS };
+type RootRecord = { root: THREE.Object3D; trs: TRS; lastWorldVersion: number };
 
 export interface ThreePluginOptions {
     canvas: HTMLCanvasElement;
     clearColor?: number;
     autoCommitTransforms?: boolean; // default true
+    useMatrices?: boolean; // default false - disable matrixAutoUpdate and compose explicitly
 }
 
 export class ThreePlugin {
@@ -25,14 +28,17 @@ export class ThreePlugin {
     readonly options: Required<ThreePluginOptions>;
 
     private world: World | null = null;
-    private renderDriver: { dispose(): void } | null = null;
+    private sysTickDisposer: { dispose(): void } | null = null;
     private roots = new Map<object, RootRecord>();
     private resizeObs: ResizeObserver | null = null;
+
+    private offParent: (() => void) | null = null;
 
     constructor(opts: ThreePluginOptions) {
         this.options = {
             clearColor: 0x000000,
             autoCommitTransforms: true,
+            useMatrices: false,
             ...opts,
         };
 
@@ -60,29 +66,31 @@ export class ThreePlugin {
         this.world = world;
         world.setService(THREE_SERVICE, this);
 
-        // create a driver node so the scheduler will run
-        const driver = new Node();
-        world.add(driver);
-        const reg = world[__worldRegisterTick](
-            driver,
+        // World-level system tick
+        this.sysTickDisposer = world.registerSystemTick(
             'frame',
             'late',
             () => this.render(),
             Number.MAX_SAFE_INTEGER,
         );
 
-        this.renderDriver = {
-            dispose: () => {
-                reg.active = false;
-                world.remove(driver);
-            },
-        };
+        // Event-driven parenting (no per-frame scan)
+        this.offParent = world.onNodeParentChanged(({ node, newParent }) => {
+            const rec = this.roots.get(node);
+            if (!rec) return;
+            const target = newParent ? this.ensureRoot(newParent) : this.scene;
+            if (rec.root.parent !== target) target.add(rec.root);
+        });
     }
 
     detach() {
         if (!this.world) return;
-        this.renderDriver?.dispose();
-        this.renderDriver = null;
+        this.sysTickDisposer?.dispose();
+        this.sysTickDisposer = null;
+
+        this.offParent?.();
+        this.offParent = null;
+
         this.world.setService(THREE_SERVICE, undefined as any);
         this.world = null;
 
@@ -109,15 +117,17 @@ export class ThreePlugin {
         let rec = this.roots.get(node);
         if (!rec) {
             const group = new THREE.Group();
-            rec = { root: group, trs: createTRS() };
+            if (this.options.useMatrices) {
+                group.matrixAutoUpdate = false;
+            }
+            rec = { root: group, trs: createTRS(), lastWorldVersion: -1 };
             this.roots.set(node, rec);
+
+            // Attach under current parent (or scene)
+            const parent = (node as any).parent;
+            const target = parent ? this.ensureRoot(parent) : this.scene;
+            if (rec.root.parent !== target) target.add(rec.root);
         }
-        // ensure parent root exists and re-parent immediately
-        const parent = (node as any).parent;
-        const targetParent: THREE.Object3D = parent
-            ? this.ensureRoot(parent)
-            : this.scene;
-        if (rec.root.parent !== targetParent) targetParent.add(rec.root);
         return rec.root;
     }
 
@@ -132,20 +142,31 @@ export class ThreePlugin {
         rec.root.remove(child);
     }
 
-    private updateParenting(): void {
-        for (const [node, rec] of this.roots) {
-            const parent = (node as any).parent;
-            const targetParent = parent ? this.ensureRoot(parent) : this.scene;
-            if (rec.root.parent !== targetParent) targetParent.add(rec.root);
-        }
-    }
-
     private syncTRS(): void {
+        if (!this.world) return;
+        const alpha = this.world.getAmbientAlpha();
+
         for (const [node, rec] of this.roots) {
             const t = maybeGetTransform(node as any);
             if (!t) continue;
-            // write interpolated *local* TRS into our reusable container
-            t.getLocalTRS(rec.trs);
+
+            if (alpha === 0) {
+                // if world TRS cached version unchanged, skip touching Three
+                t.getWorldTRS(rec.trs, 0); // fast when cached
+                if (rec.lastWorldVersion === (t as any)._worldVersion) {
+                    continue;
+                }
+                rec.lastWorldVersion = (t as any)._worldVersion;
+
+                // We still apply *local* TRS to Three (graph composes it)
+                // But rec.trs hold world; recompute local quickly:
+                t.getLocalTRS(rec.trs, 0);
+            } else {
+                // With interpolation, always update (values change very frame)
+                t.getLocalTRS(rec.trs, alpha);
+                rec.lastWorldVersion = -1; // invalid
+            }
+
             rec.root.position.set(
                 rec.trs.position.x,
                 rec.trs.position.y,
@@ -162,6 +183,10 @@ export class ThreePlugin {
                 rec.trs.scale.y,
                 rec.trs.scale.z,
             );
+            if (this.options.useMatrices) {
+                rec.root.updateMatrix();
+                rec.root.matrixWorldNeedsUpdate = true;
+            }
         }
     }
 
@@ -170,14 +195,10 @@ export class ThreePlugin {
         if (!rec) return;
         if (rec.root.parent) rec.root.parent.remove(rec.root);
         this.roots.delete(node);
-        // heal parenting for children that referenced this node as parent
-        this.updateParenting();
     }
 
     render(): void {
         if (!this.world) return;
-        // parenting changes can happen outside Three; keep it consistent
-        this.updateParenting();
 
         if (this.options.autoCommitTransforms) {
             this.syncTRS();

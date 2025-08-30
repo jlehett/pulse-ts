@@ -15,6 +15,28 @@ export const __worldAddTransform = Symbol('pulse:world:addTransform');
 export const __worldRemoveTransform = Symbol('pulse:world:removeTransform');
 
 /**
+ * Strongly-typed service keys
+ */
+export type ServiceKey<T> = symbol & { __service?: T };
+export function createServiceKey<T>(desc: string): ServiceKey<T> {
+    return Symbol(desc) as ServiceKey<T>;
+}
+
+/**
+ * Doubly-linked list lane for O(1) unregisters
+ */
+interface TickLane {
+    head: RegInternal | null;
+    tail: RegInternal | null;
+    size: number;
+}
+interface RegInternal extends TickRegistration {
+    prev: RegInternal | null;
+    next: RegInternal | null;
+    lane: TickLane;
+}
+
+/**
  * Options for the World class.
  */
 export interface WorldOptions {
@@ -55,16 +77,27 @@ export class World {
     private lastAlpha = 0;
 
     // scheduler buckets: kind->phase->registrations[]
-    private schedule: Record<
-        UpdateKind,
-        Record<UpdatePhase, TickRegistration[]>
-    > = {
-        fixed: { early: [], update: [], late: [] },
-        frame: { early: [], update: [], late: [] },
+    private schedule: Record<UpdateKind, Record<UpdatePhase, TickLane>> = {
+        fixed: { early: makeLane(), update: makeLane(), late: makeLane() },
+        frame: { early: makeLane(), update: makeLane(), late: makeLane() },
     };
 
     // transforms present in this world
     private transforms = new Set<Transform>();
+
+    private services = new Map<symbol, any>();
+
+    // World events (parenting)
+    private parentListeners = new Set<
+        (e: {
+            node: Node;
+            oldParent: Node | null;
+            newParent: Node | null;
+        }) => void
+    >();
+
+    // single hidden node for system ticks (no per-plugin driver nodes)
+    private systemNode: Node | null = null;
 
     constructor(opts: WorldOptions = {}) {
         this.fixedStep = opts.fixedStepMs ?? 1000 / 60;
@@ -83,6 +116,49 @@ export class World {
         (this as any)[__worldRemoveTransform] = (t: Transform) =>
             this.transforms.delete(t);
     }
+
+    //#region Events
+
+    /**
+     * Subscribes to node parent change events.
+     * @param fn The function to call when a node parent changes.
+     * @returns A function to unsubscribe.
+     */
+    onNodeParentChanged(
+        fn: (e: {
+            node: Node;
+            oldParent: Node | null;
+            newParent: Node | null;
+        }) => void,
+    ) {
+        this.parentListeners.add(fn);
+        return () => this.parentListeners.delete(fn);
+    }
+
+    /**
+     * Internal; called by Node.addChild/removeChild
+     * @param node The node that changed parent.
+     * @param oldParent The old parent.
+     * @param newParent The new parent.
+     */
+    _emitNodeParentChanged(
+        node: Node,
+        oldParent: Node | null,
+        newParent: Node | null,
+    ) {
+        // Internal; called by Node.addChild/removeChild
+        for (const fn of this.parentListeners) {
+            try {
+                fn({ node, oldParent, newParent });
+            } catch (e) {
+                console.error(e);
+            }
+        }
+    }
+
+    //#endregion
+
+    //#region Mount / Graph
 
     /**
      * Mounts a function component.
@@ -127,12 +203,42 @@ export class World {
     remove(node: Node): void {
         if (!this.nodes.has(node)) return;
         this.nodes.delete(node);
+
         // unregister transform if present
         const t = maybeGetTransform(node);
         if (t) this.transforms.delete(t);
+
         node.world = null;
-        // NOTE: We intentionally do not recurse; removing a parent does not auto-remove children.
+        // ticks owned by this node will be lazily unlinked during iteration
     }
+
+    //#endregion
+
+    //#region System Ticks (World-Owned)
+
+    registerSystemTick(
+        kind: UpdateKind,
+        phase: UpdatePhase,
+        fn: TickFn,
+        order = 0,
+    ): { dispose(): void } {
+        if (!this.systemNode) {
+            this.systemNode = new Node();
+            this.add(this.systemNode);
+        }
+        const reg = (this as any)[__worldRegisterTick](
+            this.systemNode,
+            kind,
+            phase,
+            fn,
+            order,
+        ) as RegInternal;
+        return { dispose: () => reg.dispose() };
+    }
+
+    //#endregion
+
+    //#region Lifecycle
 
     /**
      * Starts the world.
@@ -192,6 +298,8 @@ export class World {
         this.runPhase('frame', 'late', dt);
     }
 
+    //#endregion
+
     /**
      * Gets the ambient alpha.
      * @returns The ambient alpha.
@@ -217,19 +325,28 @@ export class World {
         fn: TickFn,
         order = 0,
     ): TickRegistration {
-        const reg: TickRegistration = {
+        const lane = this.schedule[kind][phase];
+        const reg: RegInternal = {
             node,
             kind,
             phase,
             order,
             fn,
             active: true,
+            prev: null,
+            next: null,
+            lane,
+            dispose: () => {
+                if (!reg.active) return;
+                reg.active = false;
+                unlink(reg);
+            },
         };
-        const arr = this.schedule[kind][phase];
-        // insert sorted by order (stable)
-        let i = arr.findIndex((r) => r.order > order);
-        if (i === -1) i = arr.length;
-        arr.splice(i, 0, reg);
+        // Insert by order (stable): scan once
+        let p = lane.head;
+        while (p && p.order <= order) p = p.next;
+        if (!p) append(lane, reg);
+        else insertBefore(lane, p, reg);
         return reg;
     }
 
@@ -238,10 +355,8 @@ export class World {
      * @param key The key of the service.
      * @param service The service.
      */
-    setService<T>(key: symbol, service: T) {
-        // biome: we allow undefined to remove
-        (this as any)._services ??= new Map<symbol, any>();
-        (this as any)._services.set(key, service);
+    setService<T>(key: ServiceKey<T>, service: T) {
+        this.services.set(key, service);
     }
 
     /**
@@ -249,8 +364,38 @@ export class World {
      * @param key The key of the service.
      * @returns The service.
      */
-    getService<T>(key: symbol): T | undefined {
-        return (this as any)._services?.get(key);
+    getService<T>(key: ServiceKey<T>): T | undefined {
+        return this.services.get(key);
+    }
+
+    /**
+     * Quick health snapshot for tuning.
+     * @returns The debug stats.
+     */
+    debugStats() {
+        const laneStats = (lane: TickLane) => {
+            let active = 0;
+            for (let r = lane.head; r; r = r.next) {
+                if (r.active && this.nodes.has(r.node)) active++;
+            }
+            return { size: lane.size, active };
+        };
+        return {
+            nodes: this.nodes.size,
+            transforms: this.transforms.size,
+            ticks: {
+                fixed: {
+                    early: laneStats(this.schedule.fixed.early),
+                    update: laneStats(this.schedule.fixed.update),
+                    late: laneStats(this.schedule.fixed.late),
+                },
+                frame: {
+                    early: laneStats(this.schedule.frame.early),
+                    update: laneStats(this.schedule.frame.update),
+                    late: laneStats(this.schedule.frame.late),
+                },
+            },
+        };
     }
 
     /**
@@ -263,35 +408,82 @@ export class World {
         this.currentTickKind = kind;
         this.currentTickPhase = phase;
 
-        const regs = this.schedule[kind][phase];
-        let inactiveSeen = 0;
-
-        for (let i = 0; i < regs.length; i++) {
-            const r = regs[i];
+        const lane = this.schedule[kind][phase];
+        for (let r = lane.head; r; ) {
+            const next = r.next;
             if (!r.active || !this.nodes.has(r.node)) {
-                inactiveSeen++;
-                continue;
+                // Hard-unlink zombies lazily (O(1))
+                unlink(r);
+            } else {
+                try {
+                    r.fn(dt);
+                } catch (e) {
+                    console.error(e);
+                }
             }
-            try {
-                r.fn(dt);
-            } catch (e) {
-                console.error(e);
-            }
-        }
-
-        // opportunistic compaction if the list has a bunch of inactive entries
-        if (
-            inactiveSeen &&
-            regs.length >= 64 &&
-            inactiveSeen / regs.length > 0.25
-        ) {
-            const compacted = regs.filter(
-                (r) => r.active && this.nodes.has(r.node),
-            );
-            this.schedule[kind][phase] = compacted;
+            r = next;
         }
 
         this.currentTickPhase = null;
         this.currentTickKind = null;
     }
 }
+
+//#region Lane Utils
+
+/**
+ * Creates a new lane.
+ * @returns The new lane.
+ */
+function makeLane(): TickLane {
+    return {
+        head: null,
+        tail: null,
+        size: 0,
+    };
+}
+
+/**
+ * Appends a registration to the end of a lane.
+ * @param l The lane.
+ * @param r The registration to append.
+ */
+function append(l: TickLane, r: RegInternal) {
+    r.prev = l.tail;
+    r.next = null;
+    if (l.tail) l.tail.next = r;
+    else l.head = r;
+    l.tail = r;
+    l.size++;
+}
+
+/**
+ * Inserts a registration before a given registration in a lane.
+ * @param l The lane.
+ * @param at The registration to insert before.
+ * @param r The registration to insert.
+ */
+function insertBefore(l: TickLane, at: RegInternal, r: RegInternal) {
+    r.next = at;
+    r.prev = at.prev;
+    if (at.prev) at.prev.next = r;
+    else l.head = r;
+    at.prev = r;
+    l.size++;
+}
+
+/**
+ * Unlinks a registration from a lane.
+ * @param r The registration to unlink.
+ */
+function unlink(r: RegInternal) {
+    const l = r.lane;
+    if (r.prev) r.prev.next = r.next;
+    else if (l.head === r) l.head = r.next;
+    if (r.next) r.next.prev = r.prev;
+    else if (l.tail === r) l.tail = r.prev;
+    r.prev = r.next = null;
+    l.size--;
+}
+
+//#endregion

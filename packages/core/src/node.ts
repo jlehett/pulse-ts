@@ -27,10 +27,19 @@ export class Node {
      * @returns The node.
      */
     addChild(child: Node): this {
-        if (child.parent) child.parent.removeChild(child);
+        const oldParent = child.parent;
+        if (oldParent) {
+            const i = oldParent.children.indexOf(child);
+            if (i >= 0) oldParent.children.splice(i, 1);
+            child.parent = null;
+        }
+
         this.children.push(child);
         child.parent = this;
+
+        // Ensure world membership, then emit a single parent-change event
         if (this.world) this.world.add(child);
+        this.world?._emitNodeParentChanged(child, oldParent, this);
         return this;
     }
 
@@ -42,7 +51,9 @@ export class Node {
     removeChild(child: Node): this {
         const i = this.children.indexOf(child);
         if (i >= 0) this.children.splice(i, 1);
+        const oldParent = this;
         child.parent = null;
+        this.world?._emitNodeParentChanged(child, oldParent, null);
         return this;
     }
 
@@ -54,7 +65,12 @@ export class Node {
         this.onDestroy?.();
         if (this.parent) this.parent.removeChild(this);
         this.world?.remove(this);
-        this[registeredTicks].forEach((r) => (r.active = false));
+        // hard-unlink ticks O(1)
+        for (const r of this[registeredTicks]) {
+            try {
+                r.dispose();
+            } catch {}
+        }
         this[registeredTicks].length = 0;
     }
 
@@ -94,8 +110,6 @@ export class Node {
             order,
         );
         this[registeredTicks].push(reg);
-        return () => {
-            reg.active = false;
-        };
+        return () => reg.dispose();
     }
 }

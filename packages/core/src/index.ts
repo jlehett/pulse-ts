@@ -15,6 +15,8 @@ export {
     __worldRegisterTick,
     __worldAddTransform,
     __worldRemoveTransform,
+    type ServiceKey,
+    createServiceKey,
 } from './world';
 
 // FC API

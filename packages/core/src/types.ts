@@ -29,4 +29,9 @@ export interface TickRegistration {
     order: number;
     fn: TickFn;
     active: boolean;
+
+    // O(1) unlink support (assigned by the world)
+    prev: TickRegistration | null;
+    next: TickRegistration | null;
+    dispose(): void;
 }

@@ -17,7 +17,7 @@ export function useThreeContext(): {
     camera: THREE.Camera;
 } {
     const world = __fcCurrent().world;
-    const plugin = world.getService<ThreePlugin>(THREE_SERVICE);
+    const plugin = world.getService(THREE_SERVICE);
     if (!plugin) throw new Error('ThreePlugin not attached to world.');
     return {
         plugin,
