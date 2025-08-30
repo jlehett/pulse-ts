@@ -36,6 +36,10 @@ interface RegInternal extends TickRegistration {
     lane: TickLane;
 }
 
+type OrderBuckets = Map<number, TickLane>;
+
+export type WorldSnapshot = ReturnType<World['saveSnapshot']>;
+
 /**
  * Options for the World class.
  */
@@ -76,10 +80,19 @@ export class World {
     private currentTickPhase: UpdatePhase | null = null;
     private lastAlpha = 0;
 
+    private idToNode = new Map<number, Node>();
+
     // scheduler buckets: kind->phase->registrations[]
-    private schedule: Record<UpdateKind, Record<UpdatePhase, TickLane>> = {
-        fixed: { early: makeLane(), update: makeLane(), late: makeLane() },
-        frame: { early: makeLane(), update: makeLane(), late: makeLane() },
+    private scheduleBuckets: Record<
+        UpdateKind,
+        Record<UpdatePhase, OrderBuckets>
+    > = {
+        fixed: { early: new Map(), update: new Map(), late: new Map() },
+        frame: { early: new Map(), update: new Map(), late: new Map() },
+    };
+    private orderKeys: Record<UpdateKind, Record<UpdatePhase, number[]>> = {
+        fixed: { early: [], update: [], late: [] },
+        frame: { early: [], update: [], late: [] },
     };
 
     // transforms present in this world
@@ -98,6 +111,12 @@ export class World {
 
     // single hidden node for system ticks (no per-plugin driver nodes)
     private systemNode: Node | null = null;
+
+    private frameId = 0;
+
+    getFrameId(): number {
+        return this.frameId;
+    }
 
     constructor(opts: WorldOptions = {}) {
         this.fixedStep = opts.fixedStepMs ?? 1000 / 60;
@@ -183,6 +202,7 @@ export class World {
 
         node.world = this;
         this.nodes.add(node);
+        this.idToNode.set(node.id, node);
 
         // register an existing transform (if any)
         const t = maybeGetTransform(node);
@@ -207,6 +227,8 @@ export class World {
         // unregister transform if present
         const t = maybeGetTransform(node);
         if (t) this.transforms.delete(t);
+
+        this.idToNode.delete(node.id);
 
         node.world = null;
         // ticks owned by this node will be lazily unlinked during iteration
@@ -266,6 +288,7 @@ export class World {
      * @param dtMs The delta time in milliseconds.
      */
     tick(dtMs: number): void {
+        this.frameId++;
         this.accumulator += dtMs;
 
         // fixed steps
@@ -300,6 +323,129 @@ export class World {
 
     //#endregion
 
+    //#region Snapshots
+
+    /**
+     * Saves a snapshot of the world.
+     * @returns
+     */
+    saveSnapshot(): {
+        transforms: Array<{
+            id: number;
+            p: [number, number, number];
+            r: [number, number, number, number];
+            s: [number, number, number];
+        }>;
+        accumulator: number;
+    } {
+        const transforms: Array<{
+            id: number;
+            p: [number, number, number];
+            r: [number, number, number, number];
+            s: [number, number, number];
+        }> = [];
+        for (const t of this.transforms) {
+            const n = (t as any).owner as Node;
+            transforms.push({
+                id: n.id,
+                p: [t.localPosition.x, t.localPosition.y, t.localPosition.z],
+                r: [
+                    t.localRotation.x,
+                    t.localRotation.y,
+                    t.localRotation.z,
+                    t.localRotation.w,
+                ],
+                s: [t.localScale.x, t.localScale.y, t.localScale.z],
+            });
+        }
+        return { transforms, accumulator: this.accumulator };
+    }
+
+    /**
+     * Restores a snapshot of the world.
+     * @param snap The snapshot to restore.
+     * @param opts The options for the restore.
+     */
+    restoreSnapshot(
+        snap: {
+            transforms: Array<{
+                id: number;
+                p: [number, number, number];
+                r: [number, number, number, number];
+                s: [number, number, number];
+            }>;
+            accumulator: number;
+        },
+        opts?: { strict?: boolean; resetPrevious?: boolean },
+    ): void {
+        const strict = !!opts?.strict;
+        for (const rec of snap.transforms) {
+            const node = this.idToNode.get(rec.id);
+            if (!node) {
+                if (strict)
+                    throw new Error(`restoreSnapshot: missing node ${rec.id}`);
+                else continue;
+            }
+            const t = maybeGetTransform(node);
+            if (!t) continue;
+            t.setLocal({
+                position: { x: rec.p[0], y: rec.p[1], z: rec.p[2] },
+                rotationQuat: {
+                    x: rec.r[0],
+                    y: rec.r[1],
+                    z: rec.r[2],
+                    w: rec.r[3],
+                },
+                scale: { x: rec.s[0], y: rec.s[1], z: rec.s[2] },
+            });
+            if (opts?.resetPrevious) t.snapshotPrevious();
+        }
+        if (typeof snap.accumulator === 'number')
+            this.accumulator = snap.accumulator;
+    }
+
+    //#endregion
+
+    /**
+     * Gets the debug stats of the world.
+     * @returns The debug stats.
+     */
+    debugStats() {
+        const agg = (kind: UpdateKind, phase: UpdatePhase) => {
+            const buckets = this.scheduleBuckets[kind][phase];
+            let size = 0,
+                active = 0;
+            for (const lane of buckets.values()) {
+                size += lane.size;
+                for (let r = lane.head; r; r = r.next) {
+                    if (r.active && this.nodes.has(r.node)) active++;
+                }
+            }
+            return {
+                size,
+                active,
+                orders: this.orderKeys[kind][phase].slice(),
+            };
+        };
+        return {
+            frameId: this.frameId,
+            nodes: this.nodes.size,
+            transforms: this.transforms.size,
+            ticks: {
+                fixed: {
+                    early: agg('fixed', 'early'),
+                    update: agg('fixed', 'update'),
+                    late: agg('fixed', 'late'),
+                },
+                frame: {
+                    early: agg('frame', 'early'),
+                    update: agg('frame', 'update'),
+                    late: agg('frame', 'late'),
+                },
+            },
+        };
+    }
+
     /**
      * Gets the ambient alpha.
      * @returns The ambient alpha.
@@ -325,7 +471,7 @@ export class World {
         fn: TickFn,
         order = 0,
     ): TickRegistration {
-        const lane = this.schedule[kind][phase];
+        const lane = this.laneFor(kind, phase, order);
         const reg: RegInternal = {
             node,
             kind,
@@ -342,11 +488,7 @@ export class World {
                 unlink(reg);
             },
         };
-        // Insert by order (stable): scan once
-        let p = lane.head;
-        while (p && p.order <= order) p = p.next;
-        if (!p) append(lane, reg);
-        else insertBefore(lane, p, reg);
+        append(lane, reg);
         return reg;
     }
 
@@ -369,36 +511,6 @@ export class World {
     }
 
     /**
-     * Quick health snapshot for tuning.
-     * @returns The debug stats.
-     */
-    debugStats() {
-        const laneStats = (lane: TickLane) => {
-            let active = 0;
-            for (let r = lane.head; r; r = r.next) {
-                if (r.active && this.nodes.has(r.node)) active++;
-            }
-            return { size: lane.size, active };
-        };
-        return {
-            nodes: this.nodes.size,
-            transforms: this.transforms.size,
-            ticks: {
-                fixed: {
-                    early: laneStats(this.schedule.fixed.early),
-                    update: laneStats(this.schedule.fixed.update),
-                    late: laneStats(this.schedule.fixed.late),
-                },
-                frame: {
-                    early: laneStats(this.schedule.frame.early),
-                    update: laneStats(this.schedule.frame.update),
-                    late: laneStats(this.schedule.frame.late),
-                },
-            },
-        };
-    }
-
-    /**
      * Runs a phase of the tick system.
      * @param kind The kind of tick.
      * @param phase The phase of the tick.
@@ -408,24 +520,51 @@ export class World {
         this.currentTickKind = kind;
         this.currentTickPhase = phase;
 
-        const lane = this.schedule[kind][phase];
-        for (let r = lane.head; r; ) {
-            const next = r.next;
-            if (!r.active || !this.nodes.has(r.node)) {
-                // Hard-unlink zombies lazily (O(1))
-                unlink(r);
-            } else {
-                try {
-                    r.fn(dt);
-                } catch (e) {
-                    console.error(e);
+        const orders = this.orderKeys[kind][phase];
+        for (let oi = 0; oi < orders.length; oi++) {
+            const lane = this.scheduleBuckets[kind][phase].get(orders[oi])!;
+            for (let r = lane.head; r; ) {
+                const next = r.next;
+                if (!r.active || !this.nodes.has(r.node)) {
+                    unlink(r);
+                } else {
+                    try {
+                        r.fn(dt);
+                    } catch (e) {
+                        console.error(e);
+                    }
                 }
+                r = next;
             }
-            r = next;
         }
 
         this.currentTickPhase = null;
         this.currentTickKind = null;
+    }
+
+    /**
+     * Gets the lane for a given kind, phase, and order.
+     * @param kind The kind of tick.
+     * @param phase The phase of the tick.
+     * @param order The order of the tick.
+     * @returns The lane.
+     */
+    private laneFor(
+        kind: UpdateKind,
+        phase: UpdatePhase,
+        order: number,
+    ): TickLane {
+        const buckets = this.scheduleBuckets[kind][phase];
+        let lane = buckets.get(order);
+        if (!lane) {
+            lane = makeLane();
+            buckets.set(order, lane);
+            const keys = this.orderKeys[kind][phase];
+            const i = keys.findIndex((k) => k > order);
+            if (i === -1) keys.push(order);
+            else keys.splice(i, 0, order);
+        }
+        return lane;
     }
 }
 

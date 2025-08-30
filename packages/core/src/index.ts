@@ -17,6 +17,7 @@ export {
     __worldRemoveTransform,
     type ServiceKey,
     createServiceKey,
+    type WorldSnapshot,
 } from './world';
 
 // FC API

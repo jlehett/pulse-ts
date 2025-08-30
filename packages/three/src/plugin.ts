@@ -19,6 +19,7 @@ export interface ThreePluginOptions {
     clearColor?: number;
     autoCommitTransforms?: boolean; // default true
     useMatrices?: boolean; // default false - disable matrixAutoUpdate and compose explicitly
+    enableCulling?: boolean; // default true
 }
 
 export class ThreePlugin {
@@ -34,11 +35,16 @@ export class ThreePlugin {
 
     private offParent: (() => void) | null = null;
 
+    private frustum = new THREE.Frustum();
+    private projView = new THREE.Matrix4();
+    private tmpBox = new THREE.Box3();
+
     constructor(opts: ThreePluginOptions) {
         this.options = {
             clearColor: 0x000000,
             autoCommitTransforms: true,
             useMatrices: false,
+            enableCulling: true,
             ...opts,
         };
 
@@ -150,6 +156,23 @@ export class ThreePlugin {
             const t = maybeGetTransform(node as any);
             if (!t) continue;
 
+            // Frustum culling (skip TRS sync when not visible)
+            if (this.options.enableCulling) {
+                const aabb = t.getWorldAABB(
+                    undefined,
+                    this.world!.getAmbientAlpha(),
+                );
+                if (aabb) {
+                    this.tmpBox.min.set(aabb.min.x, aabb.min.y, aabb.min.z);
+                    this.tmpBox.max.set(aabb.max.x, aabb.max.y, aabb.max.z);
+                    const vis = this.frustum.intersectsBox(this.tmpBox);
+                    rec.root.visible = vis;
+                    if (!vis) continue;
+                } else {
+                    rec.root.visible = true; // no AABB -> assume visible
+                }
+            }
+
             if (alpha === 0) {
                 // if world TRS cached version unchanged, skip touching Three
                 t.getWorldTRS(rec.trs, 0); // fast when cached
@@ -200,9 +223,19 @@ export class ThreePlugin {
     render(): void {
         if (!this.world) return;
 
+        if (this.options.enableCulling) {
+            this.camera.updateMatrixWorld();
+            this.projView.multiplyMatrices(
+                this.camera.projectionMatrix,
+                this.camera.matrixWorldInverse,
+            );
+            this.frustum.setFromProjectionMatrix(this.projView);
+        }
+
         if (this.options.autoCommitTransforms) {
             this.syncTRS();
         }
+
         this.renderer.render(this.scene, this.camera);
     }
 }

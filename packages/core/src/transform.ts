@@ -8,6 +8,22 @@ const internal_owner = Symbol('pulse:transform:owner');
 const internal_dirty = Symbol('pulse:transform:dirty');
 
 /**
+ * AABB helper interface.
+ */
+export interface AABB {
+    min: Vec3;
+    max: Vec3;
+}
+
+/**
+ * Creates a new AABB.
+ * @returns A new AABB.
+ */
+export function createAABB(): AABB {
+    return { min: new Vec3(), max: new Vec3() };
+}
+
+/**
  * Reusable container for position/rotation/scale triples.
  */
 export interface TRS {
@@ -86,6 +102,28 @@ export class Transform {
     private _cacheLocalVersion = -1;
     private _cachedWorld = createTRS();
 
+    private _cachedAncestryVersion = 0;
+    private _treeQueryFrame = -1;
+    private _cachedWorldTreeVersion = -1;
+
+    private _aabbLocal: AABB | null = null;
+    private _aabbWorld = createAABB();
+    private _aabbWorldTreeVersion = -1;
+    private _corners = [
+        new Vec3(),
+        new Vec3(),
+        new Vec3(),
+        new Vec3(),
+        new Vec3(),
+        new Vec3(),
+        new Vec3(),
+        new Vec3(),
+    ];
+
+    get owner(): Node {
+        return this[internal_owner];
+    }
+
     constructor() {
         this.localPosition = makeDirtyVec3(this, new Vec3());
         this.previousLocalPosition = new Vec3();
@@ -93,6 +131,20 @@ export class Transform {
         this.previousLocalRotation = new Quat();
         this.localScale = makeDirtyVec3(this, new Vec3(1, 1, 1));
         this.previousLocalScale = new Vec3(1, 1, 1);
+    }
+
+    getAncestryVersion(frameId: number): number {
+        if (this._treeQueryFrame === frameId)
+            return this._cachedAncestryVersion;
+        let v = this._localVersion;
+        const parent = this[internal_owner].parent;
+        if (parent) {
+            const pt = maybeGetTransform(parent);
+            if (pt) v = Math.max(v, pt.getAncestryVersion(frameId));
+        }
+        this._treeQueryFrame = frameId;
+        this._cachedAncestryVersion = v;
+        return v;
     }
 
     /**
@@ -202,25 +254,23 @@ export class Transform {
             return o;
         }
 
-        // a === 0: can cache world composition until parent/local changes
+        // a === 0: use ancestry version to avoid composing parent unless needed
         const local = this.getLocalTRS(this._scratchLocal, 0);
         const o = out ?? createTRS();
 
         const parent = this[internal_owner].parent;
-        let parentWorldVersion = 0;
+        let treeVersion = this._localVersion;
         if (parent) {
             const pt = maybeGetTransform(parent);
             if (pt) {
-                pt.getWorldTRS(this._scratchParentWorld, 0); // ensure parent world is up-to-date
-                parentWorldVersion = pt._worldVersion;
+                const frameId = w ? w.getFrameId() : 0;
+                treeVersion = Math.max(
+                    treeVersion,
+                    pt.getAncestryVersion(frameId),
+                );
             }
         }
-
-        if (
-            this._cacheParentWorldVersion === parentWorldVersion &&
-            this._cacheLocalVersion === this._localVersion
-        ) {
-            // copy cached
+        if (this._cachedWorldTreeVersion === treeVersion) {
             o.position.copy(this._cachedWorld.position);
             o.rotation.copy(this._cachedWorld.rotation);
             o.scale.copy(this._cachedWorld.scale);
@@ -251,8 +301,7 @@ export class Transform {
         this._cachedWorld.position.copy(o.position);
         this._cachedWorld.rotation.copy(o.rotation);
         this._cachedWorld.scale.copy(o.scale);
-        this._cacheParentWorldVersion = parentWorldVersion;
-        this._cacheLocalVersion = this._localVersion;
+        this._cachedWorldTreeVersion = treeVersion;
         this._worldVersion++;
         return o;
     }
@@ -277,6 +326,88 @@ export class Transform {
     get worldScale() {
         return this.getWorldTRS().scale;
     }
+
+    //#region AABB API
+
+    /**
+     * Sets the local AABB.
+     * @param min
+     * @param max
+     */
+    setLocalAABB(min: Vec3, max: Vec3): void {
+        if (!this._aabbLocal) this._aabbLocal = createAABB();
+        this._aabbLocal.min.copy(min);
+        this._aabbLocal.max.copy(max);
+        this._localVersion++; // AABB depends on local TRS for world; mark change
+    }
+
+    /**
+     * Gets the local AABB.
+     * @returns The local AABB.
+     */
+    getLocalAABB(): AABB | null {
+        return this._aabbLocal;
+    }
+
+    /**
+     * Gets the world AABB.
+     * @param out The output AABB.
+     * @param alpha The alpha value.
+     * @returns The world AABB.
+     */
+    getWorldAABB(out?: AABB, alpha?: number): AABB | null {
+        if (!this._aabbLocal) return null;
+
+        const a =
+            alpha ??
+            (this.owner.world ? this.owner.world.getAmbientAlpha() : 0);
+        const trs = this.getWorldTRS(this._scratchLocal, a); // get world TRS
+
+        // If no rotation and uniform scale, we can fast-path, but we'll do generic 8-corner transform
+        const o = out ?? this._aabbWorld;
+
+        // Build 8 local corners
+        const { min, max } = this._aabbLocal;
+        const cs = this._corners;
+        cs[0].set(min.x, min.y, min.z);
+        cs[1].set(max.x, min.y, min.z);
+        cs[2].set(min.x, max.y, min.z);
+        cs[3].set(max.x, max.y, min.z);
+        cs[4].set(min.x, min.y, max.z);
+        cs[5].set(max.x, min.y, max.z);
+        cs[6].set(min.x, max.y, max.z);
+        cs[7].set(max.x, max.y, max.z);
+
+        // Transform corners: scale -> rotate -> translate
+        let wminX = Infinity,
+            wminY = Infinity,
+            wminZ = Infinity;
+        let wmaxX = -Infinity,
+            wmaxY = -Infinity,
+            wmaxZ = -Infinity;
+        for (let i = 0; i < 8; i++) {
+            cs[i].multiply(trs.scale);
+            Quat.rotateVector(trs.rotation, cs[i], cs[i]);
+            cs[i].x += trs.position.x;
+            cs[i].y += trs.position.y;
+            cs[i].z += trs.position.z;
+            if (cs[i].x < wminX) wminX = cs[i].x;
+            if (cs[i].x > wmaxX) wmaxX = cs[i].x;
+            if (cs[i].y < wminY) wminY = cs[i].y;
+            if (cs[i].y > wmaxY) wmaxY = cs[i].y;
+            if (cs[i].z < wminZ) wminZ = cs[i].z;
+            if (cs[i].z > wmaxZ) wmaxZ = cs[i].z;
+        }
+        o.min.x = wminX;
+        o.min.y = wminY;
+        o.min.z = wminZ;
+        o.max.x = wmaxX;
+        o.max.y = wmaxY;
+        o.max.z = wmaxZ;
+        return o;
+    }
+
+    //#endregion
 }
 
 /**
