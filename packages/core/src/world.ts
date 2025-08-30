@@ -281,6 +281,8 @@ export class World {
             nodes: this.nodes.size,
             transforms: this.transforms.size,
             ticks: this.ticker.stats(this.nodes),
+            fps: this.loop.getFps(),
+            fixedSps: this.loop.getFixedSps(),
         };
     }
 
@@ -316,6 +318,13 @@ export class World {
      */
     getFrameId(): number {
         return this.loop.getFrameId();
+    }
+
+    /**
+     * Returns current performance stats.
+     */
+    getPerf() {
+        return { fps: this.loop.getFps(), fixedSps: this.loop.getFixedSps() };
     }
 
     //#endregion

@@ -4,4 +4,5 @@ export {
     useThreeRoot,
     useObject3D,
     useCulledObject3D,
+    useStatsOverlay,
 } from './fc/hooks';

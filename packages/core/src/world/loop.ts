@@ -60,6 +60,13 @@ export class EngineLoop {
     private paused = false;
     private timeScale = 1;
 
+    // perf sampling (rolling window)
+    private sampleAccumMs = 0;
+    private framesInWindow = 0;
+    private fixedInWindow = 0;
+    private fps = 0;
+    private sps = 0;
+
     constructor(opts: LoopOptions, hooks: LoopHooks) {
         this.scheduler = opts.scheduler;
         this.fixedStep = opts.fixedStepMs;
@@ -97,6 +104,7 @@ export class EngineLoop {
         if (this.timeScale !== 1) dtMs *= this.timeScale;
         this.frameId++;
         this.accumulator += dtMs;
+        this.framesInWindow++;
 
         // fixed steps
         let steps = 0;
@@ -104,6 +112,7 @@ export class EngineLoop {
             this.accumulator >= this.fixedStep &&
             steps < this.maxFixedStepsPerFrame
         ) {
+            this.fixedInWindow++;
             this.hooks.beforeFixedStep?.();
 
             const dt = this.fixedStep / 1000;
@@ -128,6 +137,17 @@ export class EngineLoop {
         this.hooks.runPhase('frame', 'update', dt);
         this.hooks.runPhase('frame', 'late', dt);
         this.currentTickKind = null;
+
+        // perf sampling
+        this.sampleAccumMs += dtMs;
+        if (this.sampleAccumMs >= 1000) {
+            const secs = this.sampleAccumMs / 1000;
+            this.fps = this.framesInWindow / secs;
+            this.sps = this.fixedInWindow / secs;
+            this.sampleAccumMs = 0;
+            this.framesInWindow = 0;
+            this.fixedInWindow = 0;
+        }
     }
 
     /**
@@ -198,5 +218,21 @@ export class EngineLoop {
      */
     getTimeScale(): number {
         return this.timeScale;
+    }
+
+    /**
+     * Gets the FPS.
+     * @returns The FPS.
+     */
+    getFps(): number {
+        return this.fps;
+    }
+
+    /**
+     * Gets the fixed SPS.
+     * @returns The fixed SPS.
+     */
+    getFixedSps(): number {
+        return this.sps;
     }
 }
