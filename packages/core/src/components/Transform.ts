@@ -1,12 +1,9 @@
-import { Vec3 } from './math/vec3';
-import { Quat } from './math/quat';
-import type { Node } from './node';
-import { kTransformOwner, kTransformDirty } from './keys';
-import {
-    createComponentToken,
-    getComponent,
-    ensureComponent,
-} from './components/registry';
+import { Vec3 } from '../math/vec3';
+import { Quat } from '../math/quat';
+import type { Node } from '../node';
+import { kTransformDirty } from '../keys';
+import { getComponent } from '../componentRegistry';
+import { Component } from '../Component';
 
 /**
  * Reusable container for position/rotation/scale triples.
@@ -37,8 +34,8 @@ export function createTRS(): TRS {
 function makeDirtyVec3(owner: Transform, v: Vec3): Vec3 {
     return new Proxy(v, {
         set(target, prop, value) {
-            target[prop as keyof Vec3] = value;
-            owner[kTransformDirty] = true;
+            (target as any)[prop as keyof Vec3] = value;
+            (owner as any)[kTransformDirty] = true;
             owner._localVersion++;
             return true;
         },
@@ -54,8 +51,8 @@ function makeDirtyVec3(owner: Transform, v: Vec3): Vec3 {
 function makeDirtyQuat(owner: Transform, q: Quat): Quat {
     return new Proxy(q, {
         set(target, prop, value) {
-            target[prop as keyof Quat] = value;
-            owner[kTransformDirty] = true;
+            (target as any)[prop as keyof Quat] = value;
+            (owner as any)[kTransformDirty] = true;
             owner._localVersion++;
             return true;
         },
@@ -65,9 +62,15 @@ function makeDirtyQuat(owner: Transform, q: Quat): Quat {
 /**
  * A transform.
  */
-export class Transform {
-    [kTransformOwner]!: Node;
-    [kTransformDirty] = true;
+export class Transform extends Component {
+    static attach<Transform>(owner: Node): Transform {
+        const t = super.attach(owner) as Transform;
+        const w = owner.world;
+        if (w) w.registerTransform(t as any);
+        return t;
+    }
+
+    [kTransformDirty] = true as any;
 
     readonly localPosition: Vec3;
     readonly previousLocalPosition: Vec3;
@@ -88,11 +91,8 @@ export class Transform {
     private _cachedWorldTreeVersion = -1;
     private _cachedWorld = createTRS();
 
-    get owner(): Node {
-        return this[kTransformOwner];
-    }
-
     constructor() {
+        super();
         this.localPosition = makeDirtyVec3(this, new Vec3());
         this.previousLocalPosition = new Vec3();
         this.localRotation = makeDirtyQuat(this, new Quat());
@@ -110,9 +110,9 @@ export class Transform {
         if (this._treeQueryFrame === frameId)
             return this._cachedAncestryVersion;
         let v = this._localVersion;
-        const parent = this[kTransformOwner].parent;
+        const parent = this.owner?.parent as Node | null;
         if (parent) {
-            const pt = maybeGetTransform(parent);
+            const pt = getComponent(parent, Transform);
             if (pt) v = Math.max(v, pt.getAncestryVersion(frameId));
         }
         this._treeQueryFrame = frameId;
@@ -128,7 +128,7 @@ export class Transform {
         this.previousLocalRotation.copy(this.localRotation);
         this.previousLocalScale.copy(this.localScale);
         // we just committed current->previous; clear dirty
-        this[kTransformDirty] = false;
+        (this as any)[kTransformDirty] = false;
     }
 
     /**
@@ -144,7 +144,7 @@ export class Transform {
         if (opts.rotationQuat)
             Object.assign(this.localRotation, opts.rotationQuat);
         if (opts.scale) Object.assign(this.localScale, opts.scale);
-        this[kTransformDirty] = true;
+        (this as any)[kTransformDirty] = true;
         this._localVersion++;
     }
 
@@ -154,7 +154,7 @@ export class Transform {
      */
     editLocal(fn: (t: this) => void) {
         fn(this);
-        this[kTransformDirty] = true;
+        (this as any)[kTransformDirty] = true;
         this._localVersion++;
     }
 
@@ -165,8 +165,8 @@ export class Transform {
      * @returns The local position, rotation, and scale.
      */
     getLocalTRS(out?: TRS, alpha?: number) {
-        const w = this[kTransformOwner].world;
-        const a = alpha ?? (w ? w.getAmbientAlpha() : 0);
+        const w = this.owner?.world as any;
+        const a = alpha ?? (w ? w.getAmbientAlpha?.() : 0);
         const o = out ?? createTRS();
 
         if (a > 0) {
@@ -198,8 +198,8 @@ export class Transform {
      * @returns The world position, rotation, and scale.
      */
     getWorldTRS(out?: TRS, alpha?: number) {
-        const w = this[kTransformOwner].world;
-        const a = alpha ?? (w ? w.getAmbientAlpha() : 0);
+        const w = this.owner?.world as any;
+        const a = alpha ?? (w ? w.getAmbientAlpha?.() : 0);
 
         // For a>0, interpolation changes every frame; don't cache
         if (a > 0) {
@@ -209,9 +209,9 @@ export class Transform {
             o.rotation.copy(local.rotation);
             o.scale.copy(local.scale);
 
-            const parent = this[kTransformOwner].parent;
+            const parent = this.owner?.parent as Node | null;
             if (!parent) return o;
-            const pt = maybeGetTransform(parent);
+            const pt = getComponent(parent, Transform);
             if (!pt) return o;
 
             const pw = pt.getWorldTRS(this._scratchParentWorld, a);
@@ -231,12 +231,12 @@ export class Transform {
         const local = this.getLocalTRS(this._scratchLocal, 0);
         const o = out ?? createTRS();
 
-        const parent = this[kTransformOwner].parent;
+        const parent = this.owner?.parent as Node | null;
         let treeVersion = this._localVersion;
         if (parent) {
-            const pt = maybeGetTransform(parent);
+            const pt = getComponent(parent, Transform);
             if (pt) {
-                const frameId = w ? w.getFrameId() : 0;
+                const frameId = w ? w.getFrameId?.() : 0;
                 treeVersion = Math.max(
                     treeVersion,
                     pt.getAncestryVersion(frameId),
@@ -257,7 +257,7 @@ export class Transform {
         o.scale.copy(local.scale);
 
         if (parent) {
-            const pt = maybeGetTransform(parent);
+            const pt = getComponent(parent, Transform);
             if (pt) {
                 const pw = pt.getWorldTRS(this._scratchParentWorld, 0);
                 o.scale.multiply(pw.scale);
@@ -280,23 +280,17 @@ export class Transform {
         return o;
     }
 
-    /**
-     * Gets the world position.
-     */
+    /** Gets the world position. */
     get worldPosition() {
         return this.getWorldTRS().position;
     }
 
-    /**
-     * Gets the world rotation.
-     */
+    /** Gets the world rotation. */
     get worldRotation() {
         return this.getWorldTRS().rotation;
     }
 
-    /**
-     * Gets the world scale.
-     */
+    /** Gets the world scale. */
     get worldScale() {
         return this.getWorldTRS().scale;
     }
@@ -308,41 +302,4 @@ export class Transform {
     getWorldVersion(): number {
         return this._worldVersion;
     }
-
-    //#endregion
 }
-
-/**
- * Attaches a transform to a node.
- * @param node The node to attach the transform to.
- * @returns The transform.
- */
-export function attachTransform(node: Node): Transform {
-    const t = ensureComponent(node, TRANSFORM_TOKEN, () => new Transform());
-    (t as Transform)[kTransformOwner] = node;
-    if (node.world && (node.world as any).registerTransform)
-        (node.world as any).registerTransform(t);
-    return t;
-}
-
-/**
- * Gets the transform attached to a node, if any.
- * @param node The node to get the transform of.
- * @returns The transform, or undefined if no transform is attached.
- */
-export function maybeGetTransform(node: Node): Transform | undefined {
-    return getComponent(node, TRANSFORM_TOKEN);
-}
-
-/**
- * Gets the transform attached to a node. If no transform is attached, it will be created.
- * @param node The node to get the transform of.
- * @returns The transform.
- */
-export function getTransform(node: Node): Transform {
-    return attachTransform(node);
-}
-
-const TRANSFORM_TOKEN = createComponentToken<Transform>(
-    'pulse:component:transform',
-);

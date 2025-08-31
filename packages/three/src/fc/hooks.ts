@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { __fcCurrent, useFrameLate } from '@pulse-ts/core';
-import { ThreePlugin, THREE_SERVICE } from '../plugin';
+import { ThreePlugin } from '../plugin';
 
 /**
  * Returns Three.js context bound to the current `World`.
@@ -17,7 +17,7 @@ export function useThreeContext(): {
     camera: THREE.Camera;
 } {
     const world = __fcCurrent().world;
-    const plugin = world.getService(THREE_SERVICE);
+    const plugin = world.getSystem(ThreePlugin);
     if (!plugin) throw new Error('ThreePlugin not attached to world.');
     return {
         plugin,

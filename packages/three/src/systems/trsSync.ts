@@ -1,31 +1,21 @@
-import type { System } from '@pulse-ts/core';
-import type { World } from '@pulse-ts/core';
-import type { ThreePlugin } from '../plugin';
+import { System } from '@pulse-ts/core';
+import type { UpdateKind, UpdatePhase } from '@pulse-ts/core';
+import { ThreePlugin } from '../plugin';
 
 /**
  * Synchronizes Node TRS into Three Object3D roots each frame before render.
  */
-export class ThreeTRSSyncSystem implements System {
-    private tick?: { dispose(): void };
+export class ThreeTRSSyncSystem extends System {
+    static updateKind: UpdateKind = 'frame';
+    static updatePhase: UpdatePhase = 'late';
+    static order: number = Number.MAX_SAFE_INTEGER - 2;
 
-    constructor(
-        private plugin: ThreePlugin,
-        private order = Number.MAX_SAFE_INTEGER - 2,
-    ) {}
+    update(): void {
+        if (!this.world) return;
 
-    attach(world: World): void {
-        this.tick = world.registerSystemTick(
-            'frame',
-            'late',
-            (dt) => {
-                this.plugin.syncTRS();
-            },
-            this.order,
-        );
-    }
+        const plugin = this.world.getSystem(ThreePlugin);
+        if (!plugin) return;
 
-    detach(): void {
-        this.tick?.dispose();
-        this.tick = undefined;
+        plugin.syncTRS();
     }
 }

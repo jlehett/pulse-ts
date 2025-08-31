@@ -1,15 +1,16 @@
 import * as THREE from 'three';
 import {
     type World,
-    type ServiceKey,
-    maybeGetTransform,
+    getComponent,
     createTRS,
     type TRS,
-    createServiceKey,
-    maybeGetVisibility,
-    CULLING_CAMERA,
-    type CullingCamera,
+    Visibility,
+    Transform,
+    CullingCamera,
+    System,
     Node,
+    type UpdateKind,
+    type UpdatePhase,
 } from '@pulse-ts/core';
 import { ThreeCameraPVSystem } from './systems/cameraPV';
 import { ThreeTRSSyncSystem } from './systems/trsSync';
@@ -17,9 +18,6 @@ import {
     StatsOverlayOptions,
     StatsOverlaySystem,
 } from './systems/statsOverlay';
-
-export const THREE_SERVICE: ServiceKey<ThreePlugin> =
-    createServiceKey<ThreePlugin>('pulse:three');
 
 type RootRecord = { root: THREE.Object3D; trs: TRS; lastWorldVersion: number };
 
@@ -31,15 +29,17 @@ export interface ThreePluginOptions {
     enableCulling?: boolean; // default true
 }
 
-export class ThreePlugin {
+export class ThreePlugin extends System {
+    static updateKind: UpdateKind = 'frame';
+    static updatePhase: UpdatePhase = 'late';
+    static order: number = Number.MAX_SAFE_INTEGER;
+
     readonly renderer: THREE.WebGLRenderer;
     readonly scene: THREE.Scene = new THREE.Scene();
     readonly camera: THREE.PerspectiveCamera;
     readonly options: Required<ThreePluginOptions>;
 
-    private world: World | null = null;
     private serviceOff: (() => void) | null = null;
-    private sysTickDisposer: { dispose(): void } | null = null;
     private roots = new Map<Node, RootRecord>();
     private resizeObs: ResizeObserver | null = null;
 
@@ -55,6 +55,7 @@ export class ThreePlugin {
     private statsSystem: StatsOverlaySystem | null = null;
 
     constructor(opts: ThreePluginOptions) {
+        super();
         this.options = {
             clearColor: 0x000000,
             autoCommitTransforms: true,
@@ -89,30 +90,13 @@ export class ThreePlugin {
      * @param world The world to attach the plugin to.
      */
     attach(world: World) {
-        if (this.world) throw new Error('ThreePlugin already attached.');
-        this.world = world;
-        this.serviceOff = world.provide(THREE_SERVICE, this);
+        super.attach(world);
 
-        // World-level render tick
-        this.sysTickDisposer = world.registerSystemTick(
-            'frame',
-            'late',
-            () => this.render(),
-            Number.MAX_SAFE_INTEGER,
-        );
         // Camera PV system (frame:early)
-        this.cameraPVSystem = new ThreeCameraPVSystem(
-            this,
-            Number.MIN_SAFE_INTEGER,
-        );
-        world.addSystem(this.cameraPVSystem);
+        world.addSystem(new ThreeCameraPVSystem());
         // TRS sync system (frame:late, before render)
         if (this.options.autoCommitTransforms) {
-            this.trsSyncSystem = new ThreeTRSSyncSystem(
-                this,
-                Number.MAX_SAFE_INTEGER - 2,
-            );
-            world.addSystem(this.trsSyncSystem);
+            world.addSystem(new ThreeTRSSyncSystem());
         }
 
         // Event-driven parenting (no per-frame scan)
@@ -134,8 +118,6 @@ export class ThreePlugin {
      */
     detach() {
         if (!this.world) return;
-        this.sysTickDisposer?.dispose();
-        this.sysTickDisposer = null;
 
         this.offParent?.();
         this.offParent = null;
@@ -167,7 +149,8 @@ export class ThreePlugin {
             this.statsSystem = null;
         }
 
-        this.world = null;
+        this.world = undefined;
+        super.detach();
     }
 
     /**
@@ -228,9 +211,9 @@ export class ThreePlugin {
     /**
      * Renders the scene.
      */
-    render(): void {
+    update(): void {
         if (!this.world) return;
-        // TRS sync happens via ThreeTRSSyncSystem when enabled
+
         this.renderer.render(this.scene, this.camera);
     }
 
@@ -238,12 +221,13 @@ export class ThreePlugin {
     enableStatsOverlay(opts?: StatsOverlayOptions): void {
         if (!this.world) return;
         if (this.statsSystem) return;
-        this.statsSystem = new StatsOverlaySystem(this, opts);
-        this.world.addSystem(this.statsSystem);
+
+        this.world.addSystem(new StatsOverlaySystem(opts));
     }
 
     disableStatsOverlay(): void {
         if (!this.world || !this.statsSystem) return;
+
         this.world.removeSystem(this.statsSystem);
         this.statsSystem = null;
     }
@@ -260,12 +244,12 @@ export class ThreePlugin {
         const alpha = this.world.getAmbientAlpha();
 
         for (const [node, rec] of this.roots) {
-            const t = maybeGetTransform(node);
+            const t = getComponent(node, Transform);
             if (!t) continue;
 
             // Visibility from core culling (if enabled)
             if (this.options.enableCulling) {
-                const v = maybeGetVisibility(node);
+                const v = getComponent(node, Visibility);
                 const vis = v ? v.visible : true;
                 rec.root.visible = vis;
                 if (!vis) continue;
@@ -326,9 +310,11 @@ export class ThreePlugin {
         // copy into Float32Array
         const e = this.projView.elements as number[];
         for (let i = 0; i < 16; i++) this.pvArray[i] = e[i];
-        this.world.provide(CULLING_CAMERA, {
-            projView: this.pvArray,
-        } as CullingCamera);
+
+        const cullingCamera = this.world.getService(CullingCamera);
+        if (cullingCamera) {
+            cullingCamera.projView = this.pvArray;
+        }
     }
 
     //#endregion

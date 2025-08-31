@@ -1,13 +1,9 @@
-import { Vec3 } from './math/vec3';
-import { Quat } from './math/quat';
-import type { Node } from './node';
-import { createTRS, type TRS, attachTransform } from './transform';
-import { kBoundsOwner } from './keys';
-import {
-    createComponentToken,
-    ensureComponent,
-    getComponent,
-} from './components/registry';
+import { Vec3 } from '../math/vec3';
+import { Quat } from '../math/quat';
+import type { Node } from '../node';
+import { createTRS, type TRS, Transform } from './Transform';
+import { attachComponent } from '../componentRegistry';
+import { Component } from '../Component';
 
 export interface AABB {
     min: Vec3;
@@ -21,8 +17,13 @@ export function createAABB(): AABB {
 /**
  * Bounds component: local AABB + cached world AABB + visibility flag.
  */
-export class Bounds {
-    [kBoundsOwner]!: Node;
+export class Bounds extends Component {
+    static attach<Bounds>(owner: Node): Bounds {
+        const b = super.attach(owner) as Bounds;
+        const w = owner.world;
+        if (w) w.registerBounds(b as any);
+        return b;
+    }
 
     private _local: AABB | null = null;
     private _localVersion = 0;
@@ -43,15 +44,7 @@ export class Bounds {
         new Vec3(),
     ];
 
-    get owner(): Node {
-        return this[kBoundsOwner];
-    }
-
-    /**
-     * Sets the local bounds.
-     * @param min The minimum point of the bounds.
-     * @param max The maximum point of the bounds.
-     */
+    /** Sets the local bounds. */
     setLocal(min: Vec3, max: Vec3): void {
         if (!this._local) this._local = createAABB();
         this._local.min.copy(min);
@@ -59,10 +52,7 @@ export class Bounds {
         this._localVersion++;
     }
 
-    /**
-     * Gets the local bounds.
-     * @returns The local bounds.
-     */
+    /** Gets the local bounds. */
     getLocal(): AABB | null {
         return this._local;
     }
@@ -71,20 +61,21 @@ export class Bounds {
      * Gets the world bounds.
      * @param out The output bounds.
      * @param alpha The alpha for the interpolation.
-     * @returns The world bounds.
      */
     getWorld(out?: AABB, alpha?: number): AABB | null {
         if (!this._local) return null;
-        const transform = attachTransform(this.owner);
 
-        const w = this.owner.world;
-        const a = alpha ?? (w ? w.getAmbientAlpha() : 0);
-        const trs = transform.getWorldTRS(this._scratchTRS, a);
+        // ensure transform exists for owner
+        const transform = attachComponent(this.owner, Transform);
+
+        const w = (this.owner as any).world;
+        const a = alpha ?? (w ? w.getAmbientAlpha?.() : 0);
+        const trs = (transform as any).getWorldTRS(this._scratchTRS, a);
 
         // Cache only for non-interpolated case using TRS world version and local bounds version
         const o = out ?? this._world;
         if (a === 0) {
-            const worldVer = transform.getWorldVersion();
+            const worldVer = (transform as any).getWorldVersion();
             if (
                 this._cachedTRSVersion === worldVer &&
                 this._cachedLocalVersion === this._localVersion
@@ -139,32 +130,9 @@ export class Bounds {
         if (a === 0) {
             this._world.min.copy(o.min);
             this._world.max.copy(o.max);
-            this._cachedTRSVersion = transform.getWorldVersion();
+            this._cachedTRSVersion = (transform as any).getWorldVersion();
             this._cachedLocalVersion = this._localVersion;
         }
         return o;
     }
 }
-
-/**
- * Attaches a bounds to a node.
- * @param node The node to attach the bounds to.
- * @returns The bounds.
- */
-export function attachBounds(node: Node): Bounds {
-    const b = ensureComponent(node, BOUNDS_TOKEN, () => new Bounds());
-    (b as any)[kBoundsOwner] = node;
-    (node.world as any)?.registerBounds?.(b);
-    return b;
-}
-
-/**
- * Gets the bounds attached to a node, if any.
- * @param node The node to get the bounds of.
- * @returns The bounds, or undefined if no bounds is attached.
- */
-export function maybeGetBounds(node: Node): Bounds | undefined {
-    return getComponent(node, BOUNDS_TOKEN);
-}
-
-const BOUNDS_TOKEN = createComponentToken<Bounds>('pulse:component:bounds');

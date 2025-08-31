@@ -1,31 +1,21 @@
-import type { System } from '@pulse-ts/core';
-import type { World } from '@pulse-ts/core';
-import type { ThreePlugin } from '../plugin';
+import { System } from '@pulse-ts/core';
+import type { UpdateKind, UpdatePhase } from '@pulse-ts/core';
+import { ThreePlugin } from '../plugin';
 
 /**
  * Pushes Three camera projection-view into the CULLING_CAMERA service.
  */
-export class ThreeCameraPVSystem implements System {
-    private tick?: { dispose(): void };
+export class ThreeCameraPVSystem extends System {
+    static updateKind: UpdateKind = 'frame';
+    static updatePhase: UpdatePhase = 'early';
+    static order = Number.MIN_SAFE_INTEGER;
 
-    constructor(
-        private plugin: ThreePlugin,
-        private order = Number.MIN_SAFE_INTEGER,
-    ) {}
+    update(): void {
+        if (!this.world) return;
 
-    attach(world: World): void {
-        this.tick = world.registerSystemTick(
-            'frame',
-            'early',
-            () => {
-                this.plugin.pushCameraPV();
-            },
-            this.order,
-        );
-    }
+        const plugin = this.world.getSystem(ThreePlugin);
+        if (!plugin) return;
 
-    detach(): void {
-        this.tick?.dispose();
-        this.tick = undefined;
+        plugin.pushCameraPV();
     }
 }

@@ -1,6 +1,7 @@
 import type { Node } from '../node';
-import { maybeGetTransform, type Transform } from '../transform';
-import { maybeGetBounds, type AABB, type Bounds } from '../bounds';
+import { getComponent } from '../componentRegistry';
+import { Transform } from '../components/Transform';
+import { Bounds } from '../components/Bounds';
 import { Vec3 } from '../math/vec3';
 
 /**
@@ -105,7 +106,7 @@ export class Snapshotter {
                     throw new Error(`restoreSnapshot: missing node ${rec.id}`);
                 else continue;
             }
-            const t = maybeGetTransform(node);
+            const t = getComponent(node, Transform);
             if (!t) continue;
             t.setLocal({
                 position: { x: rec.p[0], y: rec.p[1], z: rec.p[2] },
@@ -129,7 +130,7 @@ export class Snapshotter {
                         );
                     else continue;
                 }
-                const b = maybeGetBounds(node);
+                const b = getComponent(node, Bounds);
                 if (!b) continue;
                 const min = new Vec3(rec.min[0], rec.min[1], rec.min[2]);
                 const max = new Vec3(rec.max[0], rec.max[1], rec.max[2]);

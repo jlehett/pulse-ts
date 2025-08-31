@@ -1,3 +1,5 @@
+export type Ctor<T> = new () => T;
+
 /**
  * The kind of update.
  * - `fixed` is used for fixed time updates, like physics.

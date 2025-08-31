@@ -7,25 +7,23 @@ import type {
     UpdatePhase,
     TickFn,
     TickRegistration,
+    Ctor,
 } from './types';
-import { maybeGetTransform, type Transform } from './transform';
+import { getComponent } from './componentRegistry';
+import { Transform } from './components/Transform';
 import { Ticker } from './world/ticker';
 import { Snapshotter, type WorldSnapshot } from './world/snapshots';
-import { ServiceRegistry } from './world/services';
+import { ServiceRegistry } from './serviceRegistry';
+import { SystemRegistry } from './systemRegistry';
 import { EngineLoop } from './world/loop';
-import {
-    kWorldAddTransform,
-    kWorldRemoveTransform,
-    type ServiceKey,
-    kWorldAddBounds,
-    kRegisteredTicks,
-} from './keys';
+import { kRegisteredTicks } from './keys';
 import { SceneGraph } from './world/sceneGraph';
-import { Bounds } from './bounds';
-import { CullingSystem } from './world/culling';
-import type { System } from './world/system';
-import { STATS_SERVICE, WorldStats } from './world/stats';
+import { Bounds } from './components/Bounds';
+import { CullingSystem } from './systems/Culling';
+import type { System } from './System';
+import { StatsService } from './services/Stats';
 import { TypedEvent } from './event';
+import type { Service } from './Service';
 
 /**
  * Options for the World class.
@@ -58,9 +56,11 @@ export class World {
 
     readonly nodes = new Set<Node>();
 
+    private services = new ServiceRegistry();
+    private systems = new SystemRegistry();
+
     private ticker = new Ticker();
     private scene = new SceneGraph();
-    private services = new ServiceRegistry();
     private snapshotter!: Snapshotter;
 
     private idToNode = new Map<number, Node>();
@@ -68,7 +68,6 @@ export class World {
     private bounds = new Set<Bounds>();
     private loop!: EngineLoop;
     private systemNode: Node | null = null;
-    private systems: { sys: System; order: number }[] = [];
     private nodeAddedBus = new TypedEvent<Node>();
     private nodeRemovedBus = new TypedEvent<Node>();
 
@@ -84,13 +83,6 @@ export class World {
             (typeof window !== 'undefined' && 'requestAnimationFrame' in window
                 ? new RafScheduler()
                 : new TimeoutScheduler(60));
-
-        // expose transform registry methods via symbols
-        (this as any)[kWorldAddTransform] = (t: Transform) =>
-            this.registerTransform(t);
-        (this as any)[kWorldRemoveTransform] = (t: Transform) =>
-            this.unregisterTransform(t);
-        (this as any)[kWorldAddBounds] = (b: Bounds) => this.registerBounds(b);
 
         this.snapshotter = new Snapshotter(
             this.idToNode,
@@ -115,7 +107,7 @@ export class World {
             },
         );
         // Provide stats service for consumers
-        this.provide(STATS_SERVICE, new WorldStats(this));
+        this.provideService(new StatsService());
         // Install default systems
         this.addSystem(new CullingSystem());
     }
@@ -173,7 +165,7 @@ export class World {
         this.idToNode.set(node.id, node);
 
         // register an existing transform (if any)
-        const t = maybeGetTransform(node);
+        const t = getComponent(node, Transform);
         if (t) this.transforms.add(t);
 
         node.onInit?.();
@@ -194,7 +186,7 @@ export class World {
         this.nodes.delete(node);
 
         // unregister transform if present
-        const t = maybeGetTransform(node);
+        const t = getComponent(node, Transform);
         if (t) this.transforms.delete(t);
 
         this.idToNode.delete(node.id);
@@ -320,23 +312,6 @@ export class World {
     }
 
     /**
-     * Gets a service.
-     * @param key The key of the service.
-     * @returns The service.
-     */
-    getService<T>(key: ServiceKey<T>): T | undefined {
-        return this.services.get(key);
-    }
-
-    /**
-     * Provides a service and returns a disposer to remove it.
-     */
-    provide<T>(key: ServiceKey<T>, service: T): () => void {
-        this.services.set(key, service);
-        return () => this.services.set(key, undefined);
-    }
-
-    /**
      * Gets the frame ID.
      * @returns The frame ID.
      */
@@ -431,32 +406,76 @@ export class World {
 
     //#endregion
 
+    //#region Services Lifecycle
+
+    /**
+     * Provides a service.
+     * @param service The service to provide.
+     * @returns The service.
+     */
+    provideService<T extends Service>(service: T): T {
+        this.services.set(service);
+        service.attach(this);
+        return service;
+    }
+
+    /**
+     * Gets a service.
+     * @param service The service to get.
+     * @returns The service.
+     */
+    getService<T extends Service>(
+        service: Ctor<T> | ThisParameterType<T>,
+    ): T | undefined {
+        return this.services.get(service);
+    }
+
+    /**
+     * Removes a service from the world.
+     * @param service The service to remove.
+     */
+    removeService<T extends Service>(
+        service: Ctor<T> | ThisParameterType<T>,
+    ): void {
+        this.services.get(service)?.detach();
+        this.services.remove(service);
+    }
+
+    //#endregion
+
     //#region Systems Lifecycle
 
     /**
      * Adds a system to the world.
-     * @param sys The system to add.
-     * @param order The order of the system.
+     * @param system The system to add.
+     * @returns The system.
      */
-    addSystem(sys: System, order = 0): void {
-        this.systems.push({ sys, order });
-        this.systems.sort((a, b) => a.order - b.order);
-        sys.attach(this);
+    addSystem<T extends System>(system: T): T {
+        this.systems.set(system);
+        system.attach(this);
+        return system;
+    }
+
+    /**
+     * Gets a system.
+     * @param system The system to get.
+     * @returns The system.
+     */
+    getSystem<T extends System>(
+        system: Ctor<T> | ThisParameterType<T>,
+    ): T | undefined {
+        return this.systems.get(system);
     }
 
     /**
      * Removes a system from the world.
-     * @param sys The system to remove.
+     * @param system The system to remove.
      */
-    removeSystem(sys: System): void {
-        const i = this.systems.findIndex((e) => e.sys === sys);
-        if (i >= 0) {
-            try {
-                this.systems[i].sys.detach?.(this);
-            } finally {
-                this.systems.splice(i, 1);
-            }
-        }
+    removeSystem<T extends System>(
+        system: Ctor<T> | ThisParameterType<T>,
+    ): void {
+        this.systems.get(system)?.detach();
+        this.systems.remove(system);
     }
 
     //#endregion

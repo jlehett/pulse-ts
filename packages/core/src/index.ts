@@ -1,35 +1,29 @@
 export * from './types';
-export { Vec3 } from './math/vec3';
-export { Quat } from './math/quat';
-export {
-    Transform,
-    attachTransform,
-    maybeGetTransform,
-    getTransform,
-    type TRS,
-    createTRS,
-} from './transform';
-export {
-    Bounds,
-    attachBounds,
-    maybeGetBounds,
-    type AABB,
-    createAABB,
-} from './bounds';
+
+// Components
+export { Bounds, type AABB, createAABB } from './components/Bounds';
+export { Transform, type TRS, createTRS } from './components/Transform';
+export { Visibility } from './components/Visibility';
+
+// Services
+export { CullingCamera } from './services/CullingCamera';
+export { StatsService } from './services/Stats';
+
+// Systems
+export { CullingSystem } from './systems/Culling';
+
+// Core API
+export { System } from './System';
+export { Service } from './Service';
+export { Component } from './Component';
 export { Node } from './node';
 export { World, type WorldOptions } from './world';
 export { TypedEvent, EventBus, type Listener } from './event';
-export { type ServiceKey, createServiceKey } from './keys';
-export { CULLING_CAMERA, type CullingCamera } from './world/culling';
-export { STATS_SERVICE, type StatsService } from './world/stats';
-export type { System } from './world/system';
 export {
-    createComponentToken,
     getComponent,
-    setComponent as _setComponent,
-    ensureComponent as _ensureComponent,
-} from './components/registry';
-export { Visibility, attachVisibility, maybeGetVisibility } from './visibility';
+    setComponent,
+    attachComponent,
+} from './componentRegistry';
 export {
     ancestors,
     descendants,
@@ -46,8 +40,7 @@ export {
     useNode,
     useInit,
     useDestroy,
-    useTransform,
-    useBounds,
+    useComponent,
     useFixedEarly,
     useFixedUpdate,
     useFixedLate,
@@ -56,3 +49,7 @@ export {
     useFrameLate,
     useChild,
 } from './fc/hooks';
+
+// Math
+export { Vec3 } from './math/vec3';
+export { Quat } from './math/quat';

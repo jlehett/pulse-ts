@@ -1,6 +1,6 @@
-import type { System, World, StatsService } from '@pulse-ts/core';
-import { STATS_SERVICE } from '@pulse-ts/core';
-import type { ThreePlugin } from '../plugin';
+import type { World, UpdateKind, UpdatePhase } from '@pulse-ts/core';
+import { StatsService, System } from '@pulse-ts/core';
+import { ThreePlugin } from '../plugin';
 
 export interface StatsOverlayOptions {
     position?: 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right';
@@ -12,23 +12,30 @@ export interface StatsOverlayOptions {
     updateMs?: number; // default 300ms
 }
 
-export class StatsOverlaySystem implements System {
-    private world!: World;
+export class StatsOverlaySystem extends System {
+    static updateKind: UpdateKind = 'frame';
+    static updatePhase: UpdatePhase = 'late';
+    static order: number = Number.MAX_SAFE_INTEGER - 1;
+
     private el: HTMLDivElement | null = null;
-    private tick?: { dispose(): void };
     private acc = 0;
     private interval = 300;
 
-    constructor(
-        private plugin: ThreePlugin,
-        private opts?: StatsOverlayOptions,
-    ) {}
+    constructor(private opts?: StatsOverlayOptions) {
+        super();
+    }
 
     attach(world: World): void {
-        this.world = world;
+        super.attach(world);
+
+        if (!this.world) return;
+
+        const plugin = this.world.getSystem(ThreePlugin);
+        if (!plugin) return;
+
         if (this.el) return;
         const container =
-            this.plugin.renderer.domElement.parentElement ?? document.body;
+            plugin.renderer.domElement.parentElement ?? document.body;
         if (getComputedStyle(container).position === 'static') {
             (container as HTMLElement).style.position = 'relative';
         }
@@ -57,31 +64,21 @@ export class StatsOverlaySystem implements System {
         this.el = el as HTMLDivElement;
         this.interval = Math.max(50, this.opts?.updateMs ?? 300);
         this.acc = 0;
-        this.tick = this.world.registerSystemTick(
-            'frame',
-            'late',
-            (dt) => this.update(dt),
-            Number.MAX_SAFE_INTEGER - 1,
-        );
     }
 
     detach(): void {
-        this.tick?.dispose();
-        this.tick = undefined;
+        super.detach();
         this.el?.remove();
         this.el = null;
-        // @ts-expect-error cleanup
-        this.world = undefined;
     }
 
-    private update(dt: number): void {
+    update(dt: number): void {
         if (!this.world || !this.el) return;
+
         this.acc += dt * 1000;
         if (this.acc < this.interval) return;
         this.acc = 0;
-        const svc = this.world.getService(STATS_SERVICE) as
-            | StatsService
-            | undefined;
+        const svc = this.world.getService(StatsService);
         let fps = 0,
             fixedSps = 0;
         if (svc) {

@@ -1,5 +1,4 @@
-import { createServiceKey, type ServiceKey } from '../keys';
-import type { World } from '../world';
+import { Service } from '../Service';
 
 /**
  * The stats snapshot.
@@ -19,24 +18,18 @@ export interface StatsSnapshot {
     frameId: number;
 }
 
-export interface StatsService {
-    get(): StatsSnapshot;
-}
-
-export const STATS_SERVICE: ServiceKey<StatsService> =
-    createServiceKey<StatsService>('pulse:stats');
-
 /**
  * The world stats service.
  */
-export class WorldStats implements StatsService {
-    constructor(private world: World) {}
-
+export class StatsService extends Service {
     /**
      * Gets the stats snapshot.
      * @returns The stats snapshot.
      */
     get(): StatsSnapshot {
+        if (!this.world)
+            throw new Error('StatsService is not attached to a world');
+
         const { fps, fixedSps } = this.world.getPerf();
         return { fps, fixedSps, frameId: this.world.getFrameId() };
     }

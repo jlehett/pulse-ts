@@ -1,23 +1,12 @@
 import { Vec3 } from '../math/vec3';
 import type { World } from '../world';
-import type { System } from './system';
-import { createServiceKey, type ServiceKey } from '../keys';
-import { maybeGetBounds } from '../bounds';
-import { attachVisibility } from '../visibility';
-import { attachTransform } from '../transform';
-
-/**
- * A camera for frustum culling, represented by a projection-view matrix.
- */
-export interface CullingCamera {
-    projView: Float32Array; // length 16, column-major like Three.js
-}
-
-/**
- * The service key for the culling camera.
- */
-export const CULLING_CAMERA: ServiceKey<CullingCamera> =
-    createServiceKey<CullingCamera>('pulse:culling:camera');
+import { getComponent, attachComponent } from '../componentRegistry';
+import { Bounds } from '../components/Bounds';
+import { Visibility } from '../components/Visibility';
+import { Transform } from '../components/Transform';
+import { CullingCamera } from '../services/CullingCamera';
+import { System } from '../System';
+import { UpdateKind, UpdatePhase } from '../types';
 
 /**
  * A plane for frustum culling.
@@ -124,49 +113,36 @@ class Frustum {
 /**
  * Iterates nodes with Bounds and updates Visibility from camera frustum.
  */
-export class CullingSystem implements System {
+export class CullingSystem extends System {
+    static updateKind: UpdateKind = 'frame';
+    static updatePhase: UpdatePhase = 'update';
+
     private frustum = new Frustum();
-    private world!: World;
-    private tick?: { dispose(): void };
-
-    attach(world: World): void {
-        this.world = world;
-        this.tick = world.registerSystemTick('frame', 'update', () =>
-            this.update(),
-        );
-    }
-
-    detach(): void {
-        this.tick?.dispose();
-        this.tick = undefined;
-        // @ts-expect-error clear
-        this.world = undefined;
-    }
 
     /**
      * Updates the frustum and culls nodes.
      * @returns True if the frustum intersects the bounds, false otherwise.
      */
     update(): void {
-        const cam = this.world.getService(CULLING_CAMERA);
+        if (!this.world) return;
+
+        const cam = this.world.getService(CullingCamera);
         if (!cam) return;
         this.frustum.setFromProjView(cam.projView);
 
         const nodes = this.world.nodes; // public set of nodes
         for (const n of nodes) {
-            const b = maybeGetBounds(n);
+            const b = getComponent(n, Bounds);
             if (!b) continue;
             const aabb = b.getWorld();
             if (!aabb) {
-                attachVisibility(n).visible = true;
+                attachComponent(n, Visibility).visible = true;
                 continue;
             }
             // ensure transform up-to-date for zero-alpha cache
-            attachTransform(n).getWorldTRS(undefined, 0);
-            attachVisibility(n).visible = this.frustum.intersectsBounds(
-                aabb.min,
-                aabb.max,
-            );
+            attachComponent(n, Transform).getWorldTRS(undefined, 0);
+            attachComponent(n, Visibility).visible =
+                this.frustum.intersectsBounds(aabb.min, aabb.max);
         }
     }
 }

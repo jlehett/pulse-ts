@@ -1,10 +1,8 @@
-import { Vec3 } from '../math/vec3';
 import { current } from './runtime';
 import { World } from '../world';
 import { Node } from '../node';
-import { attachTransform, Transform } from '../transform';
-import { attachBounds, Bounds } from '../bounds';
-import { ComponentToken, ensureComponent } from '../components/registry';
+import { attachComponent } from '../componentRegistry';
+import type { Component } from '../Component';
 
 /**
  * Returns the `World` that is currently mounting the active function component.
@@ -63,34 +61,9 @@ export function useDestroy(fn: () => void): void {
  *
  * @returns The `Transform` attached to the current `Node`.
  */
-export function useTransform(): Transform {
-    const t = attachTransform(current().node);
-    return t;
-}
-
-/**
- * Ensures the current `Node` has a Bounds attached and returns it.
- *
- * - The Bounds is used for frustum culling.
- *
- * @param min The minimum point of the Bounds.
- * @param max The maximum point of the Bounds.
- */
-export function useBounds(
-    min: Readonly<Vec3 | [number, number, number]>,
-    max: Readonly<Vec3 | [number, number, number]>,
-): Bounds {
-    const b = attachBounds(current().node);
-    useInit(() => {
-        const minV = Array.isArray(min)
-            ? new Vec3(min[0], min[1], min[2])
-            : (min as Vec3);
-        const maxV = Array.isArray(max)
-            ? new Vec3(max[0], max[1], max[2])
-            : (max as Vec3);
-        b.setLocal(minV, maxV);
-    });
-    return b;
+export function useComponent<T extends Component>(Component: new () => T): T {
+    const owner = current().node;
+    return attachComponent(owner, Component);
 }
 
 /**
