@@ -44,9 +44,11 @@
         "@pulse-ts/core": "file:../core"
     },
     "peerDependencies": {
-        "@pulse-ts/core": "^0.0.4"
+        "@pulse-ts/core": "^0.0.4",
+        "@pulse-ts/three": "^0.0.1"
     },
     "peerDependenciesMeta": {
-        "@pulse-ts/core": { "optional": false }
+        "@pulse-ts/core": { "optional": false },
+        "@pulse-ts/three": { "optional": true }
     }
 }

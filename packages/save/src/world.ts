@@ -2,34 +2,78 @@ import type { World } from '@pulse-ts/core';
 import { Node } from '@pulse-ts/core';
 import { getComponent } from '@pulse-ts/core';
 import { Transform } from '@pulse-ts/core';
-import {
-    SaveFile,
-    SaveFileV1,
-    SaveOptions,
-    LoadOptions,
-    SaveNodeRecord,
-} from './types';
+import { StableId } from '@pulse-ts/core';
+import { SaveFile, SaveOptions, LoadOptions, SaveNodeRecord } from './types';
 import {
     serializeRegisteredComponents,
     deserializeComponents,
-} from './registry';
+} from './registries/componentRegistry';
+import {
+    serializeRegisteredServices,
+    deserializeServices,
+} from './registries/serviceRegistry';
+import { SaveFC } from './components/SaveFC';
+import { getFC } from './registries/fcRegistry';
 
+/**
+ * Builds a map of node IDs to nodes.
+ * @param world The world to build the ID to node map for.
+ * @returns The map of node IDs to nodes.
+ */
 function buildIdToNode(world: World): Map<number, Node> {
     const m = new Map<number, Node>();
     for (const n of world.nodes) m.set(n.id, n);
     return m;
 }
 
-export function saveWorld(world: World, opts: SaveOptions = {}): SaveFileV1 {
+/**
+ * Builds a map of stable IDs to nodes (via core:stableId component).
+ */
+function buildStableIdToNode(world: World): Map<string, Node> {
+    const m = new Map<string, Node>();
+    for (const n of world.nodes) {
+        const sid = getComponent(n, StableId);
+        if (sid && sid.id) m.set(sid.id, n);
+    }
+    return m;
+}
+
+/** Extracts a stableId string from a node record's component list if present. */
+function extractStableId(rec: SaveNodeRecord): string | null {
+    if (!rec.components) return null;
+    for (const c of rec.components)
+        if (c.type === 'core:stableId') {
+            const id = (c.data as any)?.id;
+            return typeof id === 'string' ? id : null;
+        }
+    return null;
+}
+
+/**
+ * Saves the world to a save file.
+ * @param world The world to save.
+ * @param opts The options for saving the world.
+ * @returns The save file.
+ */
+export function saveWorld(world: World, opts: SaveOptions = {}): SaveFile {
     const nodes: SaveNodeRecord[] = [];
     for (const n of world.nodes) {
+        const fcMeta = getComponent(n, SaveFC);
         nodes.push({
             id: n.id,
             parent: n.parent ? n.parent.id : null,
             components: serializeRegisteredComponents(n),
+            fc:
+                fcMeta && fcMeta.type
+                    ? { type: fcMeta.type, props: fcMeta.props }
+                    : undefined,
         });
     }
-    const out: SaveFileV1 = { version: 1, nodes };
+    const out: SaveFile = {
+        version: opts.version ?? 1,
+        services: serializeRegisteredServices(world),
+        nodes,
+    };
     if (opts.includeTime) {
         out.time = {
             timeScale: world.getTimeScale(),
@@ -39,17 +83,29 @@ export function saveWorld(world: World, opts: SaveOptions = {}): SaveFileV1 {
     return out;
 }
 
+/**
+ * Loads the world from a save file in-place.
+ * - Updates the world's nodes and hierarchy
+ * - Applies components via registered serializers
+ * - Optionally applies time state
+ * @param world The world to load the save file into.
+ * @param save The save file to load.
+ * @param opts The options for loading the world.
+ */
 export function loadWorld(
     world: World,
     save: SaveFile,
     opts: LoadOptions = {},
 ) {
-    if (!save || save.version !== 1) throw new Error('Unsupported save format');
+    if (!save) throw new Error('Save file is required');
     const strict = !!opts.strict;
     const idToNode = buildIdToNode(world);
+    const stableToNode = buildStableIdToNode(world);
 
     for (const rec of save.nodes) {
-        const node = idToNode.get(rec.id);
+        const sid = extractStableId(rec);
+        const node =
+            (sid ? stableToNode.get(sid) : undefined) ?? idToNode.get(rec.id);
         if (!node) {
             if (strict) throw new Error(`loadWorld: missing node ${rec.id}`);
             continue;
@@ -58,6 +114,8 @@ export function loadWorld(
             deserializeComponents(node, rec.components);
         }
     }
+
+    deserializeServices(world, save.services);
 
     if (opts.resetPrevious) {
         for (const n of world.nodes) {
@@ -79,13 +137,16 @@ export function loadWorld(
  * - Recreates nodes and hierarchy
  * - Applies components via registered serializers
  * - Optionally applies time state
+ * @param world The world to load the save file into.
+ * @param save The save file to load.
+ * @param opts The options for loading the world.
  */
 export function loadWorldRebuild(
     world: World,
     save: SaveFile,
     opts: LoadOptions = {},
 ) {
-    if (!save || save.version !== 1) throw new Error('Unsupported save format');
+    if (!save) throw new Error('Save file is required');
     if (typeof (world as any).clearScene === 'function') {
         (world as any).clearScene();
     } else {
@@ -96,10 +157,28 @@ export function loadWorldRebuild(
     }
 
     const idToNode = new Map<number, Node>();
-    // First pass: create nodes
+    // First pass: create/mount nodes
     for (const rec of save.nodes) {
-        const n = new (Node as any)() as Node;
-        world.add(n);
+        let n: Node;
+        const fcId = (rec as any).fc?.type as string | undefined;
+        const fcProps = (rec as any).fc?.props as any;
+        const fc = fcId ? getFC(fcId) : undefined;
+        if (fc) {
+            // Mount FC; parent will be set in second pass
+            n = world.mount(fc, fcProps);
+        } else {
+            if (fcId && !fc) {
+                // Helpful DX warning when a saved FC is missing registration
+                try {
+                    console.warn(
+                        `@pulse-ts/save: missing FC registration for "${fcId}" during rebuild. ` +
+                            `Register it via registerFC(...) or wrap with defineFC(...).`,
+                    );
+                } catch {}
+            }
+            n = new (Node as any)() as Node;
+            world.add(n);
+        }
         idToNode.set(rec.id, n);
     }
     // Second pass: parent relationships
@@ -116,6 +195,8 @@ export function loadWorldRebuild(
             deserializeComponents(n, rec.components);
         }
     }
+
+    deserializeServices(world, save.services);
 
     if (opts.resetPrevious) {
         for (const [, n] of idToNode) {

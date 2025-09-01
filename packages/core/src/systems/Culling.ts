@@ -1,5 +1,4 @@
 import { Vec3 } from '../math/vec3';
-import type { World } from '../world';
 import { getComponent, attachComponent } from '../componentRegistry';
 import { Bounds } from '../components/Bounds';
 import { Visibility } from '../components/Visibility';

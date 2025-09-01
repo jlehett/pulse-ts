@@ -4,6 +4,8 @@ export * from './types';
 export { Bounds, type AABB, createAABB } from './components/Bounds';
 export { Transform, type TRS, createTRS } from './components/Transform';
 export { Visibility } from './components/Visibility';
+export { State } from './components/State';
+export { StableId } from './components/StableId';
 
 // Services
 export { CullingCamera } from './services/CullingCamera';
@@ -48,6 +50,8 @@ export {
     useFrameUpdate,
     useFrameLate,
     useChild,
+    useState,
+    useStableId,
 } from './fc/hooks';
 
 // Math

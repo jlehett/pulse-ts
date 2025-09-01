@@ -4,9 +4,13 @@ import { Visibility } from '@pulse-ts/core';
 import { Transform } from '@pulse-ts/core';
 import { attachComponent } from '@pulse-ts/core';
 import type { Node } from '@pulse-ts/core';
-import { registerComponentSerializer } from './registry';
+import { registerComponentSerializer } from '../registries/componentRegistry';
+import { State, StableId } from '@pulse-ts/core';
 
-export function registerCoreComponentSerializers() {
+/**
+ * Register all of the @pulse-ts/core components/services with the save system.
+ */
+export function registerCoreSerializers() {
     // Transform
     registerComponentSerializer(Transform, {
         id: 'core:transform',
@@ -71,6 +75,36 @@ export function registerCoreComponentSerializers() {
         deserialize(owner: Node, data: any) {
             const comp = attachComponent(owner, Visibility);
             (comp as Visibility).visible = !!data.visible;
+        },
+    });
+
+    // State (generic key/value store)
+    registerComponentSerializer(State, {
+        id: 'core:state',
+        serialize(_owner, s: any) {
+            try {
+                const entries = (s as State).entries();
+                return { e: entries };
+            } catch {
+                return undefined;
+            }
+        },
+        deserialize(owner: Node, data: any) {
+            const comp = attachComponent(owner, State);
+            if (data && Array.isArray(data.e))
+                (comp as State).loadEntries(data.e);
+        },
+    });
+
+    // StableId (string)
+    registerComponentSerializer(StableId, {
+        id: 'core:stableId',
+        serialize(_owner, s: any) {
+            return { id: (s as StableId).id };
+        },
+        deserialize(owner: Node, data: any) {
+            const comp = attachComponent(owner, StableId);
+            (comp as StableId).id = String(data?.id ?? '');
         },
     });
 }
