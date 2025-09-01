@@ -3,6 +3,8 @@ import { World } from '../world';
 import { Node } from '../node';
 import { attachComponent } from '../componentRegistry';
 import type { Component } from '../Component';
+import { State } from '../components/State';
+import { StableId } from '../components/StableId';
 
 /**
  * Returns the `World` that is currently mounting the active function component.
@@ -182,4 +184,41 @@ export function useFrameLate(fn: (dt: number) => void, opts: TickOpts = {}) {
 export function useChild<P>(fc: (props: Readonly<P>) => void, props?: P): Node {
     const { world, node } = current();
     return world.mount(fc, props, { parent: node });
+}
+
+/**
+ * Persistent state hook for Pulse FCs (no re-render model).
+ *
+ * - Values are stored in the node's `State` component (JSON-serializable recommended).
+ * - Returns [get, set] where get() reads the latest value each time.
+ * - Setter supports functional updates.
+ * @param key The key to store the state for.
+ * @param initial The initial value to store.
+ * @returns A tuple of [get, set] where get() reads the latest value each time.
+ */
+export function useState<T>(
+    key: string,
+    initial: T | (() => T),
+): [() => T, (next: T | ((prev: T) => T)) => void] {
+    const store = attachComponent(current().node, State);
+    if (!store.has(key)) {
+        const v = typeof initial === 'function' ? (initial as any)() : initial;
+        store.set(key, v);
+    }
+    const get = () => store.get<T>(key)!;
+    const set = (next: T | ((prev: T) => T)) => {
+        const prev = get();
+        const v = typeof next === 'function' ? (next as any)(prev) : next;
+        store.set(key, v);
+    };
+    return [get, set];
+}
+
+/**
+ * Assigns a stable string identifier to the current node for save/load mapping.
+ * @param id The stable string identifier to assign.
+ */
+export function useStableId(id: string): void {
+    const comp = attachComponent(current().node, StableId);
+    comp.id = id;
 }
