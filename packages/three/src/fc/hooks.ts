@@ -1,29 +1,29 @@
 import * as THREE from 'three';
 import { __fcCurrent, useFrameLate } from '@pulse-ts/core';
-import { ThreePlugin } from '../plugin';
+import { ThreeService } from '../services/Three';
 
 /**
  * Returns Three.js context bound to the current `World`.
  *
- * - Throws if the `ThreePlugin` is not attached to the world.
+ * - Throws if the `ThreeService` is not provided to the world.
  * - Provides access to the shared renderer, scene, and camera.
  *
  * @returns The plugin and core Three objects.
  */
 export function useThreeContext(): {
-    plugin: ThreePlugin;
+    service: ThreeService;
     renderer: THREE.WebGLRenderer;
     scene: THREE.Scene;
     camera: THREE.Camera;
 } {
     const world = __fcCurrent().world;
-    const plugin = world.getSystem(ThreePlugin);
-    if (!plugin) throw new Error('ThreePlugin not attached to world.');
+    const service = world.getService(ThreeService);
+    if (!service) throw new Error('ThreeService not provided to world.');
     return {
-        plugin,
-        renderer: plugin.renderer,
-        scene: plugin.scene,
-        camera: plugin.camera,
+        service,
+        renderer: service.renderer,
+        scene: service.scene,
+        camera: service.camera,
     };
 }
 
@@ -36,11 +36,11 @@ export function useThreeContext(): {
  * @returns The `Object3D` root for the current `Node`.
  */
 export function useThreeRoot(): THREE.Object3D {
-    const { plugin } = useThreeContext();
+    const { service } = useThreeContext();
     const { node, destroy } = __fcCurrent();
-    const root = plugin.ensureRoot(node);
+    const root = service.ensureRoot(node);
     destroy?.push(() => {
-        plugin.disposeRoot(node);
+        service.disposeRoot(node);
     });
     return root;
 }
@@ -54,19 +54,8 @@ export function useThreeRoot(): THREE.Object3D {
  * @param object The `THREE.Object3D` to attach.
  */
 export function useObject3D(object: THREE.Object3D): void {
-    const { plugin } = useThreeContext();
+    const { service } = useThreeContext();
     const { node, destroy } = __fcCurrent();
-    plugin.attachChild(node, object);
-    destroy?.push(() => plugin.detachChild(node, object));
-}
-
-export function useCulledObject3D(object: THREE.Object3D): void {
-    const { plugin } = useThreeContext();
-    const { node } = __fcCurrent();
-    const root = plugin.ensureRoot(node);
-
-    // Each frame, mirror the root's visibility decided by the ThreePlugin culler
-    useFrameLate(() => {
-        object.visible = root.visible;
-    });
+    service.attachChild(node, object);
+    destroy?.push(() => service.detachChild(node, object));
 }

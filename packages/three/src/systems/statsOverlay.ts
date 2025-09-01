@@ -1,6 +1,6 @@
 import type { World, UpdateKind, UpdatePhase } from '@pulse-ts/core';
 import { StatsService, System } from '@pulse-ts/core';
-import { ThreePlugin } from '../plugin';
+import { ThreeService } from '../services/Three';
 
 export interface StatsOverlayOptions {
     position?: 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right';
@@ -12,6 +12,9 @@ export interface StatsOverlayOptions {
     updateMs?: number; // default 300ms
 }
 
+/**
+ * Displays stats overlay on the screen (FPS, fixed sps) using Three's DOM element.
+ */
 export class StatsOverlaySystem extends System {
     static updateKind: UpdateKind = 'frame';
     static updatePhase: UpdatePhase = 'late';
@@ -30,7 +33,7 @@ export class StatsOverlaySystem extends System {
 
         if (!this.world) return;
 
-        const plugin = this.world.getSystem(ThreePlugin);
+        const plugin = this.world.getService(ThreeService);
         if (!plugin) return;
 
         if (this.el) return;
