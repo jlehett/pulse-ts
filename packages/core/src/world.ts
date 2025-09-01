@@ -12,13 +12,11 @@ import type {
 import { getComponent } from './componentRegistry';
 import { Transform } from './components/Transform';
 import { Ticker } from './world/ticker';
-import { Snapshotter, type WorldSnapshot } from './world/snapshots';
 import { ServiceRegistry } from './serviceRegistry';
 import { SystemRegistry } from './systemRegistry';
 import { EngineLoop } from './world/loop';
 import { kRegisteredTicks } from './keys';
 import { SceneGraph } from './world/sceneGraph';
-import { Bounds } from './components/Bounds';
 import { CullingSystem } from './systems/Culling';
 import type { System } from './System';
 import { StatsService } from './services/Stats';
@@ -61,11 +59,7 @@ export class World {
 
     private ticker = new Ticker();
     private scene = new SceneGraph();
-    private snapshotter!: Snapshotter;
-
-    private idToNode = new Map<number, Node>();
     private transforms = new Set<Transform>();
-    private bounds = new Set<Bounds>();
     private loop!: EngineLoop;
     private systemNode: Node | null = null;
     private nodeAddedBus = new TypedEvent<Node>();
@@ -83,12 +77,6 @@ export class World {
             (typeof window !== 'undefined' && 'requestAnimationFrame' in window
                 ? new RafScheduler()
                 : new TimeoutScheduler(60));
-
-        this.snapshotter = new Snapshotter(
-            this.idToNode,
-            this.transforms,
-            this.bounds,
-        );
 
         // decoupled time/tick loop
         this.loop = new EngineLoop(
@@ -129,6 +117,17 @@ export class World {
         return this.scene.onParentChanged(fn);
     }
 
+    /**
+     * Removes all user nodes from the world while preserving internal system nodes.
+     * Destroys root nodes (and their subtrees) excluding the internal system node.
+     */
+    clearScene(): void {
+        // Destroy only roots to avoid double-destroy; preserve internal system node
+        const roots: Node[] = [];
+        for (const n of this.nodes) if (!n.parent) roots.push(n);
+        for (const r of roots) if (r !== this.systemNode) r.destroy();
+    }
+
     /** Subscribes to node added events. */
     onNodeAdded(fn: (node: Node) => void) {
         return this.nodeAddedBus.on(fn);
@@ -162,8 +161,6 @@ export class World {
 
         node.world = this;
         this.nodes.add(node);
-        this.idToNode.set(node.id, node);
-
         // register an existing transform (if any)
         const t = getComponent(node, Transform);
         if (t) this.transforms.add(t);
@@ -189,7 +186,6 @@ export class World {
         const t = getComponent(node, Transform);
         if (t) this.transforms.delete(t);
 
-        this.idToNode.delete(node.id);
         node.world = null;
         // ticks owned by this node will be lazily unlinked during iteration
         this.nodeRemovedBus.emit(node);
@@ -268,27 +264,6 @@ export class World {
     }
 
     /**
-     * Saves a snapshot of the world.
-     * @returns
-     */
-    saveSnapshot(): WorldSnapshot {
-        return this.snapshotter.save(this.loop.getAccumulator());
-    }
-
-    /**
-     * Restores a snapshot of the world.
-     * @param snap The snapshot to restore.
-     * @param opts The options for the restore.
-     */
-    restoreSnapshot(
-        snap: WorldSnapshot,
-        opts?: { strict?: boolean; resetPrevious?: boolean },
-    ) {
-        const acc = this.snapshotter.restore(snap, opts);
-        this.loop.setAccumulator(acc);
-    }
-
-    /**
      * Gets the debug stats of the world.
      * @returns The debug stats.
      */
@@ -344,22 +319,6 @@ export class World {
      */
     unregisterTransform(t: Transform) {
         this.transforms.delete(t);
-    }
-
-    /**
-     * Registers a bounds.
-     * @param b The bounds to register.
-     */
-    registerBounds(b: Bounds) {
-        this.bounds.add(b);
-    }
-
-    /**
-     * Unregisters a bounds.
-     * @param b The bounds to unregister.
-     */
-    unregisterBounds(b: Bounds) {
-        this.bounds.delete(b);
     }
 
     //#endregion

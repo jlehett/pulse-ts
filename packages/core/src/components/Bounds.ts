@@ -20,8 +20,6 @@ export function createAABB(): AABB {
 export class Bounds extends Component {
     static attach<Bounds>(owner: Node): Bounds {
         const b = super.attach(owner) as Bounds;
-        const w = owner.world;
-        if (w) w.registerBounds(b as any);
         return b;
     }
 
