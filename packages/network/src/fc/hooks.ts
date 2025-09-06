@@ -7,6 +7,8 @@ import { ReplicationService } from '../services/ReplicationService';
 import { SnapshotSystem } from '../systems/SnapshotSystem';
 import { attachComponent } from '@pulse-ts/core';
 import { StableId } from '@pulse-ts/core';
+import { ReliableChannelService } from '../services/ReliableChannel';
+import { ClockSyncService } from '../services/ClockSyncService';
 
 /**
  * Ensure TransportService and NetworkTick are initialized once per world.
@@ -223,5 +225,54 @@ export function useReplication<T = any>(
             const id = (opts.id ?? attachComponent(node, StableId).id).trim();
             if (rep && id) rep.markDirty(id, key);
         },
+    } as const;
+}
+
+/**
+ * Access a reliable request/ack channel by topic.
+ *
+ * - Returns a stable `send` that resolves with a generic `{ status, result, reason }`.
+ */
+export function useReliable<TReq = any, TRes = any>(topic: string) {
+    const world = useWorld();
+    useInit(() => {
+        if (!world.getService(ReliableChannelService))
+            world.provideService(new ReliableChannelService());
+    });
+    return {
+        send: (
+            payload: TReq,
+            opts?: { timeoutMs?: number; retries?: number },
+        ) => {
+            let svc = world.getService(ReliableChannelService);
+            if (!svc) svc = world.provideService(new ReliableChannelService());
+            return svc.send<TReq, TRes>(topic, payload, opts);
+        },
+    } as const;
+}
+
+/**
+ * Starts client clock sync and provides accessors for server time.
+ */
+export function useClockSync(opts?: { intervalMs?: number; burst?: number }) {
+    const world = useWorld();
+    let svc: ClockSyncService | undefined;
+    useInit(() => {
+        svc = world.getService(ClockSyncService);
+        if (!svc) svc = world.provideService(new ClockSyncService(opts));
+        svc.start();
+        return () => svc?.stop();
+    });
+    return {
+        getOffsetMs: () =>
+            world.getService(ClockSyncService)?.getOffsetMs() ?? 0,
+        getServerNowMs: () =>
+            world.getService(ClockSyncService)?.getServerNowMs() ?? Date.now(),
+        getStats: () =>
+            world.getService(ClockSyncService)?.getStats() ?? {
+                samples: 0,
+                bestRttMs: 0,
+                offsetMs: 0,
+            },
     } as const;
 }

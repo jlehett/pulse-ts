@@ -161,6 +161,16 @@ export class NetworkServer {
         return p ? [...p.rooms] : [];
     }
 
+    /** Lists all room names. */
+    listRooms(): string[] {
+        return [...this.rooms.keys()];
+    }
+
+    /** Lists all peer ids. */
+    listPeers(): string[] {
+        return [...this.peers.keys()];
+    }
+
     /** Disconnects a peer. */
     disconnect(peerId: string, code?: number, reason?: string) {
         const p = this.peers.get(peerId);
@@ -282,6 +292,20 @@ export class NetworkServer {
             }
             return;
         }
+        if (packet.channel === '__clock') {
+            const env = (packet as any).data as {
+                t: 'ping' | 'pong';
+                id: string;
+                cSendMs?: number;
+            };
+            if (env && env.t === 'ping' && typeof env.id === 'string') {
+                this.unicast(peer.id, {
+                    channel: '__clock',
+                    data: { t: 'pong', id: env.id, sNowMs: Date.now() } as any,
+                });
+            }
+            return;
+        }
         if (packet.channel === '__rpc') {
             const env = (packet as any).data as RpcEnvelope;
             if (env && env.t === 'req' && env.m && this.rpc.has(env.m)) {
@@ -307,6 +331,79 @@ export class NetworkServer {
                 return;
             }
             // Unknown RPC method; drop or forward? We'll drop by default.
+            return;
+        }
+
+        // Reliable request/ack channel
+        if (packet.channel === '__rel') {
+            const env = (packet as any).data as {
+                t: 'req' | 'ack';
+                id: string;
+                topic?: string;
+                payload?: any;
+            };
+            if (!env || env.t !== 'req' || typeof env.id !== 'string') return;
+            const topic = (env as any).topic as string;
+            const handlers = (this as any)._relHandlers as Map<
+                string,
+                (payload: any, peer: { id: string }) => any | Promise<any>
+            > as any;
+            const seen = ((this as any)._relSeen ??= new Map()) as Map<
+                string,
+                Map<string, any>
+            >;
+            const per =
+                seen.get(peer.id) ??
+                (seen.set(peer.id, new Map()), seen.get(peer.id)!);
+            // dedupe by id
+            if (per.has(env.id)) {
+                const ack = per.get(env.id);
+                this.unicast(peer.id, { channel: '__rel', data: ack });
+                return;
+            }
+            const srvSeq =
+                (((this as any)._relSeq ??= new Map()).get(peer.id) ?? 0) + 1;
+            ((this as any)._relSeq as Map<string, number>).set(peer.id, srvSeq);
+            const fn = handlers?.get?.(topic);
+            if (!fn) {
+                const ack = {
+                    t: 'ack',
+                    id: env.id,
+                    status: 'error',
+                    reason: 'unknown_topic',
+                    srvSeq,
+                };
+                per.set(env.id, ack);
+                this.unicast(peer.id, { channel: '__rel', data: ack });
+                this.trimRel(per);
+                return;
+            }
+            Promise.resolve()
+                .then(() => fn(env.payload, peer))
+                .then((result) => {
+                    const ack = {
+                        t: 'ack',
+                        id: env.id,
+                        status: 'ok',
+                        result,
+                        srvSeq,
+                    };
+                    per.set(env.id, ack);
+                    this.unicast(peer.id, { channel: '__rel', data: ack });
+                    this.trimRel(per);
+                })
+                .catch((e) => {
+                    const ack = {
+                        t: 'ack',
+                        id: env.id,
+                        status: 'error',
+                        reason: e?.message ?? String(e),
+                        srvSeq,
+                    };
+                    per.set(env.id, ack);
+                    this.unicast(peer.id, { channel: '__rel', data: ack });
+                    this.trimRel(per);
+                });
             return;
         }
 
@@ -337,6 +434,27 @@ export class NetworkServer {
         try {
             p.ws.send(JSON.stringify(packet));
         } catch {}
+    }
+
+    /** Registers a reliable request handler for a given topic. */
+    registerReliable(
+        topic: string,
+        fn: (payload: any, peer: { id: string }) => any | Promise<any>,
+    ) {
+        const handlers = ((this as any)._relHandlers ??= new Map()) as Map<
+            string,
+            (payload: any, peer: { id: string }) => any | Promise<any>
+        >;
+        handlers.set(topic, fn);
+        return () => handlers.delete(topic);
+    }
+
+    private trimRel(per: Map<string, any>) {
+        const MAX = 1000;
+        if (per.size <= MAX) return;
+        const it = per.keys();
+        const first = it.next();
+        if (!first.done) per.delete(first.value);
     }
 
     private _id = 0;

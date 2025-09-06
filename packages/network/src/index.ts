@@ -6,6 +6,11 @@ export * from './types';
 export { TransportService } from './services/TransportService';
 export { ReplicationService } from './services/ReplicationService';
 export { InterpolationService } from './services/InterpolationService';
+export {
+    ReliableChannelService,
+    type ReliableResult,
+} from './services/ReliableChannel';
+export { ClockSyncService } from './services/ClockSyncService';
 
 // Systems
 export { NetworkTick } from './systems/NetworkTick';
@@ -20,6 +25,8 @@ export {
     useRPC,
     useReplication,
     useRoom,
+    useReliable,
+    useClockSync,
 } from './fc/hooks';
 export { useReplicateTransform } from './fc/transform';
 
@@ -48,3 +55,7 @@ export {
 
 // Server utilities (Node)
 export { NetworkServer, attachWsServer } from './server/broker';
+export {
+    createPresenceHttpHandler,
+    type PresenceHttpOptions,
+} from './server/presence';
