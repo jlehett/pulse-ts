@@ -29,6 +29,8 @@ export {
     Axis2D,
     PointerMovement,
     PointerWheelScroll,
+    Chord,
+    Sequence,
 } from './bindings/expr';
 export type {
     BindingExpr,
@@ -37,5 +39,7 @@ export type {
     Axis2DBinding,
     PointerMovementBinding,
     PointerWheelBinding,
+    ChordBinding,
+    SequenceBinding,
     ExprBindings,
 } from './bindings/types';

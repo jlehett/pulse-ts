@@ -43,7 +43,7 @@ export function useAxis1D(name: string): () => number {
  */
 export function useAxis2D(name: string): () => Vec {
     const svc = useInput();
-    return () => svc.axis2D(name);
+    return () => svc.vec2(name);
 }
 
 /**

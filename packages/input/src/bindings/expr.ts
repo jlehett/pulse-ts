@@ -4,6 +4,8 @@ import type {
     KeyBinding,
     PointerMovementBinding,
     PointerWheelBinding,
+    ChordBinding,
+    SequenceBinding,
 } from './types';
 
 // Helpers to create declarative binding expressions
@@ -114,4 +116,32 @@ export function PointerWheelScroll(
     opts: { scale?: number } = {},
 ): PointerWheelBinding {
     return { type: 'wheel', scale: opts.scale ?? 1 };
+}
+
+/**
+ * Create a Chord binding (simultaneous keys).
+ */
+export function Chord(keys: (KeyBinding | string)[]): ChordBinding {
+    const ks: KeyBinding[] = keys.map((k) =>
+        typeof k === 'string' ? Key(k) : k,
+    );
+    return { type: 'chord', keys: ks };
+}
+
+/**
+ * Create a Sequence binding (ordered key presses within a frame window).
+ */
+export function Sequence(
+    steps: (KeyBinding | string)[],
+    opts: { maxGapFrames?: number; resetOnWrong?: boolean } = {},
+): SequenceBinding {
+    const ss: KeyBinding[] = steps.map((k) =>
+        typeof k === 'string' ? Key(k) : k,
+    );
+    return {
+        type: 'sequence',
+        steps: ss,
+        maxGapFrames: opts.maxGapFrames,
+        resetOnWrong: opts.resetOnWrong,
+    };
 }

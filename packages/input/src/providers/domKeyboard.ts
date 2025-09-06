@@ -23,6 +23,7 @@ export class DOMKeyboardProvider implements InputProvider {
         const kd = (e: any) => {
             const code: string | undefined = e?.code;
             if (!code) return;
+            if (e?.repeat) return; // ignore auto-repeat for sequence/chord stability
             if (this.opts.preventDefault) e.preventDefault?.();
             this.service.handleKey(code, true);
         };

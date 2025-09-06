@@ -143,6 +143,10 @@ export type Axis2DBinding = {
      * The axes of the axis 2D binding. Each key is the name of the axis, and the value is the axis definition.
      */
     axes: Record<string, Axis1DBinding>;
+    /** Optional inversion for first component (commonly x). */
+    invertX?: boolean;
+    /** Optional inversion for second component (commonly y). */
+    invertY?: boolean;
 };
 
 /**
@@ -179,6 +183,24 @@ export type PointerWheelBinding = {
     scale?: number;
 };
 
+/** A chord (simultaneous keys) binding. */
+export type ChordBinding = {
+    type: 'chord';
+    /** Keys that must be held down together. */
+    keys: KeyBinding[];
+};
+
+/** A sequence (ordered key presses) binding. */
+export type SequenceBinding = {
+    type: 'sequence';
+    /** Keys to press in order. */
+    steps: KeyBinding[];
+    /** Max frames allowed between successive steps. Default 15. */
+    maxGapFrames?: number;
+    /** Reset to start when a wrong key is pressed. Default true. */
+    resetOnWrong?: boolean;
+};
+
 /**
  * A binding expression.
  */
@@ -187,9 +209,11 @@ export type BindingExpr =
     | Axis1DBinding
     | Axis2DBinding
     | PointerMovementBinding
-    | PointerWheelBinding;
+    | PointerWheelBinding
+    | ChordBinding
+    | SequenceBinding;
 
 /**
  * A record of binding expressions. Each key is the name of the action, and the value is the binding expression.
  */
-export type ExprBindings = Record<string, BindingExpr>;
+export type ExprBindings = Record<string, BindingExpr | BindingExpr[]>;

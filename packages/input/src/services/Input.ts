@@ -25,12 +25,15 @@ export class InputService extends Service {
     // per-action 1D snapshots
     private actions = new Map<string, ActionState>();
 
-    // per-action accumulated axis 2D deltas for this frame
-    private axis2DAccum = new Map<string, Vec>();
-    // per-action axis 2D snapshot (frame)
-    private axis2DState = new Map<string, Vec>();
+    // per-action accumulated vec2 deltas for this frame
+    private vec2Accum = new Map<string, Vec>();
+    // per-action vec2 snapshot (frame)
+    private vec2State = new Map<string, Vec>();
     // key state (down) for Axis1DKeys support
     private keysDown = new Set<string>();
+    // sequence runtime state and pulses
+    private seqState = new Map<string, { index: number; lastFrame: number }>();
+    private seqPulse = new Set<string>();
 
     // pointer state + accumulators
     private pointer: PointerSnapshot = {
@@ -120,8 +123,10 @@ export class InputService extends Service {
         for (const name of actions)
             this.setDigitalSource(name, `key:${code}`, down);
         // Track raw key state for axes1DKeys
-        if (down) this.keysDown.add(code);
-        else this.keysDown.delete(code);
+        if (down) {
+            this.keysDown.add(code);
+            this.advanceSequences(code);
+        } else this.keysDown.delete(code);
     }
 
     /**
@@ -164,10 +169,10 @@ export class InputService extends Service {
             const mod = this.bindings.getPointerVec2Modifiers(action);
             const sx = (mod?.scaleX ?? 1) * (mod?.invertX ? -1 : 1);
             const sy = (mod?.scaleY ?? 1) * (mod?.invertY ? -1 : 1);
-            const acc = (this.axis2DAccum.get(action) ?? { x: 0, y: 0 }) as Vec;
+            const acc = (this.vec2Accum.get(action) ?? { x: 0, y: 0 }) as Vec;
             acc['x'] = (acc['x'] ?? 0) + dx * sx;
             acc['y'] = (acc['y'] ?? 0) + dy * sy;
-            this.axis2DAccum.set(action, acc);
+            this.vec2Accum.set(action, acc);
         }
     }
 
@@ -194,16 +199,16 @@ export class InputService extends Service {
     }
 
     /**
-     * Inject an axis 2D action.
+     * Inject an axis 2D action (per-frame delta).
      * @param action The action to inject.
      * @param axes The axes to inject.
      */
     injectAxis2D(action: string, axes: Vec): void {
-        const a = this.axis2DAccum.get(action) ?? { x: 0, y: 0 };
+        const a = this.vec2Accum.get(action) ?? { x: 0, y: 0 };
         Object.entries(axes).forEach(([key, value]) => {
             a[key] = (a[key] ?? 0) + value;
         });
-        this.axis2DAccum.set(action, a);
+        this.vec2Accum.set(action, a);
     }
 
     /**
@@ -214,6 +219,16 @@ export class InputService extends Service {
         for (const p of this.providers) p.update?.();
 
         const frameId = (this.world as any)?.getFrameId?.() ?? 0;
+
+        // Chords: evaluate current key-down set
+        for (const [action, def] of this.bindings.getChords()) {
+            const allDown = def.codes.every((c) => this.keysDown.has(c));
+            this.setDigitalSource(action, 'chord', allDown);
+        }
+
+        // Sequence pulses from key events
+        for (const action of this.seqPulse)
+            this.setDigitalSource(action, 'seq', true);
 
         // Digital actions
         const seen = new Set<string>();
@@ -273,13 +288,13 @@ export class InputService extends Service {
             if (pressed || released) this.actionEvent.emit({ name, state });
         }
 
-        // Pointer axis 2D (per-frame deltas): reset to {x:0,y:0} and apply accum
+        // Pointer vec2 (per-frame deltas): reset to {x:0,y:0} and apply accum
         const pAction = this.bindings.getPointerMoveAction();
-        if (pAction) this.axis2DState.set(pAction, { x: 0, y: 0 });
-        for (const [name, v] of this.axis2DAccum)
-            this.axis2DState.set(name, { ...v });
+        if (pAction) this.vec2State.set(pAction, { x: 0, y: 0 });
+        for (const [name, v] of this.vec2Accum)
+            this.vec2State.set(name, { ...v });
         // Clear accumulators for next frame
-        this.axis2DAccum.clear();
+        this.vec2Accum.clear();
 
         // Wheel -> axis (per-frame), vertical only
         for (const [name, def] of this.bindings.getWheelBindings()) {
@@ -325,8 +340,13 @@ export class InputService extends Service {
             const obj: Vec = {};
             obj[def.key1] = a;
             obj[def.key2] = b;
-            this.axis2DState.set(name, obj);
+            this.vec2State.set(name, obj);
         }
+
+        // Cleanup sequence pulses (one-frame)
+        for (const action of this.seqPulse)
+            this.setDigitalSource(action, 'seq', false);
+        this.seqPulse.clear();
     }
 
     /**
@@ -360,8 +380,8 @@ export class InputService extends Service {
      * @param name The name of the axis 2D.
      * @returns The axis 2D state.
      */
-    axis2D(name: string): Vec {
-        const v = this.axis2DState.get(name);
+    vec2(name: string): Vec {
+        const v = this.vec2State.get(name);
         if (v) return v;
         // Default zero object based on known axis 2D definition or pointer action
         for (const [n, def] of this.bindings.getVec2Defs()) {
@@ -416,6 +436,35 @@ export class InputService extends Service {
         if (down) set.add(sourceId);
         else set.delete(sourceId);
         this.digitalSources.set(name, set);
+    }
+
+    /** Advances sequences on keydown events. */
+    private advanceSequences(code: string): void {
+        const frameId = (this.world as any)?.getFrameId?.() ?? 0;
+        for (const [action, def] of this.bindings.getSequences()) {
+            let st = this.seqState.get(action);
+            if (!st) {
+                st = { index: 0, lastFrame: frameId };
+                this.seqState.set(action, st);
+            }
+            // Timeout
+            if (st.index > 0 && frameId - st.lastFrame > def.maxGapFrames) {
+                st.index = 0;
+            }
+            const expected = def.steps[st.index];
+            if (code === expected) {
+                st.index++;
+                st.lastFrame = frameId;
+                if (st.index >= def.steps.length) {
+                    this.seqPulse.add(action);
+                    st.index = 0;
+                }
+            } else if (def.resetOnWrong !== false) {
+                // allow immediate restart if key matches first step
+                st.index = code === def.steps[0] ? 1 : 0;
+                st.lastFrame = frameId;
+            }
+        }
     }
 
     //#endregion

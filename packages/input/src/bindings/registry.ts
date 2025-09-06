@@ -4,6 +4,8 @@ import type {
     Axis1DBinding,
     Axis2DBinding,
     KeyBinding,
+    ChordBinding,
+    SequenceBinding,
 } from './types';
 
 /**
@@ -40,6 +42,11 @@ export class BindingRegistry {
         }
     >();
     private wheelBindings = new Map<string, { scale: number }>();
+    private chords = new Map<string, { codes: string[] }>();
+    private sequences = new Map<
+        string,
+        { steps: string[]; maxGapFrames: number; resetOnWrong: boolean }
+    >();
 
     //#endregion
 
@@ -141,6 +148,21 @@ export class BindingRegistry {
         return this.wheelBindings.entries();
     }
 
+    /** Returns chord definitions. */
+    getChords(): Iterable<readonly [string, { codes: string[] }]> {
+        return this.chords.entries();
+    }
+
+    /** Returns sequence definitions. */
+    getSequences(): Iterable<
+        readonly [
+            string,
+            { steps: string[]; maxGapFrames: number; resetOnWrong: boolean },
+        ]
+    > {
+        return this.sequences.entries();
+    }
+
     //#endregion
 
     //#region Private Methods
@@ -151,31 +173,44 @@ export class BindingRegistry {
      */
     private compileExprBindings(map: ExprBindings) {
         for (const action of Object.keys(map)) {
-            const expr = map[action]! as BindingExpr;
-            switch (expr.type) {
-                case 'key':
-                    this.addKeyBinding(expr.code, action);
-                    break;
-                case 'axis1d':
-                    this.addAxis1D(action, expr);
-                    break;
-                case 'axis2d':
-                    this.addAxis2D(action, expr);
-                    break;
-                case 'pointerMove':
-                    this.pointerMoveAction = action;
-                    this.pointerVec2Modifiers.set(action, {
-                        invertX: expr.invertX,
-                        invertY: expr.invertY,
-                        scaleX: expr.scaleX,
-                        scaleY: expr.scaleY,
-                    });
-                    break;
-                case 'wheel':
-                    this.wheelBindings.set(action, {
-                        scale: (expr as any).scale ?? 1,
-                    });
-                    break;
+            const raw = map[action]!;
+            const list = Array.isArray(raw)
+                ? (raw as BindingExpr[])
+                : ([raw as BindingExpr] as BindingExpr[]);
+            for (const expr of list) {
+                switch (expr.type) {
+                    case 'key':
+                        this.addKeyBinding(expr.code, action);
+                        break;
+                    case 'axis1d':
+                        this.addAxis1D(action, expr);
+                        break;
+                    case 'axis2d':
+                        this.addAxis2D(action, expr);
+                        break;
+                    case 'pointerMove':
+                        this.pointerMoveAction = action;
+                        this.pointerVec2Modifiers.set(action, {
+                            invertX: expr.invertX,
+                            invertY: expr.invertY,
+                            scaleX: expr.scaleX,
+                            scaleY: expr.scaleY,
+                        });
+                        break;
+                    case 'wheel':
+                        this.wheelBindings.set(action, {
+                            scale: (expr as any).scale ?? 1,
+                        });
+                        break;
+                    case 'chord':
+                        this.addChord(action, expr);
+                        break;
+                    case 'sequence':
+                        this.addSequence(action, expr);
+                        break;
+                    default:
+                        break;
+                }
             }
         }
     }
@@ -226,7 +261,32 @@ export class BindingRegistry {
             key2: yKey,
             axis1: xName,
             axis2: yName,
+            invert1: def.invertX,
+            invert2: def.invertY,
         });
+    }
+
+    /**
+     * Add a chord binding.
+     * @param action The action to bind the chord to.
+     * @param def The chord definition.
+     */
+    private addChord(action: string, def: ChordBinding) {
+        const codes = def.keys.map((k) => k.code);
+        this.chords.set(action, { codes });
+    }
+
+    /**
+     * Add a sequence binding.
+     * @param action The action to bind the sequence to.
+     * @param def The sequence definition.
+     */
+    private addSequence(action: string, def: SequenceBinding) {
+        const steps = def.steps.map((k) => k.code);
+        const maxGapFrames =
+            typeof def.maxGapFrames === 'number' ? def.maxGapFrames : 15;
+        const resetOnWrong = def.resetOnWrong !== false;
+        this.sequences.set(action, { steps, maxGapFrames, resetOnWrong });
     }
 
     //#endregion
