@@ -1,83 +1,135 @@
 # @pulse-ts/core
 
-Core of the `@pulse-ts` game engine: world loop, node graph, components, systems, services, events, traversal, math, and a small function-component (FC) API with hooks.
-
-- Status: Work in progress
-- Root docs: [../../README.md](../../README.md)
-
-## Quick Start
-
-Install (if consuming externally):
+The core runtime for Pulse TS, a modular TypeScript game engine built for real-time, interactive applications.
 
 ```bash
 npm install @pulse-ts/core
 ```
 
-Create a world, mount a component, and start the loop:
+## What is Pulse?
 
-```ts
-import {
-  World,
-  mount,
-  useInit,
-  useFrameUpdate,
-  useComponent,
-  Transform,
-} from '@pulse-ts/core';
+Pulse is an **Entity Component System (ECS)** framework designed specifically for building interactive applications. Think of it as React meets game development - you compose your app from small, focused pieces that work together seamlessly.
 
-const world = new World();
+Unlike traditional game engines, Pulse embraces **composability** and **modularity**. You can build complex behaviors by combining simple components, and extend the engine with custom packages for your specific needs.
 
-function Spinner() {
-  // Ensure a Transform exists for this node
-  const t = useComponent(Transform);
+## Quick Start
 
-  // Initialize once
-  useInit(() => {
-    t.localPosition.set(0, 1, 0);
-  });
+Let's build your first Pulse app - a simple bouncing ball:
 
-  // Animate every frame
+```typescript
+import { World, mount } from '@pulse-ts/core';
+
+// Create your first component
+function BouncingBall() {
+  const transform = useComponent(Transform);
+
+  // Run physics every frame
   useFrameUpdate((dt) => {
-    t.localRotation.y += dt; // rotate 1 radian/sec around Y
+    // Simple gravity and bounce
+    transform.localPosition.y -= 9.81 * dt;
+
+    if (transform.localPosition.y < 0) {
+      transform.localPosition.y = 0;
+      // Bounce with energy loss
+      // (We'll add velocity in the next step!)
+    }
   });
 }
 
-mount(world, Spinner, {});
+// Create a world and mount your component
+const world = new World();
+world.mount(BouncingBall);
+
+// Start the simulation
 world.start();
 ```
 
-## What’s In Core
+That's it! You now have a basic physics simulation running. Pulse handles the timing, updates, and scene management for you.
 
-- World and Loop: fixed+frame pipeline, time scaling, pause/resume.
-- Nodes and Tree: parent/child relationships, traversal utilities.
-- Components: attach to nodes; built-ins include Transform, Bounds, Visibility, State, StableId.
-- Systems and Services: world-level behaviors and singletons.
-- FC + Hooks: ergonomic way to create nodes and register ticks.
-- Events: `TypedEvent` and `EventBus`.
-- Math: minimal `Vec3` and `Quat`.
+## Why Pulse?
 
-See the detailed guides:
+### 🎯 **Composability First**
+Build complex behaviors from simple, reusable pieces. Each component does one thing well.
 
-- World & Nodes: [docs/world-and-nodes.md](docs/world-and-nodes.md)
-- Functional Components & Hooks: [docs/functional-components.md](docs/functional-components.md)
-- Components (Transform, Bounds, Visibility, State, StableId): [docs/components.md](docs/components.md)
-- Systems & Services (incl. Culling, Stats): [docs/services-and-systems.md](docs/services-and-systems.md)
-- Events & Traversal: [docs/events-and-traversal.md](docs/events-and-traversal.md)
-- Math (Vec3, Quat): [docs/math.md](docs/math.md)
-- Ticks & Time: [docs/ticks-and-time.md](docs/ticks-and-time.md)
+### ⚡ **Performance Focused**
+- **Fixed timestep** physics with frame interpolation for smooth visuals
+- **Efficient scene graph** with cached world-space calculations
+- **Minimal allocations** and smart caching strategies
 
-## API Surface
+### 🏗️ **Modular Architecture**
+- **Core package** with essential ECS primitives
+- **Extension packages** for specific domains (input, networking, rendering)
+- **Plugin system** for custom integrations
 
-From `@pulse-ts/core`:
+### 🎨 **React-Inspired API**
+- **Functional components** with hooks for logic
+- **Declarative composition** of game objects
+- **Automatic cleanup** and lifecycle management
 
-- World: `World`, `WorldOptions`
-- Tree: `Node`, traversal helpers (`ancestors`, `descendants`, `traversePreOrder`, `traversePostOrder`, `siblings`)
-- Components: `Component`, registries (`getComponent`, `setComponent`, `attachComponent`)
-- Built-in Components: `Transform`, `Bounds`, `Visibility`, `State`, `StableId`
-- Systems/Services: `System`, `Service`, `CullingSystem`, `CullingCamera`, `StatsService`
-- Events: `TypedEvent`, `EventBus`
-- FC: `mount`, `FC`, hooks (`useWorld`, `useNode`, `useInit`, `useDestroy`, `useComponent`, `useFixedEarly`, `useFixedUpdate`, `useFixedLate`, `useFrameEarly`, `useFrameUpdate`, `useFrameLate`, `useChild`, `useState`, `useStableId`)
-- Math: `Vec3`, `Quat`
+## Core Concepts
 
-For details and examples, open the docs linked above.
+Pulse is built around a few key concepts that work together:
 
+### 🌍 **World**
+The container for everything in your application. Manages the scene graph, update loops, and global state.
+
+### 🏷️ **Nodes**
+The entities in your scene graph. Every game object is a Node with a unique ID and position in the hierarchy.
+
+### 🧩 **Components**
+Data attached to Nodes. Transform, physics properties, render state - everything is a component.
+
+### ⚙️ **Systems**
+Logic that operates on components. Physics, rendering, AI - all run as systems.
+
+### 🔧 **Services**
+Singleton utilities and managers. Input handling, asset loading, networking.
+
+## Learn More
+
+Dive deeper into Pulse with our comprehensive guides:
+
+- **[Getting Started](docs/getting-started.md)** - Complete setup and first project
+- **[Core Concepts](docs/core-concepts.md)** - Understanding World, Nodes, and Components
+- **[Scene Graph](docs/scene-graph.md)** - Building hierarchical game objects
+- **[Functional Components](docs/functional-components.md)** - React-style composition with hooks
+- **[Update System](docs/update-system.md)** - Fixed timestep physics and frame updates
+- **[Examples](docs/examples.md)** - Real-world patterns and recipes
+
+## Architecture
+
+```
+@pulse-ts/core          # Essential ECS primitives
+├── World              # Main application container
+├── Node               # Scene graph entities
+├── Component          # Data attached to nodes
+├── System             # Logic operating on components
+├── Service            # Singleton utilities
+└── FC (Functional)    # React-style components
+
+Extension Packages
+├── @pulse-ts/input    # Input handling and bindings
+├── @pulse-ts/network  # Multiplayer and networking
+├── @pulse-ts/save     # Serialization and persistence
+└── @pulse-ts/three    # Three.js rendering integration
+```
+
+## Performance Philosophy
+
+Pulse is designed for **real-time applications** with these principles:
+
+- **Predictable timing** - Fixed timestep physics with interpolation
+- **Minimal GC pressure** - Object pooling and reuse strategies
+- **Efficient queries** - Fast component iteration and spatial queries
+- **Scalable architecture** - Handle thousands of entities smoothly
+
+## Community & Support
+
+- 📖 **[Documentation](docs/)** - Comprehensive guides and API reference
+- 💬 **Discord** - Community chat and support
+- 🐛 **GitHub Issues** - Bug reports and feature requests
+- 📧 **Newsletter** - Updates and release announcements
+
+---
+
+Ready to build something amazing? Let's get started with Pulse!
