@@ -76,8 +76,6 @@ Pulse uses **functional nodes** to create Nodes. These are functions that:
 - Can create child Nodes
 - Have a lifecycle (initialization and cleanup)
 
-The key insight: **Functional nodes create Nodes, not Components**. This is different from React where components create UI elements.
-
 ## Your First Steps
 
 1. **Install Pulse**: Add `@pulse-ts/core` to your project
