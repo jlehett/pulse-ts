@@ -146,7 +146,7 @@ function Engine({ power }: { power: number }) {
 }
 ```
 
-### Component Props
+### Node Props
 
 ```typescript
 interface EnemyProps {
