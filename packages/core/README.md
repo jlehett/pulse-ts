@@ -89,37 +89,6 @@ Dive deeper into Pulse with our comprehensive guides:
 - **[Update System](docs/update-system.md)** - Understanding timing and updates
 - **[Examples](docs/examples.md)** - Real-world patterns and recipes
 
-
-## Core Concepts
-
-Pulse is built around a few key concepts that work together:
-
-### 🌍 **World**
-The container for everything in your application. Manages the scene graph, update loops, and global state.
-
-### 🏷️ **Nodes**
-The entities in your scene graph. Every game object is a Node with a unique ID and position in the hierarchy.
-
-### 🧩 **Components**
-Data attached to Nodes. Transform, physics properties, render state - everything is a component.
-
-### ⚙️ **Systems**
-Logic that operates on components. Physics, rendering, AI - all run as systems.
-
-### 🔧 **Services**
-Singleton utilities and managers. Input handling, asset loading, networking.
-
-## Learn More
-
-Dive deeper into Pulse with our comprehensive guides:
-
-- **[Getting Started](docs/getting-started.md)** - Complete setup and first project
-- **[Core Concepts](docs/core-concepts.md)** - Understanding World, Nodes, and Components
-- **[Scene Graph](docs/scene-graph.md)** - Building hierarchical game objects
-- **[Functional Components](docs/functional-nodes.md)** - React-style composition with hooks
-- **[Update System](docs/update-system.md)** - Fixed timestep physics and frame updates
-- **[Examples](docs/examples.md)** - Real-world patterns and recipes
-
 ## Architecture
 
 ```
