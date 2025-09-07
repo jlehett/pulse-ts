@@ -1,6 +1,6 @@
 # Getting Started
 
-Welcome to Pulse! This guide will walk you through creating your first Pulse application from scratch. We'll build a simple interactive scene with moving objects and user input.
+Welcome to Pulse! This guide will walk you through creating your first Pulse application from scratch. We'll build a simple timer application that demonstrates the core concepts of timing, state management, and component composition.
 
 ## Prerequisites
 
@@ -100,32 +100,39 @@ You should see "Pulse app started!" and "World is running..." in your console. C
 
 ## Adding Your First Component
 
-Now let's create something visual. We'll make a simple colored square that moves around. Create `src/components/MovingSquare.ts`:
+Now let's create a timer component that demonstrates state management and updates. Create `src/components/Timer.ts`:
 
 ```typescript
-import { useComponent, useFrameUpdate, Transform } from '@pulse-ts/core';
+import { useComponent, useFrameUpdate, useState, Transform } from '@pulse-ts/core';
 
-export function MovingSquare() {
+export function Timer() {
   // Get the transform component (position, rotation, scale)
   const transform = useComponent(Transform);
 
-  // State for our movement
-  let time = 0;
+  // State for our timer
+  const [elapsedTime, setElapsedTime] = useState('elapsedTime', 0);
+  const [updateCount, setUpdateCount] = useState('updateCount', 0);
 
   // Update every frame (typically 60fps)
   useFrameUpdate((dt) => {
-    time += dt;
+    setElapsedTime(prev => prev + dt);
+    setUpdateCount(prev => prev + 1);
 
-    // Move in a circle
+    // Move in a circle based on elapsed time
     const radius = 2;
-    transform.localPosition.x = Math.cos(time) * radius;
-    transform.localPosition.y = Math.sin(time) * radius;
+    transform.localPosition.x = Math.cos(elapsedTime) * radius;
+    transform.localPosition.y = Math.sin(elapsedTime) * radius;
 
-    // Spin the square
-    transform.localRotation.z = time;
+    // Spin based on time
+    transform.localRotation.z = elapsedTime;
+
+    // Log progress every second
+    if (Math.floor(elapsedTime) !== Math.floor(elapsedTime - dt)) {
+      console.log(`Timer: ${Math.floor(elapsedTime)}s, Updates: ${updateCount}`);
+    }
   });
 
-  console.log('MovingSquare mounted!');
+  console.log('Timer component mounted!');
 }
 ```
 
@@ -137,8 +144,8 @@ Update your main app:
 function App() {
   console.log('Pulse app started!');
 
-  // Mount our moving square
-  const square = useChild(MovingSquare);
+  // Mount our timer
+  const timer = useChild(Timer);
 }
 
 // ... existing code ...
@@ -156,220 +163,194 @@ Run it again:
 npm run dev
 ```
 
-You should now see both "Pulse app started!" and "MovingSquare mounted!" - your square is moving in a circle!
+You should now see both "Pulse app started!" and "Timer component mounted!" followed by regular updates showing elapsed time and update counts.
 
-## Making It Interactive
+## Understanding Fixed vs Frame Updates
 
-Let's add keyboard input to control the square. First, install the input package:
-
-```bash
-npm install @pulse-ts/input
-```
-
-Create an input provider and bind some keys. Update `src/index.ts`:
+Let's create a component that demonstrates the difference between fixed and frame updates. Update `src/components/Timer.ts`:
 
 ```typescript
-import { World, mount, useChild } from '@pulse-ts/core';
-import { installInput, useKey } from '@pulse-ts/input';
+export function PhysicsTimer() {
+  const [frameCount, setFrameCount] = useState('frameCount', 0);
+  const [fixedCount, setFixedCount] = useState('fixedCount', 0);
 
-// Create input provider (handles keyboard, mouse, gamepad)
-const inputProvider = installInput();
-
-function MovingSquare() {
-  const transform = useComponent(Transform);
-
-  // Get keyboard input
-  const left = useKey('ArrowLeft');
-  const right = useKey('ArrowRight');
-  const up = useKey('ArrowUp');
-  const down = useKey('ArrowDown');
-
-  let time = 0;
-
+  // Frame updates (variable timing)
   useFrameUpdate((dt) => {
-    time += dt;
+    setFrameCount(prev => prev + 1);
+    console.log(`Frame update #${frameCount} - Delta: ${dt.toFixed(4)}s`);
+  });
 
-    // Keyboard movement (overrides automatic movement)
-    if (left.pressed) transform.localPosition.x -= 5 * dt;
-    if (right.pressed) transform.localPosition.x += 5 * dt;
-    if (up.pressed) transform.localPosition.y += 5 * dt;
-    if (down.pressed) transform.localPosition.y -= 5 * dt;
-
-    // If no keys pressed, do automatic movement
-    if (!left.pressed && !right.pressed && !up.pressed && !down.pressed) {
-      const radius = 2;
-      transform.localPosition.x = Math.cos(time) * radius;
-      transform.localPosition.y = Math.sin(time) * radius;
-    }
-
-    // Always spin
-    transform.localRotation.z = time;
+  // Fixed updates (consistent timing)
+  useFixedUpdate((dt) => {
+    setFixedCount(prev => prev + 1);
+    console.log(`Fixed update #${fixedCount} - Delta: ${dt.toFixed(4)}s`);
   });
 }
 
-function App() {
-  // Mount our interactive square
-  const square = useChild(MovingSquare);
-}
+export function CombinedTimer() {
+  const [physicsTime, setPhysicsTime] = useState('physicsTime', 0);
+  const [renderTime, setRenderTime] = useState('renderTime', 0);
 
-// Create world with input
-const world = new World();
-world.provideService(inputProvider);
-world.mount(App);
-world.start();
-```
+  // Physics at fixed rate (consistent)
+  useFixedUpdate((dt) => {
+    setPhysicsTime(prev => prev + dt);
+    console.log(`Physics time: ${physicsTime.toFixed(2)}s (fixed rate)`);
+  });
 
-Now run it:
-
-```bash
-npm run dev
-```
-
-Use the arrow keys to move your square around! When you release the keys, it goes back to automatic circular movement.
-
-## Adding Physics
-
-Let's make this more realistic with proper physics. We'll add velocity and gravity. Update `MovingSquare`:
-
-```typescript
-function MovingSquare() {
-  const transform = useComponent(Transform);
-
-  // Physics properties
-  let velocityX = 0;
-  let velocityY = 0;
-  const gravity = -9.81;
-  const damping = 0.98;
-  const moveSpeed = 10;
-
-  // Get input
-  const left = useKey('ArrowLeft');
-  const right = useKey('ArrowRight');
-  const up = useKey('ArrowUp');
-  const space = useKey('Space');
-
+  // Rendering at frame rate (variable)
   useFrameUpdate((dt) => {
-    // Apply gravity
-    velocityY += gravity * dt;
-
-    // Input forces
-    if (left.pressed) velocityX -= moveSpeed * dt;
-    if (right.pressed) velocityX += moveSpeed * dt;
-    if (up.pressed || space.justPressed) velocityY += 15; // Jump!
-
-    // Apply velocity to position
-    transform.localPosition.x += velocityX * dt;
-    transform.localPosition.y += velocityY * dt;
-
-    // Ground collision
-    if (transform.localPosition.y < 0) {
-      transform.localPosition.y = 0;
-      velocityY = -velocityY * 0.8; // Bounce with energy loss
-    }
-
-    // Air resistance
-    velocityX *= damping;
-    velocityY *= damping;
-
-    // Spin based on movement
-    const speed = Math.sqrt(velocityX * velocityX + velocityY * velocityY);
-    transform.localRotation.z += speed * dt;
+    setRenderTime(prev => prev + dt);
+    console.log(`Render time: ${renderTime.toFixed(2)}s (frame rate)`);
   });
 }
 ```
 
-Now you have a bouncing, physics-driven square! Use arrow keys to move and spacebar to jump.
-
-## Adding Multiple Objects
-
-Let's create a whole scene with multiple moving objects. Create `src/components/BouncingBall.ts`:
-
-```typescript
-export function BouncingBall({ color }: { color: string }) {
-  const transform = useComponent(Transform);
-
-  let velocityX = (Math.random() - 0.5) * 10;
-  let velocityY = Math.random() * 5;
-  const gravity = -9.81;
-  const damping = 0.99;
-
-  useFrameUpdate((dt) => {
-    velocityY += gravity * dt;
-
-    transform.localPosition.x += velocityX * dt;
-    transform.localPosition.y += velocityY * dt;
-
-    // Bounce off walls
-    if (transform.localPosition.x < -5 || transform.localPosition.x > 5) {
-      velocityX = -velocityX * 0.9;
-      transform.localPosition.x = Math.max(-5, Math.min(5, transform.localPosition.x));
-    }
-
-    // Bounce off ground
-    if (transform.localPosition.y < 0) {
-      velocityY = -velocityY * 0.9;
-      transform.localPosition.y = 0;
-    }
-
-    // Air resistance
-    velocityX *= damping;
-    velocityY *= damping;
-
-    // Spin
-    transform.localRotation.z += velocityX * dt * 0.1;
-  });
-
-  console.log(`Ball ${color} spawned!`);
-}
-```
-
-Update your main app to spawn multiple balls:
+Update your main app to use these:
 
 ```typescript
 function App() {
-  // Spawn several bouncing balls
-  const colors = ['red', 'blue', 'green', 'yellow', 'purple'];
+  console.log('Pulse app started!');
 
-  for (let i = 0; i < 5; i++) {
-    const ball = useChild(BouncingBall, { color: colors[i] });
-    // Position them in a line
-    ball.getComponent(Transform).localPosition.x = (i - 2) * 2;
-    ball.getComponent(Transform).localPosition.y = 3;
+  // Mount our timers to see the difference
+  const physicsTimer = useChild(PhysicsTimer);
+  const combinedTimer = useChild(CombinedTimer);
+}
+```
+
+## State Management and Persistence
+
+Let's create a component that demonstrates persistent state and lifecycle hooks. Update `src/components/Timer.ts`:
+
+```typescript
+export function PersistentCounter() {
+  const [count, setCount] = useState('persistentCount', 0);
+  const [startTime, setStartTime] = useState('startTime', Date.now());
+
+  // Initialize when component mounts
+  useInit(() => {
+    console.log('Counter initialized with count:', count);
+    setStartTime(Date.now());
+  });
+
+  // Cleanup when component unmounts/destroys
+  useDestroy(() => {
+    const lifetime = Date.now() - startTime;
+    console.log(`Counter destroyed after ${lifetime}ms, final count: ${count}`);
+  });
+
+  useFrameUpdate((dt) => {
+    // Increment every 100ms
+    if (Math.floor(Date.now() / 100) !== Math.floor((Date.now() - dt * 1000) / 100)) {
+      setCount(prev => prev + 1);
+      console.log(`Count: ${count + 1}`);
+    }
+  });
+}
+```
+
+Update your main app to use the persistent counter:
+
+```typescript
+function App() {
+  console.log('Pulse app started!');
+
+  // Mount our persistent counter
+  const counter = useChild(PersistentCounter);
+}
+```
+
+## Multiple Components
+
+Let's create a scene with multiple interacting components. Create `src/components/Producer.ts` and `src/components/Consumer.ts`:
+
+```typescript
+// Producer.ts
+export function Producer() {
+  const [produced, setProduced] = useState('produced', 0);
+
+  useFixedUpdate((dt) => {
+    setProduced(prev => prev + 1);
+    console.log(`Producer: Created item #${produced + 1}`);
+  });
+}
+
+// Consumer.ts
+export function Consumer() {
+  const [consumed, setConsumed] = useState('consumed', 0);
+
+  useFixedUpdate((dt) => {
+    setConsumed(prev => prev + 1);
+    console.log(`Consumer: Processed item #${consumed + 1}`);
+  });
+}
+
+// Monitor.ts
+export function Monitor() {
+  const [updates, setUpdates] = useState('updates', 0);
+
+  useFrameUpdate((dt) => {
+    setUpdates(prev => prev + 1);
+
+    // Log stats every 60 frames (about 1 second at 60fps)
+    if (updates % 60 === 0) {
+      console.log(`Monitor: ${updates} frames processed`);
+    }
+  });
+}
+```
+
+Update your main app to create multiple components:
+
+```typescript
+function App() {
+  console.log('Pulse app started!');
+
+  // Create multiple producers and consumers
+  for (let i = 0; i < 3; i++) {
+    useChild(Producer);
+    useChild(Consumer);
   }
+
+  // Add a monitor
+  useChild(Monitor);
 }
 ```
 
 ## Performance Monitoring
 
-Let's add some basic performance stats:
+Let's add some basic performance stats. Update your main app:
 
 ```typescript
 function App() {
-  // ... existing ball spawning code ...
+  const [totalUpdates, setTotalUpdates] = useState('totalUpdates', 0);
+  const [lastStatsTime, setLastStatsTime] = useState('lastStatsTime', 0);
 
   // Log performance stats every second
-  let lastStatsTime = 0;
   useFrameUpdate((dt) => {
-    lastStatsTime += dt;
+    setTotalUpdates(prev => prev + 1);
+    setLastStatsTime(prev => prev + dt);
+
     if (lastStatsTime >= 1.0) {
       const stats = world.debugStats();
-      console.log(`FPS: ${stats.fps.toFixed(1)}, Nodes: ${stats.nodes}`);
-      lastStatsTime = 0;
+      console.log(`FPS: ${stats.fps.toFixed(1)}, Nodes: ${stats.nodes}, Total Updates: ${totalUpdates}`);
+      setLastStatsTime(0);
     }
   });
+
+  // ... existing component mounting code ...
 }
 ```
 
 ## Next Steps
 
-You've built a complete interactive scene with:
+You've built a complete Pulse application demonstrating core concepts:
 
-✅ Basic Pulse setup
-✅ Component-based architecture
-✅ User input handling
-✅ Physics simulation
-✅ Multiple game objects
-✅ Performance monitoring
+✅ Basic Pulse setup and World creation
+✅ Component-based architecture with state management
+✅ Fixed vs frame update timing
+✅ Lifecycle hooks (init/destroy)
+✅ Multiple interacting components
+✅ Performance monitoring and debugging
 
 ## What's Next?
 

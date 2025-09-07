@@ -14,37 +14,37 @@ Unlike traditional game engines, Pulse embraces **composability** and **modulari
 
 ## Quick Start
 
-Let's build your first Pulse app - a simple bouncing ball:
+Let's build your first Pulse app - a simple counter that demonstrates the update system:
 
 ```typescript
 import { World, mount } from '@pulse-ts/core';
 
 // Create your first component
-function BouncingBall() {
-  const transform = useComponent(Transform);
+function Counter() {
+  const [count, setCount] = useState('counter', 0);
 
-  // Run physics every frame
+  // Update every frame (typically 60fps)
   useFrameUpdate((dt) => {
-    // Simple gravity and bounce
-    transform.localPosition.y -= 9.81 * dt;
+    setCount(prev => prev + dt); // Count seconds
+    console.log(`Time elapsed: ${count.toFixed(1)}s`);
+  });
 
-    if (transform.localPosition.y < 0) {
-      transform.localPosition.y = 0;
-      // Bounce with energy loss
-      // (We'll add velocity in the next step!)
-    }
+  // Update at fixed rate (consistent 60Hz)
+  useFixedUpdate((dt) => {
+    // Perfect for physics or consistent game logic
+    console.log(`Fixed update: ${dt.toFixed(4)}s delta`);
   });
 }
 
 // Create a world and mount your component
 const world = new World();
-world.mount(BouncingBall);
+world.mount(Counter);
 
 // Start the simulation
 world.start();
 ```
 
-That's it! You now have a basic physics simulation running. Pulse handles the timing, updates, and scene management for you.
+That's it! You now have a running Pulse application with both frame-based and fixed-timestep updates. Pulse handles all the timing and scheduling for you.
 
 ## Why Pulse?
 
@@ -113,22 +113,6 @@ Extension Packages
 ├── @pulse-ts/save     # Serialization and persistence
 └── @pulse-ts/three    # Three.js rendering integration
 ```
-
-## Performance Philosophy
-
-Pulse is designed for **real-time applications** with these principles:
-
-- **Predictable timing** - Fixed timestep physics with interpolation
-- **Minimal GC pressure** - Object pooling and reuse strategies
-- **Efficient queries** - Fast component iteration and spatial queries
-- **Scalable architecture** - Handle thousands of entities smoothly
-
-## Community & Support
-
-- 📖 **[Documentation](docs/)** - Comprehensive guides and API reference
-- 💬 **Discord** - Community chat and support
-- 🐛 **GitHub Issues** - Bug reports and feature requests
-- 📧 **Newsletter** - Updates and release announcements
 
 ---
 
