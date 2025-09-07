@@ -78,7 +78,6 @@ const player = new Node();
 // Through functional nodes
 function Player() {
   // This creates a Node automatically
-  return null;
 }
 ```
 

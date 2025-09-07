@@ -4,7 +4,7 @@ Pulse's **Functional Nodes** bring React-style patterns to application developme
 
 ## Node Basics
 
-Functional Nodes (FNs) are functions that return `null` and use hooks to define behavior:
+Functional Nodes (FNs) are functions that use hooks to define behavior:
 
 ```typescript
 import { useComponent, useFrameUpdate, Transform } from '@pulse-ts/core';
@@ -17,9 +17,6 @@ function Player() {
   useFrameUpdate((dt) => {
     transform.localPosition.z += 5 * dt;
   });
-
-  // FCs return null - all logic is in hooks
-  return null;
 }
 
 // Mount the node
@@ -43,8 +40,6 @@ function MyComponent() {
   useDestroy(() => {
     console.log('Component destroyed!');
   });
-
-  return null;
 }
 ```
 
@@ -70,8 +65,6 @@ function GameObject() {
   useFrameLate((dt) => {
     // Runs after useFrameUpdate
   });
-
-  return null;
 }
 ```
 
@@ -90,8 +83,6 @@ function Character() {
       health.max = 100;
     }
   });
-
-  return null;
 }
 ```
 
@@ -111,7 +102,6 @@ function Counter() {
   });
 
   console.log(`${name}: ${count}`);
-  return null;
 }
 ```
 
@@ -124,8 +114,6 @@ function SaveableObject() {
 
   // Object can now be found and restored after save/load
   const transform = useComponent(Transform);
-
-  return null;
 }
 ```
 
@@ -146,8 +134,6 @@ function Spaceship() {
     wing1.getComponent(Transform).localPosition.set(-3, 0, 0);
     wing2.getComponent(Transform).localPosition.set(3, 0, 0);
   });
-
-  return null;
 }
 
 function Engine({ power }: { power: number }) {
@@ -157,8 +143,6 @@ function Engine({ power }: { power: number }) {
     // Engine-specific logic
     console.log(`Engine power: ${power}`);
   });
-
-  return null;
 }
 ```
 
@@ -180,8 +164,6 @@ function Enemy({ health, speed, type }: EnemyProps) {
     const moveSpeed = type === 'fast' ? speed * 2 : speed;
     transform.localPosition.z += moveSpeed * dt;
   });
-
-  return null;
 }
 
 // Usage
@@ -189,8 +171,6 @@ function Game() {
   const enemy1 = useChild(Enemy, { health: 50, speed: 2, type: 'basic' });
   const enemy2 = useChild(Enemy, { health: 100, speed: 4, type: 'fast' });
   const enemy3 = useChild(Enemy, { health: 200, speed: 1, type: 'tank' });
-
-  return null;
 }
 ```
 
@@ -269,8 +249,6 @@ function Player() {
     if (input.right) movement.move(new Vec3(1, 0, 0));
     if (input.up) movement.move(new Vec3(0, 0, 1));
   });
-
-  return null;
 }
 ```
 
@@ -282,7 +260,7 @@ function Player() {
 function SmartEnemy() {
   const [state, setState] = useState('state', 'patrol');
 
-  // Conditional child mounting
+    // Conditional child mounting
   const weapon = state === 'combat' ? useChild(Weapon) : null;
   const shield = state === 'defend' ? useChild(Shield) : null;
 
@@ -291,8 +269,6 @@ function SmartEnemy() {
       setState('combat');
     }
   });
-
-  return null;
 }
 ```
 
@@ -320,7 +296,6 @@ function ParticleSystem() {
     }));
   });
 
-  return null;
 }
 ```
 
@@ -391,7 +366,6 @@ function Enemy() {
     game.addScore(100);
   };
 
-  return null;
 }
 ```
 
@@ -416,7 +390,6 @@ function GoodNode() {
     setCount(prev => prev + 1);
   });
 
-  return null;
 }
 
 // ❌ Bad
@@ -429,7 +402,6 @@ function BadNode() {
     useFrameUpdate(() => {}); // Wrong!
   }
 
-  return null;
 }
 ```
 
@@ -451,7 +423,6 @@ function OptimizedComponent() {
   const [debouncedValue, setDebouncedValue] = useState('debounced', 0);
   const debouncedSetter = useDebounce(setDebouncedValue, 100);
 
-  return null;
 }
 ```
 
@@ -478,7 +449,6 @@ function ResourceManager() {
     return () => window.removeEventListener('resize', handler);
   });
 
-  return null;
 }
 ```
 
@@ -495,7 +465,6 @@ function Parent() {
     onMessage: (msg: string) => setMessage(msg)
   });
 
-  return null;
 }
 
 function Child({ onMessage }: { onMessage: (msg: string) => void }) {
@@ -505,7 +474,6 @@ function Child({ onMessage }: { onMessage: (msg: string) => void }) {
     }
   });
 
-  return null;
 }
 ```
 
@@ -537,7 +505,6 @@ function EnemyAI() {
     }
   });
 
-  return null;
 }
 ```
 
