@@ -1,6 +1,6 @@
 # Getting Started
 
-Welcome to Pulse! This guide will help you understand the fundamental concepts and get started with your first application. We'll focus on the core ideas rather than specific code examples.
+Welcome to Pulse! This guide will help you understand the fundamental concepts and get started with your first application.
 
 ## What is Pulse?
 
