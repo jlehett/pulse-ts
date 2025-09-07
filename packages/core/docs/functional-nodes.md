@@ -1,10 +1,6 @@
 # Functional Nodes & Hooks
 
-Pulse's **Functional Nodes** bring React-style patterns to application development. They create **Nodes** (not Components) and use hooks to manage state and behavior.
-
-**Important distinction**: Functional nodes in Pulse create Nodes in the scene graph, whereas Components are pure data structures. This is different from React where components create UI elements.
-
-**Why this matters:** In Pulse, the functional node is responsible for creating the Node entity and setting up its behavior. The Components attached to that Node contain the data. This separation keeps your logic organized and your data structures simple.
+Pulse's **Functional Nodes** bring React-style patterns to application development. They create **Nodes** and use hooks to manage state and behavior.
 
 ## Node Basics
 
