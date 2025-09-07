@@ -1,6 +1,8 @@
 # Update System & Ticks
 
-Pulse's **update system** manages time and provides multiple update loops for different types of game logic. Understanding the timing system is crucial for smooth gameplay and consistent physics.
+Pulse's **update system** manages time and provides multiple update loops for different types of application logic. This dual timing system is one of Pulse's most important features.
+
+**Why multiple update types?** Interactive applications have different timing needs. Some logic needs to be consistent regardless of frame rate, while other logic should adapt to the display rate. Pulse separates these concerns.
 
 ## Update Kinds
 
@@ -11,10 +13,24 @@ Pulse provides two main types of updates:
 - **Physics & simulation** - Perfect for consistent gameplay mechanics
 - **Network synchronization** - Deterministic across different frame rates
 
+**When to use fixed updates:** Any logic that needs to be consistent and predictable. Examples:
+- Physics calculations (gravity, collisions)
+- Game state updates (scores, timers)
+- AI decision making
+- Networked game logic
+
 ### Frame Updates
 - **Variable timing** - Runs every rendered frame
 - **Animation & rendering** - Adapts to display refresh rate
 - **Input handling** - Responsive to user input
+
+**When to use frame updates:** Logic that can vary with frame rate. Examples:
+- Visual animations
+- UI updates
+- Camera movement
+- Particle effects
+
+**Real-world example:** Imagine you're building a platformer game. You want the player character's jump physics to feel the same on a high-end gaming PC (running at 144fps) as on a older laptop (running at 30fps). Fixed updates ensure this consistency. But you might want visual effects like particle trails to look smoother on faster computers - that's where frame updates shine.
 
 ```typescript
 function GameObject() {

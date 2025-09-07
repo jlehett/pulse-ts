@@ -14,57 +14,81 @@ Unlike traditional game engines, Pulse embraces **composability** and **modulari
 
 ## Quick Start
 
-Let's build your first Pulse app - a simple counter that demonstrates the update system:
+Pulse is an Entity Component System (ECS) framework that helps you build interactive applications. At its core, Pulse manages:
+
+- **Timing**: Separate fixed and frame-based updates for consistent behavior
+- **Hierarchy**: Parent-child relationships between objects
+- **State**: Persistent data storage and lifecycle management
+- **Composition**: Building complex behavior from simple parts
+
+Let's start with a simple example that demonstrates these concepts:
 
 ```typescript
 import { World, mount } from '@pulse-ts/core';
 
-// Create your first component
-function Counter() {
-  const [count, setCount] = useState('counter', 0);
-
-  // Update every frame (typically 60fps)
-  useFrameUpdate((dt) => {
-    setCount(prev => prev + dt); // Count seconds
-    console.log(`Time elapsed: ${count.toFixed(1)}s`);
-  });
-
-  // Update at fixed rate (consistent 60Hz)
-  useFixedUpdate((dt) => {
-    // Perfect for physics or consistent game logic
-    console.log(`Fixed update: ${dt.toFixed(4)}s delta`);
-  });
+function MyApp() {
+  // This creates a Node in the scene
+  console.log('Application started!');
 }
 
-// Create a world and mount your component
+// Create a world and add your application
 const world = new World();
-world.mount(Counter);
-
-// Start the simulation
+world.mount(MyApp);
 world.start();
 ```
 
-That's it! You now have a running Pulse application with both frame-based and fixed-timestep updates. Pulse handles all the timing and scheduling for you.
+This creates a running Pulse application. The `MyApp` function is a **functional node** that creates a **Node** - the basic building block in Pulse's scene graph.
 
 ## Why Pulse?
 
 ### 🎯 **Composability First**
-Build complex behaviors from simple, reusable pieces. Each component does one thing well.
+Build complex applications by composing simple, focused pieces. Each piece does one thing well and can be combined with others.
 
 ### ⚡ **Performance Focused**
-- **Fixed timestep** physics with frame interpolation for smooth visuals
-- **Efficient scene graph** with cached world-space calculations
-- **Minimal allocations** and smart caching strategies
+- **Predictable timing** with separate fixed and frame updates
+- **Efficient scene graph** with cached spatial calculations
+- **Minimal allocations** through smart state management
 
 ### 🏗️ **Modular Architecture**
 - **Core package** with essential ECS primitives
-- **Extension packages** for specific domains (input, networking, rendering)
-- **Plugin system** for custom integrations
+- **Extension packages** for specific domains
+- **Composable systems** for custom integrations
 
-### 🎨 **React-Inspired API**
-- **Functional components** with hooks for logic
-- **Declarative composition** of game objects
-- **Automatic cleanup** and lifecycle management
+### 🎨 **React-Inspired Patterns**
+- **Functional nodes** for declarative composition
+- **Hooks** for managing state and side effects
+- **Automatic lifecycle management**
+
+## Core Concepts
+
+Pulse is built around a few fundamental concepts:
+
+### 🌍 **World**
+The container that manages your entire application. It coordinates timing, maintains the scene hierarchy, and provides services.
+
+### 🏷️ **Nodes**
+The entities in your scene graph. Every object in your application is a Node with a unique identity and position in the hierarchy.
+
+### 🧩 **Components**
+Data attached to Nodes. Components describe what properties an object has (like position, rotation, or custom state).
+
+### ⚙️ **Systems**
+Logic that operates on components. Systems process groups of components to create behavior.
+
+### 🔧 **Services**
+Singleton utilities and managers that provide global functionality.
+
+## Learn More
+
+Dive deeper into Pulse with our comprehensive guides:
+
+- **[Getting Started](docs/getting-started.md)** - Complete setup and first project
+- **[Core Concepts](docs/core-concepts.md)** - Understanding World, Nodes, and Components
+- **[Scene Graph](docs/scene-graph.md)** - Building hierarchical objects
+- **[Functional Nodes](docs/functional-nodes.md)** - Node creation with hooks
+- **[Update System](docs/update-system.md)** - Understanding timing and updates
+- **[Examples](docs/examples.md)** - Real-world patterns and recipes
+
 
 ## Core Concepts
 
@@ -92,7 +116,7 @@ Dive deeper into Pulse with our comprehensive guides:
 - **[Getting Started](docs/getting-started.md)** - Complete setup and first project
 - **[Core Concepts](docs/core-concepts.md)** - Understanding World, Nodes, and Components
 - **[Scene Graph](docs/scene-graph.md)** - Building hierarchical game objects
-- **[Functional Components](docs/functional-components.md)** - React-style composition with hooks
+- **[Functional Components](docs/functional-nodes.md)** - React-style composition with hooks
 - **[Update System](docs/update-system.md)** - Fixed timestep physics and frame updates
 - **[Examples](docs/examples.md)** - Real-world patterns and recipes
 

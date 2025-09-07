@@ -1,10 +1,14 @@
-# Functional Components & Hooks
+# Functional Nodes & Hooks
 
-Pulse's **Functional Components** bring React-style patterns to game development. Write declarative, composable game objects using familiar hooks like `useState`, `useEffect`, and custom game-specific hooks.
+Pulse's **Functional Nodes** bring React-style patterns to application development. They create **Nodes** (not Components) and use hooks to manage state and behavior.
 
-## Component Basics
+**Important distinction**: Functional nodes in Pulse create Nodes in the scene graph, whereas Components are pure data structures. This is different from React where components create UI elements.
 
-Functional Components (FCs) are functions that return `null` and use hooks to define behavior:
+**Why this matters:** In Pulse, the functional node is responsible for creating the Node entity and setting up its behavior. The Components attached to that Node contain the data. This separation keeps your logic organized and your data structures simple.
+
+## Node Basics
+
+Functional Nodes (FNs) are functions that return `null` and use hooks to define behavior:
 
 ```typescript
 import { useComponent, useFrameUpdate, Transform } from '@pulse-ts/core';
@@ -22,7 +26,7 @@ function Player() {
   return null;
 }
 
-// Mount the component
+// Mount the node
 const world = new World();
 world.mount(Player);
 ```
@@ -33,13 +37,13 @@ world.mount(Player);
 
 ```typescript
 function MyComponent() {
-  // Called when component mounts
+  // Called when node mounts
   useInit(() => {
     console.log('Component initialized!');
     return () => console.log('Cleanup on unmount!');
   });
 
-  // Called when component unmounts/destroys
+  // Called when node unmounts/destroys
   useDestroy(() => {
     console.log('Component destroyed!');
   });
@@ -135,7 +139,7 @@ function SaveableObject() {
 
 ```typescript
 function Spaceship() {
-  // Mount child components
+  // Mount child nodes
   const engine = useChild(Engine, { power: 100 });
   const wing1 = useChild(Wing, { side: 'left' });
   const wing2 = useChild(Wing, { side: 'right' });
@@ -399,13 +403,13 @@ function Enemy() {
 
 ### Rules of Hooks
 
-1. **Only call hooks at the top level** of functional components
+1. **Only call hooks at the top level** of functional nodes
 2. **Don't call hooks inside loops, conditions, or nested functions**
-3. **Hooks can only be called during component execution**
+3. **Hooks can only be called during functional node execution**
 
 ```typescript
 // ✅ Good
-function GoodComponent() {
+function GoodNode() {
   const [count, setCount] = useState('count', 0);
 
   if (count > 5) {
@@ -420,7 +424,7 @@ function GoodComponent() {
 }
 
 // ❌ Bad
-function BadComponent() {
+function BadNode() {
   if (Math.random() > 0.5) {
     const [count, setCount] = useState('count', 0); // Wrong!
   }
@@ -541,4 +545,4 @@ function EnemyAI() {
 }
 ```
 
-Functional Components bring the power of React's mental model to game development. They make your code more declarative, composable, and easier to reason about. Start with simple components and gradually build up to complex, interactive game objects!
+Functional Nodes bring the power of React's mental model to application development. They make your code more declarative, composable, and easier to reason about. Start with simple nodes and gradually build up to complex, interactive applications!

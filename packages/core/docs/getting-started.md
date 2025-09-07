@@ -1,363 +1,99 @@
 # Getting Started
 
-Welcome to Pulse! This guide will walk you through creating your first Pulse application from scratch. We'll build a simple timer application that demonstrates the core concepts of timing, state management, and component composition.
-
-## Prerequisites
+Welcome to Pulse! This guide will help you understand the fundamental concepts and get started with your first application. We'll focus on the core ideas rather than specific code examples.
 
-- Node.js 16+ and npm
-- Basic TypeScript knowledge
-- A code editor (VS Code recommended)
+## What is Pulse?
 
-## Project Setup
+Pulse is an **Entity Component System (ECS)** framework designed for building interactive applications. Unlike traditional object-oriented approaches, ECS separates:
 
-Let's create a new Pulse project:
+- **Data** (Components) from
+- **Logic** (Systems) from
+- **Identity** (Nodes)
 
-```bash
-# Create a new directory for your project
-mkdir my-pulse-game
-cd my-pulse-game
+This separation makes your code more modular, testable, and performant.
 
-# Initialize npm project
-npm init -y
+## Core Concepts
 
-# Install Pulse core
-npm install @pulse-ts/core
-
-# Install dev dependencies
-npm install -D typescript @types/node
-```
+Before writing code, let's understand Pulse's fundamental building blocks:
 
-Create a `tsconfig.json`:
+### 🌍 The World
+The World is the root container for everything in your Pulse application. It manages:
+- The scene hierarchy (parent-child relationships)
+- Update timing and scheduling
+- Global services and systems
+- Component registration
 
-```json
-{
-  "compilerOptions": {
-    "target": "ES2020",
-    "module": "ESNext",
-    "moduleResolution": "node",
-    "strict": true,
-    "esModuleInterop": true,
-    "skipLibCheck": true,
-    "forceConsistentCasingInFileNames": true,
-    "outDir": "./dist",
-    "rootDir": "./src"
-  },
-  "include": ["src/**/*"],
-  "exclude": ["node_modules", "dist"]
-}
-```
+Think of the World as your application's "universe" - everything exists within it.
 
-Create the basic folder structure:
+### 🏷️ Nodes
+Nodes are the entities in your scene graph. Every object in your application is a Node. Nodes:
+- Have a unique identity
+- Can form parent-child relationships
+- Can have data attached via components
+- Participate in the update cycle
 
-```
-my-pulse-game/
-├── src/
-│   ├── index.ts
-│   └── components/
-├── package.json
-├── tsconfig.json
-└── dist/
-```
+### 🧩 Components
+Components are pure data structures attached to Nodes. They describe what properties a Node has:
+- Position and rotation (Transform component)
+- Custom state (your own components)
+- Configuration data
 
-Update your `package.json` scripts:
+Components are just data - they don't contain logic.
 
-```json
-{
-  "scripts": {
-    "build": "tsc",
-    "start": "node dist/index.js",
-    "dev": "tsc && node dist/index.js"
-  }
-}
-```
+### ⚙️ Systems
+Systems contain the logic that operates on components. They:
+- Run automatically as part of the World's update cycle
+- Process groups of components to create behavior
+- Are optimized for performance
 
-## Your First Pulse App
+### 🔧 Services
+Services are singleton utilities that provide global functionality:
+- Statistics tracking
+- Event management
+- Resource management
 
-Let's create a simple interactive scene. In `src/index.ts`:
+## Understanding Updates
 
-```typescript
-import { World, mount } from '@pulse-ts/core';
+One of Pulse's most important concepts is its dual update system:
 
-function App() {
-  // This is our root component
-  console.log('Pulse app started!');
-}
+### Frame Updates
+- Run every rendered frame (typically 60 times per second)
+- Timing varies based on frame rate
+- Good for: Animation, UI updates, visual effects
 
-const world = new World();
-world.mount(App);
-world.start();
+### Fixed Updates
+- Run at a consistent rate (default 60Hz)
+- Timing is always the same
+- Good for: Physics, game logic, AI decisions
 
-console.log('World is running...');
-```
+**Why separate updates?** In interactive applications, you want some things (like physics) to be consistent regardless of frame rate, while other things (like animations) should adapt to the display rate.
 
-Run it:
+## Functional Nodes
 
-```bash
-npm run dev
-```
+Pulse uses **functional nodes** to create Nodes. These are functions that:
+- Create a Node in the scene
+- Use hooks to manage state and side effects
+- Can create child Nodes
+- Have a lifecycle (initialization and cleanup)
 
-You should see "Pulse app started!" and "World is running..." in your console. Congratulations! You have a basic Pulse world running.
+The key insight: **Functional nodes create Nodes, not Components**. This is different from React where components create UI elements.
 
-## Adding Your First Component
+## Your First Steps
 
-Now let's create a timer component that demonstrates state management and updates. Create `src/components/Timer.ts`:
-
-```typescript
-import { useComponent, useFrameUpdate, useState, Transform } from '@pulse-ts/core';
-
-export function Timer() {
-  // Get the transform component (position, rotation, scale)
-  const transform = useComponent(Transform);
-
-  // State for our timer
-  const [elapsedTime, setElapsedTime] = useState('elapsedTime', 0);
-  const [updateCount, setUpdateCount] = useState('updateCount', 0);
-
-  // Update every frame (typically 60fps)
-  useFrameUpdate((dt) => {
-    setElapsedTime(prev => prev + dt);
-    setUpdateCount(prev => prev + 1);
-
-    // Move in a circle based on elapsed time
-    const radius = 2;
-    transform.localPosition.x = Math.cos(elapsedTime) * radius;
-    transform.localPosition.y = Math.sin(elapsedTime) * radius;
-
-    // Spin based on time
-    transform.localRotation.z = elapsedTime;
-
-    // Log progress every second
-    if (Math.floor(elapsedTime) !== Math.floor(elapsedTime - dt)) {
-      console.log(`Timer: ${Math.floor(elapsedTime)}s, Updates: ${updateCount}`);
-    }
-  });
-
-  console.log('Timer component mounted!');
-}
-```
-
-Update your main app:
-
-```typescript
-// ... existing code ...
-
-function App() {
-  console.log('Pulse app started!');
-
-  // Mount our timer
-  const timer = useChild(Timer);
-}
-
-// ... existing code ...
-```
-
-Wait, we need to import `useChild`. Let's fix that:
-
-```typescript
-import { World, mount, useChild } from '@pulse-ts/core';
-```
-
-Run it again:
-
-```bash
-npm run dev
-```
-
-You should now see both "Pulse app started!" and "Timer component mounted!" followed by regular updates showing elapsed time and update counts.
-
-## Understanding Fixed vs Frame Updates
-
-Let's create a component that demonstrates the difference between fixed and frame updates. Update `src/components/Timer.ts`:
-
-```typescript
-export function PhysicsTimer() {
-  const [frameCount, setFrameCount] = useState('frameCount', 0);
-  const [fixedCount, setFixedCount] = useState('fixedCount', 0);
-
-  // Frame updates (variable timing)
-  useFrameUpdate((dt) => {
-    setFrameCount(prev => prev + 1);
-    console.log(`Frame update #${frameCount} - Delta: ${dt.toFixed(4)}s`);
-  });
-
-  // Fixed updates (consistent timing)
-  useFixedUpdate((dt) => {
-    setFixedCount(prev => prev + 1);
-    console.log(`Fixed update #${fixedCount} - Delta: ${dt.toFixed(4)}s`);
-  });
-}
-
-export function CombinedTimer() {
-  const [physicsTime, setPhysicsTime] = useState('physicsTime', 0);
-  const [renderTime, setRenderTime] = useState('renderTime', 0);
-
-  // Physics at fixed rate (consistent)
-  useFixedUpdate((dt) => {
-    setPhysicsTime(prev => prev + dt);
-    console.log(`Physics time: ${physicsTime.toFixed(2)}s (fixed rate)`);
-  });
-
-  // Rendering at frame rate (variable)
-  useFrameUpdate((dt) => {
-    setRenderTime(prev => prev + dt);
-    console.log(`Render time: ${renderTime.toFixed(2)}s (frame rate)`);
-  });
-}
-```
-
-Update your main app to use these:
-
-```typescript
-function App() {
-  console.log('Pulse app started!');
-
-  // Mount our timers to see the difference
-  const physicsTimer = useChild(PhysicsTimer);
-  const combinedTimer = useChild(CombinedTimer);
-}
-```
-
-## State Management and Persistence
-
-Let's create a component that demonstrates persistent state and lifecycle hooks. Update `src/components/Timer.ts`:
-
-```typescript
-export function PersistentCounter() {
-  const [count, setCount] = useState('persistentCount', 0);
-  const [startTime, setStartTime] = useState('startTime', Date.now());
-
-  // Initialize when component mounts
-  useInit(() => {
-    console.log('Counter initialized with count:', count);
-    setStartTime(Date.now());
-  });
-
-  // Cleanup when component unmounts/destroys
-  useDestroy(() => {
-    const lifetime = Date.now() - startTime;
-    console.log(`Counter destroyed after ${lifetime}ms, final count: ${count}`);
-  });
-
-  useFrameUpdate((dt) => {
-    // Increment every 100ms
-    if (Math.floor(Date.now() / 100) !== Math.floor((Date.now() - dt * 1000) / 100)) {
-      setCount(prev => prev + 1);
-      console.log(`Count: ${count + 1}`);
-    }
-  });
-}
-```
-
-Update your main app to use the persistent counter:
-
-```typescript
-function App() {
-  console.log('Pulse app started!');
-
-  // Mount our persistent counter
-  const counter = useChild(PersistentCounter);
-}
-```
-
-## Multiple Components
-
-Let's create a scene with multiple interacting components. Create `src/components/Producer.ts` and `src/components/Consumer.ts`:
-
-```typescript
-// Producer.ts
-export function Producer() {
-  const [produced, setProduced] = useState('produced', 0);
-
-  useFixedUpdate((dt) => {
-    setProduced(prev => prev + 1);
-    console.log(`Producer: Created item #${produced + 1}`);
-  });
-}
-
-// Consumer.ts
-export function Consumer() {
-  const [consumed, setConsumed] = useState('consumed', 0);
-
-  useFixedUpdate((dt) => {
-    setConsumed(prev => prev + 1);
-    console.log(`Consumer: Processed item #${consumed + 1}`);
-  });
-}
-
-// Monitor.ts
-export function Monitor() {
-  const [updates, setUpdates] = useState('updates', 0);
-
-  useFrameUpdate((dt) => {
-    setUpdates(prev => prev + 1);
-
-    // Log stats every 60 frames (about 1 second at 60fps)
-    if (updates % 60 === 0) {
-      console.log(`Monitor: ${updates} frames processed`);
-    }
-  });
-}
-```
-
-Update your main app to create multiple components:
-
-```typescript
-function App() {
-  console.log('Pulse app started!');
-
-  // Create multiple producers and consumers
-  for (let i = 0; i < 3; i++) {
-    useChild(Producer);
-    useChild(Consumer);
-  }
-
-  // Add a monitor
-  useChild(Monitor);
-}
-```
-
-## Performance Monitoring
-
-Let's add some basic performance stats. Update your main app:
-
-```typescript
-function App() {
-  const [totalUpdates, setTotalUpdates] = useState('totalUpdates', 0);
-  const [lastStatsTime, setLastStatsTime] = useState('lastStatsTime', 0);
-
-  // Log performance stats every second
-  useFrameUpdate((dt) => {
-    setTotalUpdates(prev => prev + 1);
-    setLastStatsTime(prev => prev + dt);
-
-    if (lastStatsTime >= 1.0) {
-      const stats = world.debugStats();
-      console.log(`FPS: ${stats.fps.toFixed(1)}, Nodes: ${stats.nodes}, Total Updates: ${totalUpdates}`);
-      setLastStatsTime(0);
-    }
-  });
-
-  // ... existing component mounting code ...
-}
-```
+1. **Install Pulse**: Add `@pulse-ts/core` to your project
+2. **Create a World**: The container for your application
+3. **Write functional nodes**: Functions that create Nodes
+4. **Add state and behavior**: Use hooks for data and updates
+5. **Start the world**: Call `world.start()` to begin
 
 ## Next Steps
 
-You've built a complete Pulse application demonstrating core concepts:
-
-✅ Basic Pulse setup and World creation
-✅ Component-based architecture with state management
-✅ Fixed vs frame update timing
-✅ Lifecycle hooks (init/destroy)
-✅ Multiple interacting components
-✅ Performance monitoring and debugging
-
-## What's Next?
+Now that you understand the fundamentals:
 
 - **[Core Concepts](core-concepts.md)** - Deep dive into World, Nodes, and Components
-- **[Scene Graph](scene-graph.md)** - Building hierarchical game objects
-- **[Functional Components](functional-components.md)** - Advanced component patterns
-- **[Update System](update-system.md)** - Understanding timing and updates
-- **[Examples](examples.md)** - More complex patterns and recipes
+- **[Functional Nodes](functional-nodes.md)** - Node creation with hooks
+- **[Update System](update-system.md)** - Understanding timing in detail
+- **[Scene Graph](scene-graph.md)** - Building object hierarchies
+- **[Examples](examples.md)** - Practical patterns to follow
 
-Happy coding with Pulse! 🚀
+Remember: Pulse is about composition and separation of concerns. Start simple, then combine pieces to build complex behavior!

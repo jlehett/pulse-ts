@@ -1,6 +1,6 @@
 # Scene Graph & Transforms
 
-Pulse's **scene graph** manages the spatial relationships between game objects. Every Node can have a position, rotation, and scale, and these properties inherit through the hierarchy - just like in 3D modeling software.
+Pulse's **scene graph** manages the spatial relationships between objects in your application. Every Node can have a position, rotation, and scale, and these properties inherit through the hierarchy.
 
 ## Understanding Transforms
 

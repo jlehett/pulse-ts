@@ -2,32 +2,21 @@
 
 Pulse is built around a few fundamental concepts that work together to create interactive applications. Understanding these core pieces is key to mastering Pulse development.
 
-## The Big Picture
+## What is an Entity Component System?
 
-Before diving into each concept, let's see how they fit together:
+Pulse uses an **Entity Component System (ECS)** architecture. This is a design pattern that separates different aspects of your application:
 
-```typescript
-// 1. Create a World (the container)
-const world = new World();
+- **Entities** (Nodes) - The "things" in your application
+- **Components** - Data attached to entities
+- **Systems** - Logic that processes components
 
-// 2. Add Systems (the logic)
-world.addSystem(new PhysicsSystem());
-world.addSystem(new RenderSystem());
+**Why ECS?** Traditional object-oriented programming can become complex when many different objects need similar behaviors. ECS makes it easy to:
+- Add behaviors to many objects at once
+- Query objects by their properties
+- Change object behavior without changing their class
+- Keep your code modular and testable
 
-// 3. Add Services (the utilities)
-world.provideService(new InputService());
-
-// 4. Create Nodes with Components (the data)
-const player = world.add(new Node());
-player.attach(new Transform());
-player.attach(new PlayerController());
-player.attach(new Health(100));
-
-// 5. Start the simulation
-world.start();
-```
-
-Each concept has a specific role in this ecosystem.
+**The key insight**: Instead of classes that mix data and behavior, ECS separates them. This makes your code more flexible and performant.
 
 ## 🌍 World
 
@@ -86,7 +75,7 @@ import { Node } from '@pulse-ts/core';
 // Direct creation
 const player = new Node();
 
-// Through functional components
+// Through functional nodes
 function Player() {
   // This creates a Node automatically
   return null;
@@ -429,7 +418,7 @@ world.start();
 Now that you understand the core concepts:
 
 - **[Scene Graph](scene-graph.md)** - Learn about hierarchical transforms
-- **[Functional Components](functional-components.md)** - React-style component patterns
+- **[Functional Nodes](functional-nodes.md)** - React-style node patterns
 - **[Update System](update-system.md)** - Understanding timing and phases
 - **[Examples](examples.md)** - Real-world patterns and recipes
 
