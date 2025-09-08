@@ -1,0 +1,21 @@
+# Core Concepts
+
+Pulse is an ECS (Entity Component System) runtime. Learn the core building blocks:
+
+## World
+The container that owns time, the scene graph, systems, and services. Create one world per app.
+
+## Nodes
+Entities in the scene graph. Nodes form parent/child hierarchies and hold components.
+
+## Components
+Pure data attached to nodes (e.g., `Transform`, `Visibility`, your own). No logic.
+
+## Systems
+Logic that operates over components. Systems run during the update loop.
+
+## Services
+Singleton utilities (e.g., input, audio, networking). Accessed via hooks or the world.
+
+## Functional Nodes
+Functions that create nodes and use hooks for lifecycle and updates. See [Functional Nodes](/learn/functional-nodes).

@@ -1,0 +1,20 @@
+{
+  "plugin": ["typedoc-plugin-markdown"],
+  "entryPoints": [
+    "packages/core/src/index.ts",
+    "packages/input/src/index.ts",
+    "packages/network/src/index.ts",
+    "packages/save/src/index.ts",
+    "packages/three/src/index.ts"
+  ],
+  "entryPointStrategy": "resolve",
+  "out": "apps/docs/api",
+  "tsconfig": "configs/tsconfig.typedoc.json",
+  "cleanOutputDir": false,
+  "excludeInternal": true,
+  "excludePrivate": true,
+  "excludeProtected": true,
+  "hideGenerator": true,
+  "readme": "none",
+  "categorizeByGroup": false
+}

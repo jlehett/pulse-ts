@@ -1,4 +1,4 @@
-import { Vec } from 'src/bindings/types';
+import type { Vec } from '../bindings/types';
 import { InputService } from '../services/Input';
 
 /**

@@ -3,6 +3,7 @@
         "module": "ESNext",
         "moduleResolution": "node",
         "target": "ES2018",
+        "downlevelIteration": true,
         "jsx": "react",
         "strict": true,
         "esModuleInterop": true,
