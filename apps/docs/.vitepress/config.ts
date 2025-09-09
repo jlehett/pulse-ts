@@ -22,6 +22,7 @@ export default defineConfig({
         { text: 'Camera + Controls + Render', link: '/guides/camera-controls-render' },
         { text: 'Save/Load with Stable IDs', link: '/guides/save-load-stable-ids' },
         { text: 'Input Bindings & Actions', link: '/guides/input-bindings' },
+        { text: 'Networking: Authoritative Server & Client Worlds', link: '/guides/network-authoritative-worlds' },
         { text: 'Networking: Replication & Interpolation', link: '/guides/network-snapshots-interpolation' },
         { text: 'Networking: RPC & Reliable Channels', link: '/guides/network-rpc-channels' }
       ]

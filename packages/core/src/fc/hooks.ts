@@ -1,5 +1,7 @@
 import { current } from './runtime';
 import { World } from '../world';
+import type { Service } from '../Service';
+import type { Ctor } from '../types';
 import { Node } from '../node';
 import { attachComponent } from '../componentRegistry';
 import type { Component } from '../Component';
@@ -17,6 +19,15 @@ import { StableId } from '../components/StableId';
  */
 export function useWorld(): World {
     return current().world;
+}
+
+/**
+ * Returns the `Service` associated with the current `World`.
+ * @param Service The constructor of the service to get.
+ * @returns The service instance.
+ */
+export function useService<T extends Service>(Service: Ctor<T>): T | undefined {
+    return current().world.getService(Service);
 }
 
 /**
