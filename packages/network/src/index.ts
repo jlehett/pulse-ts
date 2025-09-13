@@ -20,8 +20,11 @@ export { InterpolationSystem } from './systems/InterpolationSystem';
 // FC Hooks
 export {
     useConnection,
+    useWebSocket,
+    useMemory,
     useChannel,
     useNetworkStats,
+    useNetworkStatus,
     useRPC,
     useReplication,
     useRoom,
@@ -41,10 +44,11 @@ export {
 export { WebSocketTransport } from './transports/websocket';
 
 // Utilities
-export { defineChannel } from './messaging/channel';
+export { defineChannel, channel } from './messaging/channel';
 export { shallowDelta, type SnapshotEnvelope } from './replication/protocol';
 // Services
 export { RpcService } from './services/RpcService';
+export { getNetwork } from './facade';
 
 // Installer
 export {
@@ -54,8 +58,14 @@ export {
 } from './install';
 
 // Server utilities (Node)
-export { NetworkServer, attachWsServer } from './server/broker';
+export { NetworkServer } from './server/broker';
+export { attachWsServer } from './server/ws';
+// Server helpers
+export { type RateLimits } from './server/rateLimit';
 export {
-    createPresenceHttpHandler,
-    type PresenceHttpOptions,
-} from './server/presence';
+    type RoomAction,
+    type RoomControl,
+    type RoomAck,
+    type RoomErrorReason,
+} from './server/rooms';
+export { validateWithZod, type ZodLikeSchema } from './server/validate';

@@ -1,6 +1,7 @@
-import { useInit, useWorld, useFrameEarly, useNode } from '@pulse-ts/core';
+import { useInit, useWorld, useNode, useState } from '@pulse-ts/core';
 import { TransportService } from '../services/TransportService';
-import type { ChannelHandler, Transport } from '../types';
+import type { ChannelHandler, Transport, TransportStatus } from '../types';
+import { ChannelName } from '../messaging/channel';
 import { NetworkTick } from '../systems/NetworkTick';
 import { RpcService } from '../services/RpcService';
 import { ReplicationService } from '../services/ReplicationService';
@@ -9,6 +10,10 @@ import { attachComponent } from '@pulse-ts/core';
 import { StableId } from '@pulse-ts/core';
 import { ReliableChannelService } from '../services/ReliableChannel';
 import { ClockSyncService } from '../services/ClockSyncService';
+import { WebSocketTransport } from '../transports/websocket';
+import { MemoryTransport } from '../transports/memory';
+import type { MemoryHub } from '../transports/memory';
+import { ReservedChannels } from '../messaging/reserved';
 
 /**
  * Ensure TransportService and NetworkTick are initialized once per world.
@@ -48,18 +53,6 @@ export function useConnection(init: TransportInit) {
         };
     });
 
-    /**
-     * Flush outgoing messages and dispatch incoming messages.
-     */
-    useFrameEarly(
-        () => {
-            const s = world.getService(TransportService);
-            s?.flushOutgoing();
-            s?.dispatchIncoming(128);
-        },
-        { order: -2000 },
-    );
-
     return {
         /**
          * Get the connection status.
@@ -75,13 +68,34 @@ export function useConnection(init: TransportInit) {
 }
 
 /**
+ * Convenience hook: connect via WebSocketTransport.
+ * @param url WebSocket URL.
+ * @param opts Transport options (protocols, ws ctor for Node, autoReconnect, backoff).
+ */
+export function useWebSocket(
+    url: string,
+    opts?: ConstructorParameters<typeof WebSocketTransport>[1],
+) {
+    return useConnection(() => new WebSocketTransport(url, opts));
+}
+
+/**
+ * Convenience hook: connect two Worlds in-process via a MemoryHub.
+ * @param hub Shared MemoryHub instance.
+ * @param opts Optional peer configuration.
+ */
+export function useMemory(hub: MemoryHub, opts?: { peerId?: string }) {
+    return useConnection(() => new MemoryTransport(hub, opts?.peerId));
+}
+
+/**
  * Use a channel to send and receive messages.
  * @param name The name of the channel.
  * @param handler The handler for the channel.
  * @returns The channel.
  */
 export function useChannel<T = unknown>(
-    name: string,
+    name: ChannelName,
     handler?: ChannelHandler<T>,
 ) {
     const svc = ensureRuntime();
@@ -123,6 +137,27 @@ export function useNetworkStats() {
 }
 
 /**
+ * Subscribe to transport status changes and access the latest value.
+ */
+export function useNetworkStatus() {
+    const world = useWorld();
+    const svc = ensureRuntime();
+    const [getStatus, setStatus] = useState<TransportStatus>(
+        'net:status',
+        svc.getStatus(),
+    );
+    useInit(() => {
+        const off = svc.onStatus.on((s) => setStatus(s));
+        return () => off();
+    });
+    return {
+        /** Latest known status (fallbacks to current service if available). */
+        get: () =>
+            world.getService(TransportService)?.getStatus() ?? getStatus(),
+    } as const;
+}
+
+/**
  * Register or call an RPC method over the network.
  *
  * - If `handler` is provided, registers the method and returns a disposer via unmount.
@@ -159,7 +194,7 @@ export function useRPC<Req = unknown, Res = unknown>(
 /**
  * Joins a server-side room for channel routing and leaves on unmount.
  *
- * - Works with the server broker's `__room` channel.
+ * - Works with the server broker's reserved channel.
  * - Safe to call before connection; message queues until transport opens.
  */
 export function useRoom(room: string) {
@@ -167,8 +202,9 @@ export function useRoom(room: string) {
     useInit(() => {
         let svc = world.getService(TransportService);
         if (!svc) svc = world.provideService(new TransportService());
-        svc.publish('__room', { action: 'join', room });
-        return () => svc.publish('__room', { action: 'leave', room });
+        svc.publish(ReservedChannels.ROOM, { action: 'join', room });
+        return () =>
+            svc.publish(ReservedChannels.ROOM, { action: 'leave', room });
     });
 }
 

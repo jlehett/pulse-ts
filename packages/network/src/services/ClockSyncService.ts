@@ -1,13 +1,14 @@
 import { Service } from '@pulse-ts/core';
 import { TypedEvent } from '@pulse-ts/core';
 import { TransportService } from './TransportService';
+import { ReservedChannels } from '../messaging/reserved';
 
 type PingEnv =
     | { t: 'ping'; id: string; cSendMs: number }
     | { t: 'pong'; id: string; sNowMs: number };
 
 /**
- * Estimates server clock offset/drift via periodic pings over channel `__clock`.
+ * Estimates server clock offset/drift via periodic pings over a reserved channel.
  *
  * - Offset = best (min-RTT) sample of sNowMs - (cSend+cRecv)/2.
  * - Provides `getServerNowMs()` for consumers that need authoritative timers.
@@ -36,8 +37,9 @@ export class ClockSyncService extends Service {
         this.running = true;
         const svc = this.ensureTransport();
         if (!this.offUnsub)
-            this.offUnsub = svc.subscribe<PingEnv>('__clock', (env) =>
-                this.onMessage(env),
+            this.offUnsub = svc.subscribe<PingEnv>(
+                ReservedChannels.CLOCK,
+                (env) => this.onMessage(env),
             );
         // Kick first burst immediately
         this.pingBurst();
@@ -104,7 +106,11 @@ export class ClockSyncService extends Service {
         const id = this.makeId();
         const cSendMs = Date.now();
         this.inflight.set(id, cSendMs);
-        svc.publish<PingEnv>('__clock', { t: 'ping', id, cSendMs });
+        svc.publish<PingEnv>(ReservedChannels.CLOCK, {
+            t: 'ping',
+            id,
+            cSendMs,
+        });
     }
 
     private ensureTransport() {

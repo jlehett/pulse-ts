@@ -52,6 +52,7 @@ export {
     useChild,
     useState,
     useStableId,
+    useService,
 } from './fc/hooks';
 
 // Math

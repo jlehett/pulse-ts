@@ -1,6 +1,7 @@
 import { Service } from '@pulse-ts/core';
 import { TransportService } from './TransportService';
 import type { Unsubscribe } from '../types';
+import { ReservedChannels } from '../messaging/reserved';
 
 type ReqEnv = {
     t: 'req';
@@ -29,10 +30,10 @@ export interface ReliableResult<T = unknown> {
 }
 
 /**
- * Generic reliable request/ack channel over `TransportService` using `__rel`.
+ * Generic reliable request/ack channel over `TransportService` using a reserved channel.
  *
  * - Provides correlation IDs, retries with timeout, and in-order sequencing per client.
- * - Server is expected to respond with an `ack` envelope on `__rel` with the same id.
+ * - Server is expected to respond with an `ack` envelope on a reserved channel with the same id.
  */
 type PendingEntry = {
     resolve: (v: ReliableResult) => void;
@@ -88,7 +89,7 @@ export class ReliableChannelService extends Service {
             };
             this.pending.set(id, entry);
             const sendNow = () => {
-                svc.publish<ReqEnv>('__rel', env);
+                svc.publish<ReqEnv>(ReservedChannels.RELIABLE, env);
                 entry.timer = setTimeout(() => {
                     if (entry.retriesLeft > 0) {
                         entry.retriesLeft--;
@@ -111,7 +112,7 @@ export class ReliableChannelService extends Service {
     private ensureSubscribed() {
         const svc = this.ensureTransport();
         if (this.unsub) return;
-        this.unsub = svc.subscribe<AckEnv>('__rel', (env) => {
+        this.unsub = svc.subscribe<AckEnv>(ReservedChannels.RELIABLE, (env) => {
             if (!env || env.t !== 'ack') return;
             const p = this.pending.get(env.id);
             if (!p) return;

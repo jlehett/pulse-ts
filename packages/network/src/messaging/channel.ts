@@ -10,9 +10,14 @@ export function defineChannel<T = unknown>(name: string) {
 }
 
 /**
+ * Alias of defineChannel for a more concise DSL.
+ */
+export const channel = defineChannel;
+
+/**
  * Type for a channel name.
  */
-export type ChannelName<T = unknown> = { name: string } | string;
+export type ChannelName = { name: string } | string;
 
 /**
  * Get the key for a channel.

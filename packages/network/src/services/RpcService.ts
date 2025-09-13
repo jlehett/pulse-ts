@@ -1,13 +1,14 @@
 import { Service } from '@pulse-ts/core';
 import type { Unsubscribe } from '../types';
 import { TransportService } from './TransportService';
+import { ReservedChannels } from '../messaging/reserved';
 
 type RpcEnvelope =
     | { t: 'req'; id: string; m: string; p: any }
     | { t: 'res'; id: string; r?: any; e?: { message?: string } };
 
 /**
- * Lightweight RPC over TransportService using a reserved channel (`__rpc`).
+ * Lightweight RPC over TransportService using a reserved channel.
  *
  * - Broadcast topology: any peer with a registered handler for `m` may respond.
  * - Correlation via `id`; timeouts supported client-side.
@@ -59,7 +60,7 @@ export class RpcService extends Service {
             this.pending.set(id, { resolve, reject, timer });
         });
         const env: RpcEnvelope = { t: 'req', id, m: name, p: payload };
-        svc.publish('__rpc', env);
+        svc.publish(ReservedChannels.RPC, env);
         return p;
     }
 
@@ -67,32 +68,41 @@ export class RpcService extends Service {
     private ensureSubscribed() {
         if (this.unsub) return;
         const svc = this.ensureTransport();
-        this.unsub = svc.subscribe<RpcEnvelope>('__rpc', async (env) => {
-            if (!env || typeof env !== 'object') return;
-            if ((env as any).t === 'req') {
-                const { id, m, p } = env as Extract<RpcEnvelope, { t: 'req' }>;
-                const fn = this.handlers.get(m);
-                if (!fn) return;
-                try {
-                    const r = await fn(p);
-                    svc.publish('__rpc', { t: 'res', id, r });
-                } catch (e: any) {
-                    svc.publish('__rpc', {
-                        t: 'res',
-                        id,
-                        e: { message: e?.message ?? String(e) },
-                    });
+        this.unsub = svc.subscribe<RpcEnvelope>(
+            ReservedChannels.RPC,
+            async (env) => {
+                if (!env || typeof env !== 'object') return;
+                if ((env as any).t === 'req') {
+                    const { id, m, p } = env as Extract<
+                        RpcEnvelope,
+                        { t: 'req' }
+                    >;
+                    const fn = this.handlers.get(m);
+                    if (!fn) return;
+                    try {
+                        const r = await fn(p);
+                        svc.publish(ReservedChannels.RPC, { t: 'res', id, r });
+                    } catch (e: any) {
+                        svc.publish(ReservedChannels.RPC, {
+                            t: 'res',
+                            id,
+                            e: { message: e?.message ?? String(e) },
+                        });
+                    }
+                } else if ((env as any).t === 'res') {
+                    const { id, r, e } = env as Extract<
+                        RpcEnvelope,
+                        { t: 'res' }
+                    >;
+                    const pend = this.pending.get(id);
+                    if (!pend) return;
+                    this.pending.delete(id);
+                    if (pend.timer) clearTimeout(pend.timer);
+                    if (e) pend.reject(new Error(e.message ?? 'RPC error'));
+                    else pend.resolve(r);
                 }
-            } else if ((env as any).t === 'res') {
-                const { id, r, e } = env as Extract<RpcEnvelope, { t: 'res' }>;
-                const pend = this.pending.get(id);
-                if (!pend) return;
-                this.pending.delete(id);
-                if (pend.timer) clearTimeout(pend.timer);
-                if (e) pend.reject(new Error(e.message ?? 'RPC error'));
-                else pend.resolve(r);
-            }
-        });
+            },
+        );
     }
 
     private ensureTransport() {

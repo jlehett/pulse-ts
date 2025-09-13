@@ -9,7 +9,7 @@ import type {
     Unsubscribe,
 } from '../types';
 import { JSON_CODEC } from '../messaging/codec';
-import { channelKey } from '../messaging/channel';
+import { channelKey, ChannelName } from '../messaging/channel';
 
 /**
  * A service for transporting messages between nodes.
@@ -91,7 +91,10 @@ export class TransportService extends Service {
      * Connect to the transport.
      */
     async connect() {
-        if (!this.transport) throw new Error('No transport set');
+        if (!this.transport)
+            throw new Error(
+                'TransportService.connect(): no transport set. Provide one with installNetwork(world, { transport }), useConnection(() => new WebSocketTransport(url)), or useMemory(createMemoryHub()).',
+            );
         await this.transport.connect();
     }
 
@@ -117,7 +120,7 @@ export class TransportService extends Service {
      * @param handler The handler.
      * @returns The unsubscribe function.
      */
-    subscribe<T>(name: string, handler: ChannelHandler<T>): Unsubscribe {
+    subscribe<T>(name: ChannelName, handler: ChannelHandler<T>): Unsubscribe {
         const key = channelKey(name);
         let set = this.subs.get(key);
         if (!set) this.subs.set(key, (set = new Set()));
@@ -130,7 +133,7 @@ export class TransportService extends Service {
      * @param name The name of the channel.
      * @param data The data.
      */
-    publish<T>(name: string, data: T) {
+    publish<T>(name: ChannelName, data: T) {
         this.outbox.push({ channel: channelKey(name), data });
     }
 
@@ -179,5 +182,24 @@ export class TransportService extends Service {
             packetsIn: this.packetsIn,
             packetsOut: this.packetsOut,
         };
+    }
+
+    /**
+     * Fluent typed channel helper.
+     */
+    channel<T = unknown>(name: ChannelName) {
+        const key = channelKey(name);
+        return {
+            publish: (data: T) => this.publish<T>(key, data),
+            subscribe: (fn: ChannelHandler<T>): Unsubscribe =>
+                this.subscribe<T>(key, fn),
+            once: (fn: ChannelHandler<T>): Unsubscribe => {
+                const off = this.subscribe<T>(key, (d, meta) => {
+                    off();
+                    fn(d, meta);
+                });
+                return off;
+            },
+        } as const;
     }
 }

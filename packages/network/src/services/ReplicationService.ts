@@ -3,6 +3,7 @@ import type { Unsubscribe } from '../types';
 import { TransportService } from './TransportService';
 import type { SnapshotEnvelope } from '../replication/protocol';
 import { shallowDelta } from '../replication/protocol';
+import { ReservedChannels } from '../messaging/reserved';
 
 type ReadFn = () => any;
 type ApplyFn = (patch: any) => void;
@@ -36,7 +37,7 @@ export class ReplicationService extends Service {
 
     constructor(private opts: { channel?: string; sendHz?: number } = {}) {
         super();
-        this.opts.channel ??= '__rep';
+        this.opts.channel ??= ReservedChannels.REPL;
         this.opts.sendHz ??= 20;
     }
 
