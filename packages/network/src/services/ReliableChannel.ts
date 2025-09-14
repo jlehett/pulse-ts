@@ -104,6 +104,53 @@ export class ReliableChannelService extends Service {
         });
     }
 
+    /** Sends a reliable request addressed to a specific peer id (or ids). */
+    sendTo<TReq = unknown, TRes = unknown>(
+        peerId: string | string[],
+        topic: string,
+        payload: TReq,
+        opts: { timeoutMs?: number; retries?: number } = {},
+    ): Promise<ReliableResult<TRes>> {
+        this.ensureSubscribed();
+        const timeoutMs = opts.timeoutMs ?? this.defaults.timeoutMs!;
+        const retries = opts.retries ?? this.defaults.retries!;
+        const id = this.makeId();
+        const env: ReqEnv = {
+            t: 'req',
+            id,
+            topic,
+            payload,
+            seq: this.seq++,
+            cAt: Date.now(),
+        };
+        const svc = this.ensureTransport();
+        return new Promise<ReliableResult<TRes>>((resolve, reject) => {
+            const entry: PendingEntry = {
+                resolve: resolve as any,
+                reject,
+                retriesLeft: retries,
+                topic,
+                payload,
+                timeoutMs,
+                timer: undefined,
+            };
+            this.pending.set(id, entry);
+            const sendNow = () => {
+                svc.publishTo<ReqEnv>(ReservedChannels.RELIABLE, peerId, env);
+                entry.timer = setTimeout(() => {
+                    if (entry.retriesLeft > 0) {
+                        entry.retriesLeft--;
+                        sendNow();
+                    } else {
+                        this.pending.delete(id);
+                        reject(new Error('ReliableChannel timeout'));
+                    }
+                }, timeoutMs);
+            };
+            sendNow();
+        });
+    }
+
     /** Returns number of inflight requests. */
     inflight(): number {
         return this.pending.size;

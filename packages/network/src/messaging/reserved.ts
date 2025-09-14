@@ -12,6 +12,8 @@ export const ReservedChannels = {
     CLOCK: '__clock',
     /** The reserved channel for ROOM messages. */
     ROOM: '__room',
+    /** The reserved channel for WebRTC signaling messages. */
+    SIGNAL: '__signal',
 } as const;
 
 /**

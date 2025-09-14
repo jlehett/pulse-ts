@@ -72,6 +72,10 @@ export interface Packet<T = unknown> {
      * Optional metadata (populated if transport can provide it)
      */
     from?: string;
+    /**
+     * Optional addressing. If present, only the addressed peer(s) should consume.
+     */
+    to?: string | string[];
 }
 
 /**

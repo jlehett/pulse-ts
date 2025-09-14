@@ -18,6 +18,7 @@ export class TransportService extends Service {
     private codec: Codec;
     private transport: Transport | null = null;
     private status: TransportStatus = 'idle';
+    private selfId?: string;
 
     private inbox: Packet[] = [];
     private outbox: Packet[] = [];
@@ -35,9 +36,10 @@ export class TransportService extends Service {
     private packetsIn = 0;
     private packetsOut = 0;
 
-    constructor(opts: { codec?: Codec } = {}) {
+    constructor(opts: { codec?: Codec; selfId?: string } = {}) {
         super();
         this.codec = opts.codec ?? JSON_CODEC;
+        this.selfId = opts.selfId;
     }
 
     /**
@@ -45,6 +47,16 @@ export class TransportService extends Service {
      */
     setCodec(codec: Codec) {
         this.codec = codec;
+    }
+
+    /** Sets this client's peer id for addressed packet filtering. */
+    setSelfId(id: string) {
+        this.selfId = id;
+    }
+
+    /** Returns the configured peer id, if any. */
+    getSelfId() {
+        return this.selfId;
     }
 
     /**
@@ -138,6 +150,13 @@ export class TransportService extends Service {
     }
 
     /**
+     * Publish a message addressed to a specific peer or peers.
+     */
+    publishTo<T>(name: ChannelName, to: string | string[], data: T) {
+        this.outbox.push({ channel: channelKey(name), data, to });
+    }
+
+    /**
      * Flush the outgoing messages.
      */
     flushOutgoing() {
@@ -161,6 +180,24 @@ export class TransportService extends Service {
         let count = 0;
         while (this.inbox.length && count < max) {
             const pkt = this.inbox.shift()!;
+            // Addressing filter: if packet has 'to', ensure it includes us
+            if (pkt.to) {
+                const me = this.selfId;
+                if (!me) {
+                    // Without self id we can't decide; drop addressed packets
+                    count++;
+                    continue;
+                }
+                if (typeof pkt.to === 'string') {
+                    if (pkt.to !== me) {
+                        count++;
+                        continue;
+                    }
+                } else if (!pkt.to.includes(me)) {
+                    count++;
+                    continue;
+                }
+            }
             const set = this.subs.get(pkt.channel);
             this.onPacketIn.emit(pkt);
             if (set && set.size) {
@@ -191,6 +228,8 @@ export class TransportService extends Service {
         const key = channelKey(name);
         return {
             publish: (data: T) => this.publish<T>(key, data),
+            publishTo: (to: string | string[], data: T) =>
+                this.publishTo<T>(key, to, data),
             subscribe: (fn: ChannelHandler<T>): Unsubscribe =>
                 this.subscribe<T>(key, fn),
             once: (fn: ChannelHandler<T>): Unsubscribe => {

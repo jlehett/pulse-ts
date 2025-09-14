@@ -21,14 +21,19 @@ export { InterpolationSystem } from './systems/InterpolationSystem';
 export {
     useConnection,
     useWebSocket,
+    useWebRTC,
     useMemory,
     useChannel,
+    useChannelTo,
     useNetworkStats,
     useNetworkStatus,
+    usePeers,
     useRPC,
+    useRPCTo,
     useReplication,
     useRoom,
     useReliable,
+    useReliableTo,
     useClockSync,
 } from './fc/hooks';
 export { useReplicateTransform } from './fc/transform';
@@ -42,6 +47,11 @@ export {
 
 // Transports (WebSocket)
 export { WebSocketTransport } from './transports/websocket';
+// Transports (WebRTC)
+export {
+    WebRtcMeshTransport,
+    type WebRtcMeshOptions,
+} from './transports/webrtc';
 
 // Utilities
 export { defineChannel, channel } from './messaging/channel';
@@ -49,6 +59,10 @@ export { shallowDelta, type SnapshotEnvelope } from './replication/protocol';
 // Services
 export { RpcService } from './services/RpcService';
 export { getNetwork } from './facade';
+export {
+    RtcSignalingClient,
+    type SignalEnvelope,
+} from './signaling/RtcSignalingClient';
 
 // Installer
 export {

@@ -189,7 +189,8 @@ export class NetworkServer {
         if (!packet || typeof packet !== 'object') return; // drop malformed
         if (!('channel' in packet)) return;
 
-        // Rate limit
+        //#region Rate Limiting
+
         const size =
             typeof data === 'string'
                 ? Buffer.byteLength(data)
@@ -198,7 +199,10 @@ export class NetworkServer {
             return;
         }
 
-        // Reserved channels
+        //#endregion
+
+        //#region Reserved Channel Routing
+
         if (packet.channel === ReservedChannels.ROOM) {
             handleRoomMessage(this, peer.id, (packet as any).data, (id, pkt) =>
                 this.unicast(id, pkt),
@@ -226,8 +230,24 @@ export class NetworkServer {
             );
             return;
         }
-
-        // Reliable request/ack channel
+        if (packet.channel === ReservedChannels.SIGNAL) {
+            const env = (packet as any).data as {
+                to?: string;
+                from?: string;
+                type: string;
+                payload: any;
+            };
+            const to = env?.to;
+            if (typeof to === 'string' && to) {
+                // ensure from is set
+                env.from ??= peer.id;
+                this.unicast(to, {
+                    channel: ReservedChannels.SIGNAL,
+                    data: env,
+                });
+            }
+            return;
+        }
         if (packet.channel === ReservedChannels.RELIABLE) {
             const env = (packet as any).data as {
                 t: 'req' | 'ack';
@@ -251,6 +271,8 @@ export class NetworkServer {
             );
             return;
         }
+
+        //#endregion
 
         // Channel registry hooks and routing
         handleRegisteredChannel(

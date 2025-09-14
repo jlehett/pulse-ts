@@ -4,7 +4,7 @@ import { TransportService } from './TransportService';
 import { ReservedChannels } from '../messaging/reserved';
 
 type RpcEnvelope =
-    | { t: 'req'; id: string; m: string; p: any }
+    | { t: 'req'; id: string; m: string; p: any; from?: string }
     | { t: 'res'; id: string; r?: any; e?: { message?: string } };
 
 /**
@@ -59,8 +59,35 @@ export class RpcService extends Service {
             }, timeoutMs);
             this.pending.set(id, { resolve, reject, timer });
         });
-        const env: RpcEnvelope = { t: 'req', id, m: name, p: payload };
+        const from = svc.getSelfId();
+        const env: RpcEnvelope = { t: 'req', id, m: name, p: payload, from };
         svc.publish(ReservedChannels.RPC, env);
+        return p;
+    }
+
+    /**
+     * Calls a remote method on a specific peer and awaits the response.
+     */
+    async callTo<Req = unknown, Res = unknown>(
+        peerId: string,
+        name: string,
+        payload: Req,
+        opts: { timeoutMs?: number } = {},
+    ): Promise<Res> {
+        const svc = this.ensureTransport();
+        this.ensureSubscribed();
+        const id = this.makeId();
+        const timeoutMs = opts.timeoutMs ?? 5000;
+        const p = new Promise<Res>((resolve, reject) => {
+            const timer = setTimeout(() => {
+                this.pending.delete(id);
+                reject(new Error(`RPC timeout for ${name}`));
+            }, timeoutMs);
+            this.pending.set(id, { resolve, reject, timer });
+        });
+        const from = svc.getSelfId();
+        const env: RpcEnvelope = { t: 'req', id, m: name, p: payload, from };
+        svc.publishTo(ReservedChannels.RPC, peerId, env);
         return p;
     }
 
@@ -73,7 +100,7 @@ export class RpcService extends Service {
             async (env) => {
                 if (!env || typeof env !== 'object') return;
                 if ((env as any).t === 'req') {
-                    const { id, m, p } = env as Extract<
+                    const { id, m, p, from } = env as Extract<
                         RpcEnvelope,
                         { t: 'req' }
                     >;
@@ -81,13 +108,19 @@ export class RpcService extends Service {
                     if (!fn) return;
                     try {
                         const r = await fn(p);
-                        svc.publish(ReservedChannels.RPC, { t: 'res', id, r });
+                        const res: RpcEnvelope = { t: 'res', id, r } as any;
+                        if (from)
+                            svc.publishTo(ReservedChannels.RPC, from, res);
+                        else svc.publish(ReservedChannels.RPC, res);
                     } catch (e: any) {
-                        svc.publish(ReservedChannels.RPC, {
+                        const errEnv: RpcEnvelope = {
                             t: 'res',
                             id,
                             e: { message: e?.message ?? String(e) },
-                        });
+                        } as any;
+                        if (from)
+                            svc.publishTo(ReservedChannels.RPC, from, errEnv);
+                        else svc.publish(ReservedChannels.RPC, errEnv);
                     }
                 } else if ((env as any).t === 'res') {
                     const { id, r, e } = env as Extract<

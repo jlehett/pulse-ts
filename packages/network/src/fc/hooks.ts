@@ -14,6 +14,9 @@ import { WebSocketTransport } from '../transports/websocket';
 import { MemoryTransport } from '../transports/memory';
 import type { MemoryHub } from '../transports/memory';
 import { ReservedChannels } from '../messaging/reserved';
+import { WebRtcMeshTransport } from '../transports/webrtc';
+import { RtcSignalingClient } from '../signaling/RtcSignalingClient';
+import type { WebRtcMeshOptions } from '../transports/webrtc';
 
 /**
  * Ensure TransportService and NetworkTick are initialized once per world.
@@ -86,6 +89,90 @@ export function useWebSocket(
  */
 export function useMemory(hub: MemoryHub, opts?: { peerId?: string }) {
     return useConnection(() => new MemoryTransport(hub, opts?.peerId));
+}
+
+/**
+ * Establish a WebRTC mesh transport using a dedicated signaling transport.
+ *
+ * - Keeps a separate TransportService for signaling so swapping the main transport does not break signaling.
+ * - On mount: connects signaling, wires rtc, swaps main TransportService to WebRTC and connects it.
+ * - On unmount: disconnects rtc and stops signaling.
+ */
+export function useWebRTC(
+    selfId: string,
+    opts: {
+        signaling: Transport | (() => Transport);
+        iceServers?: RTCIceServer[];
+        webRTC?: WebRtcMeshOptions['webRTC'];
+        peers?: () => string[];
+    },
+) {
+    const world = useWorld();
+    let main!: TransportService;
+    let sigSvc: TransportService | null = null;
+    let rtc: WebRtcMeshTransport | null = null;
+    let stopSignal: (() => void) | undefined;
+
+    useInit(() => {
+        main = ensureRuntime();
+        main.setSelfId(selfId);
+
+        // Set up dedicated signaling service over provided transport
+        sigSvc = new TransportService({ selfId });
+        const sigTransport =
+            typeof opts.signaling === 'function'
+                ? opts.signaling()
+                : opts.signaling;
+        sigSvc.setTransport(sigTransport);
+        sigSvc.connect();
+        const signal = new RtcSignalingClient(sigSvc, selfId);
+
+        // Build rtc transport with signaling adapter
+        rtc = new WebRtcMeshTransport({
+            selfId,
+            iceServers: opts.iceServers,
+            webRTC: opts.webRTC,
+            signaling: {
+                send: (to, type, payload) => signal.send(to, type, payload),
+                on: (fn) => {
+                    signal.start((env) =>
+                        fn({
+                            from: env.from!,
+                            to: env.to,
+                            type: env.type,
+                            payload: env.payload,
+                        }),
+                    );
+                    return () => signal.stop();
+                },
+                peers: opts.peers,
+            },
+        });
+
+        // Swap main transport to rtc and connect
+        main.setTransport(rtc);
+        main.connect();
+
+        return () => {
+            try {
+                rtc?.disconnect();
+            } catch {}
+            try {
+                stopSignal?.();
+            } catch {}
+            try {
+                sigSvc?.disconnect();
+            } catch {}
+            sigSvc = null;
+            rtc = null;
+        };
+    });
+
+    return {
+        getStatus: () =>
+            world.getService(TransportService)?.getStatus() ?? 'idle',
+        disconnect: () => world.getService(TransportService)?.disconnect(),
+    } as const;
 }
 
 /**
@@ -192,6 +279,96 @@ export function useRPC<Req = unknown, Res = unknown>(
 }
 
 /**
+ * Track known peer ids observed via incoming packet metadata.
+ *
+ * - Uses `TransportService.onPacketIn` and collects `pkt.from` values.
+ * - Resets the peer list when the transport status goes to 'closed'.
+ * - Best-effort: requires transports to supply `from` (e.g., WebRTC mesh, memory hub).
+ */
+export function usePeers() {
+    const svc = ensureRuntime();
+    const [getSet, setSet] = useState<Set<string>>(
+        'net:peers',
+        () => new Set(),
+    );
+    useInit(() => {
+        const offIn = svc.onPacketIn.on((pkt) => {
+            const from = (pkt as any)?.from as string | undefined;
+            if (!from) return;
+            const cur = new Set(getSet());
+            if (!cur.has(from)) {
+                cur.add(from);
+                setSet(cur);
+            }
+        });
+        const offSt = svc.onStatus.on((s) => {
+            if (s === 'closed') setSet(new Set());
+        });
+        return () => {
+            offIn();
+            offSt();
+        };
+    });
+    return {
+        list: () => Array.from(getSet()),
+        size: () => getSet().size,
+        has: (id: string) => getSet().has(id),
+    } as const;
+}
+
+/**
+ * Use a channel with addressed publish to a specific peer (or peers).
+ */
+export function useChannelTo<T = unknown>(
+    to: string | string[],
+    name: ChannelName,
+    handler?: ChannelHandler<T>,
+) {
+    const svc = ensureRuntime();
+    let off: (() => void) | undefined;
+    useInit(() => {
+        if (handler) off = svc.subscribe<T>(name, handler);
+        return () => off?.();
+    });
+    return {
+        publish: (data: T) => svc.publishTo<T>(name, to, data),
+        subscribe: (fn: ChannelHandler<T>) => svc.subscribe<T>(name, fn),
+    } as const;
+}
+
+/**
+ * Register or call an RPC method to a specific peer.
+ *
+ * - If `handler` is provided, registers the method (same as useRPC).
+ * - Returns a `call` function that targets a fixed peer via callTo().
+ */
+export function useRPCTo<Req = unknown, Res = unknown>(
+    peerId: string,
+    name: string,
+    handler?: (payload: Req) => Res | Promise<Res>,
+) {
+    const world = useWorld();
+    useInit(() => {
+        // Ensure services are available
+        let svc = world.getService(TransportService);
+        if (!svc) svc = world.provideService(new TransportService());
+        let rpc = world.getService(RpcService);
+        if (!rpc) rpc = world.provideService(new RpcService());
+        let off: (() => void) | undefined;
+        if (handler) off = rpc.register<Req, Res>(name, handler);
+        return () => off?.();
+    });
+    return {
+        /** Calls the RPC method on the given peer id and awaits the result. */
+        call: (payload: Req, opts?: { timeoutMs?: number }) => {
+            let rpc = world.getService(RpcService);
+            if (!rpc) rpc = world.provideService(new RpcService());
+            return rpc.callTo<Req, Res>(peerId, name, payload, opts);
+        },
+    } as const;
+}
+
+/**
  * Joins a server-side room for channel routing and leaves on unmount.
  *
  * - Works with the server broker's reserved channel.
@@ -283,6 +460,30 @@ export function useReliable<TReq = any, TRes = any>(topic: string) {
             let svc = world.getService(ReliableChannelService);
             if (!svc) svc = world.provideService(new ReliableChannelService());
             return svc.send<TReq, TRes>(topic, payload, opts);
+        },
+    } as const;
+}
+
+/**
+ * Access a reliable request/ack channel addressed to a specific peer (or peers).
+ */
+export function useReliableTo<TReq = any, TRes = any>(
+    peerId: string | string[],
+    topic: string,
+) {
+    const world = useWorld();
+    useInit(() => {
+        if (!world.getService(ReliableChannelService))
+            world.provideService(new ReliableChannelService());
+    });
+    return {
+        send: (
+            payload: TReq,
+            opts?: { timeoutMs?: number; retries?: number },
+        ) => {
+            let svc = world.getService(ReliableChannelService);
+            if (!svc) svc = world.provideService(new ReliableChannelService());
+            return svc.sendTo<TReq, TRes>(peerId, topic, payload, opts);
         },
     } as const;
 }
