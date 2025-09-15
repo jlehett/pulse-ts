@@ -22,9 +22,12 @@ export default defineConfig({
         { text: 'Camera + Controls + Render', link: '/guides/camera-controls-render' },
         { text: 'Save/Load with Stable IDs', link: '/guides/save-load-stable-ids' },
         { text: 'Input Bindings & Actions', link: '/guides/input-bindings' },
-        { text: 'Networking: Authoritative Server & Client Worlds', link: '/guides/network-authoritative-worlds' },
-        { text: 'Networking: Replication & Interpolation', link: '/guides/network-snapshots-interpolation' },
-        { text: 'Networking: RPC & Reliable Channels', link: '/guides/network-rpc-channels' }
+        { text: 'Networking: Overview', link: '/guides/networking-overview' },
+        { text: 'Networking: Transports', link: '/guides/networking-transports' },
+        { text: 'Networking: Channels, RPC & Reliable', link: '/guides/networking-channels-rpc-reliable' },
+        { text: 'Networking: Replication & Interpolation', link: '/guides/networking-replication' },
+        { text: 'Networking: Server Broker (WebSocket)', link: '/guides/networking-server-broker' },
+        { text: 'Networking: Cookbook', link: '/guides/networking-cookbook' },
       ]
     },
     search: {

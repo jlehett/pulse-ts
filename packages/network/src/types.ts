@@ -54,6 +54,11 @@ export interface Transport {
      * @returns The unsubscribe function.
      */
     onStatus(fn: (status: TransportStatus) => void): () => void;
+
+    /** Optional peer lifecycle (for P2P transports). */
+    onPeerJoin?(fn: (peerId: string) => void): () => void;
+    onPeerLeave?(fn: (peerId: string) => void): () => void;
+    peers?(): string[];
 }
 
 /**

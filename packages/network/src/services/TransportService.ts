@@ -29,6 +29,8 @@ export class TransportService extends Service {
     readonly onStatus = new TypedEvent<TransportStatus>();
     readonly onPacketIn = new TypedEvent<Packet>();
     readonly onPacketOut = new TypedEvent<Packet>();
+    readonly onPeerJoin = new TypedEvent<string>();
+    readonly onPeerLeave = new TypedEvent<string>();
 
     // Basic stats
     private bytesIn = 0;
@@ -82,10 +84,26 @@ export class TransportService extends Service {
             this.status = s;
             this.onStatus.emit(s);
         });
+        // Optional peer lifecycle wiring (for P2P transports)
+        let offPeerJoin: (() => void) | undefined;
+        let offPeerLeave: (() => void) | undefined;
+        if (typeof (t as any).onPeerJoin === 'function') {
+            offPeerJoin = (t as any).onPeerJoin((id: string) =>
+                this.onPeerJoin.emit(id),
+            );
+        }
+        if (typeof (t as any).onPeerLeave === 'function') {
+            offPeerLeave = (t as any).onPeerLeave((id: string) =>
+                this.onPeerLeave.emit(id),
+            );
+        }
+
         // Keep detach function tied to current transport
         (this as any)._offT = () => {
             offMsg();
             offStatus();
+            offPeerJoin?.();
+            offPeerLeave?.();
         };
     }
 
@@ -219,6 +237,13 @@ export class TransportService extends Service {
             packetsIn: this.packetsIn,
             packetsOut: this.packetsOut,
         };
+    }
+
+    /** Current peer ids if supported by transport. */
+    getPeers(): string[] {
+        const t = this.transport as any;
+        if (t?.peers && typeof t.peers === 'function') return t.peers();
+        return [];
     }
 
     /**

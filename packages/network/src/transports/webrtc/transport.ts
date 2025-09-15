@@ -48,8 +48,10 @@ export class WebRtcMeshTransport implements Transport {
         (d: Uint8Array, meta?: { from?: string }) => void
     >();
     private statusHandlers = new Set<(s: TransportStatus) => void>();
+    private peerJoinHandlers = new Set<(id: string) => void>();
+    private peerLeaveHandlers = new Set<(id: string) => void>();
 
-    private peers = new Map<string, RTCDataChannel>();
+    private dcs = new Map<string, RTCDataChannel>();
     private pcs = new Map<string, RTCPeerConnection>();
     private unsubSignal: (() => void) | null = null;
 
@@ -90,16 +92,16 @@ export class WebRtcMeshTransport implements Transport {
     async disconnect(): Promise<void> {
         this.unsubSignal?.();
         this.unsubSignal = null;
-        for (const [, dc] of this.peers)
+        for (const [, dc] of this.dcs)
             try {
                 dc.close();
             } catch {}
-        this.peers.clear();
+        this.dcs.clear();
         this.setStatus('closed');
     }
 
     send(data: Uint8Array): void {
-        for (const [, dc] of this.peers) {
+        for (const [, dc] of this.dcs) {
             try {
                 if (dc.readyState !== 'open') continue;
                 if (
@@ -122,6 +124,20 @@ export class WebRtcMeshTransport implements Transport {
     onStatus(fn: (status: TransportStatus) => void) {
         this.statusHandlers.add(fn);
         return () => this.statusHandlers.delete(fn);
+    }
+
+    onPeerJoin(fn: (peerId: string) => void) {
+        this.peerJoinHandlers.add(fn);
+        return () => this.peerJoinHandlers.delete(fn);
+    }
+
+    onPeerLeave(fn: (peerId: string) => void) {
+        this.peerLeaveHandlers.add(fn);
+        return () => this.peerLeaveHandlers.delete(fn);
+    }
+
+    peers() {
+        return Array.from(this.dcs.keys());
     }
 
     private setStatus(s: TransportStatus) {
@@ -196,19 +212,23 @@ export class WebRtcMeshTransport implements Transport {
                 pc.connectionState === 'failed' ||
                 pc.connectionState === 'disconnected'
             ) {
-                this.peers.delete(peerId);
+                this.dcs.delete(peerId);
                 this.pcs.delete(peerId);
             }
         };
         // Store a placeholder channel to reserve the slot
         // Real channel will be set once open
         // @ts-expect-error placeholder
-        this.peers.set(peerId, dc ?? ({} as any));
+        this.dcs.set(peerId, dc ?? ({} as any));
     }
 
     private wireDataChannel(peerId: string, dc: RTCDataChannel) {
         dc.binaryType = 'arraybuffer';
-        dc.onopen = () => this.peers.set(peerId, dc);
+        dc.onopen = () => {
+            const firstOpen = !this.dcs.has(peerId);
+            this.dcs.set(peerId, dc);
+            if (firstOpen) for (const cb of this.peerJoinHandlers) cb(peerId);
+        };
         dc.onmessage = (ev) => {
             const data = ev.data;
             if (typeof data === 'string') {
@@ -228,6 +248,9 @@ export class WebRtcMeshTransport implements Transport {
                 for (const cb of this.msgHandlers) cb(bytes, { from: peerId });
             }
         };
-        dc.onclose = () => this.peers.delete(peerId);
+        dc.onclose = () => {
+            const had = this.dcs.delete(peerId);
+            if (had) for (const cb of this.peerLeaveHandlers) cb(peerId);
+        };
     }
 }

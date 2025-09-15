@@ -301,11 +301,24 @@ export function usePeers() {
                 setSet(cur);
             }
         });
+        const offJoin = svc.onPeerJoin.on((id) => {
+            const cur = new Set(getSet());
+            if (!cur.has(id)) {
+                cur.add(id);
+                setSet(cur);
+            }
+        });
+        const offLeave = svc.onPeerLeave.on((id) => {
+            const cur = new Set(getSet());
+            if (cur.delete(id)) setSet(cur);
+        });
         const offSt = svc.onStatus.on((s) => {
             if (s === 'closed') setSet(new Set());
         });
         return () => {
             offIn();
+            offJoin();
+            offLeave();
             offSt();
         };
     });
