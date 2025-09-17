@@ -1,4 +1,5 @@
 import { __fcCurrent, useComponent, useInit } from '@pulse-ts/core';
+import type { Node } from '@pulse-ts/core';
 import { PhysicsService } from '../services/Physics';
 import { RigidBody } from '../components/RigidBody';
 import { Collider } from '../components/Collider';
@@ -88,9 +89,9 @@ export function useBoxCollider(hx = 0.5, hy = 0.5, hz = 0.5, init?: Partial<Coll
  *     console.log('collided with', other.id);
  * });
  * ```
- * @param fn Handler invoked with the local and other nodes.
+ * @param fn Handler invoked with the local (`self`) and other (`other`) nodes.
  */
-export function useOnCollisionStart(fn: (e: { self: any; other: any }) => void) {
+export function useOnCollisionStart(fn: (e: { self: Node; other: Node }) => void) {
     const world = __fcCurrent().world;
     const node = __fcCurrent().node;
     const svc = world.getService(PhysicsService);
@@ -111,9 +112,9 @@ export function useOnCollisionStart(fn: (e: { self: any; other: any }) => void) 
  * ```ts
  * useOnCollisionEnd(() => console.log('separated!'));
  * ```
- * @param fn Handler invoked with the local and other nodes.
+ * @param fn Handler invoked with the local (`self`) and other (`other`) nodes.
  */
-export function useOnCollisionEnd(fn: (e: { self: any; other: any }) => void) {
+export function useOnCollisionEnd(fn: (e: { self: Node; other: Node }) => void) {
     const world = __fcCurrent().world;
     const node = __fcCurrent().node;
     const svc = world.getService(PhysicsService);
@@ -134,9 +135,9 @@ export function useOnCollisionEnd(fn: (e: { self: any; other: any }) => void) {
  * ```ts
  * useOnCollision(({ other }) => applyDamage(other));
  * ```
- * @param fn Handler invoked with the local and other nodes.
+ * @param fn Handler invoked with the local (`self`) and other (`other`) nodes.
  */
-export function useOnCollision(fn: (e: { self: any; other: any }) => void) {
+export function useOnCollision(fn: (e: { self: Node; other: Node }) => void) {
     const world = __fcCurrent().world;
     const node = __fcCurrent().node;
     const svc = world.getService(PhysicsService);
@@ -159,6 +160,7 @@ export function useOnCollision(fn: (e: { self: any; other: any }) => void) {
  * const hit = raycast(new Vec3(0, 1, -5), new Vec3(0, 0, 1), 20);
  * if (hit) console.log(hit.distance);
  * ```
+ * @returns A function equivalent to `physics.raycast(...)` bound to the current service.
  */
 export function usePhysicsRaycast() {
     const svc = usePhysics();

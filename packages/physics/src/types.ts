@@ -1,7 +1,10 @@
-import type { Vec3 } from '@pulse-ts/core';
+import type { Vec3, Node } from '@pulse-ts/core';
 
 /**
  * Supported high-level rigid body motion types.
+ * - `dynamic`: simulated; affected by forces, impulses, gravity, and collisions.
+ * - `kinematic`: controlled externally (e.g., set directly); does not respond to forces.
+ * - `static`: immovable; used for level geometry or anchors.
  */
 export type RigidBodyType = 'dynamic' | 'kinematic' | 'static';
 
@@ -17,13 +20,13 @@ export type RigidBodyType = 'dynamic' | 'kinematic' | 'static';
  * ```
  */
 export interface PhysicsOptions {
-    /** Optional override for the global gravity vector. */
+    /** Optional override for the global gravity vector. Defaults to `{ x: 0, y: -9.81, z: 0 }`. */
     gravity?: { x: number; y: number; z: number } | Vec3;
     /** Reserved for future constraint solving iteration tuning. */
     iterations?: number;
     /** Optional infinite horizontal plane enforced at the given world-space Y value. */
     worldPlaneY?: number;
-    /** Cell size used for the broadphase uniform grid. */
+    /** Cell size used for the broadphase uniform grid. Defaults to `1`. */
     cellSize?: number;
 }
 
@@ -38,7 +41,7 @@ export interface PhysicsOptions {
  */
 export interface RaycastHit {
     /** The node that owns the hit collider. */
-    node: any; // Node
+    node: Node;
     /** Distance from the ray origin to the intersection point. */
     distance: number;
     /** World-space hit point. */

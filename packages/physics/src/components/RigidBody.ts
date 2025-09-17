@@ -34,15 +34,20 @@ function unpackVec3(value: Vec3Like | number, y?: number, z?: number): [number, 
  */
 export class RigidBody extends Component {
     // Type and mass
+    /** Motion mode determining how the body is simulated. */
     type: RigidBodyType = 'dynamic';
+    /** Mass in kilograms; used to compute inverse mass and inertia. */
     mass = 1;
     get inverseMass() {
         return this.type === 'dynamic' && this.mass > 0 ? 1 / this.mass : 0;
     }
 
     // Linear state
+    /** Linear velocity in world units per second. */
     linearVelocity = new Vec3(0, 0, 0);
+    /** Per-second damping factor; 0 = none. */
     linearDamping = 0.0; // per-second; 0..inf (0 = none)
+    /** Multiplier applied to global gravity for this body. */
     gravityScale = 1.0;
 
     /** Force accumulator cleared each simulation step. */
@@ -51,7 +56,9 @@ export class RigidBody extends Component {
     readonly impulse = new Vec3(0, 0, 0);
 
     // Angular state
+    /** Angular velocity in radians per second about each axis. */
     angularVelocity = new Vec3(0, 0, 0);
+    /** Per-second angular damping factor; 0 = none. */
     angularDamping = 0.0;
     /** Torque accumulator cleared each simulation step. */
     readonly torque = new Vec3(0, 0, 0);
@@ -66,8 +73,13 @@ export class RigidBody extends Component {
     autoComputeInertia = true;
 
     // Material
+    /** Bounciness coefficient [0..1] used in contact response. */
     restitution = 0.2; // bounciness 0..1
-    /** Coulomb friction coefficient used in contact resolution. */
+    /**
+     * Coulomb friction coefficient used in contact resolution.
+     * Mixed with the other collider/body using the geometric mean of per-object
+     * frictions, where each object's value is the max of its RigidBody and Collider coefficients.
+     */
     friction = 0.5;
 
     applyForce(force: Vec3Like): void;
@@ -257,5 +269,3 @@ export class RigidBody extends Component {
         return c;
     }
 }
-
-

@@ -18,19 +18,28 @@ export type ColliderKind = 'sphere' | 'box';
  * ```
  */
 export class Collider extends Component {
+    /** Collider primitive kind. Prefer using `SphereCollider` or `BoxCollider` helpers. */
     kind: ColliderKind = 'sphere';
     /** Local-space offset applied to the owning transform. */
     offset = new Vec3(0, 0, 0);
     restitution = 0.2;
-    /** Surface friction coefficient combined with contacting bodies. */
+    /**
+     * Surface friction coefficient combined with contacting bodies.
+     * Mixed using geometric mean across objects; per-object value is the max of
+     * this collider's friction and the owning body's friction.
+     */
     friction = 0.5;
     /** When true, collisions are reported but not resolved. */
     isTrigger = false;
     // sphere-only params
+    /** Sphere radius in world units (applies when `kind === 'sphere'`). */
     radius = 0.5;
     // box-only params (half extents)
+    /** Half-extent along X in world units (applies when `kind === 'box'`). */
     halfX = 0.5;
+    /** Half-extent along Y in world units (applies when `kind === 'box'`). */
     halfY = 0.5;
+    /** Half-extent along Z in world units (applies when `kind === 'box'`). */
     halfZ = 0.5;
 
     /**
@@ -72,15 +81,18 @@ export class SphereCollider extends Collider {
     }
 }
 
-/**
- * Axis-aligned box collider expressed via half extents.
- *
- * @example
- * ```ts
- * const box = useBoxCollider(0.5, 1, 0.5);
- * box.restitution = 0.1;
- * ```
- */
+    /**
+     * Oriented box collider expressed via half extents.
+     * The collider orientation follows the owning node's world rotation.
+     *
+     * @example
+     * ```ts
+     * const box = useBoxCollider(0.5, 1, 0.5);
+     * box.restitution = 0.1;
+     * // rotate the node to rotate the box collider
+     * node.get(Transform).localRotation.set(0, 0, Math.sin(theta/2), Math.cos(theta/2)).normalize();
+     * ```
+     */
 export class BoxCollider extends Collider {
     /**
      * @param hx Half extent along the X axis.
