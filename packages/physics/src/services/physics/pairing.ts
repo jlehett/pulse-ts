@@ -1,14 +1,14 @@
-import { Vec3, getComponent, Transform } from '@pulse-ts/core';
-import { Collider } from '../components/Collider';
-
-export interface AABB { min: Vec3; max: Vec3 }
-
-export type AABBFn = (c: Collider) => AABB | null;
+import { Collider } from '../../components/Collider';
+import { computeAABB } from './aabb';
 
 /**
- * Uniform grid broadphase producing de-duplicated candidate pairs.
+ * Finds potential collider pairs using a uniform grid. Falls back to a naive
+ * all-pairs check if the grid produces no overlaps or cell size is invalid.
  */
-export function gridPairs(colliders: Iterable<Collider>, cellSize: number, computeAABB: AABBFn): Array<[Collider, Collider]> {
+export function findPairs(
+    colliders: Iterable<Collider>,
+    cellSize: number,
+): Array<[Collider, Collider]> {
     if (!isFinite(cellSize) || cellSize <= 0) return naivePairs(colliders);
     type CellKey = string;
     const buckets = new Map<CellKey, Collider[]>();
@@ -48,11 +48,12 @@ export function gridPairs(colliders: Iterable<Collider>, cellSize: number, compu
     return pairs.length === 0 ? naivePairs(colliders) : pairs;
 }
 
-export function naivePairs(colliders: Iterable<Collider>): Array<[Collider, Collider]> {
+function naivePairs(
+    colliders: Iterable<Collider>,
+): Array<[Collider, Collider]> {
     const arr = [...colliders];
     const out: Array<[Collider, Collider]> = [];
     for (let i = 0; i < arr.length; i++)
         for (let j = i + 1; j < arr.length; j++) out.push([arr[i]!, arr[j]!]);
     return out;
 }
-

@@ -1,18 +1,24 @@
-﻿import { Service, TypedEvent, Vec3, getComponent, Transform, Quat } from '@pulse-ts/core';
+﻿import { Service, TypedEvent, Vec3, getComponent } from '@pulse-ts/core';
 import type { Node } from '@pulse-ts/core';
 import { RigidBody } from '../components/RigidBody';
 import type { Vec3Like } from '../components/RigidBody';
 import { Collider } from '../components/Collider';
 import type { PhysicsOptions, RaycastHit } from '../types';
-import { integrateTransforms, integrateVelocities } from '../integration/integrate';
-import { gridPairs } from '../broadphase/grid';
-import { computeAABB } from '../collision/aabb';
-import { narrowphase as npNarrowphase } from '../collision/narrowphase';
-import { resolveContact } from '../collision/solver';
-import { raycast as castRay } from '../raycast/raycast';
-import { refreshAutomaticInertia as utilRefreshInertia } from '../internal/inertia';
+import {
+    integrateTransforms,
+    integrateVelocities,
+} from './physics/integration';
+import { findPairs } from './physics/pairing';
+import { detectCollision } from './physics/detect';
+import { resolveContact } from './physics/solver';
+import { raycast as castRay } from './physics/raycast';
+import { refreshAutomaticInertia as utilRefreshInertia } from './physics/inertia';
 
-function unpackVec3(value: Vec3Like | number, y?: number, z?: number): [number, number, number] {
+function unpackVec3(
+    value: Vec3Like | number,
+    y?: number,
+    z?: number,
+): [number, number, number] {
     if (typeof value === 'number') return [value, y ?? 0, z ?? 0];
     return [value.x, value.y, value.z];
 }
@@ -47,10 +53,8 @@ export class PhysicsService extends Service {
     private colliders = new Set<Collider>();
     private cellSize: number;
 
-    private tmpQuat = new Quat();
-    private tmpQuat2 = new Quat();
+    //#region Events
 
-    // events (future): collision start/stop; for now expose a simple pulse per step
     /**
      * Fires every step for each pair that remains overlapping.
      * Prefer `useOnCollision` for function components.
@@ -66,6 +70,8 @@ export class PhysicsService extends Service {
      * Prefer `useOnCollisionEnd` for function components.
      */
     readonly collisionEnd = new TypedEvent<CollisionPair>();
+
+    //#endregion
 
     private lastPairs = new Map<string, CollisionPair>();
 
@@ -95,7 +101,8 @@ export class PhysicsService extends Service {
         } catch {}
     }
 
-    // Registration API for components
+    //#region Registration API for components
+
     /** @internal */
     registerRigidBody(rb: RigidBody): void {
         this.bodies.add(rb);
@@ -117,6 +124,8 @@ export class PhysicsService extends Service {
         const rb = getComponent(c.owner, RigidBody);
         if (rb) this.refreshAutomaticInertia(rb);
     }
+
+    //#endregion
 
     private refreshAutomaticInertia(rb: RigidBody): void {
         utilRefreshInertia(rb, (c) => this.colliders.has(c));
@@ -151,32 +160,39 @@ export class PhysicsService extends Service {
     }
 
     /**
-     * Advances the physics simulation by the supplied time step, resolving forces, torques, and contacts.
-     * @param dt Delta time in seconds since the previous step.
+     * Advances the physics simulation by the supplied time step.
      *
+     * Steps performed (simple terms):
+     * - Update velocities: apply impulses, forces, gravity, and damping.
+     * - Apply movement: integrate velocities to positions and rotations.
+     * - Find potential overlaps: fast pass using bounding boxes.
+     * - Confirm collisions: accurate shape checks between candidates.
+     * - Resolve and notify: separate overlapping bodies, apply bounce/friction, emit events.
+     *
+     * @param dt Delta time in seconds since the previous step.
      * @example
-     * ```ts
      * physics.step(1 / 60);
-     * ```
      */
     step(dt: number): void {
         const startPairs = new Map<string, CollisionPair>();
         const currentPairs = new Map<string, CollisionPair>();
 
         // 1) Integrate linear/angular impulses and forces
-        integrateVelocities(this.bodies, this.gravity, dt, (c) => this.colliders.has(c));
+        integrateVelocities(this.bodies, this.gravity, dt, (c) =>
+            this.colliders.has(c),
+        );
 
         // 2) Integrate velocities -> positions (+ optional world plane)
         integrateTransforms(this.bodies, dt, this.options.worldPlaneY);
 
-        // 3) Broadphase via uniform grid to generate candidate pairs
-        const pairs = gridPairs(this.colliders, this.cellSize, computeAABB);
+        // 3) Find potential overlaps (fast pass using bounding boxes)
+        const pairs = findPairs(this.colliders, this.cellSize);
 
-        // 4) Narrowphase + resolution
+        // 4) Confirm collisions and resolve them
         for (const [a, b] of pairs) {
-            const info = npNarrowphase(a, b);
-            if (!info) continue;
-            const { nx, ny, nz, depth } = info;
+            const contact = detectCollision(a, b);
+            if (!contact) continue;
+            const { nx, ny, nz, depth } = contact;
 
             const key = this.pairKey(a.owner, b.owner);
             const pair: CollisionPair = {
@@ -190,8 +206,10 @@ export class PhysicsService extends Service {
 
             const rbA = getComponent(a.owner, RigidBody);
             const rbB = getComponent(b.owner, RigidBody);
-            const invMassA = rbA && rbA.type === 'dynamic' ? rbA.inverseMass : 0;
-            const invMassB = rbB && rbB.type === 'dynamic' ? rbB.inverseMass : 0;
+            const invMassA =
+                rbA && rbA.type === 'dynamic' ? rbA.inverseMass : 0;
+            const invMassB =
+                rbB && rbB.type === 'dynamic' ? rbB.inverseMass : 0;
             const totalInv = invMassA + invMassB;
 
             const triggered = a.isTrigger || b.isTrigger;
@@ -203,12 +221,12 @@ export class PhysicsService extends Service {
         }
 
         // 5) Start/End events
-        for (const [k, p] of currentPairs) if (!this.lastPairs.has(k)) this.collisionStart.emit(p);
-        for (const [k, p] of this.lastPairs) if (!currentPairs.has(k)) this.collisionEnd.emit(p);
+        for (const [k, p] of currentPairs)
+            if (!this.lastPairs.has(k)) this.collisionStart.emit(p);
+        for (const [k, p] of this.lastPairs)
+            if (!currentPairs.has(k)) this.collisionEnd.emit(p);
         this.lastPairs = currentPairs;
     }
-
-
 
     private pairKey(a: Node, b: Node): string {
         const ai = a.id;
@@ -216,8 +234,8 @@ export class PhysicsService extends Service {
         return ai < bi ? `${ai}|${bi}` : `${bi}|${ai}`;
     }
 
+    //#region Raycast
 
-    // --- Raycast ---
     /**
      * Casts a ray through the physics scene, returning the closest hit or null.
      * @param origin World-space ray origin.
@@ -232,7 +250,14 @@ export class PhysicsService extends Service {
      * ```
      * @returns The closest {@link RaycastHit} or `null` if nothing is intersected.
      */
-    raycast(origin: Vec3, dir: Vec3, maxDist = Infinity, filter?: (c: Collider) => boolean): RaycastHit | null {
+    raycast(
+        origin: Vec3,
+        dir: Vec3,
+        maxDist = Infinity,
+        filter?: (c: Collider) => boolean,
+    ): RaycastHit | null {
         return castRay(this.colliders, origin, dir, maxDist, filter);
     }
+
+    //#endregion
 }

@@ -1,5 +1,5 @@
 import { Vec3, getComponent, Transform, Quat } from '@pulse-ts/core';
-import { Collider } from '../components/Collider';
+import { Collider } from '../../components/Collider';
 
 export function computeAABB(c: Collider): { min: Vec3; max: Vec3 } | null {
     const t = getComponent(c.owner, Transform);
@@ -18,18 +18,15 @@ export function computeAABB(c: Collider): { min: Vec3; max: Vec3 } | null {
             min: new Vec3(cx - sr, cy - sr, cz - sr),
             max: new Vec3(cx + sr, cy + sr, cz + sr),
         };
-    } else if (c.kind === 'box') {
-        const ax = Quat.rotateVector(r, new Vec3(c.halfX, 0, 0));
-        const ay = Quat.rotateVector(r, new Vec3(0, c.halfY, 0));
-        const az = Quat.rotateVector(r, new Vec3(0, 0, c.halfZ));
-        const ex = Math.abs(ax.x) + Math.abs(ay.x) + Math.abs(az.x);
-        const ey = Math.abs(ax.y) + Math.abs(ay.y) + Math.abs(az.y);
-        const ez = Math.abs(ax.z) + Math.abs(ay.z) + Math.abs(az.z);
-        return {
-            min: new Vec3(cx - ex, cy - ey, cz - ez),
-            max: new Vec3(cx + ex, cy + ey, cz + ez),
-        };
     }
-    return null;
+    const ax = Quat.rotateVector(r, new Vec3(c.halfX, 0, 0));
+    const ay = Quat.rotateVector(r, new Vec3(0, c.halfY, 0));
+    const az = Quat.rotateVector(r, new Vec3(0, 0, c.halfZ));
+    const ex = Math.abs(ax.x) + Math.abs(ay.x) + Math.abs(az.x);
+    const ey = Math.abs(ax.y) + Math.abs(ay.y) + Math.abs(az.y);
+    const ez = Math.abs(ax.z) + Math.abs(ay.z) + Math.abs(az.z);
+    return {
+        min: new Vec3(cx - ex, cy - ey, cz - ez),
+        max: new Vec3(cx + ex, cy + ey, cz + ez),
+    };
 }
-

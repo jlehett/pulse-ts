@@ -3,7 +3,9 @@ import { installPhysics, RigidBody } from '..';
 import { Collider } from '../components/Collider';
 
 describe('PhysicsService integration', () => {
-    function createBody(opts: { mass?: number; collider?: 'sphere' | 'box' } = {}) {
+    function createBody(
+        opts: { mass?: number; collider?: 'sphere' | 'box' } = {},
+    ) {
         const world = new World();
         const physics = installPhysics(world);
         const node = new Node();
@@ -61,7 +63,10 @@ describe('PhysicsService integration', () => {
     });
 
     it('integrates torques and angular impulses', () => {
-        const { physics, body, transform } = createBody({ mass: 2, collider: 'sphere' });
+        const { physics, body, transform } = createBody({
+            mass: 2,
+            collider: 'sphere',
+        });
         body.applyAngularImpulse(1, 0, 0);
         expect(body.angularImpulse.x).toBeCloseTo(1);
         physics.step(0);
@@ -87,7 +92,7 @@ describe('PhysicsService integration', () => {
         const tb = attachComponent(b, Transform);
         ta.localPosition.set(0, 0, 0);
         tb.localPosition.set(0, 2, 0);
-        const ra = attachComponent(a, RigidBody);
+        attachComponent(a, RigidBody);
         const rb = attachComponent(b, RigidBody);
         rb.type = 'static';
         const ca = attachComponent(a, Collider);
@@ -125,7 +130,7 @@ describe('PhysicsService integration', () => {
         const tb = attachComponent(b, Transform);
         ta.localPosition.set(0, 0, 0);
         tb.localPosition.set(0, 0.8, 0); // overlap (sphere radius defaults 0.5)
-        const ra = attachComponent(a, RigidBody);
+        attachComponent(a, RigidBody);
         const rb = attachComponent(b, RigidBody);
         rb.type = 'static';
         const ca = attachComponent(a, Collider);

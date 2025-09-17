@@ -81,18 +81,18 @@ export class SphereCollider extends Collider {
     }
 }
 
-    /**
-     * Oriented box collider expressed via half extents.
-     * The collider orientation follows the owning node's world rotation.
-     *
-     * @example
-     * ```ts
-     * const box = useBoxCollider(0.5, 1, 0.5);
-     * box.restitution = 0.1;
-     * // rotate the node to rotate the box collider
-     * node.get(Transform).localRotation.set(0, 0, Math.sin(theta/2), Math.cos(theta/2)).normalize();
-     * ```
-     */
+/**
+ * Oriented box collider expressed via half extents.
+ * The collider orientation follows the owning node's world rotation.
+ *
+ * @example
+ * ```ts
+ * const box = useBoxCollider(0.5, 1, 0.5);
+ * box.restitution = 0.1;
+ * // rotate the node to rotate the box collider
+ * node.get(Transform).localRotation.set(0, 0, Math.sin(theta/2), Math.cos(theta/2)).normalize();
+ * ```
+ */
 export class BoxCollider extends Collider {
     /**
      * @param hx Half extent along the X axis.

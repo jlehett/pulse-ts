@@ -17,7 +17,11 @@ export type Vec3Like = Vec3 | { x: number; y: number; z: number };
 /**
  * Internal helper that converts mixed vector inputs into a numeric triple.
  */
-function unpackVec3(value: Vec3Like | number, y?: number, z?: number): [number, number, number] {
+function unpackVec3(
+    value: Vec3Like | number,
+    y?: number,
+    z?: number,
+): [number, number, number] {
     if (typeof value === 'number') return [value, y ?? 0, z ?? 0];
     return [value.x, value.y, value.z];
 }
@@ -33,7 +37,8 @@ function unpackVec3(value: Vec3Like | number, y?: number, z?: number): [number, 
  * ```
  */
 export class RigidBody extends Component {
-    // Type and mass
+    //#region Type and mass
+
     /** Motion mode determining how the body is simulated. */
     type: RigidBodyType = 'dynamic';
     /** Mass in kilograms; used to compute inverse mass and inertia. */
@@ -42,7 +47,10 @@ export class RigidBody extends Component {
         return this.type === 'dynamic' && this.mass > 0 ? 1 / this.mass : 0;
     }
 
-    // Linear state
+    //#endregion
+
+    //#region Linear state
+
     /** Linear velocity in world units per second. */
     linearVelocity = new Vec3(0, 0, 0);
     /** Per-second damping factor; 0 = none. */
@@ -55,7 +63,10 @@ export class RigidBody extends Component {
     /** Impulse accumulator cleared each simulation step. */
     readonly impulse = new Vec3(0, 0, 0);
 
-    // Angular state
+    //#endregion
+
+    //#region Angular state
+
     /** Angular velocity in radians per second about each axis. */
     angularVelocity = new Vec3(0, 0, 0);
     /** Per-second angular damping factor; 0 = none. */
@@ -72,7 +83,10 @@ export class RigidBody extends Component {
     /** When true, the physics service will recompute inertia from the attached collider each step. */
     autoComputeInertia = true;
 
-    // Material
+    //#endregion
+
+    //#region Material
+
     /** Bounciness coefficient [0..1] used in contact response. */
     restitution = 0.2; // bounciness 0..1
     /**
@@ -81,6 +95,8 @@ export class RigidBody extends Component {
      * frictions, where each object's value is the max of its RigidBody and Collider coefficients.
      */
     friction = 0.5;
+
+    //#endregion
 
     applyForce(force: Vec3Like): void;
     applyForce(x: number, y: number, z: number): void;
@@ -135,7 +151,11 @@ export class RigidBody extends Component {
      * @param y Optional Y component when passing numeric arguments.
      * @param z Optional Z component when passing numeric arguments.
      */
-    applyAngularImpulse(impulseOrX: Vec3Like | number, y?: number, z?: number): void {
+    applyAngularImpulse(
+        impulseOrX: Vec3Like | number,
+        y?: number,
+        z?: number,
+    ): void {
         const [ix, iy, iz] = unpackVec3(impulseOrX, y, z);
         this.angularImpulse.x += ix;
         this.angularImpulse.y += iy;
@@ -150,7 +170,11 @@ export class RigidBody extends Component {
      * @param y Optional Y component when passing numeric arguments.
      * @param z Optional Z component when passing numeric arguments.
      */
-    setLinearVelocity(velocityOrX: Vec3Like | number, y?: number, z?: number): void {
+    setLinearVelocity(
+        velocityOrX: Vec3Like | number,
+        y?: number,
+        z?: number,
+    ): void {
         const [vx, vy, vz] = unpackVec3(velocityOrX, y, z);
         this.linearVelocity.set(vx, vy, vz);
     }
@@ -163,7 +187,11 @@ export class RigidBody extends Component {
      * @param y Optional Y component when passing numeric arguments.
      * @param z Optional Z component when passing numeric arguments.
      */
-    addLinearVelocity(deltaOrX: Vec3Like | number, y?: number, z?: number): void {
+    addLinearVelocity(
+        deltaOrX: Vec3Like | number,
+        y?: number,
+        z?: number,
+    ): void {
         const [dx, dy, dz] = unpackVec3(deltaOrX, y, z);
         this.linearVelocity.x += dx;
         this.linearVelocity.y += dy;
@@ -175,7 +203,11 @@ export class RigidBody extends Component {
     /**
      * Replaces the current angular velocity vector.
      */
-    setAngularVelocity(velocityOrX: Vec3Like | number, y?: number, z?: number): void {
+    setAngularVelocity(
+        velocityOrX: Vec3Like | number,
+        y?: number,
+        z?: number,
+    ): void {
         const [vx, vy, vz] = unpackVec3(velocityOrX, y, z);
         this.angularVelocity.set(vx, vy, vz);
     }
@@ -185,7 +217,11 @@ export class RigidBody extends Component {
     /**
      * Adds a delta to the current angular velocity vector.
      */
-    addAngularVelocity(deltaOrX: Vec3Like | number, y?: number, z?: number): void {
+    addAngularVelocity(
+        deltaOrX: Vec3Like | number,
+        y?: number,
+        z?: number,
+    ): void {
         const [dx, dy, dz] = unpackVec3(deltaOrX, y, z);
         this.angularVelocity.x += dx;
         this.angularVelocity.y += dy;
@@ -202,7 +238,11 @@ export class RigidBody extends Component {
      */
     setInertiaTensor(x: number, y: number, z: number): void {
         this.inertiaTensor.set(x, y, z);
-        this.inverseInertiaTensor.set(x > 0 ? 1 / x : 0, y > 0 ? 1 / y : 0, z > 0 ? 1 / z : 0);
+        this.inverseInertiaTensor.set(
+            x > 0 ? 1 / x : 0,
+            y > 0 ? 1 / y : 0,
+            z > 0 ? 1 / z : 0,
+        );
         this.autoComputeInertia = false;
     }
 

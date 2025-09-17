@@ -1,12 +1,11 @@
 import { getComponent } from '@pulse-ts/core';
-import { RigidBody } from '../components/RigidBody';
-import { Collider } from '../components/Collider';
+import { RigidBody } from '../../components/RigidBody';
+import { Collider } from '../../components/Collider';
 
-/**
- * Computes and applies automatic inertia/inverse inertia to the rigid body based on its collider.
- * Mirrors the logic previously in PhysicsService to keep responsibilities layered.
- */
-export function refreshAutomaticInertia(rb: RigidBody, hasCollider: (c: Collider) => boolean) {
+export function refreshAutomaticInertia(
+    rb: RigidBody,
+    hasCollider: (c: Collider) => boolean,
+) {
     if (!rb.autoComputeInertia) return;
     const mass = rb.mass;
     if (rb.type !== 'dynamic' || mass <= 0 || !rb.owner?.world) {
@@ -36,6 +35,9 @@ export function refreshAutomaticInertia(rb: RigidBody, hasCollider: (c: Collider
     const iy = (mass / 3) * (hx * hx + hz * hz);
     const iz = (mass / 3) * (hx * hx + hy * hy);
     rb.inertiaTensor.set(ix, iy, iz);
-    rb.inverseInertiaTensor.set(ix > 0 ? 1 / ix : 0, iy > 0 ? 1 / iy : 0, iz > 0 ? 1 / iz : 0);
+    rb.inverseInertiaTensor.set(
+        ix > 0 ? 1 / ix : 0,
+        iy > 0 ? 1 / iy : 0,
+        iz > 0 ? 1 / iz : 0,
+    );
 }
-

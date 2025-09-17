@@ -18,7 +18,9 @@ export function usePhysics(): PhysicsService {
     const world = __fcCurrent().world;
     const svc = world.getService(PhysicsService);
     if (!svc)
-        throw new Error('PhysicsService not provided. Call installPhysics(world) first.');
+        throw new Error(
+            'PhysicsService not provided. Call installPhysics(world) first.',
+        );
     return svc;
 }
 
@@ -50,7 +52,10 @@ export function useRigidBody(init?: Partial<RigidBody>): RigidBody {
  * @param radius Sphere radius to apply.
  * @param init Optional overrides applied once to the collider.
  */
-export function useSphereCollider(radius = 0.5, init?: Partial<Collider>): Collider {
+export function useSphereCollider(
+    radius = 0.5,
+    init?: Partial<Collider>,
+): Collider {
     const col = useComponent(Collider);
     col.kind = 'sphere';
     col.radius = radius;
@@ -70,7 +75,12 @@ export function useSphereCollider(radius = 0.5, init?: Partial<Collider>): Colli
  * @param hz Half extent along the Z axis.
  * @param init Optional overrides applied once to the collider.
  */
-export function useBoxCollider(hx = 0.5, hy = 0.5, hz = 0.5, init?: Partial<Collider>): Collider {
+export function useBoxCollider(
+    hx = 0.5,
+    hy = 0.5,
+    hz = 0.5,
+    init?: Partial<Collider>,
+): Collider {
     const col = useComponent(Collider);
     col.kind = 'box';
     col.halfX = hx;
@@ -91,11 +101,16 @@ export function useBoxCollider(hx = 0.5, hy = 0.5, hz = 0.5, init?: Partial<Coll
  * ```
  * @param fn Handler invoked with the local (`self`) and other (`other`) nodes.
  */
-export function useOnCollisionStart(fn: (e: { self: Node; other: Node }) => void) {
+export function useOnCollisionStart(
+    fn: (e: { self: Node; other: Node }) => void,
+) {
     const world = __fcCurrent().world;
     const node = __fcCurrent().node;
     const svc = world.getService(PhysicsService);
-    if (!svc) throw new Error('PhysicsService not provided. Call installPhysics(world) first.');
+    if (!svc)
+        throw new Error(
+            'PhysicsService not provided. Call installPhysics(world) first.',
+        );
     useInit(() => {
         const off = svc.collisionStart.on((p) => {
             if (p.aNode === node) fn({ self: p.aNode, other: p.bNode });
@@ -114,11 +129,16 @@ export function useOnCollisionStart(fn: (e: { self: Node; other: Node }) => void
  * ```
  * @param fn Handler invoked with the local (`self`) and other (`other`) nodes.
  */
-export function useOnCollisionEnd(fn: (e: { self: Node; other: Node }) => void) {
+export function useOnCollisionEnd(
+    fn: (e: { self: Node; other: Node }) => void,
+) {
     const world = __fcCurrent().world;
     const node = __fcCurrent().node;
     const svc = world.getService(PhysicsService);
-    if (!svc) throw new Error('PhysicsService not provided. Call installPhysics(world) first.');
+    if (!svc)
+        throw new Error(
+            'PhysicsService not provided. Call installPhysics(world) first.',
+        );
     useInit(() => {
         const off = svc.collisionEnd.on((p) => {
             if (p.aNode === node) fn({ self: p.aNode, other: p.bNode });
@@ -141,7 +161,10 @@ export function useOnCollision(fn: (e: { self: Node; other: Node }) => void) {
     const world = __fcCurrent().world;
     const node = __fcCurrent().node;
     const svc = world.getService(PhysicsService);
-    if (!svc) throw new Error('PhysicsService not provided. Call installPhysics(world) first.');
+    if (!svc)
+        throw new Error(
+            'PhysicsService not provided. Call installPhysics(world) first.',
+        );
     useInit(() => {
         const off = svc.collisions.on((p) => {
             if (p.aNode === node) fn({ self: p.aNode, other: p.bNode });
