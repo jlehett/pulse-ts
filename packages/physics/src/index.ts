@@ -7,6 +7,7 @@ export { PhysicsSystem } from './systems/step';
 
 // Components
 export { RigidBody } from './components/RigidBody';
+export type { Vec3Like } from './components/RigidBody';
 export { Collider, SphereCollider, BoxCollider } from './components/Collider';
 
 // FC Hooks
@@ -14,3 +15,4 @@ export { usePhysics, useRigidBody, useSphereCollider, useBoxCollider, useOnColli
 
 // Types
 export type { PhysicsOptions, RigidBodyType, RaycastHit } from './types';
+

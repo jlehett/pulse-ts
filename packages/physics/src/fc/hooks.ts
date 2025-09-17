@@ -1,11 +1,17 @@
-import { __fcCurrent, useComponent } from '@pulse-ts/core';
+import { __fcCurrent, useComponent, useInit } from '@pulse-ts/core';
 import { PhysicsService } from '../services/Physics';
 import { RigidBody } from '../components/RigidBody';
-import { Collider, BoxCollider } from '../components/Collider';
-import { useDestroy, useInit } from '@pulse-ts/core';
+import { Collider } from '../components/Collider';
 
 /**
- * Get the PhysicsService.
+ * Returns the PhysicsService for the currently executing function component.
+ *
+ * @example
+ * ```ts
+ * const physics = usePhysics();
+ * physics.setGravity(0, -15, 0);
+ * ```
+ * @throws When the physics service has not been installed in the world.
  */
 export function usePhysics(): PhysicsService {
     const world = __fcCurrent().world;
@@ -16,7 +22,15 @@ export function usePhysics(): PhysicsService {
 }
 
 /**
- * Ensure a RigidBody component on the current node.
+ * Ensures a RigidBody component exists on the current node and applies optional initial values.
+ *
+ * @example
+ * ```ts
+ * const body = useRigidBody({ mass: 3 });
+ * body.applyForce(0, 30, 0);
+ * body.applyTorque({ x: 0, y: 1, z: 0 });
+ * ```
+ * @param init Optional overrides applied once to the component.
  */
 export function useRigidBody(init?: Partial<RigidBody>): RigidBody {
     const rb = useComponent(RigidBody);
@@ -25,7 +39,15 @@ export function useRigidBody(init?: Partial<RigidBody>): RigidBody {
 }
 
 /**
- * Ensure a sphere Collider on the current node.
+ * Ensures a sphere collider is present on the current node, optionally configuring defaults.
+ *
+ * @example
+ * ```ts
+ * const collider = useSphereCollider(0.75, { restitution: 0.5 });
+ * collider.isTrigger = true;
+ * ```
+ * @param radius Sphere radius to apply.
+ * @param init Optional overrides applied once to the collider.
  */
 export function useSphereCollider(radius = 0.5, init?: Partial<Collider>): Collider {
     const col = useComponent(Collider);
@@ -35,7 +57,18 @@ export function useSphereCollider(radius = 0.5, init?: Partial<Collider>): Colli
     return col;
 }
 
-/** Ensure a box Collider on the current node. */
+/**
+ * Ensures an axis-aligned box collider is present on the current node.
+ *
+ * @example
+ * ```ts
+ * useBoxCollider(0.5, 1, 0.5, { restitution: 0.1 });
+ * ```
+ * @param hx Half extent along the X axis.
+ * @param hy Half extent along the Y axis.
+ * @param hz Half extent along the Z axis.
+ * @param init Optional overrides applied once to the collider.
+ */
 export function useBoxCollider(hx = 0.5, hy = 0.5, hz = 0.5, init?: Partial<Collider>): Collider {
     const col = useComponent(Collider);
     col.kind = 'box';
@@ -46,7 +79,17 @@ export function useBoxCollider(hx = 0.5, hy = 0.5, hz = 0.5, init?: Partial<Coll
     return col;
 }
 
-// Collision event hooks filtered to current node
+/**
+ * Registers a callback for the start of collisions involving the current node.
+ *
+ * @example
+ * ```ts
+ * useOnCollisionStart(({ self, other }) => {
+ *     console.log('collided with', other.id);
+ * });
+ * ```
+ * @param fn Handler invoked with the local and other nodes.
+ */
 export function useOnCollisionStart(fn: (e: { self: any; other: any }) => void) {
     const world = __fcCurrent().world;
     const node = __fcCurrent().node;
@@ -61,6 +104,15 @@ export function useOnCollisionStart(fn: (e: { self: any; other: any }) => void) 
     });
 }
 
+/**
+ * Registers a callback for the end of collisions involving the current node.
+ *
+ * @example
+ * ```ts
+ * useOnCollisionEnd(() => console.log('separated!'));
+ * ```
+ * @param fn Handler invoked with the local and other nodes.
+ */
 export function useOnCollisionEnd(fn: (e: { self: any; other: any }) => void) {
     const world = __fcCurrent().world;
     const node = __fcCurrent().node;
@@ -75,6 +127,15 @@ export function useOnCollisionEnd(fn: (e: { self: any; other: any }) => void) {
     });
 }
 
+/**
+ * Registers a callback that fires every step while the current node remains in contact with another collider.
+ *
+ * @example
+ * ```ts
+ * useOnCollision(({ other }) => applyDamage(other));
+ * ```
+ * @param fn Handler invoked with the local and other nodes.
+ */
 export function useOnCollision(fn: (e: { self: any; other: any }) => void) {
     const world = __fcCurrent().world;
     const node = __fcCurrent().node;
@@ -89,7 +150,16 @@ export function useOnCollision(fn: (e: { self: any; other: any }) => void) {
     });
 }
 
-// Raycast helper
+/**
+ * Provides a convenient raycast function bound to the current PhysicsService instance.
+ *
+ * @example
+ * ```ts
+ * const raycast = usePhysicsRaycast();
+ * const hit = raycast(new Vec3(0, 1, -5), new Vec3(0, 0, 1), 20);
+ * if (hit) console.log(hit.distance);
+ * ```
+ */
 export function usePhysicsRaycast() {
     const svc = usePhysics();
     return svc.raycast.bind(svc);
