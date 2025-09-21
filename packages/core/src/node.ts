@@ -4,6 +4,21 @@ import { kRegisteredTicks } from './keys';
 
 let NEXT_ID = 1;
 
+/**
+ * A Node is an entity in the scene graph.
+ *
+ * - Nodes form parent/child hierarchies.
+ * - Components attach to nodes to hold data/state.
+ * - Ticks registered on a node run according to the world's update loop.
+ *
+ * Example:
+ * ```ts
+ * const world = new World();
+ * const parent = world.add(new Node());
+ * const child = world.add(new Node());
+ * parent.addChild(child);
+ * ```
+ */
 export class Node {
     //#region Fields
 
