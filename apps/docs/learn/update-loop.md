@@ -28,3 +28,8 @@ Each kind has Early → Update → Late. Use Early for input/prep, Late for post
 - Hook `dt` values are in seconds.
 - World config like `fixedStepMs` is in milliseconds.
 
+### Control
+
+- `pause()` / `resume()` stop and start stepping without tearing down state.
+- `setTimeScale(f)` scales both frame and fixed time (e.g., slow-mo).
+

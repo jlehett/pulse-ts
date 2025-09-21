@@ -5,6 +5,10 @@ Pulse is an ECS (Entity Component System) runtime. Learn the core building block
 ## World
 The container that owns time, the scene graph, systems, and services. Create one world per app.
 
+- Manage lifecycle with `start()`, `stop()`, and `tick(dtMs)`.
+- Clean the scene with `clearScene()` (preserves internal system nodes).
+- Query stats via `getPerf()` or `StatsService`.
+
 ## Nodes
 Entities in the scene graph. Nodes form parent/child hierarchies and hold components.
 
