@@ -12,9 +12,13 @@ export function findPairs(
     if (!isFinite(cellSize) || cellSize <= 0) return naivePairs(colliders);
     type CellKey = string;
     const buckets = new Map<CellKey, Collider[]>();
+    const planes: Collider[] = [];
     for (const c of colliders) {
         const bb = computeAABB(c);
-        if (!bb) continue;
+        if (!bb) {
+            if (c.kind === 'plane') planes.push(c);
+            continue;
+        }
         const minx = Math.floor(bb.min.x / cellSize);
         const miny = Math.floor(bb.min.y / cellSize);
         const minz = Math.floor(bb.min.z / cellSize);
@@ -44,6 +48,20 @@ export function findPairs(
                 set.add(key);
                 pairs.push([a, b]);
             }
+    }
+    if (planes.length) {
+        const all = [...colliders];
+        for (const pl of planes) {
+            for (const o of all) {
+                if (o === pl) continue;
+                const ai = pl.owner.id;
+                const bi = o.owner.id;
+                const key = ai < bi ? `${ai}|${bi}` : `${bi}|${ai}`;
+                if (set.has(key)) continue;
+                set.add(key);
+                pairs.push([pl, o]);
+            }
+        }
     }
     return pairs.length === 0 ? naivePairs(colliders) : pairs;
 }

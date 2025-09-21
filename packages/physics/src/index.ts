@@ -47,6 +47,7 @@ export type { CollisionPair } from './services/Physics';
 export { RigidBody } from './components/RigidBody';
 export type { Vec3Like } from './components/RigidBody';
 export { Collider, SphereCollider, BoxCollider } from './components/Collider';
+export { PlaneCollider, CapsuleCollider } from './components/Collider';
 
 // FC Hooks
 export {
@@ -54,6 +55,8 @@ export {
     useRigidBody,
     useSphereCollider,
     useBoxCollider,
+    usePlaneCollider,
+    useCapsuleCollider,
     useOnCollisionStart,
     useOnCollisionEnd,
     useOnCollision,
@@ -62,3 +65,26 @@ export {
 
 // Types
 export type { PhysicsOptions, RigidBodyType, RaycastHit } from './types';
+
+// Filter helpers
+export {
+    layer,
+    layers,
+    setLayer,
+    setMask,
+    addToMask,
+    removeFromMask,
+    collideWithAll,
+    collideWithNone,
+    shouldCollide,
+} from './filters';
+
+// Materials helpers
+export {
+    DEFAULT_RESTITUTION,
+    DEFAULT_FRICTION,
+    getRestitution,
+    getFriction,
+    combineRestitution,
+    combineFriction,
+} from './materials';

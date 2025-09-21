@@ -4,14 +4,7 @@ import { RigidBody } from '../components/RigidBody';
 import type { Vec3Like } from '../components/RigidBody';
 import { Collider } from '../components/Collider';
 import type { PhysicsOptions, RaycastHit } from '../types';
-import {
-    integrateTransforms,
-    integrateVelocities,
-} from './physics/integration';
-import { findPairs } from './physics/pairing';
-import { detectCollision } from './physics/detect';
-import { resolveContact } from './physics/solver';
-import { raycast as castRay } from './physics/raycast';
+import { DefaultEngine, type PhysicsEngine } from './physics/engine';
 import { refreshAutomaticInertia as utilRefreshInertia } from './physics/inertia';
 
 function unpackVec3(
@@ -74,6 +67,7 @@ export class PhysicsService extends Service {
     //#endregion
 
     private lastPairs = new Map<string, CollisionPair>();
+    private engine: PhysicsEngine = DefaultEngine;
 
     /**
      * Creates a new physics service.
@@ -178,47 +172,57 @@ export class PhysicsService extends Service {
         const currentPairs = new Map<string, CollisionPair>();
 
         // 1) Integrate linear/angular impulses and forces
-        integrateVelocities(this.bodies, this.gravity, dt, (c) =>
-            this.colliders.has(c),
+        this.engine.integrator.updateVelocities(
+            this.bodies,
+            this.gravity,
+            dt,
+            (c: Collider) => this.colliders.has(c),
         );
 
         // 2) Integrate velocities -> positions (+ optional world plane)
-        integrateTransforms(this.bodies, dt, this.options.worldPlaneY);
+        this.engine.integrator.applyMovement(
+            this.bodies,
+            dt,
+            this.options.worldPlaneY,
+        );
 
         // 3) Find potential overlaps (fast pass using bounding boxes)
-        const pairs = findPairs(this.colliders, this.cellSize);
+        const pairs = this.engine.pairFinder.findPairs(
+            this.colliders,
+            this.cellSize,
+        );
 
-        // 4) Confirm collisions and resolve them
+        // 4) Confirm collisions, build constraints, then solve iteratively
+        const constraints: import('./physics/solver').ContactConstraint[] = [];
+        const { detectManifold } = require('./physics/detect') as typeof import('./physics/detect');
         for (const [a, b] of pairs) {
-            const contact = detectCollision(a, b);
-            if (!contact) continue;
-            const { nx, ny, nz, depth } = contact;
-
+            if (!this.engine.filter.shouldCollide(a, b)) continue;
+            const pts = detectManifold(a, b);
+            if (!pts || pts.length === 0) continue;
+            const { nx, ny, nz, depth } = pts[0]!; // representative for event
             const key = this.pairKey(a.owner, b.owner);
-            const pair: CollisionPair = {
-                aNode: a.owner,
-                bNode: b.owner,
-                normal: new Vec3(nx, ny, nz),
-                depth,
-            };
+            const pair: CollisionPair = { aNode: a.owner, bNode: b.owner, normal: new Vec3(nx, ny, nz), depth };
             currentPairs.set(key, pair);
             if (!this.lastPairs.has(key)) startPairs.set(key, pair);
 
             const rbA = getComponent(a.owner, RigidBody);
             const rbB = getComponent(b.owner, RigidBody);
-            const invMassA =
-                rbA && rbA.type === 'dynamic' ? rbA.inverseMass : 0;
-            const invMassB =
-                rbB && rbB.type === 'dynamic' ? rbB.inverseMass : 0;
-            const totalInv = invMassA + invMassB;
-
-            const triggered = a.isTrigger || b.isTrigger;
-            if (!triggered && totalInv > 0) {
-                resolveContact(a, b, { nx, ny, nz, depth });
-            }
+            const invMassA = rbA && rbA.type === 'dynamic' ? rbA.inverseMass : 0;
+            const invMassB = rbB && rbB.type === 'dynamic' ? rbB.inverseMass : 0;
+            if (!(a.isTrigger || b.isTrigger) && (invMassA + invMassB) > 0)
+                for (const p of pts) constraints.push({ a, b, nx: p.nx, ny: p.ny, nz: p.nz, depth: p.depth });
 
             this.collisions.emit(pair);
         }
+
+        // Positional correction (split correction): move bodies out of penetration
+        const { correctPositions, solveContactsIterative } = require('./physics/solver') as typeof import('./physics/solver');
+        const slop = (this.options as any).contactSlop ?? 0.005;
+        const beta = (this.options as any).baumgarte ?? 0.2;
+        for (const c of constraints) correctPositions(c, slop);
+        // Iterative velocity solve
+        const iters = Math.max(1, (this.options as any).iterations ?? 4);
+        solveContactsIterative(constraints, iters, dt, slop, beta);
 
         // 5) Start/End events
         for (const [k, p] of currentPairs)
@@ -253,10 +257,18 @@ export class PhysicsService extends Service {
     raycast(
         origin: Vec3,
         dir: Vec3,
-        maxDist = Infinity,
+        maxOrOpts:
+            | number
+            | { mask?: number; filter?: (c: Collider) => boolean } = Infinity,
         filter?: (c: Collider) => boolean,
     ): RaycastHit | null {
-        return castRay(this.colliders, origin, dir, maxDist, filter);
+        return this.engine.raycaster.cast(
+            this.colliders,
+            origin,
+            dir,
+            maxOrOpts as any,
+            filter,
+        );
     }
 
     //#endregion

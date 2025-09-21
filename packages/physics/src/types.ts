@@ -24,6 +24,10 @@ export interface PhysicsOptions {
     gravity?: { x: number; y: number; z: number } | Vec3;
     /** Reserved for future constraint solving iteration tuning. */
     iterations?: number;
+    /** Penetration slop (in world units) not corrected to avoid jitter. Defaults to 0.005. */
+    contactSlop?: number;
+    /** Baumgarte position correction factor (0..1). Defaults to 0.2. */
+    baumgarte?: number;
     /** Optional infinite horizontal plane enforced at the given world-space Y value. */
     worldPlaneY?: number;
     /** Cell size used for the broadphase uniform grid. Defaults to `1`. */

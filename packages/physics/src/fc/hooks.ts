@@ -91,6 +91,33 @@ export function useBoxCollider(
 }
 
 /**
+ * Ensures a plane collider is present on the current node.
+ * The plane point is the node position plus rotated offset; the normal is the node rotation applied to `planeNormal`.
+ */
+export function usePlaneCollider(init?: Partial<Collider>): Collider {
+    const col = useComponent(Collider);
+    col.kind = 'plane';
+    if (init) Object.assign(col, init);
+    return col;
+}
+
+/**
+ * Ensures a capsule collider is present on the current node, oriented along local Y.
+ */
+export function useCapsuleCollider(
+    radius = 0.5,
+    halfHeight = 0.5,
+    init?: Partial<Collider>,
+): Collider {
+    const col = useComponent(Collider);
+    col.kind = 'capsule';
+    col.capRadius = radius;
+    col.capHalfHeight = halfHeight;
+    if (init) Object.assign(col, init);
+    return col;
+}
+
+/**
  * Registers a callback for the start of collisions involving the current node.
  *
  * @example

@@ -5,7 +5,7 @@ import { PhysicsService } from '../services/Physics';
 /**
  * Supported collider primitive types.
  */
-export type ColliderKind = 'sphere' | 'box';
+export type ColliderKind = 'sphere' | 'box' | 'plane' | 'capsule';
 
 /**
  * Base Collider component responsible for describing collision geometry.
@@ -31,6 +31,16 @@ export class Collider extends Component {
     friction = 0.5;
     /** When true, collisions are reported but not resolved. */
     isTrigger = false;
+    /**
+     * Collision layer bitfield used with {@link mask} to determine if two colliders interact.
+     * The default places the collider on layer 1.
+     */
+    layer = 1 >>> 0;
+    /**
+     * Collision mask bitfield listing which layers this collider collides with.
+     * The default of all bits set collides with all layers.
+     */
+    mask = 0xffffffff >>> 0;
     // sphere-only params
     /** Sphere radius in world units (applies when `kind === 'sphere'`). */
     radius = 0.5;
@@ -41,6 +51,16 @@ export class Collider extends Component {
     halfY = 0.5;
     /** Half-extent along Z in world units (applies when `kind === 'box'`). */
     halfZ = 0.5;
+
+    // plane-only params
+    /** Local-space plane normal (applies when `kind === 'plane'`). */
+    planeNormal = new Vec3(0, 1, 0);
+
+    // capsule-only params
+    /** Capsule radius (applies when `kind === 'capsule'`). */
+    capRadius = 0.5;
+    /** Capsule half height along the local Y axis (applies when `kind === 'capsule'`). */
+    capHalfHeight = 0.5;
 
     /**
      * Registers the collider with the physics service when attached to a node.
@@ -105,5 +125,29 @@ export class BoxCollider extends Collider {
         this.halfX = hx;
         this.halfY = hy;
         this.halfZ = hz;
+    }
+}
+
+/**
+ * Infinite plane collider defined by a point and a normal.
+ * The plane point is the node position plus the rotated `offset`, and the normal
+ * is the node rotation applied to `planeNormal`.
+ */
+export class PlaneCollider extends Collider {
+    constructor() {
+        super();
+        this.kind = 'plane';
+    }
+}
+
+/**
+ * Capsule collider oriented along the node's local Y axis.
+ */
+export class CapsuleCollider extends Collider {
+    constructor(radius = 0.5, halfHeight = 0.5) {
+        super();
+        this.kind = 'capsule';
+        this.capRadius = radius;
+        this.capHalfHeight = halfHeight;
     }
 }
