@@ -15,7 +15,20 @@ export function createAABB(): AABB {
 }
 
 /**
- * Bounds component: local AABB + cached world AABB + visibility flag.
+ * Bounds component: local AABB + cached/calc world AABB.
+ *
+ * @example
+ * ```ts
+ * import { World, Node, Bounds, Transform, Vec3 } from '@pulse-ts/core';
+ * const w = new World();
+ * const n = w.add(new Node());
+ * const t = Transform.attach(n);
+ * const b = Bounds.attach(n);
+ * b.setLocal(new Vec3(-1, -1, -1), new Vec3(1, 1, 1));
+ * // Move the node and query world bounds
+ * t.setLocal({ position: { x: 5 } });
+ * const worldAabb = b.getWorld();
+ * ```
  */
 export class Bounds extends Component {
     static attach<Bounds>(owner: Node): Bounds {

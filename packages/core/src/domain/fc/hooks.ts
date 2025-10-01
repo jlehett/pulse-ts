@@ -16,6 +16,19 @@ import { StableId } from '../components/StableId';
  * - The returned reference is stable for the lifetime of the component.
  *
  * @returns The current `World` instance.
+ *
+ * @example
+ * ```ts
+ * import { World, useWorld, useFrameUpdate } from '@pulse-ts/core';
+ * function GameLoop() {
+ *   const world = useWorld();
+ *   useFrameUpdate(() => {
+ *     // read perf each frame
+ *     void world.getPerf();
+ *   });
+ * }
+ * new World().mount(GameLoop);
+ * ```
  */
 export function useWorld(): World {
     return current().world;
@@ -49,6 +62,18 @@ export function useNode(): Node {
  * - If the function returns another function, that returned function is registered as a destroy/cleanup hook.
  *
  * @param fn The function to run on initialization. Optionally returns a cleanup function.
+ *
+ * @example
+ * ```ts
+ * import { World, useInit } from '@pulse-ts/core';
+ * function Spawner() {
+ *   useInit(() => {
+ *     // do one-time setup
+ *     return () => void 0; // cleanup
+ *   });
+ * }
+ * new World().mount(Spawner);
+ * ```
  */
 export function useInit(fn: () => void | (() => void)): void {
     current().init.push(fn);
@@ -164,6 +189,17 @@ export function useFrameEarly(fn: (dt: number) => void, opts: TickOpts = {}) {
  *
  * @param fn Callback invoked with `dt` in seconds for the variable frame step.
  * @param opts Optional scheduling options (lower `order` runs earlier; default 0).
+ *
+ * @example
+ * ```ts
+ * import { World, useFrameUpdate } from '@pulse-ts/core';
+ * function Rotator() {
+ *   useFrameUpdate((dt) => {
+ *     // advance state using dt
+ *   });
+ * }
+ * new World().mount(Rotator);
+ * ```
  */
 export function useFrameUpdate(fn: (dt: number) => void, opts: TickOpts = {}) {
     reg('frame', 'update', fn, opts.order ?? 0);
@@ -191,6 +227,16 @@ export function useFrameLate(fn: (dt: number) => void, opts: TickOpts = {}) {
  * @param fc The child component function to mount.
  * @param props Optional props to pass to the child component.
  * @returns The newly mounted child `Node`.
+ *
+ * @example
+ * ```ts
+ * import { World, useChild } from '@pulse-ts/core';
+ * function Child() {}
+ * function Parent() {
+ *   useChild(Child);
+ * }
+ * new World().mount(Parent);
+ * ```
  */
 export function useChild<P>(fc: (props: Readonly<P>) => void, props?: P): Node {
     const { world, node } = current();
@@ -206,6 +252,16 @@ export function useChild<P>(fc: (props: Readonly<P>) => void, props?: P): Node {
  * @param key The key to store the state for.
  * @param initial The initial value to store.
  * @returns A tuple of [get, set] where get() reads the latest value each time.
+ *
+ * @example
+ * ```ts
+ * import { World, useState, useFrameUpdate } from '@pulse-ts/core';
+ * function Counter() {
+ *   const [get, set] = useState('count', 0);
+ *   useFrameUpdate(() => set((c) => c + 1));
+ * }
+ * new World().mount(Counter);
+ * ```
  */
 export function useState<T>(
     key: string,

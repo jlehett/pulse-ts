@@ -2,6 +2,12 @@ Purpose
 - Modular TypeScript game engine, publishable to npm, broad use-cases.
 - Keep code clean, maintainable, understandable. Prefer clarity over cleverness.
 
+Design docs
+- Design/architecture plans go in the design-docs/ directory and can be written in simple markdown files.
+- Before implementing significant features or changes, create a design doc and seek feedback from the user.
+- Iterate on design docs based on feedback prior to implementation.
+- Once a design is approved, you can proceed with implementation, using the design doc as a reference.
+
 Repo facts
 - TypeScript everywhere; strict mode at public boundaries.
 - Docs: apps/docs/ (VitePress) with guides/ and learn/; keep current with code changes.

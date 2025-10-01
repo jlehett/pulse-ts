@@ -6,6 +6,14 @@ export type Listener<T> = (e: Readonly<T>) => void;
 
 /**
  * A single-channel, strongly-typed event.
+ *
+ * @example
+ * ```ts
+ * const e = new TypedEvent<number>();
+ * const off = e.on((n) => console.log(n));
+ * e.emit(1);
+ * off();
+ * ```
  */
 export class TypedEvent<T> {
     private listeners = new Set<Listener<T>>();

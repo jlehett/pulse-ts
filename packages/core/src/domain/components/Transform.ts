@@ -61,6 +61,16 @@ function makeDirtyQuat(owner: Transform, q: Quat): Quat {
 
 /**
  * A transform.
+ *
+ * @example
+ * ```ts
+ * import { World, Node, Transform } from '@pulse-ts/core';
+ * const w = new World();
+ * const n = w.add(new Node());
+ * const t = Transform.attach(n);
+ * t.setLocal({ position: { x: 1, y: 2, z: 3 } });
+ * const worldPos = t.worldPosition; // Vec3 with composed world position
+ * ```
  */
 export class Transform extends Component {
     static attach<Transform>(owner: Node): Transform {

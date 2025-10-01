@@ -56,6 +56,15 @@ export class TimeoutScheduler implements Scheduler {
 
 /**
  * A scheduler that uses a manual loop.
+ *
+ * Useful for tests; call `step(nowMs?)` to drive the loop.
+ *
+ * @example
+ * ```ts
+ * const sched = new ManualScheduler();
+ * loop = new EngineLoop({ scheduler: sched, fixedStepMs: 16, maxFixedStepsPerFrame: 8, maxFrameDtMs: 250 }, hooks);
+ * sched.step(); // drive one iteration with current time
+ * ```
  */
 export class ManualScheduler implements Scheduler {
     private loop: ((now: number) => void) | null = null;
