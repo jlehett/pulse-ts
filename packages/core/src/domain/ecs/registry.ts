@@ -2,6 +2,18 @@
  * Generic constructor-keyed registry for engine singletons.
  *
  * Used by ServiceRegistry and SystemRegistry to reduce duplication.
+ *
+ * @example
+ * ```ts
+ * class Base {}
+ * class A extends Base { n = 1 }
+ * class B extends Base { s = 'x' }
+ * const reg = new CtorRegistry<Base>();
+ * reg.set(new A());
+ * reg.set(new B());
+ * reg.get(A)?.n; // 1
+ * reg.remove(A);
+ * ```
  */
 export class CtorRegistry<TBase> {
     private m = new Map<new () => TBase | ThisParameterType<TBase>, TBase>();

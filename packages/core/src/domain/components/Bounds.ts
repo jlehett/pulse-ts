@@ -80,7 +80,8 @@ export class Bounds extends Component {
         // ensure transform exists for owner
         const transform = attachComponent(this.owner, Transform);
 
-        const w = (this.owner?.world as unknown as WorldTimingApi | undefined) ??
+        const w =
+            (this.owner?.world as unknown as WorldTimingApi | undefined) ??
             undefined;
         const a = alpha ?? (w ? w.getAmbientAlpha() : 0);
         const trs = (transform as any).getWorldTRS(this._scratchTRS, a);
