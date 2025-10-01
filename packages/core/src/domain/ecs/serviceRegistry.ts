@@ -1,18 +1,12 @@
 import type { Service } from './Service';
 import type { Ctor } from './types';
+import { CtorRegistry } from './registry';
 
 /**
  * The service registry.
  */
 export class ServiceRegistry {
-    //#region Fields
-
-    /**
-     * The map of services.
-     */
-    private m = new Map<Ctor<Service> | ThisParameterType<Service>, Service>();
-
-    //#endregion
+    private reg = new CtorRegistry<Service>();
 
     //#region Public Methods
 
@@ -22,10 +16,7 @@ export class ServiceRegistry {
      * @param serviceInstance The service instance.
      */
     set<T extends Service>(serviceInstance: T): void {
-        this.m.set(
-            serviceInstance.constructor as Ctor<Service>,
-            serviceInstance,
-        );
+        this.reg.set(serviceInstance);
     }
 
     /**
@@ -36,7 +27,7 @@ export class ServiceRegistry {
     get<T extends Service>(
         Service: Ctor<T> | ThisParameterType<T>,
     ): T | undefined {
-        return this.m.get(Service) as T | undefined;
+        return this.reg.get(Service as any) as T | undefined;
     }
 
     /**
@@ -44,7 +35,7 @@ export class ServiceRegistry {
      * @param Service The constructor of the service.
      */
     remove<T extends Service>(Service: Ctor<T> | ThisParameterType<T>): void {
-        this.m.delete(Service);
+        this.reg.remove(Service as any);
     }
 
     //#endregion

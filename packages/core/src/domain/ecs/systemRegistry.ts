@@ -1,18 +1,12 @@
 import type { System } from './System';
 import type { Ctor } from './types';
+import { CtorRegistry } from './registry';
 
 /**
  * The system registry.
  */
 export class SystemRegistry {
-    //#region Fields
-
-    /**
-     * The map of systems.
-     */
-    private m = new Map<Ctor<System> | ThisParameterType<System>, System>();
-
-    //#endregion
+    private reg = new CtorRegistry<System>();
 
     //#region Public Methods
 
@@ -21,7 +15,7 @@ export class SystemRegistry {
      * @param systemInstance The system instance.
      */
     set<T extends System>(systemInstance: T): void {
-        this.m.set(systemInstance.constructor as Ctor<System>, systemInstance);
+        this.reg.set(systemInstance);
     }
 
     /**
@@ -32,7 +26,7 @@ export class SystemRegistry {
     get<T extends System>(
         System: Ctor<T> | ThisParameterType<T>,
     ): T | undefined {
-        return this.m.get(System) as T | undefined;
+        return this.reg.get(System as any) as T | undefined;
     }
 
     /**
@@ -40,7 +34,7 @@ export class SystemRegistry {
      * @param System The constructor of the system.
      */
     remove<T extends System>(System: Ctor<T> | ThisParameterType<T>): void {
-        this.m.delete(System);
+        this.reg.remove(System as any);
     }
 
     //#endregion

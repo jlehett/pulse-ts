@@ -9,3 +9,4 @@ export * from './world';
 export * from './fc';
 export * from './events';
 export * from './math';
+export * from './queries';

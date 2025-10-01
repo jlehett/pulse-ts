@@ -23,3 +23,18 @@ Singleton utilities (e.g., input, audio, networking). Accessed via hooks or the 
 
 ## Functional Nodes
 Functions that create nodes and use hooks for lifecycle and updates. See [Functional Nodes](/learn/functional-nodes).
+
+## Queries
+Iterate nodes that have components (and optionally exclude others) with type-safe helpers.
+
+```ts
+import { World, defineQuery, Transform, Bounds } from '@pulse-ts/core';
+
+const world = new World();
+// ... populate world with nodes/components ...
+
+const HasTRSB = defineQuery([Transform, Bounds]);
+for (const [node, t, b] of HasTRSB.run(world)) {
+  // node has Transform (t) and Bounds (b)
+}
+```
