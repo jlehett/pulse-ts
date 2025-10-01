@@ -4,6 +4,7 @@ import type { Node } from '../ecs/node';
 import { createTRS, type TRS, Transform } from './Transform';
 import { attachComponent } from '../ecs/componentRegistry';
 import { Component } from '../ecs/Component';
+import type { WorldTimingApi } from '../world/api';
 
 export interface AABB {
     min: Vec3;
@@ -79,8 +80,9 @@ export class Bounds extends Component {
         // ensure transform exists for owner
         const transform = attachComponent(this.owner, Transform);
 
-        const w = (this.owner as any).world;
-        const a = alpha ?? (w ? w.getAmbientAlpha?.() : 0);
+        const w = (this.owner?.world as unknown as WorldTimingApi | undefined) ??
+            undefined;
+        const a = alpha ?? (w ? w.getAmbientAlpha() : 0);
         const trs = (transform as any).getWorldTRS(this._scratchTRS, a);
 
         // Cache only for non-interpolated case using TRS world version and local bounds version

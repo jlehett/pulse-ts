@@ -27,6 +27,7 @@ import type { System } from '../ecs/System';
 import { StatsService } from '../services/Stats';
 import { TypedEvent } from '../../utils/event';
 import type { Service } from '../ecs/Service';
+import { defineQuery } from '../ecs/queries';
 
 /**
  * Options for the World class.
@@ -493,6 +494,30 @@ export class World implements WorldTimingApi, WorldTransformRegistry {
      */
     private runPhase(kind: UpdateKind, phase: UpdatePhase, dt: number) {
         this.ticker.runPhase(kind, phase, dt, this.nodes);
+    }
+
+    //#endregion
+
+    //#region Queries (sugar)
+
+    /**
+     * Convenience typed query creator bound to this world.
+     * Equivalent to `defineQuery(has, opts).run(world)` but avoids re-creating the query
+     * if you hold onto the returned object.
+     */
+    query<const Has extends readonly (new () => any)[], const Not extends readonly (new () => any)[] = []>(
+        has: Has,
+        opts?: { not?: Not },
+    ) {
+        const q = defineQuery(has as any, { not: opts?.not as any });
+        return {
+            run: () => q.run(this) as IterableIterator<[
+                Node,
+                ...{ [K in keyof Has]: InstanceType<Has[K]> }
+            ]>,
+            some: () => q.some(this),
+            count: () => q.count(this),
+        } as const;
     }
 
     //#endregion

@@ -1,4 +1,6 @@
 import { Node } from '../ecs/node';
+import { Transform } from '../components/Transform';
+import { attachComponent } from '../ecs/componentRegistry';
 import { World } from './world';
 
 describe('World', () => {
@@ -83,6 +85,20 @@ describe('World', () => {
         expect(calls).toEqual(['first']);
         w.tick(16);
         expect(calls).toEqual(['first', 'first', 'second']);
+    });
+
+    test('query sugar returns typed tuples', () => {
+        const w = new World();
+        const n = w.add(new Node());
+        const tComp = attachComponent(n, Transform);
+        const Q = w.query([Transform]);
+        const rows = Array.from(Q.run());
+        expect(rows.length).toBe(1);
+        const [node, outT] = rows[0]!;
+        expect(node).toBe(n);
+        expect(outT).toBe(tComp);
+        expect(Q.some()).toBe(true);
+        expect(Q.count()).toBe(1);
     });
 
     test('setNodeTicksEnabled toggles execution', () => {

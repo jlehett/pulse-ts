@@ -30,4 +30,16 @@ describe('Quat', () => {
         expect(r.y).toBeCloseTo(1, 5);
         expect(r.z).toBeCloseTo(0, 5);
     });
+
+    test('slerpInto matches slerp result', () => {
+        const a = new Quat(0, 0, 0, 1);
+        const b = new Quat(0, 0, 1, 0); // 180deg around Z axis
+        const out = new Quat();
+        const m = Quat.slerp(a, b, 0.25);
+        Quat.slerpInto(a, b, 0.25, out);
+        expect(out.x).toBeCloseTo(m.x, 5);
+        expect(out.y).toBeCloseTo(m.y, 5);
+        expect(out.z).toBeCloseTo(m.z, 5);
+        expect(out.w).toBeCloseTo(m.w, 5);
+    });
 });
