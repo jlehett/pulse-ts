@@ -1,4 +1,5 @@
 import type { FC } from '../fc/runtime';
+import type { WorldTimingApi, WorldTransformRegistry } from './api';
 import { mountFC } from '../fc/runtime';
 import {
     Scheduler,
@@ -53,7 +54,7 @@ export interface WorldOptions {
  * The World class is the main class for the Pulse engine.
  * It manages the nodes and the tick system.
  */
-export class World {
+export class World implements WorldTimingApi, WorldTransformRegistry {
     //#region Fields
 
     readonly nodes = new Set<Node>();

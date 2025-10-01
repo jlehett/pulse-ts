@@ -17,6 +17,24 @@ describe('World', () => {
         expect(w.debugStats().nodes).toBe(baseCount); // only internal node remains
     });
 
+    test('onNodeAdded/onNodeRemoved fire correctly', () => {
+        const w = new World();
+        const log: string[] = [];
+        const offAdd = w.onNodeAdded((n) => log.push(`+${n.id}`));
+        const offRem = w.onNodeRemoved((n) => log.push(`-${n.id}`));
+
+        const a = w.add(new Node());
+        const b = w.add(new Node());
+        expect(log).toEqual([`+${a.id}`, `+${b.id}`]);
+
+        w.remove(a);
+        w.remove(b);
+        expect(log).toEqual([`+${a.id}`, `+${b.id}`, `-${a.id}`, `-${b.id}`]);
+
+        offAdd();
+        offRem();
+    });
+
     test('registerTick runs in frame and fixed phases with ordering', () => {
         const w = new World({ fixedStepMs: 10 });
         const n = w.add(new Node());
@@ -82,5 +100,28 @@ describe('World', () => {
         w.registerTick(n, 'frame', 'update', () => c++);
         w.tick(16);
         expect(c).toBe(2);
+    });
+
+    test('debugStats reflects disabled phases', () => {
+        const w = new World();
+        const n = w.add(new Node());
+        let c = 0;
+        w.registerTick(n, 'frame', 'early', () => c++);
+        w.tick(16);
+        expect(c).toBe(1);
+        const stats1 = w.debugStats();
+        expect(stats1.ticks.frame.early.disabled).toBe(false);
+
+        w.setPhaseEnabled('frame', 'early', false);
+        w.tick(16);
+        expect(c).toBe(1);
+        const stats2 = w.debugStats();
+        expect(stats2.ticks.frame.early.disabled).toBe(true);
+
+        w.setPhaseEnabled('frame', 'early', true);
+        w.tick(16);
+        expect(c).toBe(2);
+        const stats3 = w.debugStats();
+        expect(stats3.ticks.frame.early.disabled).toBe(false);
     });
 });

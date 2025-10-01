@@ -1,6 +1,7 @@
 import { Vec3 } from '../../utils/math/vec3';
 import { Quat } from '../../utils/math/quat';
 import type { Node } from '../ecs/node';
+import type { WorldTimingApi, WorldTransformRegistry } from '../world/api';
 import { kTransformDirty } from '../ecs/keys';
 import { getComponent } from '../ecs/componentRegistry';
 import { Component } from '../ecs/Component';
@@ -75,7 +76,7 @@ function makeDirtyQuat(owner: Transform, q: Quat): Quat {
 export class Transform extends Component {
     static attach<Transform>(owner: Node): Transform {
         const t = super.attach(owner) as Transform;
-        const w = owner.world;
+        const w = owner.world as unknown as WorldTransformRegistry | null;
         if (w) w.registerTransform(t as any);
         return t;
     }
@@ -175,8 +176,8 @@ export class Transform extends Component {
      * @returns The local position, rotation, and scale.
      */
     getLocalTRS(out?: TRS, alpha?: number) {
-        const w = this.owner?.world as any;
-        const a = alpha ?? (w ? w.getAmbientAlpha?.() : 0);
+        const w = this.owner?.world as unknown as WorldTimingApi | undefined;
+        const a = alpha ?? (w ? w.getAmbientAlpha() : 0);
         const o = out ?? createTRS();
 
         if (a > 0) {
@@ -208,8 +209,8 @@ export class Transform extends Component {
      * @returns The world position, rotation, and scale.
      */
     getWorldTRS(out?: TRS, alpha?: number) {
-        const w = this.owner?.world as any;
-        const a = alpha ?? (w ? w.getAmbientAlpha?.() : 0);
+        const w = this.owner?.world as unknown as WorldTimingApi | undefined;
+        const a = alpha ?? (w ? w.getAmbientAlpha() : 0);
 
         // For a>0, interpolation changes every frame; don't cache
         if (a > 0) {
@@ -246,7 +247,7 @@ export class Transform extends Component {
         if (parent) {
             const pt = getComponent(parent, Transform);
             if (pt) {
-                const frameId = w ? w.getFrameId?.() : 0;
+                const frameId = w ? w.getFrameId() : 0;
                 treeVersion = Math.max(
                     treeVersion,
                     pt.getAncestryVersion(frameId),

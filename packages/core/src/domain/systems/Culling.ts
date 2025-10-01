@@ -1,11 +1,12 @@
 import { Vec3 } from '../../utils/math/vec3';
-import { getComponent, attachComponent } from '../ecs/componentRegistry';
+import { attachComponent } from '../ecs/componentRegistry';
 import { Bounds } from '../components/Bounds';
 import { Visibility } from '../components/Visibility';
 import { Transform } from '../components/Transform';
 import { CullingCamera } from '../services/CullingCamera';
 import { System } from '../ecs/System';
 import { UpdateKind, UpdatePhase } from '../ecs/types';
+import { defineQuery } from '../ecs/queries';
 
 /**
  * A plane for frustum culling.
@@ -117,6 +118,7 @@ export class CullingSystem extends System {
     static updatePhase: UpdatePhase = 'update';
 
     private frustum = new Frustum();
+    private static QB = defineQuery([Transform, Bounds]);
 
     /**
      * Updates the frustum and culls nodes.
@@ -129,17 +131,12 @@ export class CullingSystem extends System {
         if (!cam) return;
         this.frustum.setFromProjView(cam.projView);
 
-        const nodes = this.world.nodes; // public set of nodes
-        for (const n of nodes) {
-            const b = getComponent(n, Bounds);
-            if (!b) continue;
-            const aabb = b.getWorld();
+        for (const [n] of CullingSystem.QB.run(this.world)) {
+            const aabb = attachComponent(n, Bounds).getWorld(undefined, 0);
             if (!aabb) {
                 attachComponent(n, Visibility).visible = true;
                 continue;
             }
-            // ensure transform up-to-date for zero-alpha cache
-            attachComponent(n, Transform).getWorldTRS(undefined, 0);
             attachComponent(n, Visibility).visible =
                 this.frustum.intersectsBounds(aabb.min, aabb.max);
         }
