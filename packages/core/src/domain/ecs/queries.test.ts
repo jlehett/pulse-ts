@@ -58,4 +58,39 @@ describe('typed queries', () => {
         attachComponent(n, Transform);
         expect(Array.from(Q.run(w)).length).toBe(1);
     });
+
+    test('multi-world isolation with internal index', () => {
+        const w1 = new World();
+        const w2 = new World();
+        const n1 = w1.add(new Node());
+        const n2 = w2.add(new Node());
+        attachComponent(n1, Transform);
+        attachComponent(n2, Transform);
+        const Q = defineQuery([Transform]);
+        const ids1 = Array.from(Q.run(w1)).map(([n]) => n.id);
+        const ids2 = Array.from(Q.run(w2)).map(([n]) => n.id);
+        expect(ids1).toEqual([n1.id]);
+        expect(ids2).toEqual([n2.id]);
+    });
+
+    test('attach before add to world, then add, then query finds it', () => {
+        const w = new World();
+        const n = new Node();
+        attachComponent(n, Transform);
+        const Q = defineQuery([Transform]);
+        // Not yet added to world -> no result
+        expect(Array.from(Q.run(w)).length).toBe(0);
+        w.add(n);
+        expect(Array.from(Q.run(w)).length).toBe(1);
+    });
+
+    test('destroy cleanup removes node from index results', () => {
+        const w = new World();
+        const n = w.add(new Node());
+        attachComponent(n, Transform);
+        const Q = defineQuery([Transform]);
+        expect(Array.from(Q.run(w)).length).toBe(1);
+        n.destroy();
+        expect(Array.from(Q.run(w)).length).toBe(0);
+    });
 });

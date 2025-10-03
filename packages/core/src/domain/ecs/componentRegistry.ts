@@ -1,6 +1,7 @@
 import type { Component } from './Component';
 import type { Node } from './node';
 import type { Ctor } from './types';
+import { registerComponent } from './queryIndex';
 
 /**
  * A store of components.
@@ -34,6 +35,8 @@ export function setComponent<T extends Component>(owner: Node, value: T): void {
         store.set(value.constructor as Ctor<Component>, m);
     }
     m.set(owner, value);
+    // Update query index for this component attachment
+    registerComponent(owner, value.constructor as Ctor<Component>);
 }
 
 /**

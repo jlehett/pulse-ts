@@ -1,6 +1,7 @@
 import type { World } from '../world/world';
 import type { TickRegistration } from './types';
 import { kRegisteredTicks } from './keys';
+import { removeNode } from './queryIndex';
 
 let NEXT_ID = 1;
 
@@ -87,6 +88,8 @@ export class Node {
         this.onDestroy?.();
         if (this.parent) this.parent.removeChild(this);
         this.world?.remove(this);
+        // Unregister from internal query index
+        removeNode(this);
         // hard-unlink ticks O(1)
         for (const r of this[kRegisteredTicks]) {
             try {

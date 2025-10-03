@@ -3,6 +3,7 @@ import type { Node } from './node';
 import { getComponent } from './componentRegistry';
 import type { Component } from './Component';
 import type { ComponentCtor } from './types';
+import { candidates } from './queryIndex';
 
 /**
  * Defines a reusable typed query that matches nodes that have all components in `has`
@@ -26,8 +27,51 @@ export function defineQuery<
         world: World,
     ): IterableIterator<[Node, ...{ [K in keyof Has]: InstanceType<Has[K]> }]> {
         const not = opts?.not ?? ([] as const);
+
+        // If we have at least one required component, iterate the smallest
+        // candidate set from the index to reduce scanning.
+        if (has.length > 0) {
+            let base: ReadonlySet<Node> | undefined;
+            for (let i = 0; i < has.length; i++) {
+                const set = candidates(has[i] as ComponentCtor<Component>);
+                if (!set || set.size === 0) {
+                    // No nodes have this component at all -> empty result
+                    return;
+                }
+                if (!base || set.size < base.size) base = set;
+            }
+            const baseSet = base!;
+            for (const n of baseSet) {
+                // Multi-world isolation
+                if (!world.nodes.has(n)) continue;
+                const comps: Component[] = [];
+                let ok = true;
+                for (let i = 0; i < has.length; i++) {
+                    const C = has[i] as ComponentCtor<Component>;
+                    const inst = getComponent(n, C);
+                    if (!inst) {
+                        ok = false;
+                        break;
+                    }
+                    comps.push(inst);
+                }
+                if (!ok) continue;
+                let bad = false;
+                for (let i = 0; i < not.length; i++) {
+                    const NC = not[i] as ComponentCtor<Component>;
+                    if (getComponent(n, NC)) {
+                        bad = true;
+                        break;
+                    }
+                }
+                if (bad) continue;
+                yield [n, ...(comps as any)];
+            }
+            return;
+        }
+
+        // Fallback: scan all nodes (handles empty `has` case)
         for (const n of world.nodes) {
-            // require all `has`
             const comps: Component[] = [];
             let ok = true;
             for (let i = 0; i < has.length; i++) {
@@ -40,7 +84,6 @@ export function defineQuery<
                 comps.push(inst);
             }
             if (!ok) continue;
-            // exclude any `not`
             let bad = false;
             for (let i = 0; i < not.length; i++) {
                 const NC = not[i] as ComponentCtor<Component>;
