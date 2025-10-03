@@ -1,4 +1,4 @@
-import { Node } from '../ecs/node';
+import { Node } from '../ecs/base/node';
 import {
     ancestors,
     descendants,

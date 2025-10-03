@@ -1,4 +1,4 @@
-import { World } from '../world/world';
+import { World } from '../../world/world';
 import { System } from './System';
 
 class TestSysEarly extends System {

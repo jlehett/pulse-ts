@@ -5,30 +5,30 @@ import {
     Scheduler,
     RafScheduler,
     TimeoutScheduler,
-} from '../../infra/schedule';
-import { Node } from '../ecs/node';
+} from '../../infra/scheduler';
+import { Node } from '../ecs/base/node';
 import type {
     UpdateKind,
     UpdatePhase,
     TickFn,
     TickRegistration,
     Ctor,
-} from '../ecs/types';
-import { getComponent } from '../ecs/componentRegistry';
-import { Transform } from '../components/Transform';
+} from '../ecs/base/types';
+import { getComponent } from '../ecs/registry/componentRegistry';
+import { Transform } from '../components/spatial/Transform';
 import { Ticker } from './ticker';
-import { ServiceRegistry } from '../ecs/serviceRegistry';
-import { SystemRegistry } from '../ecs/systemRegistry';
+import { ServiceRegistry } from '../ecs/registry/serviceRegistry';
+import { SystemRegistry } from '../ecs/registry/systemRegistry';
 import { EngineLoop } from './loop';
-import { kRegisteredTicks } from '../ecs/keys';
+import { kRegisteredTicks } from '../ecs/base/keys';
 import { SceneGraph } from './sceneGraph';
 import { CullingSystem } from '../systems/Culling';
-import type { System } from '../ecs/System';
+import type { System } from '../ecs/base/System';
 import { StatsService } from '../services/Stats';
 import { TypedEvent } from '../../utils/event';
-import type { Service } from '../ecs/Service';
-import { defineQuery } from '../ecs/queries';
-import type { ComponentCtor } from '../ecs/types';
+import type { Service } from '../ecs/base/Service';
+import { defineQuery } from '../ecs/query';
+import type { ComponentCtor } from '../ecs/base/types';
 
 /**
  * Options for the World class.

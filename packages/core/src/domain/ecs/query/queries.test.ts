@@ -1,10 +1,10 @@
-import { World } from '../world/world';
-import { Node } from './node';
-import { attachComponent } from './componentRegistry';
-import { Transform } from '../components/Transform';
-import { Bounds } from '../components/Bounds';
-import { Visibility } from '../components/Visibility';
-import { defineQuery, query } from './queries';
+import { World } from '../../world/world';
+import { Node } from '../base/node';
+import { attachComponent } from '../registry/componentRegistry';
+import { Transform } from '../../components/spatial/Transform';
+import { Bounds } from '../../components/spatial/Bounds';
+import { Visibility } from '../../components/meta/Visibility';
+import { defineQuery, query } from './index';
 
 describe('typed queries', () => {
     test('has-only query yields node and components in order', () => {

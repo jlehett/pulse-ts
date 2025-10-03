@@ -1,4 +1,4 @@
-import { System } from './System';
+import { System } from '../base/System';
 import { SystemRegistry } from './systemRegistry';
 
 class S1 extends System {

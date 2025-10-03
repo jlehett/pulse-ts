@@ -1,5 +1,5 @@
-import type { Scheduler } from '../../infra/schedule';
-import type { UpdateKind, UpdatePhase } from '../ecs/types';
+import type { Scheduler } from '../../infra/scheduler';
+import type { UpdateKind, UpdatePhase } from '../ecs/base/types';
 
 /**
  * Options for the loop.

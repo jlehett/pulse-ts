@@ -1,4 +1,4 @@
-import { Service } from '../ecs/Service';
+import { Service } from '../ecs/base/Service';
 
 /**
  * A service that provides a culling camera.

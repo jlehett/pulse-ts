@@ -1,4 +1,4 @@
-import { CtorRegistry } from './registry';
+import { CtorRegistry } from './CtorRegistry';
 
 class Base {}
 class A extends Base {

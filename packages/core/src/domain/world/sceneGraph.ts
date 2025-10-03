@@ -1,5 +1,5 @@
 import { TypedEvent } from '../../utils/event';
-import type { Node } from '../ecs/node';
+import type { Node } from '../ecs/base/node';
 import type { ParentChange } from './events';
 
 /**

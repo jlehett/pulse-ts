@@ -1,12 +1,12 @@
 import { Vec3 } from '../../utils/math/vec3';
-import { attachComponent } from '../ecs/componentRegistry';
-import { Bounds } from '../components/Bounds';
-import { Visibility } from '../components/Visibility';
-import { Transform } from '../components/Transform';
+import { attachComponent } from '../ecs/registry/componentRegistry';
+import { Bounds } from '../components/spatial/Bounds';
+import { Visibility } from '../components/meta/Visibility';
+import { Transform } from '../components/spatial/Transform';
 import { CullingCamera } from '../services/CullingCamera';
-import { System } from '../ecs/System';
-import { UpdateKind, UpdatePhase } from '../ecs/types';
-import { defineQuery } from '../ecs/queries';
+import { System } from '../ecs/base/System';
+import { UpdateKind, UpdatePhase } from '../ecs/base/types';
+import { defineQuery } from '../ecs/query';
 
 /**
  * A plane for frustum culling.

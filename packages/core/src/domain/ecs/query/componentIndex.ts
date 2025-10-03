@@ -2,9 +2,9 @@
 // that currently have an instance attached. Also tracks the reverse mapping
 // to unlink efficiently on node destruction.
 
-import type { ComponentCtor } from './types';
+import type { ComponentCtor } from '../types';
 
-type NodeLike = import('./node').Node;
+type NodeLike = import('../node').Node;
 
 const index = new Map<ComponentCtor, Set<NodeLike>>();
 const reverse = new WeakMap<NodeLike, Set<ComponentCtor>>();

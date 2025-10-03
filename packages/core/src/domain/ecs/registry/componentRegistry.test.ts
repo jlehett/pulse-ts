@@ -1,12 +1,12 @@
-import { Transform } from '../components/Transform';
-import { World } from '../world/world';
-import { Component } from './Component';
+import { Transform } from '../../components/spatial/Transform';
+import { World } from '../../world/world';
+import { Component } from '../base/Component';
 import {
     attachComponent,
     getComponent,
     setComponent,
 } from './componentRegistry';
-import { Node } from './node';
+import { Node } from '../base/node';
 
 class Foo extends Component {
     v = 0;

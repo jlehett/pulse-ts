@@ -1,6 +1,6 @@
 import { EngineLoop } from './loop';
-import { ManualScheduler } from '../../infra/schedule';
-import type { UpdateKind, UpdatePhase } from '../ecs/types';
+import { ManualScheduler } from '../../infra/scheduler';
+import type { UpdateKind, UpdatePhase } from '../ecs/base/types';
 
 function makeLoop(
     options?: Partial<{ fixed: number; maxSteps: number; maxFrameDt: number }>,

@@ -1,4 +1,4 @@
-import { Service } from './Service';
+import { Service } from '../base/Service';
 import { ServiceRegistry } from './serviceRegistry';
 
 class A extends Service {

@@ -1,7 +1,7 @@
-import { Vec3 } from '../../utils/math/vec3';
-import { attachComponent } from '../ecs/componentRegistry';
-import { Node } from '../ecs/node';
-import { World } from '../world/world';
+import { Vec3 } from '../../../utils/math/vec3';
+import { attachComponent } from '../../ecs/registry/componentRegistry';
+import { Node } from '../../ecs/base/node';
+import { World } from '../../world/world';
 import { Bounds } from './Bounds';
 import { Transform } from './Transform';
 
@@ -21,13 +21,11 @@ describe('Bounds', () => {
         expect(a0.min.x).toBeCloseTo(3);
         expect(a0.max.x).toBeCloseTo(7);
 
-        // Calling again with no changes returns same cached bounds object values
         const out = { min: new Vec3(), max: new Vec3() };
         const a1 = b.getWorld(out, 0)!;
         expect(a1.min.x).toBe(3);
         expect(a1.max.x).toBe(7);
 
-        // Change transform to invalidate cache
         t.setLocal({ position: { x: 6 } });
         const a2 = b.getWorld(undefined, 0)!;
         expect(a2.min.x).toBeCloseTo(4);

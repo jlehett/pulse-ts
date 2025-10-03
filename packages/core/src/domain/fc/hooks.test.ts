@@ -1,5 +1,5 @@
-import { Transform } from '../components/Transform';
-import { Service } from '../ecs/Service';
+import { Transform } from '../components/spatial/Transform';
+import { Service } from '../ecs/base/Service';
 import { World } from '../world/world';
 import { useChild, useComponent, useInit, useService, useState } from './hooks';
 

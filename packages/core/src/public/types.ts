@@ -1,1 +1,1 @@
-export * from '../domain/ecs/types';
+export * from '../domain/ecs/base/types';

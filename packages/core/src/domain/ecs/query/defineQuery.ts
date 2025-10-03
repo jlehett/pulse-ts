@@ -1,9 +1,9 @@
-import type { World } from '../world/world';
-import type { Node } from './node';
-import { getComponent } from './componentRegistry';
-import type { Component } from './Component';
-import type { ComponentCtor } from './types';
-import { candidates } from './queryIndex';
+import type { World } from '../../world/world';
+import type { Node } from '../base/node';
+import { getComponent } from '../registry/componentRegistry';
+import type { Component } from '../base/Component';
+import type { ComponentCtor } from '../base/types';
+import { candidates } from './componentIndex';
 
 /**
  * Defines a reusable typed query that matches nodes that have all components in `has`

@@ -1,4 +1,4 @@
-import type { Node } from '../ecs/node';
+import type { Node } from '../ecs/base/node';
 
 /**
  * The parent change event.

@@ -1,12 +1,12 @@
 import { current } from './runtime';
 import { World } from '../world/world';
-import type { Service } from '../ecs/Service';
-import type { Ctor } from '../ecs/types';
-import { Node } from '../ecs/node';
-import { attachComponent } from '../ecs/componentRegistry';
-import type { Component } from '../ecs/Component';
-import { State } from '../components/State';
-import { StableId } from '../components/StableId';
+import type { Service } from '../ecs/base/Service';
+import type { Ctor } from '../ecs/base/types';
+import { Node } from '../ecs/base/node';
+import { attachComponent } from '../ecs/registry/componentRegistry';
+import type { Component } from '../ecs/base/Component';
+import { State } from '../components/meta/State';
+import { StableId } from '../components/meta/StableId';
 
 /**
  * Returns the `World` that is currently mounting the active function component.

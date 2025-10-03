@@ -1,4 +1,4 @@
-import { World } from '../world/world';
+import { World } from '../../world/world';
 import { Node } from './node';
 
 describe('Node', () => {

@@ -15,6 +15,10 @@ export interface WorldTimingApi {
  * and compose transforms efficiently.
  */
 export interface WorldTransformRegistry {
-    registerTransform(t: import('../components/Transform').Transform): void;
-    unregisterTransform(t: import('../components/Transform').Transform): void;
+    registerTransform(
+        t: import('../components/spatial/Transform').Transform,
+    ): void;
+    unregisterTransform(
+        t: import('../components/spatial/Transform').Transform,
+    ): void;
 }

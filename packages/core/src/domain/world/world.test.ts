@@ -1,6 +1,6 @@
-import { Node } from '../ecs/node';
-import { Transform } from '../components/Transform';
-import { attachComponent } from '../ecs/componentRegistry';
+import { Node } from '../ecs/base/node';
+import { Transform } from '../components/spatial/Transform';
+import { attachComponent } from '../ecs/registry/componentRegistry';
 import { World } from './world';
 
 describe('World', () => {

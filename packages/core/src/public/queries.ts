@@ -1,1 +1,1 @@
-export { defineQuery, query } from '../domain/ecs/queries';
+export { defineQuery, query } from '../domain/ecs/query';

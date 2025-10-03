@@ -1,10 +1,10 @@
-import { Node } from '../ecs/node';
+import { Node } from '../ecs/base/node';
 import type {
     UpdateKind,
     UpdatePhase,
     TickFn,
     TickRegistration,
-} from '../ecs/types';
+} from '../ecs/base/types';
 
 /**
  * The tick lane interface.

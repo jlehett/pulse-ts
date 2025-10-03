@@ -1,5 +1,5 @@
 import { World } from '../world/world';
-import { Node } from '../ecs/node';
+import { Node } from '../ecs/base/node';
 
 /**
  * A function component.

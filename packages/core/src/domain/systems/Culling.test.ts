@@ -1,11 +1,14 @@
 import { World } from '../world/world';
-import { Node } from '../ecs/node';
-import { attachComponent, getComponent } from '../ecs/componentRegistry';
-import { Bounds } from '../components/Bounds';
+import { Node } from '../ecs/base/node';
+import {
+    attachComponent,
+    getComponent,
+} from '../ecs/registry/componentRegistry';
+import { Bounds } from '../components/spatial/Bounds';
 import { Vec3 } from '../../utils/math/vec3';
-import { Transform } from '../components/Transform';
+import { Transform } from '../components/spatial/Transform';
 import { CullingCamera } from '../services/CullingCamera';
-import { Visibility } from '../components/Visibility';
+import { Visibility } from '../components/meta/Visibility';
 
 function identityPV(): Float32Array {
     // Identity 4x4 (column-major) defines clip-space cube [-1,1] on x/y/z
