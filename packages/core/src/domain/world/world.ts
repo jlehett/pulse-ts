@@ -28,7 +28,7 @@ import { StatsService } from '../services/Stats';
 import { TypedEvent } from '../../utils/event';
 import type { Service } from '../ecs/Service';
 import { defineQuery } from '../ecs/queries';
-import type { ComponentCtor } from '../ecs/queries';
+import type { ComponentCtor } from '../ecs/types';
 
 /**
  * Options for the World class.

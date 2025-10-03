@@ -1,3 +1,6 @@
+/**
+ * Constructor type for class-based APIs.
+ */
 export type Ctor<T> = new () => T;
 
 /**
@@ -37,3 +40,19 @@ export interface TickRegistration {
     next: TickRegistration | null;
     dispose(): void;
 }
+
+/**
+ * A component constructor type, constrained to Pulse components.
+ *
+ * Use this alias for typed component constructor arrays in queries and helpers.
+ *
+ * @example
+ * ```ts
+ * import { type ComponentCtor } from '@pulse-ts/core';
+ * import { Transform, Bounds } from '@pulse-ts/core';
+ * const has: readonly ComponentCtor[] = [Transform, Bounds];
+ * ```
+ */
+export type ComponentCtor<
+    T extends import('./Component').Component = import('./Component').Component,
+> = new () => T;

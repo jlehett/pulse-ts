@@ -2,9 +2,7 @@ import type { World } from '../world/world';
 import type { Node } from './node';
 import { getComponent } from './componentRegistry';
 import type { Component } from './Component';
-
-/** A component constructor type. */
-export type ComponentCtor<T extends Component = Component> = new () => T;
+import type { ComponentCtor } from './types';
 
 /**
  * Defines a reusable typed query that matches nodes that have all components in `has`
