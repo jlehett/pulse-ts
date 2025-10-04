@@ -4,6 +4,18 @@ import { ThreeService } from '../services/Three';
 
 /**
  * Synchronizes Node TRS into Three Object3D roots each frame before render.
+ *
+ * - Copies local TRS (with interpolation when `alpha>0`) from `Transform` components into corresponding Three roots.
+ * - Optionally respects core `Visibility` when `enableCulling` is `true`.
+ *
+ * @example
+ * ```ts
+ * import { World } from '@pulse-ts/core';
+ * import { ThreeTRSSyncSystem, ThreeService } from '@pulse-ts/three';
+ * const world = new World();
+ * world.provideService(new ThreeService({ canvas: document.createElement('canvas') }));
+ * world.addSystem(new ThreeTRSSyncSystem());
+ * ```
  */
 export class ThreeTRSSyncSystem extends System {
     static updateKind: UpdateKind = 'frame';

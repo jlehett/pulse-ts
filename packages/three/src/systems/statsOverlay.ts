@@ -2,18 +2,40 @@ import type { World, UpdateKind, UpdatePhase } from '@pulse-ts/core';
 import { StatsService, System } from '@pulse-ts/core';
 import { ThreeService } from '../services/Three';
 
+/**
+ * Options for the on-screen performance stats overlay.
+ */
 export interface StatsOverlayOptions {
+    /** Corner to anchor the overlay. Default: `top-left`. */
     position?: 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right';
+    /** Background CSS color. Default: `rgba(0,0,0,0.4)`. */
     background?: string;
+    /** Text color. Default: `#0f0`. */
     color?: string;
+    /** CSS font. Default: `12px monospace`. */
     font?: string;
+    /** CSS padding. Default: `2px 6px`. */
     pad?: string;
+    /** CSS z-index. Default: `1000`. */
     zIndex?: string | number;
-    updateMs?: number; // default 300ms
+    /** Update interval in milliseconds. Default: `300`. */
+    updateMs?: number;
 }
 
 /**
- * Displays stats overlay on the screen (FPS, fixed sps) using Three's DOM element.
+ * Displays a stats overlay (FPS, fixed SPS) inside Three's container element.
+ *
+ * - Appends a positioned `<div>` overlay next to the Three canvas.
+ * - Reads values from `StatsService` every `updateMs`.
+ *
+ * @example
+ * ```ts
+ * import { World } from '@pulse-ts/core';
+ * import { StatsOverlaySystem, ThreeService } from '@pulse-ts/three';
+ * const world = new World();
+ * world.provideService(new ThreeService({ canvas: document.createElement('canvas') }));
+ * world.addSystem(new StatsOverlaySystem({ position: 'top-right' }));
+ * ```
  */
 export class StatsOverlaySystem extends System {
     static updateKind: UpdateKind = 'frame';

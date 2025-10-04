@@ -4,7 +4,19 @@ import type { UpdateKind, UpdatePhase } from '@pulse-ts/core';
 import { ThreeService } from '../services/Three';
 
 /**
- * Pushes Three camera projection-view into the CullingCamera service.
+ * Pushes Three camera projection-view into the `CullingCamera` service.
+ *
+ * - Runs first in `frame.early` by default.
+ * - Enables core culling to use the Three camera.
+ *
+ * @example
+ * ```ts
+ * import { World } from '@pulse-ts/core';
+ * import { ThreeCameraPVSystem, ThreeService } from '@pulse-ts/three';
+ * const world = new World();
+ * world.provideService(new ThreeService({ canvas: document.createElement('canvas') }));
+ * world.addSystem(new ThreeCameraPVSystem());
+ * ```
  */
 export class ThreeCameraPVSystem extends System {
     static updateKind: UpdateKind = 'frame';

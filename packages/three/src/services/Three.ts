@@ -8,20 +8,50 @@ export type RootRecord = {
     lastWorldVersion: number;
 };
 
+/**
+ * Options for configuring the Three.js integration.
+ */
 export interface ThreeOptions {
+    /**
+     * The target canvas to render into.
+     */
     canvas: HTMLCanvasElement;
+    /**
+     * Scene clear color (hex RGB). Default: `0x000000`.
+     */
     clearColor?: number;
-    autoCommitTransforms?: boolean; // default true
-    useMatrices?: boolean; // default false - disable matrixAutoUpdate and compose explicitly
-    enableCulling?: boolean; // default true
+    /**
+     * Auto-install `ThreeTRSSyncSystem` to push transforms before render. Default: `true`.
+     */
+    autoCommitTransforms?: boolean;
+    /**
+     * Use explicit matrix composition on roots (sets `matrixAutoUpdate=false`). Default: `false`.
+     */
+    useMatrices?: boolean;
+    /**
+     * Respect core `Visibility` to hide Three roots. Default: `true`.
+     */
+    enableCulling?: boolean;
 }
 
 /**
  * ThreeService: provides renderer/scene/camera and scene-graph bridging.
  *
- * - Lifecycles with the World as a Service (not a System)
- * - Focused Systems (render, camera PV, TRS sync) consume this service
- * - Encapsulates node<->Object3D root mapping and parenting
+ * - Lifecycles with the `World` as a `Service` (not a `System`).
+ * - Focused systems (render, camera PV, TRS sync) consume this service.
+ * - Encapsulates Node ↔ Object3D root mapping and parenting.
+ *
+ * @example
+ * ```ts
+ * import { World, Node } from '@pulse-ts/core';
+ * import { ThreeService } from '@pulse-ts/three';
+ *
+ * const world = new World();
+ * const canvas = document.createElement('canvas');
+ * const three = world.provideService(new ThreeService({ canvas }));
+ * const node = world.add(new Node());
+ * const root = three.ensureRoot(node); // Object3D root for this node
+ * ```
  */
 export class ThreeService extends Service {
     readonly renderer: THREE.WebGLRenderer;
@@ -100,7 +130,7 @@ export class ThreeService extends Service {
     /**
      * Ensures a root Object3D for the given node.
      * @param node The node to ensure a root for.
-     * @returns The root Object3D.
+     * @returns The root `THREE.Object3D`.
      */
     ensureRoot(node: Node): THREE.Object3D {
         let rec = this.roots.get(node);
@@ -119,9 +149,9 @@ export class ThreeService extends Service {
     }
 
     /**
-     * Attaches a child Object3D to the root of the given node.
+     * Attaches a child `Object3D` to the root of the given node.
      * @param node The node to attach the child to.
-     * @param child The child Object3D to attach.
+     * @param child The child `Object3D` to attach.
      */
     attachChild(node: Node, child: THREE.Object3D): void {
         const root = this.ensureRoot(node);
@@ -129,9 +159,9 @@ export class ThreeService extends Service {
     }
 
     /**
-     * Detaches a child Object3D from the root of the given node.
+     * Detaches a child `Object3D` from the root of the given node.
      * @param node The node to detach the child from.
-     * @param child The child Object3D to detach.
+     * @param child The child `Object3D` to detach.
      */
     detachChild(node: Node, child: THREE.Object3D): void {
         const rec = this.roots.get(node);
@@ -140,7 +170,7 @@ export class ThreeService extends Service {
     }
 
     /**
-     * Disposes the root Object3D for the given node.
+     * Disposes the root `Object3D` for the given node and removes it from the scene graph.
      * @param node The node to dispose the root for.
      */
     disposeRoot(node: Node): void {
@@ -151,8 +181,8 @@ export class ThreeService extends Service {
     }
 
     /**
-     * Iterates over the roots.
-     * @returns An iterator over the roots.
+     * Iterates node→root records managed by the service.
+     * @returns Iterator of `[Node, RootRecord]` entries.
      */
     iterateRoots(): IterableIterator<[Node, RootRecord]> {
         return this.roots.entries();
