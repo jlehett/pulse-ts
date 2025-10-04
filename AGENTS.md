@@ -44,6 +44,7 @@ Testing
 - Add/update tests with any code change.
 
 Documentation
+- Prefer extensive JSDoc coverage; mandatory for anything public-facing. JSDoc should include `@param`, `@returns`, `@example`, and any other relevant tags.
 - Update apps/docs/ when APIs/behavior change.
 - Keep guides/ and learn/ current; mirror public API examples from JSDoc.
 - For new modules, include: overview, quickstart, limitations/trade-offs.
