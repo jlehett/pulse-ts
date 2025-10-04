@@ -23,6 +23,12 @@ export {
     useClockSync,
 } from './public/hooks';
 export { useReplicateTransform } from './public/transform';
+// Factory helpers (function-first public API)
+export {
+    createWebSocketTransport,
+    createMemoryTransport,
+    createWebRtcMeshTransport,
+} from './public/factories';
 
 // Lightweight channel helper
 export { defineChannel, channel } from './domain/messaging/channel';

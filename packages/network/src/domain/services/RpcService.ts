@@ -16,9 +16,9 @@ type RpcEnvelope =
  *
  * @example
  * // Server/peer with handler
- * rpc.register<number, number>('double', (x) => x * 2);
+ * rpc.register<number, number>('double', (x) => x * 2)
  * // Client call
- * const result = await rpc.call<number, number>('double', 21);
+ * const result = await rpc.call<number, number>('double', 21)
  */
 export class RpcService extends Service {
     private handlers = new Map<string, (payload: any) => any | Promise<any>>();
@@ -71,9 +71,7 @@ export class RpcService extends Service {
         return p;
     }
 
-    /**
-     * Calls a remote method on a specific peer and awaits the response.
-     */
+    /** Calls a remote method on a specific peer and awaits the response. */
     async callTo<Req = unknown, Res = unknown>(
         peerId: string,
         name: string,

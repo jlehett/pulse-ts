@@ -40,6 +40,15 @@ server.registerRpc('getTime', () => Date.now())
 server.registerReliable('shop:buy', async (req) => ({ ok: true }))
 ```
 
+Alternatively, use the function‑first factory when connecting imperatively with the facade:
+
+```
+import { getNetwork, createWebSocketTransport } from '@pulse-ts/network'
+
+const net = getNetwork(world)
+await net.connect(() => createWebSocketTransport('ws://localhost:8080'))
+```
+
 Rooms are controlled via the reserved `__room` channel; the `useRoom(room)` hook sends join/leave.
 
 ## WebRTC (P2P Mesh)
@@ -58,6 +67,14 @@ function ConnectP2P() {
     iceServers: [{ urls: 'stun:stun.l.google.com:19302' }]
   })
 }
+```
+
+Factory form for an imperative connect:
+
+```ts
+import { createWebRtcMeshTransport, getNetwork } from '@pulse-ts/network'
+const net = getNetwork(world)
+await net.connect(() => createWebRtcMeshTransport('peer-123', { signaling: ws }))
 ```
 
 **Important:** `TransportService.getStatus()` becomes `open` when signaling is wired, not when a DataChannel to a specific peer is ready. Use the peer lifecycle to gate your P2P sends:

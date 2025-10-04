@@ -24,6 +24,14 @@ type Peer = {
 /**
  * In-memory message hub for tests and local simulation.
  * Broadcasts to all peers except sender.
+ *
+ * @example
+ * const hub = createMemoryHub()
+ * const a = new MemoryTransport(hub, 'a')
+ * const b = new MemoryTransport(hub, 'b')
+ * await a.connect(); await b.connect()
+ * b.onMessage((d) => console.log(new TextDecoder().decode(d)))
+ * a.send(new TextEncoder().encode('hello')) // -> logs 'hello'
  */
 export interface MemoryHub {
     /**

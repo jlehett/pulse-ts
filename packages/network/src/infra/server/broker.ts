@@ -46,24 +46,27 @@ export class NetworkServer {
     // Rate limiting per peer and per channel
     private rateLimiter?: RateLimiter;
 
+    /**
+     * @param opts Server configuration and hooks.
+     * @param opts.assignId Assign a stable peer id. Defaults to incremental.
+     * @param opts.authorize Authorize a connection; return false or throw to reject.
+     * @param opts.defaultRoom Optional room to auto-join on connect.
+     * @param opts.onConnect Callback on peer connect.
+     * @param opts.onDisconnect Callback on peer disconnect.
+     * @param opts.limits Optional rate limits configuration.
+     * @param opts.maxRoomsPerPeer Max rooms a single peer may join.
+     */
     constructor(
         private opts: {
-            /** Assign a stable peer id. Defaults to incremental. */
             assignId?: (req: any) => string;
-            /** Authorize a connection. Throw/return false to reject. */
             authorize?: (req: any) => boolean | Promise<boolean>;
-            /** Default room to add new peers to (optional). */
             defaultRoom?: string;
-            /** Called when a peer connects. */
             onConnect?: (peer: {
                 id: string;
                 rooms: ReadonlySet<string>;
             }) => void;
-            /** Called when a peer disconnects. */
             onDisconnect?: (peerId: string) => void;
-            /** Rate limits config. */
             limits?: RateLimits;
-            /** Max rooms a single peer may be in (drops join beyond this). */
             maxRoomsPerPeer?: number;
         } = {},
     ) {
@@ -71,7 +74,10 @@ export class NetworkServer {
             this.rateLimiter = new RateLimiter(this.opts.limits);
     }
 
-    /** Binds a ws server (from the 'ws' package) to this broker. */
+    /**
+     * Binds a ws server (from the 'ws' package) to this broker.
+     * @param wss WebSocketServer instance from 'ws'.
+     */
     attachWebSocketServer(wss: WsServer) {
         wss.on('connection', async (ws: WsConn, req: any) => {
             try {

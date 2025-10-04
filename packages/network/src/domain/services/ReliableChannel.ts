@@ -36,8 +36,8 @@ export interface ReliableResult<T = unknown> {
  * - Server is expected to respond with an `ack` envelope on a reserved channel with the same id.
  *
  * @example
- * const rel = world.provideService(new ReliableChannelService());
- * const res = await rel.send<string, string>('echo', 'hello');
+ * const rel = world.provideService(new ReliableChannelService())
+ * const res = await rel.send<string, string>('echo', 'hello')
  */
 type PendingEntry = {
     resolve: (v: ReliableResult) => void;

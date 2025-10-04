@@ -45,13 +45,13 @@ export interface InstalledNetwork {
  * @returns The installed service instances.
  *
  * @example
- * import { World } from '@pulse-ts/core';
- * import { installNetwork, WebSocketTransport } from '@pulse-ts/network';
- * const world = new World();
+ * import { World } from '@pulse-ts/core'
+ * import { installNetwork, createWebSocketTransport } from '@pulse-ts/network'
+ * const world = new World()
  * await installNetwork(world, {
- *   transport: () => new WebSocketTransport('ws://localhost:8080'),
+ *   transport: () => createWebSocketTransport('ws://localhost:8080'),
  *   replication: { sendHz: 20 },
- * });
+ * })
  */
 export async function installNetwork(
     world: World,

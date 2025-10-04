@@ -20,6 +20,13 @@ export type SnapshotEnvelope = {
 /**
  * Returns a shallow delta between two plain objects (changed keys only).
  * Undefined means no change. Null is a valid value and included.
+ *
+ * @param now Current object.
+ * @param last Previous object.
+ * @returns Patch object or `undefined` if no changes.
+ *
+ * @example
+ * shallowDelta({ a: 1, b: 2 }, { a: 1, b: 0 }) // => { b: 2 }
  */
 export function shallowDelta(now: any, last: any): any | undefined {
     if (now === last) return undefined;

@@ -25,6 +25,9 @@ export class ClockSyncService extends Service {
 
     readonly onSample = new TypedEvent<{ offsetMs: number; rttMs: number }>();
 
+    /**
+     * @param opts Sampling interval and burst count.
+     */
     constructor(private opts: { intervalMs?: number; burst?: number } = {}) {
         super();
         this.opts.intervalMs ??= 2000;

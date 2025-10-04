@@ -18,6 +18,8 @@ import { useReplication } from './hooks';
  * Usage:
  * - On both sides, ensure `useStableId('entity-id')` or pass `opts.id`.
  * - Call `useReplicateTransform({ role: 'producer'|'consumer'|'both' })`.
+ *
+ * @param opts Options including id, role, and smoothing parameters.
  */
 export function useReplicateTransform(
     opts: {

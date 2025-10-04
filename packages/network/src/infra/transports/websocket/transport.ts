@@ -36,6 +36,11 @@ export class WebSocketTransport implements Transport {
     private ws: WebSocketLike | null = null;
     private reconnectAttempts = 0;
 
+    /**
+     * @param url WebSocket URL.
+     * @param opts Transport options, including optional WebSocket constructor for Node,
+     *             autoReconnect, and backoff parameters.
+     */
     constructor(
         private url: string,
         private opts: {
@@ -113,13 +118,21 @@ export class WebSocketTransport implements Transport {
         }
     }
 
-    /** Subscribes to raw incoming frames. */
+    /**
+     * Subscribes to raw incoming frames.
+     * @param fn Callback invoked with bytes; `meta.from` is undefined for WS.
+     * @returns Unsubscribe function.
+     */
     onMessage(fn: (data: Uint8Array, meta?: { from?: string }) => void) {
         this.msgHandlers.add(fn);
         return () => this.msgHandlers.delete(fn);
     }
 
-    /** Subscribes to status changes. */
+    /**
+     * Subscribes to status changes.
+     * @param fn Callback invoked on status update.
+     * @returns Unsubscribe function.
+     */
     onStatus(fn: (status: TransportStatus) => void) {
         this.statusHandlers.add(fn);
         return () => this.statusHandlers.delete(fn);

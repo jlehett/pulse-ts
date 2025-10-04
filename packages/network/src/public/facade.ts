@@ -11,13 +11,14 @@ import { channelKey } from '../domain/messaging/channel';
 
 /**
  * Simplified facade over common networking tasks for a given World.
- *
  * Prefer using hooks in components; this facade is handy in imperative code.
+ *
+ * @param world Target World instance.
+ * @returns Facade with `connect`, `status`, `disconnect`, `stats`, `channel`, `rpc`, `reliable`, `replicate` helpers.
  *
  * @example
  * import { World } from '@pulse-ts/core'
  * import { getNetwork } from '@pulse-ts/network'
- * // Optionally provide a transport factory (e.g., a deep import of WebSocketTransport)
  * const world = new World()
  * const net = getNetwork(world)
  * await net.connect(() => undefined as any)

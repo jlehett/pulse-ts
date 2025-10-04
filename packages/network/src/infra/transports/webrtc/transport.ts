@@ -3,16 +3,19 @@ import type { Transport, TransportStatus } from '../../domain/types';
 type WebRTC = typeof RTCPeerConnection;
 
 export type WebRtcMeshOptions = {
+    /** This peer's stable id. */
     selfId: string;
-    /** STUN/TURN config */
+    /** STUN/TURN config. */
     iceServers?: RTCIceServer[];
-    /** Signaling adapter */
+    /** Signaling adapter (transport-agnostic). */
     signaling: {
+        /** Send a signaling envelope to a peer. */
         send: (
             to: string,
             type: 'hello' | 'offer' | 'answer' | 'ice',
             payload: any,
         ) => void | Promise<void>;
+        /** Subscribe to incoming signaling envelopes. */
         on: (
             fn: (env: {
                 from: string;
@@ -57,6 +60,9 @@ export class WebRtcMeshTransport implements Transport {
 
     private RTCPeerConnection: WebRTC;
 
+    /**
+     * @param opts Mesh options including `selfId`, `signaling`, and `iceServers`.
+     */
     constructor(private opts: WebRtcMeshOptions) {
         this.RTCPeerConnection =
             opts.webRTC?.RTCPeerConnection ??
@@ -68,10 +74,12 @@ export class WebRtcMeshTransport implements Transport {
         }
     }
 
+    /** Current connection status of the mesh signaling. */
     getStatus(): TransportStatus {
         return this.status;
     }
 
+    /** Connects signaling and starts establishing peer connections. */
     async connect(): Promise<void> {
         if (this.status === 'open') return;
         this.setStatus('connecting');
@@ -89,6 +97,7 @@ export class WebRtcMeshTransport implements Transport {
         this.setStatus('open');
     }
 
+    /** Disconnects all peer connections and stops signaling. */
     async disconnect(): Promise<void> {
         this.unsubSignal?.();
         this.unsubSignal = null;
@@ -100,6 +109,7 @@ export class WebRtcMeshTransport implements Transport {
         this.setStatus('closed');
     }
 
+    /** Broadcasts a binary frame to all open DataChannels. */
     send(data: Uint8Array): void {
         for (const [, dc] of this.dcs) {
             try {
@@ -116,26 +126,31 @@ export class WebRtcMeshTransport implements Transport {
         }
     }
 
+    /** Subscribe to messages; meta.from is the peer id. */
     onMessage(fn: (data: Uint8Array, meta?: { from?: string }) => void) {
         this.msgHandlers.add(fn);
         return () => this.msgHandlers.delete(fn);
     }
 
+    /** Subscribe to status changes. */
     onStatus(fn: (status: TransportStatus) => void) {
         this.statusHandlers.add(fn);
         return () => this.statusHandlers.delete(fn);
     }
 
+    /** Subscribe to peer join events (DataChannel open). */
     onPeerJoin(fn: (peerId: string) => void) {
         this.peerJoinHandlers.add(fn);
         return () => this.peerJoinHandlers.delete(fn);
     }
 
+    /** Subscribe to peer leave events (DataChannel close). */
     onPeerLeave(fn: (peerId: string) => void) {
         this.peerLeaveHandlers.add(fn);
         return () => this.peerLeaveHandlers.delete(fn);
     }
 
+    /** Returns current peer ids with an open DataChannel. */
     peers() {
         return Array.from(this.dcs.keys());
     }

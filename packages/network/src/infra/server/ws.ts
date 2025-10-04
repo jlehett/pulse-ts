@@ -15,10 +15,14 @@ export type WsServer = {
 /**
  * Attaches a Node 'ws' WebSocketServer to a NetworkServer.
  *
- * Example:
- * const { WebSocketServer } = require('ws');
- * const wss = new WebSocketServer({ port: 8080 });
- * const server = attachWsServer(wss, { defaultRoom: 'lobby' });
+ * @param wss WebSocketServer from the 'ws' package.
+ * @param opts NetworkServer options.
+ * @returns The created NetworkServer instance.
+ *
+ * @example
+ * const { WebSocketServer } = require('ws')
+ * const wss = new WebSocketServer({ port: 8080 })
+ * const server = attachWsServer(wss, { defaultRoom: 'lobby' })
  */
 export function attachWsServer(
     wss: WsServer,

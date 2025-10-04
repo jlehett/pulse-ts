@@ -51,15 +51,16 @@ export class TransportService extends Service {
     private packetsIn = 0;
     private packetsOut = 0;
 
+    /**
+     * @param opts Optional codec override and self peer id.
+     */
     constructor(opts: { codec?: Codec; selfId?: string } = {}) {
         super();
         this.codec = opts.codec ?? JSON_CODEC;
         this.selfId = opts.selfId;
     }
 
-    /**
-     * Replaces the packet codec used for encode/decode.
-     */
+    /** Replaces the packet codec used for encode/decode. */
     setCodec(codec: Codec) {
         this.codec = codec;
     }
@@ -75,8 +76,8 @@ export class TransportService extends Service {
     }
 
     /**
-     * Set the transport.
-     * @param t The transport.
+     * Sets the underlying transport and wires message/status handlers.
+     * @param t Transport implementation.
      */
     setTransport(t: Transport) {
         if (this.transport) this.detachTransport();
@@ -120,9 +121,7 @@ export class TransportService extends Service {
         };
     }
 
-    /**
-     * Detach the transport.
-     */
+    /** Detach the current transport and clear status to 'idle'. */
     private detachTransport() {
         (this as any)._offT?.();
         (this as any)._offT = undefined;
@@ -130,9 +129,7 @@ export class TransportService extends Service {
         this.status = 'idle';
     }
 
-    /**
-     * Connect to the transport.
-     */
+    /** Connects the underlying transport. */
     async connect() {
         if (!this.transport)
             throw new Error(
@@ -141,27 +138,22 @@ export class TransportService extends Service {
         await this.transport.connect();
     }
 
-    /**
-     * Disconnect from the transport.
-     */
+    /** Disconnects the underlying transport. */
     async disconnect() {
         if (!this.transport) return;
         await this.transport.disconnect();
     }
 
-    /**
-     * Get the status of the transport.
-     * @returns The status.
-     */
+    /** Returns the last known status. */
     getStatus(): TransportStatus {
         return this.status;
     }
 
     /**
      * Subscribe to a channel.
-     * @param name The name of the channel.
-     * @param handler The handler.
-     * @returns The unsubscribe function.
+     * @param name Channel name.
+     * @param handler Handler invoked with decoded payload and `{ from? }`.
+     * @returns Unsubscribe function.
      */
     subscribe<T>(name: ChannelName, handler: ChannelHandler<T>): Unsubscribe {
         const key = channelKey(name);
@@ -171,25 +163,17 @@ export class TransportService extends Service {
         return () => set!.delete(handler as ChannelHandler<any>);
     }
 
-    /**
-     * Publish a message to a channel.
-     * @param name The name of the channel.
-     * @param data The data.
-     */
+    /** Publish a message to a channel. */
     publish<T>(name: ChannelName, data: T) {
         this.outbox.push({ channel: channelKey(name), data });
     }
 
-    /**
-     * Publish a message addressed to a specific peer or peers.
-     */
+    /** Publish a message addressed to a specific peer or peers. */
     publishTo<T>(name: ChannelName, to: string | string[], data: T) {
         this.outbox.push({ channel: channelKey(name), data, to });
     }
 
-    /**
-     * Flush the outgoing messages.
-     */
+    /** Flushes the outgoing messages to the transport. */
     flushOutgoing() {
         if (!this.transport) return;
         for (const pkt of this.outbox) {
@@ -203,8 +187,8 @@ export class TransportService extends Service {
     }
 
     /**
-     * Dispatch the incoming messages.
-     * @param max The maximum number of messages to dispatch.
+     * Dispatches incoming messages to subscribers.
+     * @param max Maximum number of messages to process per call (default 128).
      */
     dispatchIncoming(max = 128) {
         // process up to max msgs per call to avoid long spikes
@@ -239,26 +223,21 @@ export class TransportService extends Service {
     }
 
     /**
-     * Pumps the transport: flushes outgoing messages, then dispatches incoming.
-     *
-     * This mirrors what `NetworkTick` does each frame and is handy in tests or
-     * imperative setups where you are not running a scheduler/system loop.
+     * Pumps the transport: flushes outgoing, then dispatches incoming.
+     * Mirrors what `NetworkTick` does and is handy in tests or imperative setups.
      *
      * @param max Maximum number of incoming packets to dispatch (default 256).
      * @example
      * // Two worlds wired via MemoryTransport
-     * // a.publish('chat', 'hello');
-     * // a.pump(); b.pump(); // delivers 'hello' to b's subscribers
+     * // a.publish('chat', 'hello')
+     * // a.pump(); b.pump() // delivers 'hello' to b's subscribers
      */
     pump(max = 256) {
         this.flushOutgoing();
         this.dispatchIncoming(max);
     }
 
-    /**
-     * Get the stats.
-     * @returns The stats.
-     */
+    /** Returns basic transport statistics. */
     getStats() {
         return {
             status: this.status,
@@ -276,9 +255,7 @@ export class TransportService extends Service {
         return [];
     }
 
-    /**
-     * Fluent typed channel helper.
-     */
+    /** Fluent typed channel helper. */
     channel<T = unknown>(name: ChannelName) {
         const key = channelKey(name);
         return {

@@ -41,9 +41,7 @@ export class ReplicationService extends Service {
         this.opts.sendHz ??= 20;
     }
 
-    /**
-     * Updates replication options (channel and/or send rate).
-     */
+    /** Updates replication options (channel and/or send rate). */
     configure(opts: Partial<{ channel: string; sendHz: number }>) {
         if (opts.channel) this.opts.channel = opts.channel;
         if (typeof opts.sendHz === 'number' && opts.sendHz > 0)

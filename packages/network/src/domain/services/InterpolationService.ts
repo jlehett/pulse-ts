@@ -22,9 +22,7 @@ type Entry = {
     lambda: number;
 };
 
-/**
- * Maintains target TRS for remote entities and smoothly interpolates toward them.
- */
+/** Maintains target TRS for remote entities and smoothly interpolates toward them. */
 export class InterpolationService extends Service {
     private m = new Map<string, Entry>();
 
@@ -64,19 +62,15 @@ export class InterpolationService extends Service {
         return id;
     }
 
-    /**
-     * Updates the target for an entity's transform.
-     */
+    /** Updates the target for an entity's transform. */
     setTarget(id: string, patch: Target) {
         const e = this.m.get(id);
         if (!e) return;
         e.target = { ...e.target, ...patch };
     }
 
-    /**
-     * Steps interpolation toward targets for all registered entities.
-     * @param dt Delta time in seconds.
-     */
+    /** Steps interpolation toward targets for all registered entities.
+     * @param dt Delta time in seconds. */
     tick(dt: number) {
         if (dt <= 0) return;
         for (const [, e] of this.m) this.step(e, dt);

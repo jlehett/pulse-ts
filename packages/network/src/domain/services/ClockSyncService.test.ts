@@ -1,59 +1,76 @@
 import { World } from '@pulse-ts/core';
-import { ClockSyncService } from './ClockSyncService';
 import { TransportService } from './TransportService';
+import { ClockSyncService } from './ClockSyncService';
 import {
     createMemoryHub,
     MemoryTransport,
 } from '../../infra/transports/memory';
 import { ReservedChannels } from '../messaging/reserved';
 
-function wire(world: World, t: MemoryTransport) {
-    const net = world.provideService(new TransportService());
-    net.setTransport(t);
-    return net;
-}
-
 describe('ClockSyncService', () => {
-    it('collects samples and updates stats via ping/pong', async () => {
-        const hub = createMemoryHub();
-        const w1 = new World();
-        const w2 = new World();
-        const a = wire(w1, new MemoryTransport(hub, 'a'));
-        const b = wire(w2, new MemoryTransport(hub, 'b'));
-        await a.connect();
-        await b.connect();
+    it('tracks best RTT sample and offset', async () => {
+        // Stub Date.now to a controllable clock
+        let now = 0;
+        const realNow = Date.now;
+        jest.spyOn(Date, 'now').mockImplementation(() => now);
 
-        // server-like responder on B
-        b.subscribe(ReservedChannels.CLOCK, (env: any) => {
-            if (!env || env.t !== 'ping') return;
-            b.publish(ReservedChannels.CLOCK, {
-                t: 'pong',
-                id: env.id,
-                sNowMs: Date.now(),
-            });
+        const hub = createMemoryHub();
+        const wClient = new World();
+        const tA = new TransportService();
+        tA.setTransport(new MemoryTransport(hub, 'a'));
+        const tB = new TransportService();
+        tB.setTransport(new MemoryTransport(hub, 'b'));
+        await tA.connect();
+        await tB.connect();
+
+        // Server: reply to pings with sNowMs = clientNow + offset
+        const serverOffset = 100;
+        tB.subscribe<any>(ReservedChannels.CLOCK, (env) => {
+            if (env?.t === 'ping') {
+                tB.publish(ReservedChannels.CLOCK, {
+                    t: 'pong',
+                    id: env.id,
+                    sNowMs: now + serverOffset,
+                });
+            }
         });
 
-        const svc = w1.provideService(
-            new ClockSyncService({ intervalMs: 1000 }),
+        const clock = wClient.provideService(
+            new ClockSyncService({ intervalMs: 10000 }),
         );
-        svc.start();
+        // wire the client service into the client world transport service
+        wClient.provideService(tA);
 
-        // Drive a few cycles
-        for (let i = 0; i < 5; i++) {
-            a.flushOutgoing();
-            b.dispatchIncoming();
-            b.flushOutgoing();
-            a.dispatchIncoming();
-            // let microtasks run
+        // Start and trigger first ping
+        now = 0;
+        clock.start();
+        // deliver ping to server after some time
+        now = 10;
+        tA.flushOutgoing();
+        tB.dispatchIncoming();
+        // deliver pong to client after some time
+        now = 40;
+        tB.flushOutgoing();
+        tA.dispatchIncoming();
 
-            await Promise.resolve();
-        }
+        // Second sample with smaller RTT
+        now = 50;
+        (clock as any).pingBurst?.();
+        now = 52;
+        tA.flushOutgoing();
+        tB.dispatchIncoming();
+        now = 60;
+        tB.flushOutgoing();
+        tA.dispatchIncoming();
 
-        const stats = svc.getStats();
-        expect(stats.samples).toBeGreaterThanOrEqual(1);
-        expect(typeof svc.getOffsetMs()).toBe('number');
-        expect(stats.bestRttMs).toBeGreaterThanOrEqual(0);
+        const stats = clock.getStats();
+        expect(stats.bestRttMs).toBe(10);
+        expect(clock.getOffsetMs()).toBe(97); // 152 - (50+60)/2
 
-        svc.stop();
+        // cleanup
+        (Date.now as any) = realNow;
+        clock.stop();
+        await tA.disconnect();
+        await tB.disconnect();
     });
 });

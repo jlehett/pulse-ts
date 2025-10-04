@@ -24,6 +24,7 @@ import type { WebRtcMeshOptions } from '../infra/transports/webrtc';
 
 /**
  * Ensure TransportService and NetworkTick are initialized once per world.
+ * Internal helper for hooks; idempotent per World.
  */
 function ensureRuntime() {
     const world = useWorld();
@@ -35,17 +36,20 @@ function ensureRuntime() {
 
 /**
  * Type for the initialization function of a transport.
+ * Accepts either an instance or a factory function returning a `Transport`.
  */
 export type TransportInit = Transport | (() => Transport);
 
 /**
- * Use a connection to the network.
- * @param init The transport to use.
- * @returns The connection status and a function to disconnect.
+ * Establish a network connection using a provided transport instance or factory.
+ * Sets the transport on `TransportService` and initiates `connect()` on mount; disconnects on unmount.
+ *
+ * @param init Transport instance or factory.
+ * @returns Helpers for status and disconnecting.
  *
  * @example
  * // Browser: connect via WebSocket
- * const { getStatus } = useConnection(() => new WebSocketTransport('ws://localhost:8080'));
+ * const { getStatus } = useConnection(() => new WebSocketTransport('ws://localhost:8080'))
  */
 export function useConnection(init: TransportInit) {
     const world = useWorld();
@@ -80,11 +84,13 @@ export function useConnection(init: TransportInit) {
 
 /**
  * Convenience hook: connect via WebSocketTransport.
+ *
  * @param url WebSocket URL.
  * @param opts Transport options (protocols, ws ctor for Node, autoReconnect, backoff).
+ * @returns Same shape as {@link useConnection}.
  *
  * @example
- * useWebSocket('ws://localhost:8080', { autoReconnect: true });
+ * useWebSocket('ws://localhost:8080', { autoReconnect: true })
  */
 export function useWebSocket(
     url: string,
@@ -94,13 +100,15 @@ export function useWebSocket(
 }
 
 /**
- * Convenience hook: connect two Worlds in-process via a MemoryHub.
- * @param hub Shared MemoryHub instance.
+ * Convenience hook: connect two Worlds in-process via a shared MemoryHub.
+ *
+ * @param hub Shared {@link MemoryHub} instance.
  * @param opts Optional peer configuration.
+ * @returns Same shape as {@link useConnection}.
  *
  * @example
- * const hub = createMemoryHub();
- * useMemory(hub, { peerId: 'client-1' });
+ * const hub = createMemoryHub()
+ * useMemory(hub, { peerId: 'client-1' })
  */
 export function useMemory(hub: MemoryHub, opts?: { peerId?: string }) {
     return useConnection(() => new MemoryTransport(hub, opts?.peerId));
@@ -110,14 +118,18 @@ export function useMemory(hub: MemoryHub, opts?: { peerId?: string }) {
  * Establish a WebRTC mesh transport using a dedicated signaling transport.
  *
  * - Keeps a separate TransportService for signaling so swapping the main transport does not break signaling.
- * - On mount: connects signaling, wires rtc, swaps main TransportService to WebRTC and connects it.
- * - On unmount: disconnects rtc and stops signaling.
+ * - On mount: connects signaling, wires RTC, swaps main TransportService to WebRTC and connects it.
+ * - On unmount: disconnects RTC and stops signaling.
+ *
+ * @param selfId Stable id for this peer.
+ * @param opts Signaling and WebRTC options.
+ * @returns Same shape as {@link useConnection}.
  *
  * @example
  * useWebRTC('peer-a', {
  *   signaling: () => new WebSocketTransport('ws://localhost:8080'),
  *   peers: () => ['peer-b'],
- * });
+ * })
  */
 export function useWebRTC(
     selfId: string,
@@ -198,13 +210,14 @@ export function useWebRTC(
 
 /**
  * Use a channel to send and receive messages.
- * @param name The name of the channel.
- * @param handler The handler for the channel.
- * @returns The channel.
+ *
+ * @param name Channel name (string or value returned by `defineChannel`).
+ * @param handler Optional handler to subscribe on mount.
+ * @returns `{ publish, subscribe }` helper bound to the channel.
  *
  * @example
- * const chat = useChannel<string>('chat', (msg) => console.log('got', msg));
- * chat.publish('hello');
+ * const chat = useChannel<string>('chat', (msg) => console.log('got', msg))
+ * chat.publish('hello')
  */
 export function useChannel<T = unknown>(
     name: ChannelName,
@@ -232,11 +245,12 @@ export function useChannel<T = unknown>(
 }
 
 /**
- * Use the network stats.
- * @returns The network stats.
+ * Read aggregated network stats from the TransportService.
+ *
+ * @returns `{ get }` accessor returning the latest stats snapshot.
  * @example
- * const stats = useNetworkStats();
- * console.log(stats.get());
+ * const stats = useNetworkStats()
+ * console.log(stats.get())
  */
 export function useNetworkStats() {
     const world = useWorld();
@@ -253,9 +267,11 @@ export function useNetworkStats() {
 
 /**
  * Subscribe to transport status changes and access the latest value.
+ *
+ * @returns `{ get }` accessor returning the latest known status.
  * @example
- * const status = useNetworkStatus();
- * console.log(status.get());
+ * const status = useNetworkStatus()
+ * console.log(status.get())
  */
 export function useNetworkStatus() {
     const world = useWorld();
@@ -283,10 +299,11 @@ export function useNetworkStatus() {
  *
  * @param name Method name.
  * @param handler Optional method implementation.
+ * @returns `{ call }` to invoke the RPC method.
  *
  * @example
- * const { call } = useRPC<number, number>('double', (x) => x * 2);
- * call(21).then(console.log);
+ * const { call } = useRPC<number, number>('double', (x) => x * 2)
+ * call(21).then(console.log)
  */
 export function useRPC<Req = unknown, Res = unknown>(
     name: string,
@@ -314,15 +331,16 @@ export function useRPC<Req = unknown, Res = unknown>(
 }
 
 /**
- * Track known peer ids observed via incoming packet metadata.
+ * Track known peer ids observed via incoming packet metadata and transport peer events.
  *
  * - Uses `TransportService.onPacketIn` and collects `pkt.from` values.
  * - Resets the peer list when the transport status goes to 'closed'.
  * - Best-effort: requires transports to supply `from` (e.g., WebRTC mesh, memory hub).
  *
+ * @returns `{ list, size, has }` peer helpers.
  * @example
- * const peers = usePeers();
- * console.log(peers.list());
+ * const peers = usePeers()
+ * console.log(peers.list())
  */
 export function usePeers() {
     const svc = ensureRuntime();
@@ -370,8 +388,14 @@ export function usePeers() {
 
 /**
  * Use a channel with addressed publish to a specific peer (or peers).
+ *
+ * @param to Peer id or list of ids.
+ * @param name Channel name (string or value from `defineChannel`).
+ * @param handler Optional handler to subscribe on mount.
+ * @returns `{ publish, subscribe }` helper bound to the channel.
+ *
  * @example
- * useChannelTo('peer-2', 'chat').publish('hi');
+ * useChannelTo('peer-2', 'chat').publish('hi')
  */
 export function useChannelTo<T = unknown>(
     to: string | string[],
@@ -396,9 +420,14 @@ export function useChannelTo<T = unknown>(
  * - If `handler` is provided, registers the method (same as useRPC).
  * - Returns a `call` function that targets a fixed peer via callTo().
  *
+ * @param peerId Target peer id.
+ * @param name Method name.
+ * @param handler Optional local implementation.
+ * @returns `{ call }` to invoke the RPC on the target peer.
+ *
  * @example
- * const add = useRPCTo<{x:number,y:number}, number>('peer-2', 'add');
- * add.call({ x: 1, y: 2 });
+ * const add = useRPCTo<{x:number,y:number}, number>('peer-2', 'add')
+ * add.call({ x: 1, y: 2 })
  */
 export function useRPCTo<Req = unknown, Res = unknown>(
     peerId: string,
@@ -432,8 +461,9 @@ export function useRPCTo<Req = unknown, Res = unknown>(
  * - Works with the server broker's reserved channel.
  * - Safe to call before connection; message queues until transport opens.
  *
+ * @param room Room name.
  * @example
- * useRoom('lobby');
+ * useRoom('lobby')
  */
 export function useRoom(room: string) {
     const world = useWorld();
@@ -457,9 +487,10 @@ export function useRoom(room: string) {
  *
  * @param key Replica key name under the entity (e.g., 'transform', 'state').
  * @param opts Replica functions and options.
+ * @returns `{ markDirty }` helper to force inclusion in next snapshot.
  *
  * @example
- * useReplication('state', { read: () => ({ x: 1 }) });
+ * useReplication('state', { read: () => ({ x: 1 }) })
  */
 export function useReplication<T = any>(
     key: string,
@@ -510,9 +541,12 @@ export function useReplication<T = any>(
  *
  * - Returns a stable `send` that resolves with a generic `{ status, result, reason }`.
  *
+ * @param topic Topic string identifying the handler on the receiver side.
+ * @returns `{ send }` to send a request and await ack.
+ *
  * @example
- * const rel = useReliable<string, string>('echo');
- * const res = await rel.send('hello');
+ * const rel = useReliable<string, string>('echo')
+ * const res = await rel.send('hello')
  */
 export function useReliable<TReq = any, TRes = any>(topic: string) {
     const world = useWorld();
@@ -534,9 +568,14 @@ export function useReliable<TReq = any, TRes = any>(topic: string) {
 
 /**
  * Access a reliable request/ack channel addressed to a specific peer (or peers).
+ *
+ * @param peerId Peer id string or list of ids.
+ * @param topic Topic string identifying the handler on the receiver side.
+ * @returns `{ send }` to send a request and await ack.
+ *
  * @example
- * const rel = useReliableTo<string, string>('peer-2', 'echo');
- * await rel.send('hi');
+ * const rel = useReliableTo<string, string>('peer-2', 'echo')
+ * await rel.send('hi')
  */
 export function useReliableTo<TReq = any, TRes = any>(
     peerId: string | string[],
@@ -561,9 +600,12 @@ export function useReliableTo<TReq = any, TRes = any>(
 
 /**
  * Starts client clock sync and provides accessors for server time.
+ *
+ * @param opts Optional ping interval and burst size.
+ * @returns `{ getOffsetMs, getServerNowMs, getStats }` accessors.
  * @example
- * const clock = useClockSync({ intervalMs: 1000 });
- * console.log(clock.getServerNowMs());
+ * const clock = useClockSync({ intervalMs: 1000 })
+ * console.log(clock.getServerNowMs())
  */
 export function useClockSync(opts?: { intervalMs?: number; burst?: number }) {
     const world = useWorld();
