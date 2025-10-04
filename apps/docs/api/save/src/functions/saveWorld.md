@@ -8,9 +8,9 @@
 
 > **saveWorld**(`world`, `opts`): [`SaveFile`](../type-aliases/SaveFile.md)
 
-Defined in: [packages/save/src/world.ts:58](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/save/src/world.ts#L58)
+Defined in: packages/save/src/public/world.ts:18
 
-Saves the world to a save file.
+Saves the world to a JSON-safe object.
 
 ## Parameters
 
@@ -18,16 +18,27 @@ Saves the world to a save file.
 
 `World`
 
-The world to save.
+The world to serialize.
 
 ### opts
 
 [`SaveOptions`](../interfaces/SaveOptions.md) = `{}`
 
-The options for saving the world.
+Optional save options (e.g., includeTime).
 
 ## Returns
 
 [`SaveFile`](../type-aliases/SaveFile.md)
 
-The save file.
+A JSON-safe save file object.
+
+## Example
+
+```ts
+import { World } from '@pulse-ts/core';
+import { installSave, saveWorld } from '@pulse-ts/save';
+const world = new World();
+installSave(world);
+const save = saveWorld(world, { includeTime: true });
+const json = JSON.stringify(save);
+```

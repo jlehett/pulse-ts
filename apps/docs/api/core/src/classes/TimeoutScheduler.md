@@ -6,7 +6,7 @@
 
 # Class: TimeoutScheduler
 
-Defined in: [packages/core/src/infra/scheduler/TimeoutScheduler.ts:6](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/core/src/infra/scheduler/TimeoutScheduler.ts#L6)
+Defined in: [packages/core/src/infra/scheduler/TimeoutScheduler.ts:6](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/core/src/infra/scheduler/TimeoutScheduler.ts#L6)
 
 A scheduler that uses setTimeout.
 
@@ -20,7 +20,7 @@ A scheduler that uses setTimeout.
 
 > **new TimeoutScheduler**(`fps`): `TimeoutScheduler`
 
-Defined in: [packages/core/src/infra/scheduler/TimeoutScheduler.ts:7](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/core/src/infra/scheduler/TimeoutScheduler.ts#L7)
+Defined in: [packages/core/src/infra/scheduler/TimeoutScheduler.ts:7](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/core/src/infra/scheduler/TimeoutScheduler.ts#L7)
 
 #### Parameters
 
@@ -38,7 +38,7 @@ Defined in: [packages/core/src/infra/scheduler/TimeoutScheduler.ts:7](https://gi
 
 > **start**(`loop`): `void`
 
-Defined in: [packages/core/src/infra/scheduler/TimeoutScheduler.ts:11](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/core/src/infra/scheduler/TimeoutScheduler.ts#L11)
+Defined in: [packages/core/src/infra/scheduler/TimeoutScheduler.ts:11](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/core/src/infra/scheduler/TimeoutScheduler.ts#L11)
 
 #### Parameters
 
@@ -60,7 +60,7 @@ Defined in: [packages/core/src/infra/scheduler/TimeoutScheduler.ts:11](https://g
 
 > **stop**(): `void`
 
-Defined in: [packages/core/src/infra/scheduler/TimeoutScheduler.ts:25](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/core/src/infra/scheduler/TimeoutScheduler.ts#L25)
+Defined in: [packages/core/src/infra/scheduler/TimeoutScheduler.ts:25](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/core/src/infra/scheduler/TimeoutScheduler.ts#L25)
 
 #### Returns
 

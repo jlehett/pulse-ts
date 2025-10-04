@@ -8,9 +8,9 @@
 
 > **withSave**\<`P`\>(`id`, `opts`): (`fc`) => `FC`\<`P`\>
 
-Defined in: [packages/save/src/hooks/fc.ts:64](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/save/src/hooks/fc.ts#L64)
+Defined in: packages/save/src/public/fc.ts:76
 
-Curried variant of defineFC for ergonomic composition.
+Curried variant of [defineFC](defineFC.md) for ergonomic composition.
 
 ## Type Parameters
 
@@ -24,7 +24,11 @@ Curried variant of defineFC for ergonomic composition.
 
 `string`
 
+Stable id for save files.
+
 ### opts
+
+Optional config (autoRegister, mapProps).
 
 #### autoRegister?
 
@@ -47,3 +51,10 @@ Curried variant of defineFC for ergonomic composition.
 ### Returns
 
 `FC`\<`P`\>
+
+## Example
+
+```ts
+import { withSave } from '@pulse-ts/save';
+const Saved = withSave('game:thing')((props) => void props);
+```

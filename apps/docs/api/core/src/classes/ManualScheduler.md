@@ -6,7 +6,7 @@
 
 # Class: ManualScheduler
 
-Defined in: [packages/core/src/infra/scheduler/ManualScheduler.ts:15](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/core/src/infra/scheduler/ManualScheduler.ts#L15)
+Defined in: [packages/core/src/infra/scheduler/ManualScheduler.ts:15](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/core/src/infra/scheduler/ManualScheduler.ts#L15)
 
 A scheduler that uses a manual loop.
 
@@ -40,7 +40,7 @@ sched.step(); // drive one iteration with current time
 
 > **start**(`loop`): `void`
 
-Defined in: [packages/core/src/infra/scheduler/ManualScheduler.ts:18](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/core/src/infra/scheduler/ManualScheduler.ts#L18)
+Defined in: [packages/core/src/infra/scheduler/ManualScheduler.ts:18](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/core/src/infra/scheduler/ManualScheduler.ts#L18)
 
 #### Parameters
 
@@ -62,7 +62,7 @@ Defined in: [packages/core/src/infra/scheduler/ManualScheduler.ts:18](https://gi
 
 > **step**(`nowMs?`): `void`
 
-Defined in: [packages/core/src/infra/scheduler/ManualScheduler.ts:26](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/core/src/infra/scheduler/ManualScheduler.ts#L26)
+Defined in: [packages/core/src/infra/scheduler/ManualScheduler.ts:26](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/core/src/infra/scheduler/ManualScheduler.ts#L26)
 
 #### Parameters
 
@@ -80,7 +80,7 @@ Defined in: [packages/core/src/infra/scheduler/ManualScheduler.ts:26](https://gi
 
 > **stop**(): `void`
 
-Defined in: [packages/core/src/infra/scheduler/ManualScheduler.ts:22](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/core/src/infra/scheduler/ManualScheduler.ts#L22)
+Defined in: [packages/core/src/infra/scheduler/ManualScheduler.ts:22](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/core/src/infra/scheduler/ManualScheduler.ts#L22)
 
 #### Returns
 

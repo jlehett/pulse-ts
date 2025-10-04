@@ -8,7 +8,7 @@
 
 > **ChordBinding** = `object`
 
-Defined in: [packages/input/src/domain/bindings/types.ts:213](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/input/src/domain/bindings/types.ts#L213)
+Defined in: [packages/input/src/domain/bindings/types.ts:213](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/input/src/domain/bindings/types.ts#L213)
 
 A chord (simultaneous keys) binding expression.
 
@@ -18,7 +18,7 @@ A chord (simultaneous keys) binding expression.
 
 > **keys**: [`KeyBinding`](KeyBinding.md)[]
 
-Defined in: [packages/input/src/domain/bindings/types.ts:216](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/input/src/domain/bindings/types.ts#L216)
+Defined in: [packages/input/src/domain/bindings/types.ts:216](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/input/src/domain/bindings/types.ts#L216)
 
 Keys that must be held down together.
 
@@ -28,4 +28,4 @@ Keys that must be held down together.
 
 > **type**: `"chord"`
 
-Defined in: [packages/input/src/domain/bindings/types.ts:214](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/input/src/domain/bindings/types.ts#L214)
+Defined in: [packages/input/src/domain/bindings/types.ts:214](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/input/src/domain/bindings/types.ts#L214)

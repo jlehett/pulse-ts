@@ -6,7 +6,7 @@
 
 # Class: VirtualInput
 
-Defined in: [packages/input/src/public/virtual.ts:15](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/input/src/public/virtual.ts#L15)
+Defined in: [packages/input/src/public/virtual.ts:15](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/input/src/public/virtual.ts#L15)
 
 Virtual input helper for tests and bots. Does not attach to DOM.
 
@@ -25,7 +25,7 @@ vi.axis2D('move', { x: 1, y: 0 });
 
 > **new VirtualInput**(`service`): `VirtualInput`
 
-Defined in: [packages/input/src/public/virtual.ts:30](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/input/src/public/virtual.ts#L30)
+Defined in: [packages/input/src/public/virtual.ts:30](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/input/src/public/virtual.ts#L30)
 
 Create a virtual input injector bound to an `InputService`.
 
@@ -58,7 +58,7 @@ console.log(svc.action('jump').pressed); // true
 
 > **axis1D**(`action`, `value`): `void`
 
-Defined in: [packages/input/src/public/virtual.ts:64](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/input/src/public/virtual.ts#L64)
+Defined in: [packages/input/src/public/virtual.ts:64](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/input/src/public/virtual.ts#L64)
 
 Inject a per-frame 1D axis value.
 
@@ -86,7 +86,7 @@ Numeric value to add this frame.
 
 > **axis2D**(`action`, `axes`): `void`
 
-Defined in: [packages/input/src/public/virtual.ts:55](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/input/src/public/virtual.ts#L55)
+Defined in: [packages/input/src/public/virtual.ts:55](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/input/src/public/virtual.ts#L55)
 
 Inject per-frame 2D axis deltas.
 
@@ -114,7 +114,7 @@ Object with numeric components to accumulate this frame.
 
 > **press**(`action`, `sourceId`): `void`
 
-Defined in: [packages/input/src/public/virtual.ts:37](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/input/src/public/virtual.ts#L37)
+Defined in: [packages/input/src/public/virtual.ts:37](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/input/src/public/virtual.ts#L37)
 
 Press an action.
 
@@ -142,7 +142,7 @@ Optional virtual source id for debugging.
 
 > **release**(`action`, `sourceId`): `void`
 
-Defined in: [packages/input/src/public/virtual.ts:46](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/input/src/public/virtual.ts#L46)
+Defined in: [packages/input/src/public/virtual.ts:46](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/input/src/public/virtual.ts#L46)
 
 Release an action.
 

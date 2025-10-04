@@ -6,7 +6,7 @@
 
 # Class: Node
 
-Defined in: [packages/core/src/domain/ecs/base/node.ts:23](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/core/src/domain/ecs/base/node.ts#L23)
+Defined in: [packages/core/src/domain/ecs/base/node.ts:23](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/core/src/domain/ecs/base/node.ts#L23)
 
 A Node is an entity in the scene graph.
 
@@ -39,7 +39,7 @@ parent.addChild(child);
 
 > **\[kRegisteredTicks\]**: `TickRegistration`[] = `[]`
 
-Defined in: [packages/core/src/domain/ecs/base/node.ts:32](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/core/src/domain/ecs/base/node.ts#L32)
+Defined in: [packages/core/src/domain/ecs/base/node.ts:32](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/core/src/domain/ecs/base/node.ts#L32)
 
 ***
 
@@ -47,7 +47,7 @@ Defined in: [packages/core/src/domain/ecs/base/node.ts:32](https://github.com/jl
 
 > **children**: `Node`[] = `[]`
 
-Defined in: [packages/core/src/domain/ecs/base/node.ts:30](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/core/src/domain/ecs/base/node.ts#L30)
+Defined in: [packages/core/src/domain/ecs/base/node.ts:30](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/core/src/domain/ecs/base/node.ts#L30)
 
 ***
 
@@ -55,7 +55,7 @@ Defined in: [packages/core/src/domain/ecs/base/node.ts:30](https://github.com/jl
 
 > `readonly` **id**: `number`
 
-Defined in: [packages/core/src/domain/ecs/base/node.ts:26](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/core/src/domain/ecs/base/node.ts#L26)
+Defined in: [packages/core/src/domain/ecs/base/node.ts:26](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/core/src/domain/ecs/base/node.ts#L26)
 
 ***
 
@@ -63,7 +63,7 @@ Defined in: [packages/core/src/domain/ecs/base/node.ts:26](https://github.com/jl
 
 > **parent**: `null` \| `Node` = `null`
 
-Defined in: [packages/core/src/domain/ecs/base/node.ts:29](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/core/src/domain/ecs/base/node.ts#L29)
+Defined in: [packages/core/src/domain/ecs/base/node.ts:29](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/core/src/domain/ecs/base/node.ts#L29)
 
 ***
 
@@ -71,7 +71,7 @@ Defined in: [packages/core/src/domain/ecs/base/node.ts:29](https://github.com/jl
 
 > **world**: `null` \| [`World`](World.md) = `null`
 
-Defined in: [packages/core/src/domain/ecs/base/node.ts:27](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/core/src/domain/ecs/base/node.ts#L27)
+Defined in: [packages/core/src/domain/ecs/base/node.ts:27](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/core/src/domain/ecs/base/node.ts#L27)
 
 ## Methods
 
@@ -79,7 +79,7 @@ Defined in: [packages/core/src/domain/ecs/base/node.ts:27](https://github.com/jl
 
 > **addChild**(`child`): `this`
 
-Defined in: [packages/core/src/domain/ecs/base/node.ts:43](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/core/src/domain/ecs/base/node.ts#L43)
+Defined in: [packages/core/src/domain/ecs/base/node.ts:43](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/core/src/domain/ecs/base/node.ts#L43)
 
 Adds a child node to this node.
 
@@ -103,7 +103,7 @@ The node.
 
 > **destroy**(): `void`
 
-Defined in: [packages/core/src/domain/ecs/base/node.ts:86](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/core/src/domain/ecs/base/node.ts#L86)
+Defined in: [packages/core/src/domain/ecs/base/node.ts:86](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/core/src/domain/ecs/base/node.ts#L86)
 
 Destroys the node and its subtree.
 
@@ -117,7 +117,7 @@ Destroys the node and its subtree.
 
 > `optional` **onDestroy**(): `void`
 
-Defined in: [packages/core/src/domain/ecs/base/node.ts:110](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/core/src/domain/ecs/base/node.ts#L110)
+Defined in: [packages/core/src/domain/ecs/base/node.ts:110](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/core/src/domain/ecs/base/node.ts#L110)
 
 Called when the node is destroyed.
 
@@ -131,7 +131,7 @@ Called when the node is destroyed.
 
 > `optional` **onInit**(): `void`
 
-Defined in: [packages/core/src/domain/ecs/base/node.ts:105](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/core/src/domain/ecs/base/node.ts#L105)
+Defined in: [packages/core/src/domain/ecs/base/node.ts:105](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/core/src/domain/ecs/base/node.ts#L105)
 
 Called when the node is initialized.
 
@@ -145,7 +145,7 @@ Called when the node is initialized.
 
 > **removeChild**(`child`): `this`
 
-Defined in: [packages/core/src/domain/ecs/base/node.ts:72](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/core/src/domain/ecs/base/node.ts#L72)
+Defined in: [packages/core/src/domain/ecs/base/node.ts:72](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/core/src/domain/ecs/base/node.ts#L72)
 
 Removes a child node from this node. Does not remove it from the world.
 

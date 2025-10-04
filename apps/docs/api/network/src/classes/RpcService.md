@@ -6,7 +6,7 @@
 
 # Class: RpcService
 
-Defined in: [packages/network/src/services/RpcService.ts:17](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/network/src/services/RpcService.ts#L17)
+Defined in: [packages/network/src/services/RpcService.ts:17](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/network/src/services/RpcService.ts#L17)
 
 Lightweight RPC over TransportService using a reserved channel.
 
@@ -64,7 +64,7 @@ The world to attach the service to.
 
 > **call**\<`Req`, `Res`\>(`name`, `payload`, `opts`): `Promise`\<`Res`\>
 
-Defined in: [packages/network/src/services/RpcService.ts:46](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/network/src/services/RpcService.ts#L46)
+Defined in: [packages/network/src/services/RpcService.ts:46](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/network/src/services/RpcService.ts#L46)
 
 Calls a remote method by broadcasting a request and awaiting the first response.
 
@@ -110,7 +110,7 @@ Timeout options.
 
 > **callTo**\<`Req`, `Res`\>(`peerId`, `name`, `payload`, `opts`): `Promise`\<`Res`\>
 
-Defined in: [packages/network/src/services/RpcService.ts:71](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/network/src/services/RpcService.ts#L71)
+Defined in: [packages/network/src/services/RpcService.ts:71](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/network/src/services/RpcService.ts#L71)
 
 Calls a remote method on a specific peer and awaits the response.
 
@@ -172,7 +172,7 @@ Detaches the service from the world.
 
 > **register**\<`Req`, `Res`\>(`name`, `fn`): [`Unsubscribe`](../type-aliases/Unsubscribe.md)
 
-Defined in: [packages/network/src/services/RpcService.ts:31](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/network/src/services/RpcService.ts#L31)
+Defined in: [packages/network/src/services/RpcService.ts:31](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/network/src/services/RpcService.ts#L31)
 
 Registers a method handler.
 

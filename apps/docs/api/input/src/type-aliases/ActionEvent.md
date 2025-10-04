@@ -8,7 +8,7 @@
 
 > **ActionEvent** = `object`
 
-Defined in: [packages/input/src/domain/bindings/types.ts:251](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/input/src/domain/bindings/types.ts#L251)
+Defined in: [packages/input/src/domain/bindings/types.ts:251](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/input/src/domain/bindings/types.ts#L251)
 
 Action event payload emitted on press/release transitions during commit().
 
@@ -18,7 +18,7 @@ Action event payload emitted on press/release transitions during commit().
 
 > **name**: `string`
 
-Defined in: [packages/input/src/domain/bindings/types.ts:253](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/input/src/domain/bindings/types.ts#L253)
+Defined in: [packages/input/src/domain/bindings/types.ts:253](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/input/src/domain/bindings/types.ts#L253)
 
 Action name
 
@@ -28,6 +28,6 @@ Action name
 
 > **state**: [`ActionState`](ActionState.md)
 
-Defined in: [packages/input/src/domain/bindings/types.ts:255](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/input/src/domain/bindings/types.ts#L255)
+Defined in: [packages/input/src/domain/bindings/types.ts:255](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/input/src/domain/bindings/types.ts#L255)
 
 New state snapshot

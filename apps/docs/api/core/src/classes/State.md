@@ -6,7 +6,7 @@
 
 # Class: State
 
-Defined in: [packages/core/src/domain/components/meta/State.ts:6](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/core/src/domain/components/meta/State.ts#L6)
+Defined in: [packages/core/src/domain/components/meta/State.ts:6](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/core/src/domain/components/meta/State.ts#L6)
 
 Generic key/value state store component for a Node.
 
@@ -36,7 +36,7 @@ Generic key/value state store component for a Node.
 
 > **get** **owner**(): [`Node`](Node.md)
 
-Defined in: [packages/core/src/domain/ecs/base/Component.ts:17](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/core/src/domain/ecs/base/Component.ts#L17)
+Defined in: [packages/core/src/domain/ecs/base/Component.ts:17](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/core/src/domain/ecs/base/Component.ts#L17)
 
 The owner of the component.
 
@@ -54,7 +54,7 @@ The owner of the component.
 
 > **\[kSetComponentOwner\]**(`owner`): `void`
 
-Defined in: [packages/core/src/domain/ecs/base/Component.ts:10](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/core/src/domain/ecs/base/Component.ts#L10)
+Defined in: [packages/core/src/domain/ecs/base/Component.ts:10](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/core/src/domain/ecs/base/Component.ts#L10)
 
 #### Parameters
 
@@ -76,7 +76,7 @@ Defined in: [packages/core/src/domain/ecs/base/Component.ts:10](https://github.c
 
 > **entries**(): \[`string`, `unknown`\][]
 
-Defined in: [packages/core/src/domain/components/meta/State.ts:21](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/core/src/domain/components/meta/State.ts#L21)
+Defined in: [packages/core/src/domain/components/meta/State.ts:21](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/core/src/domain/components/meta/State.ts#L21)
 
 #### Returns
 
@@ -88,7 +88,7 @@ Defined in: [packages/core/src/domain/components/meta/State.ts:21](https://githu
 
 > **get**\<`T`\>(`key`): `undefined` \| `T`
 
-Defined in: [packages/core/src/domain/components/meta/State.ts:13](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/core/src/domain/components/meta/State.ts#L13)
+Defined in: [packages/core/src/domain/components/meta/State.ts:13](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/core/src/domain/components/meta/State.ts#L13)
 
 #### Type Parameters
 
@@ -112,7 +112,7 @@ Defined in: [packages/core/src/domain/components/meta/State.ts:13](https://githu
 
 > **has**(`key`): `boolean`
 
-Defined in: [packages/core/src/domain/components/meta/State.ts:9](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/core/src/domain/components/meta/State.ts#L9)
+Defined in: [packages/core/src/domain/components/meta/State.ts:9](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/core/src/domain/components/meta/State.ts#L9)
 
 #### Parameters
 
@@ -130,7 +130,7 @@ Defined in: [packages/core/src/domain/components/meta/State.ts:9](https://github
 
 > **loadEntries**(`entries`): `void`
 
-Defined in: [packages/core/src/domain/components/meta/State.ts:25](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/core/src/domain/components/meta/State.ts#L25)
+Defined in: [packages/core/src/domain/components/meta/State.ts:25](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/core/src/domain/components/meta/State.ts#L25)
 
 #### Parameters
 
@@ -148,7 +148,7 @@ Defined in: [packages/core/src/domain/components/meta/State.ts:25](https://githu
 
 > **set**\<`T`\>(`key`, `value`): `void`
 
-Defined in: [packages/core/src/domain/components/meta/State.ts:17](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/core/src/domain/components/meta/State.ts#L17)
+Defined in: [packages/core/src/domain/components/meta/State.ts:17](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/core/src/domain/components/meta/State.ts#L17)
 
 #### Type Parameters
 
@@ -176,7 +176,7 @@ Defined in: [packages/core/src/domain/components/meta/State.ts:17](https://githu
 
 > `static` **attach**\<`T`\>(`this`, `owner`): `T`
 
-Defined in: [packages/core/src/domain/ecs/base/Component.ts:27](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/core/src/domain/ecs/base/Component.ts#L27)
+Defined in: [packages/core/src/domain/ecs/base/Component.ts:27](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/core/src/domain/ecs/base/Component.ts#L27)
 
 Attaches the component to an owner. Override this method to implement
 custom attachment logic.

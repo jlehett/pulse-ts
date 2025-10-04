@@ -6,7 +6,7 @@
 
 # Class: NetworkServer
 
-Defined in: [packages/network/src/server/broker.ts:32](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/network/src/server/broker.ts#L32)
+Defined in: [packages/network/src/server/broker.ts:32](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/network/src/server/broker.ts#L32)
 
 Minimal channel/room broker for WebSocket servers.
 
@@ -20,7 +20,7 @@ Minimal channel/room broker for WebSocket servers.
 
 > **new NetworkServer**(`opts`): `NetworkServer`
 
-Defined in: [packages/network/src/server/broker.ts:49](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/network/src/server/broker.ts#L49)
+Defined in: [packages/network/src/server/broker.ts:49](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/network/src/server/broker.ts#L49)
 
 #### Parameters
 
@@ -78,7 +78,7 @@ Called when a peer disconnects.
 
 > **attachWebSocketServer**(`wss`): `void`
 
-Defined in: [packages/network/src/server/broker.ts:75](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/network/src/server/broker.ts#L75)
+Defined in: [packages/network/src/server/broker.ts:75](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/network/src/server/broker.ts#L75)
 
 Binds a ws server (from the 'ws' package) to this broker.
 
@@ -98,7 +98,7 @@ Binds a ws server (from the 'ws' package) to this broker.
 
 > **broadcast**(`packet`, `rooms?`, `exceptId?`): `void`
 
-Defined in: [packages/network/src/server/broker.ts:165](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/network/src/server/broker.ts#L165)
+Defined in: [packages/network/src/server/broker.ts:165](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/network/src/server/broker.ts#L165)
 
 Sends a packet to all peers in given room(s) except an optional excluded peer.
 
@@ -126,7 +126,7 @@ Sends a packet to all peers in given room(s) except an optional excluded peer.
 
 > **disconnect**(`peerId`, `code?`, `reason?`): `void`
 
-Defined in: [packages/network/src/server/broker.ts:134](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/network/src/server/broker.ts#L134)
+Defined in: [packages/network/src/server/broker.ts:134](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/network/src/server/broker.ts#L134)
 
 Disconnects a peer.
 
@@ -154,7 +154,7 @@ Disconnects a peer.
 
 > **joinRoom**(`peerId`, `room`): \{ `ok`: `true`; \} \| \{ `ok`: `false`; `reason`: `"max_rooms"` \| `"unknown_peer"`; \}
 
-Defined in: [packages/network/src/server/broker.ts:97](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/network/src/server/broker.ts#L97)
+Defined in: [packages/network/src/server/broker.ts:97](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/network/src/server/broker.ts#L97)
 
 Registers a room membership.
 
@@ -178,7 +178,7 @@ Registers a room membership.
 
 > **leaveRoom**(`peerId`, `room`): \{ `ok`: `true`; \} \| \{ `ok`: `false`; `reason`: `"not_member"` \| `"unknown_room"`; \}
 
-Defined in: [packages/network/src/server/broker.ts:104](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/network/src/server/broker.ts#L104)
+Defined in: [packages/network/src/server/broker.ts:104](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/network/src/server/broker.ts#L104)
 
 Removes a peer from a room.
 
@@ -202,7 +202,7 @@ Removes a peer from a room.
 
 > **listPeers**(): `string`[]
 
-Defined in: [packages/network/src/server/broker.ts:129](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/network/src/server/broker.ts#L129)
+Defined in: [packages/network/src/server/broker.ts:129](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/network/src/server/broker.ts#L129)
 
 Lists all peer ids.
 
@@ -216,7 +216,7 @@ Lists all peer ids.
 
 > **listRooms**(): `string`[]
 
-Defined in: [packages/network/src/server/broker.ts:124](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/network/src/server/broker.ts#L124)
+Defined in: [packages/network/src/server/broker.ts:124](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/network/src/server/broker.ts#L124)
 
 Lists all room names.
 
@@ -230,7 +230,7 @@ Lists all room names.
 
 > **peersInRoom**(`room`): `string`[]
 
-Defined in: [packages/network/src/server/broker.ts:114](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/network/src/server/broker.ts#L114)
+Defined in: [packages/network/src/server/broker.ts:114](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/network/src/server/broker.ts#L114)
 
 Lists peers currently in a room.
 
@@ -250,7 +250,7 @@ Lists peers currently in a room.
 
 > **registerChannel**(`name`, `opts`): () => `boolean`
 
-Defined in: [packages/network/src/server/broker.ts:109](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/network/src/server/broker.ts#L109)
+Defined in: [packages/network/src/server/broker.ts:109](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/network/src/server/broker.ts#L109)
 
 Registers channel validation and/or a server-side handler.
 
@@ -278,7 +278,7 @@ Registers channel validation and/or a server-side handler.
 
 > **registerReliable**(`topic`, `fn`): () => `boolean`
 
-Defined in: [packages/network/src/server/broker.ts:296](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/network/src/server/broker.ts#L296)
+Defined in: [packages/network/src/server/broker.ts:296](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/network/src/server/broker.ts#L296)
 
 Registers a reliable request handler for a given topic.
 
@@ -306,7 +306,7 @@ Registers a reliable request handler for a given topic.
 
 > **registerRpc**(`name`, `fn`): () => `boolean`
 
-Defined in: [packages/network/src/server/broker.ts:156](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/network/src/server/broker.ts#L156)
+Defined in: [packages/network/src/server/broker.ts:156](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/network/src/server/broker.ts#L156)
 
 Registers an RPC handler hosted by the server.
 
@@ -334,7 +334,7 @@ Registers an RPC handler hosted by the server.
 
 > **roomsForPeer**(`peerId`): `string`[]
 
-Defined in: [packages/network/src/server/broker.ts:119](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/network/src/server/broker.ts#L119)
+Defined in: [packages/network/src/server/broker.ts:119](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/network/src/server/broker.ts#L119)
 
 Returns rooms for a given peer.
 

@@ -8,9 +8,10 @@
 
 > **deserializeServices**(`world`, `items`): `void`
 
-Defined in: [packages/save/src/registries/serviceRegistry.ts:71](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/save/src/registries/serviceRegistry.ts#L71)
+Defined in: packages/save/src/domain/registries/serviceRegistry.ts:65
 
-Deserialize all registered services.
+Apply serialized services to an existing world.
+This only applies when the target service is already provided by the world.
 
 ## Parameters
 
@@ -18,14 +19,20 @@ Deserialize all registered services.
 
 `World`
 
-The world to deserialize the services for.
+The target world.
 
 ### items
 
 `object`[]
 
-An array of serialized services.
+Array of serialized service payloads.
 
 ## Returns
 
 `void`
+
+## Example
+
+```ts
+deserializeServices(world, [{ type: 'game:my-svc', data: { v: 1 } }]);
+```

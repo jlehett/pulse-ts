@@ -8,7 +8,7 @@
 
 > **PointerButton**(`button`): [`PointerButtonBinding`](../type-aliases/PointerButtonBinding.md)
 
-Defined in: [packages/input/src/domain/bindings/expr.ts:157](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/input/src/domain/bindings/expr.ts#L157)
+Defined in: [packages/input/src/domain/bindings/expr.ts:157](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/input/src/domain/bindings/expr.ts#L157)
 
 Create a pointer button binding (maps a specific pointer/mouse button to a digital action).
 

@@ -8,7 +8,7 @@
 
 > **registerComponentSerializer**\<`T`\>(`ctor`, `serializer`): `void`
 
-Defined in: [packages/save/src/registries/componentRegistry.ts:22](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/save/src/registries/componentRegistry.ts#L22)
+Defined in: packages/save/src/domain/registries/componentRegistry.ts:21
 
 Register a component serializer.
 
@@ -24,14 +24,21 @@ Register a component serializer.
 
 `Ctor`\<`T`\>
 
-The constructor of the component to register.
+The component constructor to associate with the serializer.
 
 ### serializer
 
 [`ComponentSerializer`](../type-aliases/ComponentSerializer.md)\<`T`\>
 
-The serializer to register.
+The serializer implementation.
 
 ## Returns
 
 `void`
+
+## Example
+
+```ts
+import { registerComponentSerializer } from '@pulse-ts/save';
+// see ComponentSerializer example in public/types
+```

@@ -191,7 +191,7 @@ export class WebRtcMeshTransport implements Transport {
             iceServers: this.opts.iceServers,
         });
         this.pcs.set(peerId, pc);
-        let dc: RTCDataChannel;
+        let dc: RTCDataChannel | undefined = undefined;
         if (isOfferer) {
             dc = pc.createDataChannel('data', { negotiated: false });
             this.wireDataChannel(peerId, dc);
@@ -218,7 +218,6 @@ export class WebRtcMeshTransport implements Transport {
         };
         // Store a placeholder channel to reserve the slot
         // Real channel will be set once open
-        // @ts-expect-error placeholder
         this.dcs.set(peerId, dc ?? ({} as any));
     }
 

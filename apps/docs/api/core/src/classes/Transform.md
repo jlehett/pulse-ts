@@ -6,7 +6,7 @@
 
 # Class: Transform
 
-Defined in: [packages/core/src/domain/components/spatial/Transform.ts:54](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/core/src/domain/components/spatial/Transform.ts#L54)
+Defined in: [packages/core/src/domain/components/spatial/Transform.ts:54](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/core/src/domain/components/spatial/Transform.ts#L54)
 
 A transform.
 
@@ -20,7 +20,7 @@ A transform.
 
 > **new Transform**(): `Transform`
 
-Defined in: [packages/core/src/domain/components/spatial/Transform.ts:81](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/core/src/domain/components/spatial/Transform.ts#L81)
+Defined in: [packages/core/src/domain/components/spatial/Transform.ts:81](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/core/src/domain/components/spatial/Transform.ts#L81)
 
 #### Returns
 
@@ -36,7 +36,7 @@ Defined in: [packages/core/src/domain/components/spatial/Transform.ts:81](https:
 
 > **\_localVersion**: `number` = `0`
 
-Defined in: [packages/core/src/domain/components/spatial/Transform.ts:74](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/core/src/domain/components/spatial/Transform.ts#L74)
+Defined in: [packages/core/src/domain/components/spatial/Transform.ts:74](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/core/src/domain/components/spatial/Transform.ts#L74)
 
 ***
 
@@ -44,7 +44,7 @@ Defined in: [packages/core/src/domain/components/spatial/Transform.ts:74](https:
 
 > **\[kTransformDirty\]**: `any`
 
-Defined in: [packages/core/src/domain/components/spatial/Transform.ts:62](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/core/src/domain/components/spatial/Transform.ts#L62)
+Defined in: [packages/core/src/domain/components/spatial/Transform.ts:62](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/core/src/domain/components/spatial/Transform.ts#L62)
 
 ***
 
@@ -52,7 +52,7 @@ Defined in: [packages/core/src/domain/components/spatial/Transform.ts:62](https:
 
 > `readonly` **localPosition**: [`Vec3`](Vec3.md)
 
-Defined in: [packages/core/src/domain/components/spatial/Transform.ts:64](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/core/src/domain/components/spatial/Transform.ts#L64)
+Defined in: [packages/core/src/domain/components/spatial/Transform.ts:64](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/core/src/domain/components/spatial/Transform.ts#L64)
 
 ***
 
@@ -60,7 +60,7 @@ Defined in: [packages/core/src/domain/components/spatial/Transform.ts:64](https:
 
 > `readonly` **localRotation**: [`Quat`](Quat.md)
 
-Defined in: [packages/core/src/domain/components/spatial/Transform.ts:66](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/core/src/domain/components/spatial/Transform.ts#L66)
+Defined in: [packages/core/src/domain/components/spatial/Transform.ts:66](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/core/src/domain/components/spatial/Transform.ts#L66)
 
 ***
 
@@ -68,7 +68,7 @@ Defined in: [packages/core/src/domain/components/spatial/Transform.ts:66](https:
 
 > `readonly` **localScale**: [`Vec3`](Vec3.md)
 
-Defined in: [packages/core/src/domain/components/spatial/Transform.ts:68](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/core/src/domain/components/spatial/Transform.ts#L68)
+Defined in: [packages/core/src/domain/components/spatial/Transform.ts:68](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/core/src/domain/components/spatial/Transform.ts#L68)
 
 ***
 
@@ -76,7 +76,7 @@ Defined in: [packages/core/src/domain/components/spatial/Transform.ts:68](https:
 
 > `readonly` **previousLocalPosition**: [`Vec3`](Vec3.md)
 
-Defined in: [packages/core/src/domain/components/spatial/Transform.ts:65](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/core/src/domain/components/spatial/Transform.ts#L65)
+Defined in: [packages/core/src/domain/components/spatial/Transform.ts:65](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/core/src/domain/components/spatial/Transform.ts#L65)
 
 ***
 
@@ -84,7 +84,7 @@ Defined in: [packages/core/src/domain/components/spatial/Transform.ts:65](https:
 
 > `readonly` **previousLocalRotation**: [`Quat`](Quat.md)
 
-Defined in: [packages/core/src/domain/components/spatial/Transform.ts:67](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/core/src/domain/components/spatial/Transform.ts#L67)
+Defined in: [packages/core/src/domain/components/spatial/Transform.ts:67](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/core/src/domain/components/spatial/Transform.ts#L67)
 
 ***
 
@@ -92,7 +92,7 @@ Defined in: [packages/core/src/domain/components/spatial/Transform.ts:67](https:
 
 > `readonly` **previousLocalScale**: [`Vec3`](Vec3.md)
 
-Defined in: [packages/core/src/domain/components/spatial/Transform.ts:69](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/core/src/domain/components/spatial/Transform.ts#L69)
+Defined in: [packages/core/src/domain/components/spatial/Transform.ts:69](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/core/src/domain/components/spatial/Transform.ts#L69)
 
 ## Accessors
 
@@ -102,7 +102,7 @@ Defined in: [packages/core/src/domain/components/spatial/Transform.ts:69](https:
 
 > **get** **owner**(): [`Node`](Node.md)
 
-Defined in: [packages/core/src/domain/ecs/base/Component.ts:17](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/core/src/domain/ecs/base/Component.ts#L17)
+Defined in: [packages/core/src/domain/ecs/base/Component.ts:17](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/core/src/domain/ecs/base/Component.ts#L17)
 
 The owner of the component.
 
@@ -122,7 +122,7 @@ The owner of the component.
 
 > **get** **worldPosition**(): [`Vec3`](Vec3.md)
 
-Defined in: [packages/core/src/domain/components/spatial/Transform.ts:238](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/core/src/domain/components/spatial/Transform.ts#L238)
+Defined in: [packages/core/src/domain/components/spatial/Transform.ts:238](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/core/src/domain/components/spatial/Transform.ts#L238)
 
 ##### Returns
 
@@ -136,7 +136,7 @@ Defined in: [packages/core/src/domain/components/spatial/Transform.ts:238](https
 
 > **get** **worldRotation**(): [`Quat`](Quat.md)
 
-Defined in: [packages/core/src/domain/components/spatial/Transform.ts:241](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/core/src/domain/components/spatial/Transform.ts#L241)
+Defined in: [packages/core/src/domain/components/spatial/Transform.ts:241](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/core/src/domain/components/spatial/Transform.ts#L241)
 
 ##### Returns
 
@@ -150,7 +150,7 @@ Defined in: [packages/core/src/domain/components/spatial/Transform.ts:241](https
 
 > **get** **worldScale**(): [`Vec3`](Vec3.md)
 
-Defined in: [packages/core/src/domain/components/spatial/Transform.ts:244](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/core/src/domain/components/spatial/Transform.ts#L244)
+Defined in: [packages/core/src/domain/components/spatial/Transform.ts:244](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/core/src/domain/components/spatial/Transform.ts#L244)
 
 ##### Returns
 
@@ -162,7 +162,7 @@ Defined in: [packages/core/src/domain/components/spatial/Transform.ts:244](https
 
 > **\[kSetComponentOwner\]**(`owner`): `void`
 
-Defined in: [packages/core/src/domain/ecs/base/Component.ts:10](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/core/src/domain/ecs/base/Component.ts#L10)
+Defined in: [packages/core/src/domain/ecs/base/Component.ts:10](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/core/src/domain/ecs/base/Component.ts#L10)
 
 #### Parameters
 
@@ -184,7 +184,7 @@ Defined in: [packages/core/src/domain/ecs/base/Component.ts:10](https://github.c
 
 > **editLocal**(`fn`): `void`
 
-Defined in: [packages/core/src/domain/components/spatial/Transform.ts:125](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/core/src/domain/components/spatial/Transform.ts#L125)
+Defined in: [packages/core/src/domain/components/spatial/Transform.ts:125](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/core/src/domain/components/spatial/Transform.ts#L125)
 
 #### Parameters
 
@@ -202,7 +202,7 @@ Defined in: [packages/core/src/domain/components/spatial/Transform.ts:125](https
 
 > **getAncestryVersion**(`frameId`): `number`
 
-Defined in: [packages/core/src/domain/components/spatial/Transform.ts:91](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/core/src/domain/components/spatial/Transform.ts#L91)
+Defined in: [packages/core/src/domain/components/spatial/Transform.ts:91](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/core/src/domain/components/spatial/Transform.ts#L91)
 
 #### Parameters
 
@@ -220,7 +220,7 @@ Defined in: [packages/core/src/domain/components/spatial/Transform.ts:91](https:
 
 > **getLocalTRS**(`out?`, `alpha?`): [`TRS`](../interfaces/TRS.md)
 
-Defined in: [packages/core/src/domain/components/spatial/Transform.ts:131](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/core/src/domain/components/spatial/Transform.ts#L131)
+Defined in: [packages/core/src/domain/components/spatial/Transform.ts:131](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/core/src/domain/components/spatial/Transform.ts#L131)
 
 #### Parameters
 
@@ -242,7 +242,7 @@ Defined in: [packages/core/src/domain/components/spatial/Transform.ts:131](https
 
 > **getWorldTRS**(`out?`, `alpha?`): [`TRS`](../interfaces/TRS.md)
 
-Defined in: [packages/core/src/domain/components/spatial/Transform.ts:158](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/core/src/domain/components/spatial/Transform.ts#L158)
+Defined in: [packages/core/src/domain/components/spatial/Transform.ts:158](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/core/src/domain/components/spatial/Transform.ts#L158)
 
 #### Parameters
 
@@ -264,7 +264,7 @@ Defined in: [packages/core/src/domain/components/spatial/Transform.ts:158](https
 
 > **getWorldVersion**(): `number`
 
-Defined in: [packages/core/src/domain/components/spatial/Transform.ts:248](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/core/src/domain/components/spatial/Transform.ts#L248)
+Defined in: [packages/core/src/domain/components/spatial/Transform.ts:248](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/core/src/domain/components/spatial/Transform.ts#L248)
 
 #### Returns
 
@@ -276,7 +276,7 @@ Defined in: [packages/core/src/domain/components/spatial/Transform.ts:248](https
 
 > **setLocal**(`opts`): `void`
 
-Defined in: [packages/core/src/domain/components/spatial/Transform.ts:112](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/core/src/domain/components/spatial/Transform.ts#L112)
+Defined in: [packages/core/src/domain/components/spatial/Transform.ts:112](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/core/src/domain/components/spatial/Transform.ts#L112)
 
 #### Parameters
 
@@ -304,7 +304,7 @@ Defined in: [packages/core/src/domain/components/spatial/Transform.ts:112](https
 
 > **snapshotPrevious**(): `void`
 
-Defined in: [packages/core/src/domain/components/spatial/Transform.ts:105](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/core/src/domain/components/spatial/Transform.ts#L105)
+Defined in: [packages/core/src/domain/components/spatial/Transform.ts:105](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/core/src/domain/components/spatial/Transform.ts#L105)
 
 #### Returns
 
@@ -316,7 +316,7 @@ Defined in: [packages/core/src/domain/components/spatial/Transform.ts:105](https
 
 > `static` **attach**\<`Transform`\>(`owner`): `Transform`
 
-Defined in: [packages/core/src/domain/components/spatial/Transform.ts:55](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/core/src/domain/components/spatial/Transform.ts#L55)
+Defined in: [packages/core/src/domain/components/spatial/Transform.ts:55](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/core/src/domain/components/spatial/Transform.ts#L55)
 
 Attaches the component to an owner. Override this method to implement
 custom attachment logic.

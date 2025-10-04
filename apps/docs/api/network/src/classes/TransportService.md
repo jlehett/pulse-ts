@@ -6,7 +6,7 @@
 
 # Class: TransportService
 
-Defined in: [packages/network/src/services/TransportService.ts:17](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/network/src/services/TransportService.ts#L17)
+Defined in: [packages/network/src/services/TransportService.ts:17](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/network/src/services/TransportService.ts#L17)
 
 A service for transporting messages between nodes.
 
@@ -20,7 +20,7 @@ A service for transporting messages between nodes.
 
 > **new TransportService**(`opts`): `TransportService`
 
-Defined in: [packages/network/src/services/TransportService.ts:41](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/network/src/services/TransportService.ts#L41)
+Defined in: [packages/network/src/services/TransportService.ts:41](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/network/src/services/TransportService.ts#L41)
 
 #### Parameters
 
@@ -48,7 +48,7 @@ Defined in: [packages/network/src/services/TransportService.ts:41](https://githu
 
 > `readonly` **onPacketIn**: `TypedEvent`\<[`Packet`](../interfaces/Packet.md)\<`unknown`\>\>
 
-Defined in: [packages/network/src/services/TransportService.ts:30](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/network/src/services/TransportService.ts#L30)
+Defined in: [packages/network/src/services/TransportService.ts:30](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/network/src/services/TransportService.ts#L30)
 
 ***
 
@@ -56,7 +56,7 @@ Defined in: [packages/network/src/services/TransportService.ts:30](https://githu
 
 > `readonly` **onPacketOut**: `TypedEvent`\<[`Packet`](../interfaces/Packet.md)\<`unknown`\>\>
 
-Defined in: [packages/network/src/services/TransportService.ts:31](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/network/src/services/TransportService.ts#L31)
+Defined in: [packages/network/src/services/TransportService.ts:31](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/network/src/services/TransportService.ts#L31)
 
 ***
 
@@ -64,7 +64,7 @@ Defined in: [packages/network/src/services/TransportService.ts:31](https://githu
 
 > `readonly` **onPeerJoin**: `TypedEvent`\<`string`\>
 
-Defined in: [packages/network/src/services/TransportService.ts:32](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/network/src/services/TransportService.ts#L32)
+Defined in: [packages/network/src/services/TransportService.ts:32](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/network/src/services/TransportService.ts#L32)
 
 ***
 
@@ -72,7 +72,7 @@ Defined in: [packages/network/src/services/TransportService.ts:32](https://githu
 
 > `readonly` **onPeerLeave**: `TypedEvent`\<`string`\>
 
-Defined in: [packages/network/src/services/TransportService.ts:33](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/network/src/services/TransportService.ts#L33)
+Defined in: [packages/network/src/services/TransportService.ts:33](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/network/src/services/TransportService.ts#L33)
 
 ***
 
@@ -80,7 +80,7 @@ Defined in: [packages/network/src/services/TransportService.ts:33](https://githu
 
 > `readonly` **onStatus**: `TypedEvent`\<[`TransportStatus`](../type-aliases/TransportStatus.md)\>
 
-Defined in: [packages/network/src/services/TransportService.ts:29](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/network/src/services/TransportService.ts#L29)
+Defined in: [packages/network/src/services/TransportService.ts:29](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/network/src/services/TransportService.ts#L29)
 
 ## Methods
 
@@ -114,7 +114,7 @@ The world to attach the service to.
 
 > **channel**\<`T`\>(`name`): `object`
 
-Defined in: [packages/network/src/services/TransportService.ts:252](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/network/src/services/TransportService.ts#L252)
+Defined in: [packages/network/src/services/TransportService.ts:252](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/network/src/services/TransportService.ts#L252)
 
 Fluent typed channel helper.
 
@@ -200,7 +200,7 @@ Fluent typed channel helper.
 
 > **connect**(): `Promise`\<`void`\>
 
-Defined in: [packages/network/src/services/TransportService.ts:123](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/network/src/services/TransportService.ts#L123)
+Defined in: [packages/network/src/services/TransportService.ts:123](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/network/src/services/TransportService.ts#L123)
 
 Connect to the transport.
 
@@ -232,7 +232,7 @@ Detaches the service from the world.
 
 > **disconnect**(): `Promise`\<`void`\>
 
-Defined in: [packages/network/src/services/TransportService.ts:134](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/network/src/services/TransportService.ts#L134)
+Defined in: [packages/network/src/services/TransportService.ts:134](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/network/src/services/TransportService.ts#L134)
 
 Disconnect from the transport.
 
@@ -246,7 +246,7 @@ Disconnect from the transport.
 
 > **dispatchIncoming**(`max`): `void`
 
-Defined in: [packages/network/src/services/TransportService.ts:196](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/network/src/services/TransportService.ts#L196)
+Defined in: [packages/network/src/services/TransportService.ts:196](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/network/src/services/TransportService.ts#L196)
 
 Dispatch the incoming messages.
 
@@ -268,7 +268,7 @@ The maximum number of messages to dispatch.
 
 > **flushOutgoing**(): `void`
 
-Defined in: [packages/network/src/services/TransportService.ts:180](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/network/src/services/TransportService.ts#L180)
+Defined in: [packages/network/src/services/TransportService.ts:180](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/network/src/services/TransportService.ts#L180)
 
 Flush the outgoing messages.
 
@@ -282,7 +282,7 @@ Flush the outgoing messages.
 
 > **getPeers**(): `string`[]
 
-Defined in: [packages/network/src/services/TransportService.ts:243](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/network/src/services/TransportService.ts#L243)
+Defined in: [packages/network/src/services/TransportService.ts:243](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/network/src/services/TransportService.ts#L243)
 
 Current peer ids if supported by transport.
 
@@ -296,7 +296,7 @@ Current peer ids if supported by transport.
 
 > **getSelfId**(): `undefined` \| `string`
 
-Defined in: [packages/network/src/services/TransportService.ts:60](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/network/src/services/TransportService.ts#L60)
+Defined in: [packages/network/src/services/TransportService.ts:60](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/network/src/services/TransportService.ts#L60)
 
 Returns the configured peer id, if any.
 
@@ -310,7 +310,7 @@ Returns the configured peer id, if any.
 
 > **getStats**(): `object`
 
-Defined in: [packages/network/src/services/TransportService.ts:232](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/network/src/services/TransportService.ts#L232)
+Defined in: [packages/network/src/services/TransportService.ts:232](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/network/src/services/TransportService.ts#L232)
 
 Get the stats.
 
@@ -346,7 +346,7 @@ The stats.
 
 > **getStatus**(): [`TransportStatus`](../type-aliases/TransportStatus.md)
 
-Defined in: [packages/network/src/services/TransportService.ts:143](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/network/src/services/TransportService.ts#L143)
+Defined in: [packages/network/src/services/TransportService.ts:143](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/network/src/services/TransportService.ts#L143)
 
 Get the status of the transport.
 
@@ -362,7 +362,7 @@ The status.
 
 > **publish**\<`T`\>(`name`, `data`): `void`
 
-Defined in: [packages/network/src/services/TransportService.ts:166](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/network/src/services/TransportService.ts#L166)
+Defined in: [packages/network/src/services/TransportService.ts:166](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/network/src/services/TransportService.ts#L166)
 
 Publish a message to a channel.
 
@@ -396,7 +396,7 @@ The data.
 
 > **publishTo**\<`T`\>(`name`, `to`, `data`): `void`
 
-Defined in: [packages/network/src/services/TransportService.ts:173](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/network/src/services/TransportService.ts#L173)
+Defined in: [packages/network/src/services/TransportService.ts:173](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/network/src/services/TransportService.ts#L173)
 
 Publish a message addressed to a specific peer or peers.
 
@@ -430,7 +430,7 @@ Publish a message addressed to a specific peer or peers.
 
 > **setCodec**(`codec`): `void`
 
-Defined in: [packages/network/src/services/TransportService.ts:50](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/network/src/services/TransportService.ts#L50)
+Defined in: [packages/network/src/services/TransportService.ts:50](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/network/src/services/TransportService.ts#L50)
 
 Replaces the packet codec used for encode/decode.
 
@@ -450,7 +450,7 @@ Replaces the packet codec used for encode/decode.
 
 > **setSelfId**(`id`): `void`
 
-Defined in: [packages/network/src/services/TransportService.ts:55](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/network/src/services/TransportService.ts#L55)
+Defined in: [packages/network/src/services/TransportService.ts:55](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/network/src/services/TransportService.ts#L55)
 
 Sets this client's peer id for addressed packet filtering.
 
@@ -470,7 +470,7 @@ Sets this client's peer id for addressed packet filtering.
 
 > **setTransport**(`t`): `void`
 
-Defined in: [packages/network/src/services/TransportService.ts:68](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/network/src/services/TransportService.ts#L68)
+Defined in: [packages/network/src/services/TransportService.ts:68](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/network/src/services/TransportService.ts#L68)
 
 Set the transport.
 
@@ -492,7 +492,7 @@ The transport.
 
 > **subscribe**\<`T`\>(`name`, `handler`): [`Unsubscribe`](../type-aliases/Unsubscribe.md)
 
-Defined in: [packages/network/src/services/TransportService.ts:153](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/network/src/services/TransportService.ts#L153)
+Defined in: [packages/network/src/services/TransportService.ts:153](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/network/src/services/TransportService.ts#L153)
 
 Subscribe to a channel.
 

@@ -6,7 +6,7 @@
 
 # Interface: MemoryHub
 
-Defined in: [packages/network/src/transports/memory/hub.ts:28](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/network/src/transports/memory/hub.ts#L28)
+Defined in: [packages/network/src/transports/memory/hub.ts:28](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/network/src/transports/memory/hub.ts#L28)
 
 In-memory message hub for tests and local simulation.
 Broadcasts to all peers except sender.
@@ -17,7 +17,7 @@ Broadcasts to all peers except sender.
 
 > `readonly` **id**: `string`
 
-Defined in: [packages/network/src/transports/memory/hub.ts:32](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/network/src/transports/memory/hub.ts#L32)
+Defined in: [packages/network/src/transports/memory/hub.ts:32](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/network/src/transports/memory/hub.ts#L32)
 
 The ID of the hub.
 
@@ -27,7 +27,7 @@ The ID of the hub.
 
 > **addPeer**(`peerId`, `cb`): `void`
 
-Defined in: [packages/network/src/transports/memory/hub.ts:38](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/network/src/transports/memory/hub.ts#L38)
+Defined in: [packages/network/src/transports/memory/hub.ts:38](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/network/src/transports/memory/hub.ts#L38)
 
 Add a peer to the hub.
 
@@ -55,7 +55,7 @@ The peer.
 
 > **peers**(): `string`[]
 
-Defined in: [packages/network/src/transports/memory/hub.ts:54](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/network/src/transports/memory/hub.ts#L54)
+Defined in: [packages/network/src/transports/memory/hub.ts:54](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/network/src/transports/memory/hub.ts#L54)
 
 Get the peers in the hub.
 
@@ -71,7 +71,7 @@ The peers.
 
 > **removePeer**(`peerId`): `void`
 
-Defined in: [packages/network/src/transports/memory/hub.ts:43](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/network/src/transports/memory/hub.ts#L43)
+Defined in: [packages/network/src/transports/memory/hub.ts:43](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/network/src/transports/memory/hub.ts#L43)
 
 Remove a peer from the hub.
 
@@ -93,7 +93,7 @@ The ID of the peer.
 
 > **send**(`from`, `data`): `void`
 
-Defined in: [packages/network/src/transports/memory/hub.ts:49](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/network/src/transports/memory/hub.ts#L49)
+Defined in: [packages/network/src/transports/memory/hub.ts:49](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/network/src/transports/memory/hub.ts#L49)
 
 Send a message to a peer.
 

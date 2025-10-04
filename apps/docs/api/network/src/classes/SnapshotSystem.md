@@ -6,7 +6,7 @@
 
 # Class: SnapshotSystem
 
-Defined in: [packages/network/src/systems/SnapshotSystem.ts:9](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/network/src/systems/SnapshotSystem.ts#L9)
+Defined in: [packages/network/src/systems/SnapshotSystem.ts:9](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/network/src/systems/SnapshotSystem.ts#L9)
 
 Periodically builds and sends replication snapshots.
 
@@ -36,7 +36,7 @@ Periodically builds and sends replication snapshots.
 
 > `static` **order**: `number` = `0`
 
-Defined in: [packages/network/src/systems/SnapshotSystem.ts:12](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/network/src/systems/SnapshotSystem.ts#L12)
+Defined in: [packages/network/src/systems/SnapshotSystem.ts:12](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/network/src/systems/SnapshotSystem.ts#L12)
 
 The order of the update that this system is registered for.
 
@@ -50,7 +50,7 @@ The order of the update that this system is registered for.
 
 > `static` **updateKind**: `"fixed"` \| `"frame"` = `'fixed'`
 
-Defined in: [packages/network/src/systems/SnapshotSystem.ts:10](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/network/src/systems/SnapshotSystem.ts#L10)
+Defined in: [packages/network/src/systems/SnapshotSystem.ts:10](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/network/src/systems/SnapshotSystem.ts#L10)
 
 The kind of update that this system is registered for.
 Defaults to 'fixed'.
@@ -65,7 +65,7 @@ Defaults to 'fixed'.
 
 > `static` **updatePhase**: `"early"` \| `"update"` \| `"late"` = `'update'`
 
-Defined in: [packages/network/src/systems/SnapshotSystem.ts:11](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/network/src/systems/SnapshotSystem.ts#L11)
+Defined in: [packages/network/src/systems/SnapshotSystem.ts:11](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/network/src/systems/SnapshotSystem.ts#L11)
 
 The phase of the update that this system is registered for.
 Defaults to 'update'.
@@ -124,7 +124,7 @@ Detaches the system from the world.
 
 > **update**(`dt`): `void`
 
-Defined in: [packages/network/src/systems/SnapshotSystem.ts:14](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/network/src/systems/SnapshotSystem.ts#L14)
+Defined in: [packages/network/src/systems/SnapshotSystem.ts:14](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/network/src/systems/SnapshotSystem.ts#L14)
 
 Method that will be called on every tick that this system is registered for.
 

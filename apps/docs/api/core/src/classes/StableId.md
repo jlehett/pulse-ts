@@ -6,7 +6,7 @@
 
 # Class: StableId
 
-Defined in: [packages/core/src/domain/components/meta/StableId.ts:6](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/core/src/domain/components/meta/StableId.ts#L6)
+Defined in: [packages/core/src/domain/components/meta/StableId.ts:6](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/core/src/domain/components/meta/StableId.ts#L6)
 
 Stable string identifier for a Node.
 
@@ -34,7 +34,7 @@ Stable string identifier for a Node.
 
 > **id**: `string` = `''`
 
-Defined in: [packages/core/src/domain/components/meta/StableId.ts:7](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/core/src/domain/components/meta/StableId.ts#L7)
+Defined in: [packages/core/src/domain/components/meta/StableId.ts:7](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/core/src/domain/components/meta/StableId.ts#L7)
 
 ## Accessors
 
@@ -44,7 +44,7 @@ Defined in: [packages/core/src/domain/components/meta/StableId.ts:7](https://git
 
 > **get** **owner**(): [`Node`](Node.md)
 
-Defined in: [packages/core/src/domain/ecs/base/Component.ts:17](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/core/src/domain/ecs/base/Component.ts#L17)
+Defined in: [packages/core/src/domain/ecs/base/Component.ts:17](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/core/src/domain/ecs/base/Component.ts#L17)
 
 The owner of the component.
 
@@ -62,7 +62,7 @@ The owner of the component.
 
 > **\[kSetComponentOwner\]**(`owner`): `void`
 
-Defined in: [packages/core/src/domain/ecs/base/Component.ts:10](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/core/src/domain/ecs/base/Component.ts#L10)
+Defined in: [packages/core/src/domain/ecs/base/Component.ts:10](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/core/src/domain/ecs/base/Component.ts#L10)
 
 #### Parameters
 
@@ -84,7 +84,7 @@ Defined in: [packages/core/src/domain/ecs/base/Component.ts:10](https://github.c
 
 > `static` **attach**\<`T`\>(`this`, `owner`): `T`
 
-Defined in: [packages/core/src/domain/ecs/base/Component.ts:27](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/core/src/domain/ecs/base/Component.ts#L27)
+Defined in: [packages/core/src/domain/ecs/base/Component.ts:27](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/core/src/domain/ecs/base/Component.ts#L27)
 
 Attaches the component to an owner. Override this method to implement
 custom attachment logic.

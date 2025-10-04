@@ -6,7 +6,7 @@
 
 # Class: InterpolationService
 
-Defined in: [packages/network/src/services/InterpolationService.ts:29](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/network/src/services/InterpolationService.ts#L29)
+Defined in: [packages/network/src/services/InterpolationService.ts:29](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/network/src/services/InterpolationService.ts#L29)
 
 Maintains target TRS for remote entities and smoothly interpolates toward them.
 
@@ -78,7 +78,7 @@ Detaches the service from the world.
 
 > **register**(`node`, `opts?`): `string`
 
-Defined in: [packages/network/src/services/InterpolationService.ts:37](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/network/src/services/InterpolationService.ts#L37)
+Defined in: [packages/network/src/services/InterpolationService.ts:37](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/network/src/services/InterpolationService.ts#L37)
 
 Registers or updates the interpolation entry for an entity id.
 
@@ -116,7 +116,7 @@ Options including smoothing lambda and snap distance.
 
 > **setTarget**(`id`, `patch`): `void`
 
-Defined in: [packages/network/src/services/InterpolationService.ts:71](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/network/src/services/InterpolationService.ts#L71)
+Defined in: [packages/network/src/services/InterpolationService.ts:71](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/network/src/services/InterpolationService.ts#L71)
 
 Updates the target for an entity's transform.
 
@@ -140,7 +140,7 @@ Updates the target for an entity's transform.
 
 > **tick**(`dt`): `void`
 
-Defined in: [packages/network/src/services/InterpolationService.ts:81](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/network/src/services/InterpolationService.ts#L81)
+Defined in: [packages/network/src/services/InterpolationService.ts:81](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/network/src/services/InterpolationService.ts#L81)
 
 Steps interpolation toward targets for all registered entities.
 

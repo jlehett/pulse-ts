@@ -8,7 +8,7 @@
 
 > **shallowDelta**(`now`, `last`): `any`
 
-Defined in: [packages/network/src/replication/protocol.ts:24](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/network/src/replication/protocol.ts#L24)
+Defined in: [packages/network/src/replication/protocol.ts:24](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/network/src/replication/protocol.ts#L24)
 
 Returns a shallow delta between two plain objects (changed keys only).
 Undefined means no change. Null is a valid value and included.

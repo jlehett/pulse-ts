@@ -6,9 +6,16 @@
 
 # Interface: LoadOptions
 
-Defined in: [packages/save/src/types.ts:19](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/save/src/types.ts#L19)
+Defined in: packages/save/src/public/types.ts:25
 
 Options for loading a world.
+
+## Example
+
+```ts
+import { loadWorld } from '@pulse-ts/save';
+loadWorld(world, save, { strict: false, applyTime: true, resetPrevious: true });
+```
 
 ## Properties
 
@@ -16,7 +23,7 @@ Options for loading a world.
 
 > `optional` **applyTime**: `boolean`
 
-Defined in: [packages/save/src/types.ts:27](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/save/src/types.ts#L27)
+Defined in: packages/save/src/public/types.ts:33
 
 Whether to apply the saved time state.
 
@@ -26,7 +33,7 @@ Whether to apply the saved time state.
 
 > `optional` **resetPrevious**: `boolean`
 
-Defined in: [packages/save/src/types.ts:25](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/save/src/types.ts#L25)
+Defined in: packages/save/src/public/types.ts:31
 
 Whether to reset the previous values of the Transform component when applying.
 
@@ -36,6 +43,6 @@ Whether to reset the previous values of the Transform component when applying.
 
 > `optional` **strict**: `boolean`
 
-Defined in: [packages/save/src/types.ts:23](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/save/src/types.ts#L23)
+Defined in: packages/save/src/public/types.ts:29
 
 Whether to fail if a node is missing when loading a save file in-place.

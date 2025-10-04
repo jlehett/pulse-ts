@@ -8,7 +8,7 @@
 
 > **InputOptions** = `object`
 
-Defined in: [packages/input/src/domain/bindings/types.ts:94](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/input/src/domain/bindings/types.ts#L94)
+Defined in: [packages/input/src/domain/bindings/types.ts:94](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/input/src/domain/bindings/types.ts#L94)
 
 Options configuring the InputService.
 
@@ -18,7 +18,7 @@ Options configuring the InputService.
 
 > `optional` **pointerLock**: `boolean`
 
-Defined in: [packages/input/src/domain/bindings/types.ts:106](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/input/src/domain/bindings/types.ts#L106)
+Defined in: [packages/input/src/domain/bindings/types.ts:106](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/input/src/domain/bindings/types.ts#L106)
 
 Whether to request pointer lock on pointerdown if available. Defaults to false.
 
@@ -28,7 +28,7 @@ Whether to request pointer lock on pointerdown if available. Defaults to false.
 
 > `optional` **preventDefault**: `boolean`
 
-Defined in: [packages/input/src/domain/bindings/types.ts:102](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/input/src/domain/bindings/types.ts#L102)
+Defined in: [packages/input/src/domain/bindings/types.ts:102](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/input/src/domain/bindings/types.ts#L102)
 
 Whether to prevent default behavior of events. Defaults to false.
 
@@ -38,6 +38,6 @@ Whether to prevent default behavior of events. Defaults to false.
 
 > `optional` **target**: `EventTarget` \| `null`
 
-Defined in: [packages/input/src/domain/bindings/types.ts:98](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/input/src/domain/bindings/types.ts#L98)
+Defined in: [packages/input/src/domain/bindings/types.ts:98](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/input/src/domain/bindings/types.ts#L98)
 
 The target to listen for events on. Defaults to window if present.

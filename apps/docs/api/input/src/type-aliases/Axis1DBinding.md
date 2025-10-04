@@ -8,7 +8,7 @@
 
 > **Axis1DBinding** = `object`
 
-Defined in: [packages/input/src/domain/bindings/types.ts:136](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/input/src/domain/bindings/types.ts#L136)
+Defined in: [packages/input/src/domain/bindings/types.ts:136](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/input/src/domain/bindings/types.ts#L136)
 
 An axis 1D binding expression.
 
@@ -18,7 +18,7 @@ An axis 1D binding expression.
 
 > **neg**: [`KeyBinding`](KeyBinding.md)[]
 
-Defined in: [packages/input/src/domain/bindings/types.ts:145](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/input/src/domain/bindings/types.ts#L145)
+Defined in: [packages/input/src/domain/bindings/types.ts:145](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/input/src/domain/bindings/types.ts#L145)
 
 The negative key binding.
 
@@ -28,7 +28,7 @@ The negative key binding.
 
 > **pos**: [`KeyBinding`](KeyBinding.md)[]
 
-Defined in: [packages/input/src/domain/bindings/types.ts:141](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/input/src/domain/bindings/types.ts#L141)
+Defined in: [packages/input/src/domain/bindings/types.ts:141](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/input/src/domain/bindings/types.ts#L141)
 
 The positive key binding.
 
@@ -38,7 +38,7 @@ The positive key binding.
 
 > `optional` **scale**: `number`
 
-Defined in: [packages/input/src/domain/bindings/types.ts:149](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/input/src/domain/bindings/types.ts#L149)
+Defined in: [packages/input/src/domain/bindings/types.ts:149](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/input/src/domain/bindings/types.ts#L149)
 
 The scale of the axis.
 
@@ -48,4 +48,4 @@ The scale of the axis.
 
 > **type**: `"axis1d"`
 
-Defined in: [packages/input/src/domain/bindings/types.ts:137](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/input/src/domain/bindings/types.ts#L137)
+Defined in: [packages/input/src/domain/bindings/types.ts:137](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/input/src/domain/bindings/types.ts#L137)

@@ -8,9 +8,9 @@
 
 > **serializeRegisteredServices**(`world`): `object`[]
 
-Defined in: [packages/save/src/registries/serviceRegistry.ts:55](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/save/src/registries/serviceRegistry.ts#L55)
+Defined in: packages/save/src/domain/registries/serviceRegistry.ts:46
 
-Serialize all registered services.
+Serialize all world services that have registered serializers.
 
 ## Parameters
 
@@ -18,10 +18,16 @@ Serialize all registered services.
 
 `World`
 
-The world to serialize the services for.
+The source world.
 
 ## Returns
 
 `object`[]
 
-An array of serialized services.
+Array of serialized service payloads.
+
+## Example
+
+```ts
+const items = serializeRegisteredServices(world);
+```

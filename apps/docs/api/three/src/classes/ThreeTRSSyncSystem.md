@@ -6,7 +6,7 @@
 
 # Class: ThreeTRSSyncSystem
 
-Defined in: [packages/three/src/systems/trsSync.ts:20](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/three/src/systems/trsSync.ts#L20)
+Defined in: [packages/three/src/domain/systems/trsSync.ts:20](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/three/src/domain/systems/trsSync.ts#L20)
 
 Synchronizes Node TRS into Three Object3D roots each frame before render.
 
@@ -47,7 +47,7 @@ world.addSystem(new ThreeTRSSyncSystem());
 
 > `static` **order**: `number`
 
-Defined in: [packages/three/src/systems/trsSync.ts:23](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/three/src/systems/trsSync.ts#L23)
+Defined in: [packages/three/src/domain/systems/trsSync.ts:23](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/three/src/domain/systems/trsSync.ts#L23)
 
 The order of the update that this system is registered for.
 
@@ -61,7 +61,7 @@ The order of the update that this system is registered for.
 
 > `static` **updateKind**: `UpdateKind` = `'frame'`
 
-Defined in: [packages/three/src/systems/trsSync.ts:21](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/three/src/systems/trsSync.ts#L21)
+Defined in: [packages/three/src/domain/systems/trsSync.ts:21](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/three/src/domain/systems/trsSync.ts#L21)
 
 The kind of update that this system is registered for.
 Defaults to 'fixed'.
@@ -76,7 +76,7 @@ Defaults to 'fixed'.
 
 > `static` **updatePhase**: `UpdatePhase` = `'late'`
 
-Defined in: [packages/three/src/systems/trsSync.ts:22](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/three/src/systems/trsSync.ts#L22)
+Defined in: [packages/three/src/domain/systems/trsSync.ts:22](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/three/src/domain/systems/trsSync.ts#L22)
 
 The phase of the update that this system is registered for.
 Defaults to 'update'.
@@ -135,7 +135,7 @@ Detaches the system from the world.
 
 > **update**(): `void`
 
-Defined in: [packages/three/src/systems/trsSync.ts:25](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/three/src/systems/trsSync.ts#L25)
+Defined in: [packages/three/src/domain/systems/trsSync.ts:25](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/three/src/domain/systems/trsSync.ts#L25)
 
 Method that will be called on every tick that this system is registered for.
 

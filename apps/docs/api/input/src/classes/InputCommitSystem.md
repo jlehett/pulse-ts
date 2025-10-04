@@ -6,7 +6,7 @@
 
 # Class: InputCommitSystem
 
-Defined in: [packages/input/src/domain/systems/commit.ts:16](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/input/src/domain/systems/commit.ts#L16)
+Defined in: [packages/input/src/domain/systems/commit.ts:16](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/input/src/domain/systems/commit.ts#L16)
 
 System that commits input at `frame.early` so user code reads a stable snapshot.
 
@@ -58,7 +58,7 @@ The order of the update that this system is registered for.
 
 > `static` **updateKind**: `UpdateKind` = `'frame'`
 
-Defined in: [packages/input/src/domain/systems/commit.ts:18](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/input/src/domain/systems/commit.ts#L18)
+Defined in: [packages/input/src/domain/systems/commit.ts:18](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/input/src/domain/systems/commit.ts#L18)
 
 Runs once per frame.
 
@@ -72,7 +72,7 @@ Runs once per frame.
 
 > `static` **updatePhase**: `UpdatePhase` = `'early'`
 
-Defined in: [packages/input/src/domain/systems/commit.ts:20](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/input/src/domain/systems/commit.ts#L20)
+Defined in: [packages/input/src/domain/systems/commit.ts:20](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/input/src/domain/systems/commit.ts#L20)
 
 Scheduled at the `early` phase, before user updates.
 
@@ -130,7 +130,7 @@ Detaches the system from the world.
 
 > **update**(): `void`
 
-Defined in: [packages/input/src/domain/systems/commit.ts:22](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/input/src/domain/systems/commit.ts#L22)
+Defined in: [packages/input/src/domain/systems/commit.ts:22](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/input/src/domain/systems/commit.ts#L22)
 
 Method that will be called on every tick that this system is registered for.
 

@@ -8,7 +8,7 @@
 
 > **query**\<`Has`\>(`world`, `has`, `opts?`): `IterableIterator`\<\[[`Node`](../classes/Node.md), ...\{ \[K in string \| number \| symbol\]: InstanceType\<Has\[K\<K\>\]\> \}\[\]\]\>
 
-Defined in: [packages/core/src/domain/ecs/query/defineQuery.ts:122](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/core/src/domain/ecs/query/defineQuery.ts#L122)
+Defined in: [packages/core/src/domain/ecs/query/defineQuery.ts:122](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/core/src/domain/ecs/query/defineQuery.ts#L122)
 
 Convenience one-off query helper. See `defineQuery` for behavior.
 

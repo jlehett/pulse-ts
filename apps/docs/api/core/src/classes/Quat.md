@@ -6,7 +6,7 @@
 
 # Class: Quat
 
-Defined in: [packages/core/src/utils/math/quat.ts:6](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/core/src/utils/math/quat.ts#L6)
+Defined in: [packages/core/src/utils/math/quat.ts:6](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/core/src/utils/math/quat.ts#L6)
 
 A quaternion.
 
@@ -16,7 +16,7 @@ A quaternion.
 
 > **new Quat**(`x`, `y`, `z`, `w`): `Quat`
 
-Defined in: [packages/core/src/utils/math/quat.ts:7](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/core/src/utils/math/quat.ts#L7)
+Defined in: [packages/core/src/utils/math/quat.ts:7](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/core/src/utils/math/quat.ts#L7)
 
 #### Parameters
 
@@ -46,7 +46,7 @@ Defined in: [packages/core/src/utils/math/quat.ts:7](https://github.com/jlehett/
 
 > **w**: `number` = `1`
 
-Defined in: [packages/core/src/utils/math/quat.ts:11](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/core/src/utils/math/quat.ts#L11)
+Defined in: [packages/core/src/utils/math/quat.ts:11](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/core/src/utils/math/quat.ts#L11)
 
 ***
 
@@ -54,7 +54,7 @@ Defined in: [packages/core/src/utils/math/quat.ts:11](https://github.com/jlehett
 
 > **x**: `number` = `0`
 
-Defined in: [packages/core/src/utils/math/quat.ts:8](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/core/src/utils/math/quat.ts#L8)
+Defined in: [packages/core/src/utils/math/quat.ts:8](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/core/src/utils/math/quat.ts#L8)
 
 ***
 
@@ -62,7 +62,7 @@ Defined in: [packages/core/src/utils/math/quat.ts:8](https://github.com/jlehett/
 
 > **y**: `number` = `0`
 
-Defined in: [packages/core/src/utils/math/quat.ts:9](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/core/src/utils/math/quat.ts#L9)
+Defined in: [packages/core/src/utils/math/quat.ts:9](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/core/src/utils/math/quat.ts#L9)
 
 ***
 
@@ -70,7 +70,7 @@ Defined in: [packages/core/src/utils/math/quat.ts:9](https://github.com/jlehett/
 
 > **z**: `number` = `0`
 
-Defined in: [packages/core/src/utils/math/quat.ts:10](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/core/src/utils/math/quat.ts#L10)
+Defined in: [packages/core/src/utils/math/quat.ts:10](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/core/src/utils/math/quat.ts#L10)
 
 ## Methods
 
@@ -78,7 +78,7 @@ Defined in: [packages/core/src/utils/math/quat.ts:10](https://github.com/jlehett
 
 > **clone**(): `Quat`
 
-Defined in: [packages/core/src/utils/math/quat.ts:17](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/core/src/utils/math/quat.ts#L17)
+Defined in: [packages/core/src/utils/math/quat.ts:17](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/core/src/utils/math/quat.ts#L17)
 
 Returns a clone of the quaternion.
 
@@ -92,7 +92,7 @@ Returns a clone of the quaternion.
 
 > **copy**(`q`): `this`
 
-Defined in: [packages/core/src/utils/math/quat.ts:47](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/core/src/utils/math/quat.ts#L47)
+Defined in: [packages/core/src/utils/math/quat.ts:47](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/core/src/utils/math/quat.ts#L47)
 
 Copies the values of the given quaternion.
 
@@ -112,7 +112,7 @@ Copies the values of the given quaternion.
 
 > **normalize**(): `this`
 
-Defined in: [packages/core/src/utils/math/quat.ts:35](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/core/src/utils/math/quat.ts#L35)
+Defined in: [packages/core/src/utils/math/quat.ts:35](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/core/src/utils/math/quat.ts#L35)
 
 Normalizes the quaternion.
 
@@ -126,7 +126,7 @@ Normalizes the quaternion.
 
 > **set**(`x`, `y`, `z`, `w`): `this`
 
-Defined in: [packages/core/src/utils/math/quat.ts:24](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/core/src/utils/math/quat.ts#L24)
+Defined in: [packages/core/src/utils/math/quat.ts:24](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/core/src/utils/math/quat.ts#L24)
 
 Sets the quaternion to the given values.
 
@@ -158,7 +158,7 @@ Sets the quaternion to the given values.
 
 > `static` **multiply**(`a`, `b`, `out`): `Quat`
 
-Defined in: [packages/core/src/utils/math/quat.ts:58](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/core/src/utils/math/quat.ts#L58)
+Defined in: [packages/core/src/utils/math/quat.ts:58](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/core/src/utils/math/quat.ts#L58)
 
 Multiplies two quaternions.
 
@@ -186,7 +186,7 @@ Multiplies two quaternions.
 
 > `static` **rotateVector**(`q`, `v`, `out`): [`Vec3`](Vec3.md)
 
-Defined in: [packages/core/src/utils/math/quat.ts:77](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/core/src/utils/math/quat.ts#L77)
+Defined in: [packages/core/src/utils/math/quat.ts:77](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/core/src/utils/math/quat.ts#L77)
 
 Rotates a vector by the quaternion.
 
@@ -214,7 +214,7 @@ Rotates a vector by the quaternion.
 
 > `static` **slerp**(`a`, `b`, `t`): `Quat`
 
-Defined in: [packages/core/src/utils/math/quat.ts:98](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/core/src/utils/math/quat.ts#L98)
+Defined in: [packages/core/src/utils/math/quat.ts:98](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/core/src/utils/math/quat.ts#L98)
 
 Spherically interpolates between two quaternions.
 
@@ -242,7 +242,7 @@ Spherically interpolates between two quaternions.
 
 > `static` **slerpInto**(`a`, `b`, `t`, `out`): `Quat`
 
-Defined in: [packages/core/src/utils/math/quat.ts:129](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/core/src/utils/math/quat.ts#L129)
+Defined in: [packages/core/src/utils/math/quat.ts:129](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/core/src/utils/math/quat.ts#L129)
 
 Spherically interpolates between two quaternions and stores the result in the given output quaternion.
 

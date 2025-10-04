@@ -8,7 +8,7 @@
 
 > **Axis2D**(`axes`): [`Axis2DBinding`](../type-aliases/Axis2DBinding.md)
 
-Defined in: [packages/input/src/domain/bindings/expr.ts:86](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/input/src/domain/bindings/expr.ts#L86)
+Defined in: [packages/input/src/domain/bindings/expr.ts:86](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/input/src/domain/bindings/expr.ts#L86)
 
 Create an Axis2D binding (mapping two Axis1D to a vector, e.g., WASD).
 

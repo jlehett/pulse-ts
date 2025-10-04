@@ -6,7 +6,7 @@
 
 # Abstract Class: System
 
-Defined in: [packages/core/src/domain/ecs/base/System.ts:8](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/core/src/domain/ecs/base/System.ts#L8)
+Defined in: [packages/core/src/domain/ecs/base/System.ts:8](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/core/src/domain/ecs/base/System.ts#L8)
 
 A system is a behavior that is run on every tick of the specified phase and kind
 for a world, and is registered on the world's system node.
@@ -31,7 +31,7 @@ for a world, and is registered on the world's system node.
 
 > `static` `optional` **order**: `number`
 
-Defined in: [packages/core/src/domain/ecs/base/System.ts:24](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/core/src/domain/ecs/base/System.ts#L24)
+Defined in: [packages/core/src/domain/ecs/base/System.ts:24](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/core/src/domain/ecs/base/System.ts#L24)
 
 The order of the update that this system is registered for.
 
@@ -41,7 +41,7 @@ The order of the update that this system is registered for.
 
 > `static` `optional` **updateKind**: [`UpdateKind`](../type-aliases/UpdateKind.md)
 
-Defined in: [packages/core/src/domain/ecs/base/System.ts:13](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/core/src/domain/ecs/base/System.ts#L13)
+Defined in: [packages/core/src/domain/ecs/base/System.ts:13](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/core/src/domain/ecs/base/System.ts#L13)
 
 The kind of update that this system is registered for.
 Defaults to 'fixed'.
@@ -52,7 +52,7 @@ Defaults to 'fixed'.
 
 > `static` `optional` **updatePhase**: [`UpdatePhase`](../type-aliases/UpdatePhase.md)
 
-Defined in: [packages/core/src/domain/ecs/base/System.ts:19](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/core/src/domain/ecs/base/System.ts#L19)
+Defined in: [packages/core/src/domain/ecs/base/System.ts:19](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/core/src/domain/ecs/base/System.ts#L19)
 
 The phase of the update that this system is registered for.
 Defaults to 'update'.
@@ -63,7 +63,7 @@ Defaults to 'update'.
 
 > **attach**(`world`): `void`
 
-Defined in: [packages/core/src/domain/ecs/base/System.ts:37](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/core/src/domain/ecs/base/System.ts#L37)
+Defined in: [packages/core/src/domain/ecs/base/System.ts:37](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/core/src/domain/ecs/base/System.ts#L37)
 
 Attaches the system to the world.
 
@@ -85,7 +85,7 @@ The world to attach the system to.
 
 > **detach**(): `void`
 
-Defined in: [packages/core/src/domain/ecs/base/System.ts:54](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/core/src/domain/ecs/base/System.ts#L54)
+Defined in: [packages/core/src/domain/ecs/base/System.ts:54](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/core/src/domain/ecs/base/System.ts#L54)
 
 Detaches the system from the world.
 
@@ -99,7 +99,7 @@ Detaches the system from the world.
 
 > `abstract` **update**(`dt`): `void`
 
-Defined in: [packages/core/src/domain/ecs/base/System.ts:63](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/core/src/domain/ecs/base/System.ts#L63)
+Defined in: [packages/core/src/domain/ecs/base/System.ts:63](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/core/src/domain/ecs/base/System.ts#L63)
 
 Method that will be called on every tick that this system is registered for.
 

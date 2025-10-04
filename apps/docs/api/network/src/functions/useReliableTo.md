@@ -8,7 +8,7 @@
 
 > **useReliableTo**\<`TReq`, `TRes`\>(`peerId`, `topic`): `object`
 
-Defined in: [packages/network/src/fc/hooks.ts:483](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/network/src/fc/hooks.ts#L483)
+Defined in: [packages/network/src/fc/hooks.ts:483](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/network/src/fc/hooks.ts#L483)
 
 Access a reliable request/ack channel addressed to a specific peer (or peers).
 

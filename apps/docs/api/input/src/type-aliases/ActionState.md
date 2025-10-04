@@ -8,7 +8,7 @@
 
 > **ActionState** = `object`
 
-Defined in: [packages/input/src/domain/bindings/types.ts:6](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/input/src/domain/bindings/types.ts#L6)
+Defined in: [packages/input/src/domain/bindings/types.ts:6](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/input/src/domain/bindings/types.ts#L6)
 
 The state of an action.
 
@@ -18,7 +18,7 @@ The state of an action.
 
 > **down**: `boolean`
 
-Defined in: [packages/input/src/domain/bindings/types.ts:10](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/input/src/domain/bindings/types.ts#L10)
+Defined in: [packages/input/src/domain/bindings/types.ts:10](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/input/src/domain/bindings/types.ts#L10)
 
 Whether the input bound to the action is currently held down.
 
@@ -28,7 +28,7 @@ Whether the input bound to the action is currently held down.
 
 > **pressed**: `boolean`
 
-Defined in: [packages/input/src/domain/bindings/types.ts:14](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/input/src/domain/bindings/types.ts#L14)
+Defined in: [packages/input/src/domain/bindings/types.ts:14](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/input/src/domain/bindings/types.ts#L14)
 
 Whether the input bound to the action was just pressed down this frame.
 
@@ -38,7 +38,7 @@ Whether the input bound to the action was just pressed down this frame.
 
 > **released**: `boolean`
 
-Defined in: [packages/input/src/domain/bindings/types.ts:18](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/input/src/domain/bindings/types.ts#L18)
+Defined in: [packages/input/src/domain/bindings/types.ts:18](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/input/src/domain/bindings/types.ts#L18)
 
 Whether the input bound to the action was just released this frame.
 
@@ -48,7 +48,7 @@ Whether the input bound to the action was just released this frame.
 
 > **since**: `number`
 
-Defined in: [packages/input/src/domain/bindings/types.ts:26](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/input/src/domain/bindings/types.ts#L26)
+Defined in: [packages/input/src/domain/bindings/types.ts:26](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/input/src/domain/bindings/types.ts#L26)
 
 The frame id when last state change occurred.
 
@@ -58,6 +58,6 @@ The frame id when last state change occurred.
 
 > **value**: `number`
 
-Defined in: [packages/input/src/domain/bindings/types.ts:22](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/input/src/domain/bindings/types.ts#L22)
+Defined in: [packages/input/src/domain/bindings/types.ts:22](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/input/src/domain/bindings/types.ts#L22)
 
 The value of the action. 0..1 for digital; can be any number for axes

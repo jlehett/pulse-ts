@@ -8,7 +8,7 @@
 
 > **installThree**(`world`, `opts`): [`ThreeService`](../classes/ThreeService.md)
 
-Defined in: [packages/three/src/public/install.ts:28](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/three/src/public/install.ts#L28)
+Defined in: [packages/three/src/public/install.ts:28](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/three/src/public/install.ts#L28)
 
 Convenience installer for Three.js rendering.
 

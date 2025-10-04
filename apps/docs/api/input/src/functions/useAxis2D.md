@@ -8,7 +8,7 @@
 
 > **useAxis2D**(`name`): () => [`Vec`](../type-aliases/Vec.md)
 
-Defined in: [packages/input/src/public/hooks.ts:77](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/input/src/public/hooks.ts#L77)
+Defined in: [packages/input/src/public/hooks.ts:77](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/input/src/public/hooks.ts#L77)
 
 Create an accessor for a 2D axis vector.
 
