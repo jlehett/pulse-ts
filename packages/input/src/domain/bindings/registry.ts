@@ -6,6 +6,7 @@ import type {
     KeyBinding,
     ChordBinding,
     SequenceBinding,
+    PointerVec2Modifiers,
 } from './types';
 
 /**
@@ -17,15 +18,7 @@ export class BindingRegistry {
     private keyBindings = new Map<string, string[]>();
     private buttonBindings = new Map<number, string[]>();
     private pointerMoveActions: string[] = [];
-    private pointerVec2Modifiers = new Map<
-        string,
-        {
-            invertX?: boolean;
-            invertY?: boolean;
-            scaleX?: number;
-            scaleY?: number;
-        }
-    >();
+    private pointerVec2Modifiers = new Map<string, PointerVec2Modifiers>();
     private axes1D = new Map<
         string,
         { pos: string[]; neg: string[]; scale: number }
@@ -106,7 +99,7 @@ export class BindingRegistry {
      * @param action The action to get the pointer vec2 modifiers for.
      * @returns The pointer vec2 modifiers.
      */
-    getPointerVec2Modifiers(action: string) {
+    getPointerVec2Modifiers(action: string): PointerVec2Modifiers | undefined {
         return this.pointerVec2Modifiers.get(action);
     }
 

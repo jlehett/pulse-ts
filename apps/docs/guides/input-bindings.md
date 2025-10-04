@@ -94,6 +94,28 @@ off();
 
 Note: `preventDefault` and `pointerLock` default to `false` unless specified in `installInput` options.
 
+## Resetting input state
+
+For testing or level reloads, reset input state without replacing the service:
+
+```ts
+import { useInput } from '@pulse-ts/input';
+
+const input = useInput();
+input.reset(); // clears pressed/down flags, pointer deltas, injected values
+```
+
+## Commit pipeline (reference)
+
+On each frame at `frame.early`, the input service:
+- Updates providers (poll)
+- Evaluates chords and sequence pulses (one-frame presses)
+- Computes digital actions and 1D axes from keys
+- Accumulates/flushes pointer movement and wheel deltas
+- Applies injected 1D axes and composes Axis2D from 1D
+
+This ensures user code reads a stable snapshot for the rest of the frame.
+
 ## Multiple pointer movement bindings
 
 You can bind more than one action to pointer movement, each with its own sensitivity/inversion. This is useful for separate "look" and "aim" vectors.

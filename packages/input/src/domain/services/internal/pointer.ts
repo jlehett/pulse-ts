@@ -1,11 +1,4 @@
-import type { Vec } from '../../bindings/types';
-
-export type PointerVec2Modifiers = {
-    invertX?: boolean;
-    invertY?: boolean;
-    scaleX?: number;
-    scaleY?: number;
-};
+import type { Vec, PointerVec2Modifiers } from '../../bindings/types';
 
 /**
  * Accumulate scaled/inverted pointer delta into the per-action vec2 accumulator.

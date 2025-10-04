@@ -7,6 +7,7 @@ import type {
     PointerSnapshot,
     Vec,
     ExprBindings,
+    ActionEvent,
 } from '../bindings/types';
 import { BindingRegistry } from '../bindings/registry';
 import { computeActionState } from './internal/state';
@@ -18,6 +19,19 @@ import { computeChordDownActions } from './internal/chords';
 /**
  * World-scoped input service: collects device events, applies bindings,
  * and exposes stable per-frame snapshots.
+ *
+ * Commit pipeline order (per frame):
+ * 1) Providers update (poll)
+ * 2) Chords evaluated → digital sources updated
+ * 3) Sequence pulses applied (pressed for one frame)
+ * 4) Digital actions computed (keys/buttons/sequences/chords)
+ * 5) Axes1D from keys computed (e.g., WASD components)
+ * 6) Pointer vec2 accumulated and snapshotted
+ * 7) Wheel axis applied (auto-released next frame)
+ * 8) Pointer snapshot finalized (delta, wheel, buttons, locked)
+ * 9) Injected 1D axes applied and auto-released
+ * 10) Derived vec2 from 1D composed
+ * 11) Sequence pulses cleared
  *
  * @example
  * ```ts
@@ -45,20 +59,23 @@ export class InputService extends Service {
     private actions = new Map<string, ActionState>();
 
     // per-action accumulated vec2 deltas for this frame
-    private vec2Accum = new Map<string, Vec>();
+    private vec2AccumFrame = new Map<string, Vec>();
     // per-action vec2 snapshot (frame)
     private vec2State = new Map<string, Vec>();
     // per-action accumulated 1D axis values for this frame (virtual/manual)
-    private axis1Accum = new Map<string, number>();
-    private axis1PrevInjected = new Set<string>();
+    private axis1AccumFrame = new Map<string, number>();
+    private axis1PrevInjectedFrame = new Set<string>();
     // key state (down) for Axis1DKeys support
     private keysDown = new Set<string>();
-    // sequence runtime state and pulses
-    private seqState = new Map<string, { index: number; lastFrame: number }>();
-    private seqPulse = new Set<string>();
+    // sequence runtime state and per-frame pulses
+    private seqRuntime = new Map<
+        string,
+        { index: number; lastFrame: number }
+    >();
+    private seqPulseFrame = new Set<string>();
 
-    // pointer state + accumulators
-    private pointer: PointerSnapshot = {
+    // pointer state + per-frame accumulators
+    private pointerSnapshot: PointerSnapshot = {
         x: 0,
         y: 0,
         deltaX: 0,
@@ -69,8 +86,8 @@ export class InputService extends Service {
         buttons: 0,
         locked: false,
     };
-    private pDelta = { dx: 0, dy: 0 };
-    private pWheel = { x: 0, y: 0, z: 0 };
+    private pointerDeltaFrame = { dx: 0, dy: 0 };
+    private wheelDeltaFrame = { x: 0, y: 0, z: 0 };
 
     // events for consumers who prefer subscriptions
     /**
@@ -87,10 +104,7 @@ export class InputService extends Service {
      * // later: off();
      * ```
      */
-    readonly actionEvent = new TypedEvent<{
-        name: string;
-        state: ActionState;
-    }>();
+    readonly actionEvent = new TypedEvent<ActionEvent>();
 
     //#endregion
 
@@ -185,14 +199,14 @@ export class InputService extends Service {
         // Track raw key state for axes1DKeys
         if (down) {
             this.keysDown.add(code);
-            const frameId = (this.world as any)?.getFrameId?.() ?? 0;
+            const frameId = this.getFrameId();
             const pulses = advanceSequencesForKey(
                 code,
                 frameId,
                 this.bindings.getSequences(),
-                this.seqState,
+                this.seqRuntime,
             );
-            for (const a of pulses) this.seqPulse.add(a);
+            for (const a of pulses) this.seqPulseFrame.add(a);
         } else {
             this.keysDown.delete(code);
         }
@@ -226,15 +240,15 @@ export class InputService extends Service {
         locked: boolean,
         buttons: number,
     ): void {
-        this.pointer.x = x;
-        this.pointer.y = y;
-        this.pointer.locked = !!locked;
-        this.pointer.buttons = buttons >>> 0;
-        this.pDelta.dx += dx;
-        this.pDelta.dy += dy;
+        this.pointerSnapshot.x = x;
+        this.pointerSnapshot.y = y;
+        this.pointerSnapshot.locked = !!locked;
+        this.pointerSnapshot.buttons = buttons >>> 0;
+        this.pointerDeltaFrame.dx += dx;
+        this.pointerDeltaFrame.dy += dy;
         for (const action of this.bindings.getPointerMoveActions()) {
             const mod = this.bindings.getPointerVec2Modifiers(action);
-            accumulatePointerDelta(action, dx, dy, mod, this.vec2Accum);
+            accumulatePointerDelta(action, dx, dy, mod, this.vec2AccumFrame);
         }
     }
 
@@ -245,9 +259,9 @@ export class InputService extends Service {
      * @param dz Wheel Z delta.
      */
     handleWheel(dx: number, dy: number, dz: number): void {
-        this.pWheel.x += dx;
-        this.pWheel.y += dy;
-        this.pWheel.z += dz;
+        this.wheelDeltaFrame.x += dx;
+        this.wheelDeltaFrame.y += dy;
+        this.wheelDeltaFrame.z += dz;
     }
 
     /**
@@ -266,11 +280,11 @@ export class InputService extends Service {
      * @param axes Object with numeric components to accumulate this frame.
      */
     injectAxis2D(action: string, axes: Vec): void {
-        const a = this.vec2Accum.get(action) ?? { x: 0, y: 0 };
+        const a = this.vec2AccumFrame.get(action) ?? { x: 0, y: 0 };
         Object.entries(axes).forEach(([key, value]) => {
             a[key] = (a[key] ?? 0) + value;
         });
-        this.vec2Accum.set(action, a);
+        this.vec2AccumFrame.set(action, a);
     }
 
     /**
@@ -280,8 +294,8 @@ export class InputService extends Service {
      * @param value Numeric value to add for this frame.
      */
     injectAxis1D(action: string, value: number): void {
-        const prev = this.axis1Accum.get(action) ?? 0;
-        this.axis1Accum.set(action, prev + value);
+        const prev = this.axis1AccumFrame.get(action) ?? 0;
+        this.axis1AccumFrame.set(action, prev + value);
     }
 
     /**
@@ -292,7 +306,7 @@ export class InputService extends Service {
         // allow providers to poll
         for (const p of this.providers) p.update?.();
 
-        const frameId = (this.world as any)?.getFrameId?.() ?? 0;
+        const frameId = this.getFrameId();
 
         this.commitChordStates();
         this.commitSequencePulses();
@@ -318,7 +332,7 @@ export class InputService extends Service {
                 pressed: false,
                 released: false,
                 value: 0,
-                since: (this.world as any)?.getFrameId?.() ?? 0,
+                since: this.getFrameId(),
             }
         );
     }
@@ -359,7 +373,45 @@ export class InputService extends Service {
      * @returns Pointer snapshot.
      */
     pointerState(): PointerSnapshot {
-        return this.pointer;
+        return this.pointerSnapshot;
+    }
+
+    /**
+     * Reset transient input state and snapshots.
+     * Useful on level reload or between tests without replacing the service instance.
+     *
+     * @example
+     * ```ts
+     * const svc = new InputService();
+     * // ...use input...
+     * svc.reset();
+     * // states return to defaults
+     * ```
+     */
+    reset(): void {
+        this.digitalSources.clear();
+        this.actions.clear();
+        this.vec2AccumFrame.clear();
+        this.vec2State.clear();
+        this.axis1AccumFrame.clear();
+        this.axis1PrevInjectedFrame.clear();
+        this.keysDown.clear();
+        this.seqRuntime.clear();
+        this.seqPulseFrame.clear();
+        this.pointerSnapshot.x = 0;
+        this.pointerSnapshot.y = 0;
+        this.pointerSnapshot.deltaX = 0;
+        this.pointerSnapshot.deltaY = 0;
+        this.pointerSnapshot.wheelX = 0;
+        this.pointerSnapshot.wheelY = 0;
+        this.pointerSnapshot.wheelZ = 0;
+        this.pointerSnapshot.buttons = 0 >>> 0;
+        this.pointerSnapshot.locked = false;
+        this.pointerDeltaFrame.dx = 0;
+        this.pointerDeltaFrame.dy = 0;
+        this.wheelDeltaFrame.x = 0;
+        this.wheelDeltaFrame.y = 0;
+        this.wheelDeltaFrame.z = 0;
     }
 
     //#endregion
@@ -378,6 +430,13 @@ export class InputService extends Service {
         return typeof window !== 'undefined'
             ? (window as unknown as EventTarget)
             : null;
+    }
+
+    /**
+     * Current frame id from world (0 if unavailable).
+     */
+    private getFrameId(): number {
+        return (this.world as any)?.getFrameId?.() ?? 0;
     }
 
     /**
@@ -413,7 +472,7 @@ export class InputService extends Service {
     }
 
     private commitSequencePulses(): void {
-        for (const action of this.seqPulse)
+        for (const action of this.seqPulseFrame)
             this.setDigitalSource(action, 'seq', true);
     }
 
@@ -445,14 +504,14 @@ export class InputService extends Service {
     private commitPointerVec2(): void {
         const pActions = this.bindings.getPointerMoveActions();
         for (const name of pActions) this.vec2State.set(name, { x: 0, y: 0 });
-        for (const [name, v] of this.vec2Accum)
+        for (const [name, v] of this.vec2AccumFrame)
             this.vec2State.set(name, { ...v });
-        this.vec2Accum.clear();
+        this.vec2AccumFrame.clear();
     }
 
     private commitWheel(frameId: number): void {
         for (const [name, def] of this.bindings.getWheelBindings()) {
-            const nextValue = this.pWheel.y * def.scale;
+            const nextValue = this.wheelDeltaFrame.y * def.scale;
             const prev = this.actions.get(name);
             const state = computeActionState(prev, nextValue, frameId);
             this.actions.set(name, state);
@@ -462,19 +521,22 @@ export class InputService extends Service {
     }
 
     private commitPointerSnapshot(): void {
-        this.pointer.deltaX = this.pDelta.dx;
-        this.pointer.deltaY = this.pDelta.dy;
-        this.pDelta.dx = 0;
-        this.pDelta.dy = 0;
-        this.pointer.wheelX = this.pWheel.x;
-        this.pointer.wheelY = this.pWheel.y;
-        this.pointer.wheelZ = this.pWheel.z;
-        this.pWheel.x = this.pWheel.y = this.pWheel.z = 0;
+        this.pointerSnapshot.deltaX = this.pointerDeltaFrame.dx;
+        this.pointerSnapshot.deltaY = this.pointerDeltaFrame.dy;
+        this.pointerDeltaFrame.dx = 0;
+        this.pointerDeltaFrame.dy = 0;
+        this.pointerSnapshot.wheelX = this.wheelDeltaFrame.x;
+        this.pointerSnapshot.wheelY = this.wheelDeltaFrame.y;
+        this.pointerSnapshot.wheelZ = this.wheelDeltaFrame.z;
+        this.wheelDeltaFrame.x =
+            this.wheelDeltaFrame.y =
+            this.wheelDeltaFrame.z =
+                0;
     }
 
     private commitInjectedAxes1D(frameId: number): void {
         const injectedNow = new Set<string>();
-        for (const [name, value] of this.axis1Accum.entries()) {
+        for (const [name, value] of this.axis1AccumFrame.entries()) {
             injectedNow.add(name);
             const prev = this.actions.get(name);
             const state = computeActionState(prev, value, frameId);
@@ -482,7 +544,7 @@ export class InputService extends Service {
             if (state.pressed || state.released)
                 this.actionEvent.emit({ name, state });
         }
-        for (const name of this.axis1PrevInjected) {
+        for (const name of this.axis1PrevInjectedFrame) {
             if (!injectedNow.has(name)) {
                 const prev = this.actions.get(name);
                 const state = computeActionState(prev, 0, frameId);
@@ -491,8 +553,8 @@ export class InputService extends Service {
                     this.actionEvent.emit({ name, state });
             }
         }
-        this.axis1PrevInjected = injectedNow;
-        this.axis1Accum.clear();
+        this.axis1PrevInjectedFrame = injectedNow;
+        this.axis1AccumFrame.clear();
     }
 
     private commitDerivedVec2(): void {
@@ -503,9 +565,9 @@ export class InputService extends Service {
     }
 
     private finalizeSequences(): void {
-        for (const action of this.seqPulse)
+        for (const action of this.seqPulseFrame)
             this.setDigitalSource(action, 'seq', false);
-        this.seqPulse.clear();
+        this.seqPulseFrame.clear();
     }
 
     //#endregion

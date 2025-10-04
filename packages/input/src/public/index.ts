@@ -17,6 +17,8 @@ export type {
     PointerSnapshot,
     InputOptions,
     InputProvider,
+    ActionEvent,
+    PointerVec2Modifiers,
     BindingExpr,
     KeyBinding,
     Axis1DBinding,

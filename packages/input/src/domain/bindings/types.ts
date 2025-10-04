@@ -74,6 +74,21 @@ export type PointerSnapshot = {
 };
 
 /**
+ * Modifiers that affect pointer movement mapping to an Axis2D.
+ * Moved to bindings types so both registry and service can use a shared shape.
+ */
+export type PointerVec2Modifiers = {
+    /** Invert the first component (typically x). */
+    invertX?: boolean;
+    /** Invert the second component (typically y). */
+    invertY?: boolean;
+    /** Scale applied to the first component (x). */
+    scaleX?: number;
+    /** Scale applied to the second component (y). */
+    scaleY?: number;
+};
+
+/**
  * Options configuring the InputService.
  */
 export type InputOptions = {
@@ -229,3 +244,13 @@ export type BindingExpr =
  * A record of binding expressions. Each key is the name of the action, and the value is the binding expression.
  */
 export type ExprBindings = Record<string, BindingExpr | BindingExpr[]>;
+
+/**
+ * Action event payload emitted on press/release transitions during commit().
+ */
+export type ActionEvent = {
+    /** Action name */
+    name: string;
+    /** New state snapshot */
+    state: ActionState;
+};
