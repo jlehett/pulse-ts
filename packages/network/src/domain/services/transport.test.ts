@@ -95,4 +95,48 @@ describe('TransportService', () => {
         b.dispatchIncoming();
         expect(got).toEqual(['first']);
     });
+
+    it('drops addressed packets when receiver has no selfId set', async () => {
+        const hub = createMemoryHub();
+        const aT = new MemoryTransport(hub, 'a');
+        const bT = new MemoryTransport(hub, 'b');
+
+        const a = new TransportService({ selfId: 'a' });
+        const b = new TransportService(); // no selfId configured
+        a.setTransport(aT);
+        b.setTransport(bT);
+        await a.connect();
+        await b.connect();
+
+        const gotB: string[] = [];
+        b.subscribe<string>('dm', (m) => gotB.push(m));
+
+        a.publishTo('dm', 'b', 'to-b');
+        a.pump();
+        b.pump();
+
+        expect(gotB).toEqual([]);
+    });
+
+    it('pump() flushes and dispatches in one call', async () => {
+        const hub = createMemoryHub();
+        const aT = new MemoryTransport(hub, 'a');
+        const bT = new MemoryTransport(hub, 'b');
+
+        const a = new TransportService({ selfId: 'a' });
+        const b = new TransportService({ selfId: 'b' });
+        a.setTransport(aT);
+        b.setTransport(bT);
+        await a.connect();
+        await b.connect();
+
+        const got: string[] = [];
+        b.subscribe<string>('chat', (m) => got.push(m));
+
+        a.publish('chat', 'hello');
+        a.pump();
+        b.pump();
+
+        expect(got).toEqual(['hello']);
+    });
 });

@@ -239,6 +239,23 @@ export class TransportService extends Service {
     }
 
     /**
+     * Pumps the transport: flushes outgoing messages, then dispatches incoming.
+     *
+     * This mirrors what `NetworkTick` does each frame and is handy in tests or
+     * imperative setups where you are not running a scheduler/system loop.
+     *
+     * @param max Maximum number of incoming packets to dispatch (default 256).
+     * @example
+     * // Two worlds wired via MemoryTransport
+     * // a.publish('chat', 'hello');
+     * // a.pump(); b.pump(); // delivers 'hello' to b's subscribers
+     */
+    pump(max = 256) {
+        this.flushOutgoing();
+        this.dispatchIncoming(max);
+    }
+
+    /**
      * Get the stats.
      * @returns The stats.
      */

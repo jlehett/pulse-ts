@@ -51,7 +51,7 @@ server.registerReliable('shop:buy', async (req, peer) => ({ ok: true }))
 
 ## Signaling for WebRTC
 
-The broker forwards `__signal` envelopes by `to` peer id. Use the `RtcSignalingClient` on the client side and `useWebRTC` to establish a mesh.
+The broker forwards `__signal` envelopes by `to` peer id. On the client, prefer `useWebRTC(selfId, { signaling: wsTransportFactory })` which wires a minimal signaling client internally and switches the main transport to WebRTC.
 
 ```ts
 // Envelope shape: { to, from?, type: 'hello'|'offer'|'answer'|'ice', payload }

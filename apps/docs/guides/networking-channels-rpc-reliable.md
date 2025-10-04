@@ -25,7 +25,7 @@ function ChatToBob() {
 }
 ```
 
-Under the hood, addressed publish sets `Packet.to`; `TransportService` on receivers ignores packets addressed to other peers. Set your local id with `TransportService.setSelfId(id)` (this is done automatically in `useWebRTC`).
+Under the hood, addressed publish sets `Packet.to`; `TransportService` on receivers ignores packets addressed to other peers. Set your local id with `TransportService.setSelfId(id)` (this is done automatically in `useWebRTC`). Receivers without a `selfId` drop addressed packets by design.
 
 ## RPC (Request/Response)
 

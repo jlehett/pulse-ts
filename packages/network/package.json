@@ -16,10 +16,25 @@
             "types": "./dist/index.d.ts",
             "import": "./dist/index.js",
             "require": "./dist/index.cjs"
+        },
+        "./transports/websocket": {
+            "types": "./dist/transports/websocket/index.d.ts",
+            "import": "./dist/transports/websocket/index.js",
+            "require": "./dist/transports/websocket/index.cjs"
+        },
+        "./transports/webrtc": {
+            "types": "./dist/transports/webrtc/index.d.ts",
+            "import": "./dist/transports/webrtc/index.js",
+            "require": "./dist/transports/webrtc/index.cjs"
+        },
+        "./transports/memory": {
+            "types": "./dist/transports/memory/index.d.ts",
+            "import": "./dist/transports/memory/index.js",
+            "require": "./dist/transports/memory/index.cjs"
         }
     },
     "scripts": {
-        "build": "tsup src/index.ts --dts --format esm,cjs --out-dir dist --clean",
+        "build": "tsup src/index.ts src/transports/websocket/index.ts src/transports/webrtc/index.ts src/transports/memory/index.ts --dts --format esm,cjs --out-dir dist --clean",
         "test": "jest",
         "lint": "eslint .",
         "lint:fix": "eslint . --fix",

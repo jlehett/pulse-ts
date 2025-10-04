@@ -68,7 +68,7 @@ function ConnectP2P() {
 Notes:
 
 - The broker forwards `__signal` envelopes by `to` peer id; no persistence required.
-- The included `WebRtcMeshTransport` negotiates DataChannels (offer/answer/ICE) and broadcasts messages to connected peers. It emits `meta.from` for per‑peer origin.
+- The included `WebRtcMeshTransport` negotiates DataChannels (offer/answer/ICE) and broadcasts messages to connected peers (advanced: deep import from `@pulse-ts/network/transports/webrtc`). It emits `meta.from` for per‑peer origin.
 - The transport is functional but minimal; you can bring your own TURN or add “perfect negotiation” if needed.
 
 ## Status and Peers

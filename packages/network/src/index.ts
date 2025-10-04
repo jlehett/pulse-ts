@@ -1,23 +1,9 @@
-// Public exports for @pulse-ts/network (refactored layout)
+// Public exports for @pulse-ts/network — client APIs favor hooks/facade.
 
+// Types used by public API options (kept for ergonomics)
 export * from './domain/types';
 
-// Services
-export { TransportService } from './domain/services/TransportService';
-export { ReplicationService } from './domain/services/ReplicationService';
-export { InterpolationService } from './domain/services/InterpolationService';
-export {
-    ReliableChannelService,
-    type ReliableResult,
-} from './domain/services/ReliableChannel';
-export { ClockSyncService } from './domain/services/ClockSyncService';
-
-// Systems
-export { NetworkTick } from './domain/systems/NetworkTick';
-export { SnapshotSystem } from './domain/systems/SnapshotSystem';
-export { InterpolationSystem } from './domain/systems/InterpolationSystem';
-
-// Public hooks
+// Public hooks (preferred for client code)
 export {
     useConnection,
     useWebSocket,
@@ -38,33 +24,21 @@ export {
 } from './public/hooks';
 export { useReplicateTransform } from './public/transform';
 
-// Transports
-export {
-    MemoryTransport,
-    createMemoryHub,
-    type MemoryHub,
-} from './infra/transports/memory';
-export { WebSocketTransport } from './infra/transports/websocket';
-export {
-    WebRtcMeshTransport,
-    type WebRtcMeshOptions,
-} from './infra/transports/webrtc';
-
-// Utilities
+// Lightweight channel helper
 export { defineChannel, channel } from './domain/messaging/channel';
+
+// Select pure helpers that are part of public docs
 export {
     shallowDelta,
     type SnapshotEnvelope,
 } from './domain/replication/protocol';
-// Services
-export { RpcService } from './domain/services/RpcService';
-export { getNetwork } from './public/facade';
-export {
-    RtcSignalingClient,
-    type SignalEnvelope,
-} from './infra/signaling/RtcSignalingClient';
 
-// Installer
+// Memory hub helper for local testing (hooked via useMemory)
+export { createMemoryHub, type MemoryHub } from './infra/transports/memory';
+
+// Facade and installer
+export { getNetwork } from './public/facade';
+
 export {
     installNetwork,
     type NetworkInstallOptions,
