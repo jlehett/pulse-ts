@@ -72,3 +72,18 @@ vi.axis2D('move', { x: 1, y: 0 });
 - Enable `pointerLock` to capture mouse for FPS-style look.
 - Use `Axis2D` for combined WASD vectors and `Axis1D` for single axes.
 - Use `Chord` for simultaneous keys and `Sequence` for combos.
+
+Note: `preventDefault` and `pointerLock` default to `false` unless specified in `installInput` options.
+
+## Multiple pointer movement bindings
+
+You can bind more than one action to pointer movement, each with its own sensitivity/inversion. This is useful for separate "look" and "aim" vectors.
+
+```ts
+installInput(world, {
+  bindings: {
+    look: PointerMovement({ scaleX: 0.1, scaleY: 0.1 }),
+    aim:  PointerMovement({ scaleX: 0.05, scaleY: 0.05, invertY: true }),
+  }
+});
+```

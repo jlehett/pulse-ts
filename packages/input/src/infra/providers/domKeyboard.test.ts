@@ -31,4 +31,24 @@ describe('DOMKeyboardProvider', () => {
         svc.commit();
         expect(svc.action('jump').released).toBe(true);
     });
+
+    test('ignores repeat keydown events for stability', () => {
+        const svc = new InputService();
+        svc.setBindings({ jump: Key('Space') });
+        const prov = new DOMKeyboardProvider(svc, { preventDefault: false });
+        const tgt = new FakeTarget() as any;
+        prov.start(tgt);
+
+        const events: any[] = [];
+        svc.actionEvent.on((e) => events.push(e));
+
+        tgt.emit('keydown', { code: 'Space', repeat: false });
+        svc.commit();
+        tgt.emit('keydown', { code: 'Space', repeat: true });
+        svc.commit();
+        expect(svc.action('jump').down).toBe(true);
+        // Only one pressed event should have been emitted
+        const pressedCount = events.filter((e) => e.state.pressed).length;
+        expect(pressedCount).toBe(1);
+    });
 });

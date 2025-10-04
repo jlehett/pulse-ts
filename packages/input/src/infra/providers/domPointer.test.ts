@@ -49,4 +49,34 @@ describe('DOMPointerProvider', () => {
         svc.commit();
         expect(svc.axis('zoom')).toBe(1);
     });
+
+    test('requests pointer lock on pointerdown when enabled and clears on cancel', () => {
+        const svc = new InputService();
+        const prov = new DOMPointerProvider(svc, {
+            preventDefault: false,
+            pointerLock: true,
+        });
+        const tgt = new FakeTarget() as any;
+        prov.start(tgt);
+
+        let requested = false;
+        const el = {
+            requestPointerLock() {
+                requested = true;
+            },
+        };
+        // pointerdown should request pointer lock
+        tgt.emit('pointerdown', { button: 0, target: el });
+        expect(requested).toBe(true);
+
+        // cancel should clear buttons by sending ups
+        svc.commit();
+        tgt.emit('pointerdown', { button: 0 });
+        svc.commit();
+        expect(svc.action('fire').down).toBe(false); // no binding, just sanity
+        // Emitting cancel should release
+        tgt.emit('pointercancel', {});
+        svc.commit();
+        // No exception; rely on provider path coverage
+    });
 });

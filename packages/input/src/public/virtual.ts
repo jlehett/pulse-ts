@@ -41,4 +41,13 @@ export class VirtualInput {
     axis2D(action: string, axes: Vec): void {
         this.service.injectAxis2D(action, axes);
     }
+
+    /**
+     * Inject a per-frame 1D axis value.
+     * @param action Axis name.
+     * @param value Numeric value to add this frame.
+     */
+    axis1D(action: string, value: number): void {
+        this.service.injectAxis1D(action, value);
+    }
 }

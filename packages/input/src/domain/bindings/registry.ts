@@ -16,7 +16,7 @@ export class BindingRegistry {
 
     private keyBindings = new Map<string, string[]>();
     private buttonBindings = new Map<number, string[]>();
-    private pointerMoveAction?: string;
+    private pointerMoveActions: string[] = [];
     private pointerVec2Modifiers = new Map<
         string,
         {
@@ -59,7 +59,7 @@ export class BindingRegistry {
     setBindings(b: ExprBindings) {
         this.keyBindings.clear();
         this.buttonBindings.clear();
-        this.pointerMoveAction = undefined;
+        this.pointerMoveActions = [];
         this.pointerVec2Modifiers.clear();
         this.axes1D.clear();
         this.vec2Defs.clear();
@@ -94,11 +94,11 @@ export class BindingRegistry {
     }
 
     /**
-     * Get the action that pointer movement is bound to.
-     * @returns The pointer movement action.
+     * Get the actions that pointer movement is bound to.
+     * @returns Array of action names.
      */
-    getPointerMoveAction(): string | undefined {
-        return this.pointerMoveAction;
+    getPointerMoveActions(): readonly string[] {
+        return this.pointerMoveActions;
     }
 
     /**
@@ -198,7 +198,7 @@ export class BindingRegistry {
                         this.addAxis2D(action, expr);
                         break;
                     case 'pointerMove':
-                        this.pointerMoveAction = action;
+                        this.pointerMoveActions.push(action);
                         this.pointerVec2Modifiers.set(action, {
                             invertX: expr.invertX,
                             invertY: expr.invertY,

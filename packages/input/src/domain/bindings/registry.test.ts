@@ -21,6 +21,7 @@ describe('BindingRegistry', () => {
                 y: { pos: Key('W'), neg: Key('S') },
             }),
             look: PointerMovement({ scaleX: 0.5, invertY: true }),
+            aim: PointerMovement({ scaleX: 0.25, scaleY: 0.25 }),
             zoom: PointerWheelScroll({ scale: 2 }),
             fire: PointerButton(0),
             combo: Chord([Key('ControlLeft'), Key('KeyC')]),
@@ -42,10 +43,13 @@ describe('BindingRegistry', () => {
         });
 
         expect(reg.getActionsForKey('Space')).toContain('jump');
-        expect(reg.getPointerMoveAction()).toBe('look');
+        const pActs = reg.getPointerMoveActions();
+        expect(pActs).toEqual(expect.arrayContaining(['look', 'aim']));
         const mod = reg.getPointerVec2Modifiers('look')!;
         expect(mod.scaleX).toBe(0.5);
         expect(mod.invertY).toBe(true);
+        const modAim = reg.getPointerVec2Modifiers('aim')!;
+        expect(modAim.scaleX).toBe(0.25);
 
         // axis2d derived axes exist
         const vecDefs = Array.from(reg.getVec2Defs());
@@ -72,5 +76,37 @@ describe('BindingRegistry', () => {
         const konami = seqs.find(([name]) => name === 'konami')![1];
         expect(konami.maxGapFrames).toBe(20);
         expect(konami.steps[0]).toBe('ArrowUp');
+    });
+
+    test('Axis2D non-standard keys (x & z) map correctly', () => {
+        const reg = new BindingRegistry();
+        reg.setBindings({
+            moveXZ: Axis2D({
+                x: { pos: Key('KeyD'), neg: Key('KeyA') },
+                z: { pos: Key('KeyW'), neg: Key('KeyS') },
+            }),
+        });
+        const defs = Array.from(reg.getVec2Defs());
+        const def = defs.find(([k]) => k === 'moveXZ')![1];
+        expect(def.key1).toBe('x');
+        expect(def.key2).toBe('z');
+        expect(def.axis1).toContain('__axis:moveXZ:x');
+        expect(def.axis2).toContain('__axis:moveXZ:z');
+    });
+
+    test('mergeBindings overrides Axis1D by name and appends new actions', () => {
+        const reg = new BindingRegistry();
+        reg.setBindings({
+            throttle: Axis1D({ pos: Key('KeyW'), scale: 1 }),
+        });
+        // Merge should override throttle scale and add a new key action
+        reg.mergeBindings({
+            throttle: Axis1D({ pos: Key('KeyW'), scale: 3 }),
+            jump: Key('Space'),
+        });
+        const axes = Array.from(reg.getAxes1DKeys());
+        const thr = axes.find(([name]) => name === 'throttle')![1];
+        expect(thr.scale).toBe(3);
+        expect(reg.getActionsForKey('Space')).toContain('jump');
     });
 });

@@ -30,4 +30,24 @@ describe('installInput', () => {
         world.getSystem(InputCommitSystem)!.update();
         expect(svc.action('jump').pressed).toBe(true);
     });
+
+    test('detach stops providers from handling further events', () => {
+        const world = new World();
+        const target = new FakeTarget() as any;
+        const svc = installInput(world, {
+            target,
+            bindings: { jump: Key('Space') },
+        });
+
+        target.emit('keydown', { code: 'Space' });
+        world.getSystem(InputCommitSystem)!.update();
+        expect(svc.action('jump').pressed).toBe(true);
+
+        // Detach and attempt another keydown — should not affect service
+        svc.detach();
+        target.emit('keydown', { code: 'Space' });
+        world.getSystem(InputCommitSystem)!.update();
+        // No new press; state remains from before detach (no repeat press)
+        expect(svc.action('jump').pressed).toBe(false);
+    });
 });

@@ -82,11 +82,11 @@ export type InputOptions = {
      */
     target?: EventTarget | null;
     /**
-     * Whether to prevent default behavior of events. Defaults to true.
+     * Whether to prevent default behavior of events. Defaults to false.
      */
     preventDefault?: boolean;
     /**
-     * Whether to request pointer lock on pointerdown if available. Defaults to true.
+     * Whether to request pointer lock on pointerdown if available. Defaults to false.
      */
     pointerLock?: boolean;
 };
