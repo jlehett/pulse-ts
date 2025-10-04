@@ -23,9 +23,8 @@ export function defineQuery<
     const Has extends readonly ComponentCtor[],
     const Not extends readonly ComponentCtor[] = [],
 >(has: Has, opts?: { not?: Not }) {
-    function* run(
-        world: World,
-    ): IterableIterator<[Node, ...{ [K in keyof Has]: InstanceType<Has[K]> }]> {
+    type Row = [Node, ...{ [K in keyof Has]: InstanceType<Has[K]> }];
+    function* run(world: World): IterableIterator<Row> {
         const not = opts?.not ?? ([] as const);
 
         // If we have at least one required component, iterate the smallest
@@ -65,7 +64,7 @@ export function defineQuery<
                     }
                 }
                 if (bad) continue;
-                yield [n, ...(comps as any)];
+                yield [n, ...(comps as any)] as unknown as Row;
             }
             return;
         }
@@ -93,7 +92,7 @@ export function defineQuery<
                 }
             }
             if (bad) continue;
-            yield [n, ...(comps as any)];
+            yield [n, ...(comps as any)] as unknown as Row;
         }
     }
     function some(world: World): boolean {
