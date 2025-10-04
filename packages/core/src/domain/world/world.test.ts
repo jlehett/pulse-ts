@@ -4,10 +4,10 @@ import { attachComponent } from '../ecs/registry/componentRegistry';
 import { World } from './world';
 
 describe('World', () => {
-    test('add/remove nodes and clearScene preserves system node', () => {
+    test('add/remove nodes and clearScene preserves internal system node if present', () => {
         const w = new World();
-        // Culling system installs a system node on construction via registerSystemTick
-        const baseCount = w.debugStats().nodes; // includes system node
+        // No defaults installed by World; base count reflects only internal nodes (none by default)
+        const baseCount = w.debugStats().nodes;
 
         const a = new Node();
         const b = new Node();
@@ -139,5 +139,17 @@ describe('World', () => {
         expect(c).toBe(2);
         const stats3 = w.debugStats();
         expect(stats3.ticks.frame.early.disabled).toBe(false);
+    });
+
+    test('getAmbientAlpha reflects fraction of fixed step during frame', () => {
+        const w = new World({ fixedStepMs: 10 });
+        let alpha = -1;
+        const n = w.add(new Node());
+        w.registerTick(n, 'frame', 'update', () => {
+            alpha = w.getAmbientAlpha();
+        });
+        // Half of fixed step -> alpha ~ 0.5 during the frame
+        w.tick(5);
+        expect(alpha).toBeCloseTo(0.5, 5);
     });
 });

@@ -13,4 +13,15 @@ describe('StatsService', () => {
         expect(typeof snap.fixedSps).toBe('number');
         expect(snap.frameId).toBeGreaterThan(0);
     });
+
+    test('detach on removeService prevents access', () => {
+        const w = new World({ fixedStepMs: 10 });
+        const svc = w.provideService(new StatsService());
+        // It works while attached
+        w.tick(10);
+        expect(() => svc.get()).not.toThrow();
+        // After removal, access throws
+        w.removeService(StatsService);
+        expect(() => svc.get()).toThrow();
+    });
 });
