@@ -8,7 +8,7 @@
 
 > **createMemoryHub**(): [`MemoryHub`](../interfaces/MemoryHub.md)
 
-Defined in: [packages/network/src/transports/memory/hub.ts:63](https://github.com/jlehett/pulse-ts/blob/d786433c7cb88fe7c30a7029f46dff58815931cc/packages/network/src/transports/memory/hub.ts#L63)
+Defined in: [packages/network/src/transports/memory/hub.ts:63](https://github.com/jlehett/pulse-ts/blob/4869ef2c4af7bf37d31e2edd2d6d1ba148133fb2/packages/network/src/transports/memory/hub.ts#L63)
 
 Create a memory hub.
 

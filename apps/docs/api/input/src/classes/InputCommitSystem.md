@@ -6,9 +6,19 @@
 
 # Class: InputCommitSystem
 
-Defined in: packages/input/src/domain/systems/commit.ts:7
+Defined in: [packages/input/src/domain/systems/commit.ts:16](https://github.com/jlehett/pulse-ts/blob/4869ef2c4af7bf37d31e2edd2d6d1ba148133fb2/packages/input/src/domain/systems/commit.ts#L16)
 
-Runs at frame.early to snapshot inputs before user update.
+System that commits input at `frame.early` so user code reads a stable snapshot.
+
+## Example
+
+```ts
+import { World } from '@pulse-ts/core';
+import { InputCommitSystem, InputService } from '@pulse-ts/input';
+const world = new World();
+world.provideService(new InputService());
+world.addSystem(new InputCommitSystem());
+```
 
 ## Extends
 
@@ -48,7 +58,7 @@ The order of the update that this system is registered for.
 
 > `static` **updateKind**: `UpdateKind` = `'frame'`
 
-Defined in: packages/input/src/domain/systems/commit.ts:8
+Defined in: [packages/input/src/domain/systems/commit.ts:17](https://github.com/jlehett/pulse-ts/blob/4869ef2c4af7bf37d31e2edd2d6d1ba148133fb2/packages/input/src/domain/systems/commit.ts#L17)
 
 The kind of update that this system is registered for.
 Defaults to 'fixed'.
@@ -63,7 +73,7 @@ Defaults to 'fixed'.
 
 > `static` **updatePhase**: `UpdatePhase` = `'early'`
 
-Defined in: packages/input/src/domain/systems/commit.ts:9
+Defined in: [packages/input/src/domain/systems/commit.ts:18](https://github.com/jlehett/pulse-ts/blob/4869ef2c4af7bf37d31e2edd2d6d1ba148133fb2/packages/input/src/domain/systems/commit.ts#L18)
 
 The phase of the update that this system is registered for.
 Defaults to 'update'.
@@ -122,7 +132,7 @@ Detaches the system from the world.
 
 > **update**(): `void`
 
-Defined in: packages/input/src/domain/systems/commit.ts:11
+Defined in: [packages/input/src/domain/systems/commit.ts:20](https://github.com/jlehett/pulse-ts/blob/4869ef2c4af7bf37d31e2edd2d6d1ba148133fb2/packages/input/src/domain/systems/commit.ts#L20)
 
 Method that will be called on every tick that this system is registered for.
 

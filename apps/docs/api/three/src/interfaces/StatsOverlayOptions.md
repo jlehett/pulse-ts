@@ -6,7 +6,7 @@
 
 # Interface: StatsOverlayOptions
 
-Defined in: [packages/three/src/systems/statsOverlay.ts:5](https://github.com/jlehett/pulse-ts/blob/d786433c7cb88fe7c30a7029f46dff58815931cc/packages/three/src/systems/statsOverlay.ts#L5)
+Defined in: [packages/three/src/systems/statsOverlay.ts:5](https://github.com/jlehett/pulse-ts/blob/4869ef2c4af7bf37d31e2edd2d6d1ba148133fb2/packages/three/src/systems/statsOverlay.ts#L5)
 
 ## Properties
 
@@ -14,7 +14,7 @@ Defined in: [packages/three/src/systems/statsOverlay.ts:5](https://github.com/jl
 
 > `optional` **background**: `string`
 
-Defined in: [packages/three/src/systems/statsOverlay.ts:7](https://github.com/jlehett/pulse-ts/blob/d786433c7cb88fe7c30a7029f46dff58815931cc/packages/three/src/systems/statsOverlay.ts#L7)
+Defined in: [packages/three/src/systems/statsOverlay.ts:7](https://github.com/jlehett/pulse-ts/blob/4869ef2c4af7bf37d31e2edd2d6d1ba148133fb2/packages/three/src/systems/statsOverlay.ts#L7)
 
 ***
 
@@ -22,7 +22,7 @@ Defined in: [packages/three/src/systems/statsOverlay.ts:7](https://github.com/jl
 
 > `optional` **color**: `string`
 
-Defined in: [packages/three/src/systems/statsOverlay.ts:8](https://github.com/jlehett/pulse-ts/blob/d786433c7cb88fe7c30a7029f46dff58815931cc/packages/three/src/systems/statsOverlay.ts#L8)
+Defined in: [packages/three/src/systems/statsOverlay.ts:8](https://github.com/jlehett/pulse-ts/blob/4869ef2c4af7bf37d31e2edd2d6d1ba148133fb2/packages/three/src/systems/statsOverlay.ts#L8)
 
 ***
 
@@ -30,7 +30,7 @@ Defined in: [packages/three/src/systems/statsOverlay.ts:8](https://github.com/jl
 
 > `optional` **font**: `string`
 
-Defined in: [packages/three/src/systems/statsOverlay.ts:9](https://github.com/jlehett/pulse-ts/blob/d786433c7cb88fe7c30a7029f46dff58815931cc/packages/three/src/systems/statsOverlay.ts#L9)
+Defined in: [packages/three/src/systems/statsOverlay.ts:9](https://github.com/jlehett/pulse-ts/blob/4869ef2c4af7bf37d31e2edd2d6d1ba148133fb2/packages/three/src/systems/statsOverlay.ts#L9)
 
 ***
 
@@ -38,7 +38,7 @@ Defined in: [packages/three/src/systems/statsOverlay.ts:9](https://github.com/jl
 
 > `optional` **pad**: `string`
 
-Defined in: [packages/three/src/systems/statsOverlay.ts:10](https://github.com/jlehett/pulse-ts/blob/d786433c7cb88fe7c30a7029f46dff58815931cc/packages/three/src/systems/statsOverlay.ts#L10)
+Defined in: [packages/three/src/systems/statsOverlay.ts:10](https://github.com/jlehett/pulse-ts/blob/4869ef2c4af7bf37d31e2edd2d6d1ba148133fb2/packages/three/src/systems/statsOverlay.ts#L10)
 
 ***
 
@@ -46,7 +46,7 @@ Defined in: [packages/three/src/systems/statsOverlay.ts:10](https://github.com/j
 
 > `optional` **position**: `"top-left"` \| `"top-right"` \| `"bottom-left"` \| `"bottom-right"`
 
-Defined in: [packages/three/src/systems/statsOverlay.ts:6](https://github.com/jlehett/pulse-ts/blob/d786433c7cb88fe7c30a7029f46dff58815931cc/packages/three/src/systems/statsOverlay.ts#L6)
+Defined in: [packages/three/src/systems/statsOverlay.ts:6](https://github.com/jlehett/pulse-ts/blob/4869ef2c4af7bf37d31e2edd2d6d1ba148133fb2/packages/three/src/systems/statsOverlay.ts#L6)
 
 ***
 
@@ -54,7 +54,7 @@ Defined in: [packages/three/src/systems/statsOverlay.ts:6](https://github.com/jl
 
 > `optional` **updateMs**: `number`
 
-Defined in: [packages/three/src/systems/statsOverlay.ts:12](https://github.com/jlehett/pulse-ts/blob/d786433c7cb88fe7c30a7029f46dff58815931cc/packages/three/src/systems/statsOverlay.ts#L12)
+Defined in: [packages/three/src/systems/statsOverlay.ts:12](https://github.com/jlehett/pulse-ts/blob/4869ef2c4af7bf37d31e2edd2d6d1ba148133fb2/packages/three/src/systems/statsOverlay.ts#L12)
 
 ***
 
@@ -62,4 +62,4 @@ Defined in: [packages/three/src/systems/statsOverlay.ts:12](https://github.com/j
 
 > `optional` **zIndex**: `string` \| `number`
 
-Defined in: [packages/three/src/systems/statsOverlay.ts:11](https://github.com/jlehett/pulse-ts/blob/d786433c7cb88fe7c30a7029f46dff58815931cc/packages/three/src/systems/statsOverlay.ts#L11)
+Defined in: [packages/three/src/systems/statsOverlay.ts:11](https://github.com/jlehett/pulse-ts/blob/4869ef2c4af7bf37d31e2edd2d6d1ba148133fb2/packages/three/src/systems/statsOverlay.ts#L11)

@@ -8,19 +8,20 @@
 
 > **useInput**(): [`InputService`](../classes/InputService.md)
 
-Defined in: packages/input/src/public/hooks.ts:20
+Defined in: [packages/input/src/public/hooks.ts:20](https://github.com/jlehett/pulse-ts/blob/4869ef2c4af7bf37d31e2edd2d6d1ba148133fb2/packages/input/src/public/hooks.ts#L20)
 
-Get the InputService.
+Get the `InputService` bound to the current world.
 
 ## Returns
 
 [`InputService`](../classes/InputService.md)
 
-The InputService.
+The `InputService` instance.
 
-Example
+## Example
+
 ```ts
 import { useInput } from '@pulse-ts/input';
-const getSvc = useInput();
-const svc = getSvc; // callable in FC hooks
+const input = useInput();
+// use inside FC hooks to query actions/axes
 ```

@@ -6,7 +6,7 @@
 
 # Interface: ThreeOptions
 
-Defined in: [packages/three/src/services/Three.ts:11](https://github.com/jlehett/pulse-ts/blob/d786433c7cb88fe7c30a7029f46dff58815931cc/packages/three/src/services/Three.ts#L11)
+Defined in: [packages/three/src/services/Three.ts:11](https://github.com/jlehett/pulse-ts/blob/4869ef2c4af7bf37d31e2edd2d6d1ba148133fb2/packages/three/src/services/Three.ts#L11)
 
 ## Properties
 
@@ -14,7 +14,7 @@ Defined in: [packages/three/src/services/Three.ts:11](https://github.com/jlehett
 
 > `optional` **autoCommitTransforms**: `boolean`
 
-Defined in: [packages/three/src/services/Three.ts:14](https://github.com/jlehett/pulse-ts/blob/d786433c7cb88fe7c30a7029f46dff58815931cc/packages/three/src/services/Three.ts#L14)
+Defined in: [packages/three/src/services/Three.ts:14](https://github.com/jlehett/pulse-ts/blob/4869ef2c4af7bf37d31e2edd2d6d1ba148133fb2/packages/three/src/services/Three.ts#L14)
 
 ***
 
@@ -22,7 +22,7 @@ Defined in: [packages/three/src/services/Three.ts:14](https://github.com/jlehett
 
 > **canvas**: `HTMLCanvasElement`
 
-Defined in: [packages/three/src/services/Three.ts:12](https://github.com/jlehett/pulse-ts/blob/d786433c7cb88fe7c30a7029f46dff58815931cc/packages/three/src/services/Three.ts#L12)
+Defined in: [packages/three/src/services/Three.ts:12](https://github.com/jlehett/pulse-ts/blob/4869ef2c4af7bf37d31e2edd2d6d1ba148133fb2/packages/three/src/services/Three.ts#L12)
 
 ***
 
@@ -30,7 +30,7 @@ Defined in: [packages/three/src/services/Three.ts:12](https://github.com/jlehett
 
 > `optional` **clearColor**: `number`
 
-Defined in: [packages/three/src/services/Three.ts:13](https://github.com/jlehett/pulse-ts/blob/d786433c7cb88fe7c30a7029f46dff58815931cc/packages/three/src/services/Three.ts#L13)
+Defined in: [packages/three/src/services/Three.ts:13](https://github.com/jlehett/pulse-ts/blob/4869ef2c4af7bf37d31e2edd2d6d1ba148133fb2/packages/three/src/services/Three.ts#L13)
 
 ***
 
@@ -38,7 +38,7 @@ Defined in: [packages/three/src/services/Three.ts:13](https://github.com/jlehett
 
 > `optional` **enableCulling**: `boolean`
 
-Defined in: [packages/three/src/services/Three.ts:16](https://github.com/jlehett/pulse-ts/blob/d786433c7cb88fe7c30a7029f46dff58815931cc/packages/three/src/services/Three.ts#L16)
+Defined in: [packages/three/src/services/Three.ts:16](https://github.com/jlehett/pulse-ts/blob/4869ef2c4af7bf37d31e2edd2d6d1ba148133fb2/packages/three/src/services/Three.ts#L16)
 
 ***
 
@@ -46,4 +46,4 @@ Defined in: [packages/three/src/services/Three.ts:16](https://github.com/jlehett
 
 > `optional` **useMatrices**: `boolean`
 
-Defined in: [packages/three/src/services/Three.ts:15](https://github.com/jlehett/pulse-ts/blob/d786433c7cb88fe7c30a7029f46dff58815931cc/packages/three/src/services/Three.ts#L15)
+Defined in: [packages/three/src/services/Three.ts:15](https://github.com/jlehett/pulse-ts/blob/4869ef2c4af7bf37d31e2edd2d6d1ba148133fb2/packages/three/src/services/Three.ts#L15)

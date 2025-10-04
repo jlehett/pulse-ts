@@ -8,7 +8,7 @@
 
 > **getNetwork**(`world`): `object`
 
-Defined in: [packages/network/src/facade.ts:15](https://github.com/jlehett/pulse-ts/blob/d786433c7cb88fe7c30a7029f46dff58815931cc/packages/network/src/facade.ts#L15)
+Defined in: [packages/network/src/facade.ts:15](https://github.com/jlehett/pulse-ts/blob/4869ef2c4af7bf37d31e2edd2d6d1ba148133fb2/packages/network/src/facade.ts#L15)
 
 Simplified facade over common networking tasks for a given World.
 

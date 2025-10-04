@@ -6,11 +6,12 @@
 
 # Class: VirtualInput
 
-Defined in: packages/input/src/public/virtual.ts:15
+Defined in: [packages/input/src/public/virtual.ts:15](https://github.com/jlehett/pulse-ts/blob/4869ef2c4af7bf37d31e2edd2d6d1ba148133fb2/packages/input/src/public/virtual.ts#L15)
 
 Virtual input helper for tests and bots. Does not attach to DOM.
 
-Example
+## Example
+
 ```ts
 import { VirtualInput } from '@pulse-ts/input';
 const vi = new VirtualInput(service);
@@ -24,7 +25,7 @@ vi.axis2D('move', { x: 1, y: 0 });
 
 > **new VirtualInput**(`service`): `VirtualInput`
 
-Defined in: packages/input/src/public/virtual.ts:16
+Defined in: [packages/input/src/public/virtual.ts:16](https://github.com/jlehett/pulse-ts/blob/4869ef2c4af7bf37d31e2edd2d6d1ba148133fb2/packages/input/src/public/virtual.ts#L16)
 
 #### Parameters
 
@@ -42,9 +43,9 @@ Defined in: packages/input/src/public/virtual.ts:16
 
 > **axis2D**(`action`, `axes`): `void`
 
-Defined in: packages/input/src/public/virtual.ts:41
+Defined in: [packages/input/src/public/virtual.ts:41](https://github.com/jlehett/pulse-ts/blob/4869ef2c4af7bf37d31e2edd2d6d1ba148133fb2/packages/input/src/public/virtual.ts#L41)
 
-Inject a axis 2D action.
+Inject per-frame 2D axis deltas.
 
 #### Parameters
 
@@ -52,13 +53,13 @@ Inject a axis 2D action.
 
 `string`
 
-The action to inject.
+Axis2D action name.
 
 ##### axes
 
 [`Vec`](../type-aliases/Vec.md)
 
-The axes to inject.
+Object with numeric components to accumulate this frame.
 
 #### Returns
 
@@ -70,7 +71,7 @@ The axes to inject.
 
 > **press**(`action`, `sourceId`): `void`
 
-Defined in: packages/input/src/public/virtual.ts:23
+Defined in: [packages/input/src/public/virtual.ts:23](https://github.com/jlehett/pulse-ts/blob/4869ef2c4af7bf37d31e2edd2d6d1ba148133fb2/packages/input/src/public/virtual.ts#L23)
 
 Press an action.
 
@@ -80,11 +81,13 @@ Press an action.
 
 `string`
 
-The action to press.
+Action name.
 
 ##### sourceId
 
 `string` = `'virt'`
+
+Optional virtual source id for debugging.
 
 #### Returns
 
@@ -96,7 +99,7 @@ The action to press.
 
 > **release**(`action`, `sourceId`): `void`
 
-Defined in: packages/input/src/public/virtual.ts:32
+Defined in: [packages/input/src/public/virtual.ts:32](https://github.com/jlehett/pulse-ts/blob/4869ef2c4af7bf37d31e2edd2d6d1ba148133fb2/packages/input/src/public/virtual.ts#L32)
 
 Release an action.
 
@@ -106,13 +109,13 @@ Release an action.
 
 `string`
 
-The action to release.
+Action name.
 
 ##### sourceId
 
 `string` = `'virt'`
 
-The source ID.
+Optional virtual source id used in press().
 
 #### Returns
 

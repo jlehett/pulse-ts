@@ -6,7 +6,7 @@
 
 # Interface: RateLimits
 
-Defined in: [packages/network/src/server/rateLimit.ts:3](https://github.com/jlehett/pulse-ts/blob/d786433c7cb88fe7c30a7029f46dff58815931cc/packages/network/src/server/rateLimit.ts#L3)
+Defined in: [packages/network/src/server/rateLimit.ts:3](https://github.com/jlehett/pulse-ts/blob/4869ef2c4af7bf37d31e2edd2d6d1ba148133fb2/packages/network/src/server/rateLimit.ts#L3)
 
 ## Properties
 
@@ -14,7 +14,7 @@ Defined in: [packages/network/src/server/rateLimit.ts:3](https://github.com/jleh
 
 > `optional` **burstMultiplier**: `number`
 
-Defined in: [packages/network/src/server/rateLimit.ts:9](https://github.com/jlehett/pulse-ts/blob/d786433c7cb88fe7c30a7029f46dff58815931cc/packages/network/src/server/rateLimit.ts#L9)
+Defined in: [packages/network/src/server/rateLimit.ts:9](https://github.com/jlehett/pulse-ts/blob/4869ef2c4af7bf37d31e2edd2d6d1ba148133fb2/packages/network/src/server/rateLimit.ts#L9)
 
 Multiplier for burst capacity (default 2).
 
@@ -24,7 +24,7 @@ Multiplier for burst capacity (default 2).
 
 > `optional` **bytesPerSecond**: `number`
 
-Defined in: [packages/network/src/server/rateLimit.ts:7](https://github.com/jlehett/pulse-ts/blob/d786433c7cb88fe7c30a7029f46dff58815931cc/packages/network/src/server/rateLimit.ts#L7)
+Defined in: [packages/network/src/server/rateLimit.ts:7](https://github.com/jlehett/pulse-ts/blob/4869ef2c4af7bf37d31e2edd2d6d1ba148133fb2/packages/network/src/server/rateLimit.ts#L7)
 
 Bytes per second allowed per peer (default unlimited).
 
@@ -34,7 +34,7 @@ Bytes per second allowed per peer (default unlimited).
 
 > `optional` **disconnectOnAbuse**: `boolean`
 
-Defined in: [packages/network/src/server/rateLimit.ts:16](https://github.com/jlehett/pulse-ts/blob/d786433c7cb88fe7c30a7029f46dff58815931cc/packages/network/src/server/rateLimit.ts#L16)
+Defined in: [packages/network/src/server/rateLimit.ts:16](https://github.com/jlehett/pulse-ts/blob/4869ef2c4af7bf37d31e2edd2d6d1ba148133fb2/packages/network/src/server/rateLimit.ts#L16)
 
 When a peer exceeds limits: drop (default) or disconnect (handled by caller).
 
@@ -44,7 +44,7 @@ When a peer exceeds limits: drop (default) or disconnect (handled by caller).
 
 > `optional` **messagesPerSecond**: `number`
 
-Defined in: [packages/network/src/server/rateLimit.ts:5](https://github.com/jlehett/pulse-ts/blob/d786433c7cb88fe7c30a7029f46dff58815931cc/packages/network/src/server/rateLimit.ts#L5)
+Defined in: [packages/network/src/server/rateLimit.ts:5](https://github.com/jlehett/pulse-ts/blob/4869ef2c4af7bf37d31e2edd2d6d1ba148133fb2/packages/network/src/server/rateLimit.ts#L5)
 
 Messages per second allowed per peer (default unlimited).
 
@@ -54,7 +54,7 @@ Messages per second allowed per peer (default unlimited).
 
 > `optional` **onLimitExceeded**: (`peerId`, `info`) => `void`
 
-Defined in: [packages/network/src/server/rateLimit.ts:18](https://github.com/jlehett/pulse-ts/blob/d786433c7cb88fe7c30a7029f46dff58815931cc/packages/network/src/server/rateLimit.ts#L18)
+Defined in: [packages/network/src/server/rateLimit.ts:18](https://github.com/jlehett/pulse-ts/blob/4869ef2c4af7bf37d31e2edd2d6d1ba148133fb2/packages/network/src/server/rateLimit.ts#L18)
 
 Callback when a peer is rate limited.
 
@@ -84,6 +84,6 @@ Callback when a peer is rate limited.
 
 > `optional` **perChannel**: `Record`\<`string`, \{ `bytesPerSecond?`: `number`; `messagesPerSecond?`: `number`; \}\>
 
-Defined in: [packages/network/src/server/rateLimit.ts:11](https://github.com/jlehett/pulse-ts/blob/d786433c7cb88fe7c30a7029f46dff58815931cc/packages/network/src/server/rateLimit.ts#L11)
+Defined in: [packages/network/src/server/rateLimit.ts:11](https://github.com/jlehett/pulse-ts/blob/4869ef2c4af7bf37d31e2edd2d6d1ba148133fb2/packages/network/src/server/rateLimit.ts#L11)
 
 Per-channel overrides.

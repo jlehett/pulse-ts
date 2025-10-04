@@ -6,7 +6,7 @@
 
 # Class: CullingSystem
 
-Defined in: [packages/core/src/domain/systems/Culling.ts:116](https://github.com/jlehett/pulse-ts/blob/d786433c7cb88fe7c30a7029f46dff58815931cc/packages/core/src/domain/systems/Culling.ts#L116)
+Defined in: [packages/core/src/domain/systems/Culling.ts:116](https://github.com/jlehett/pulse-ts/blob/4869ef2c4af7bf37d31e2edd2d6d1ba148133fb2/packages/core/src/domain/systems/Culling.ts#L116)
 
 Iterates nodes with Bounds and updates Visibility from camera frustum.
 
@@ -34,7 +34,7 @@ Iterates nodes with Bounds and updates Visibility from camera frustum.
 
 > `static` `optional` **order**: `number`
 
-Defined in: [packages/core/src/domain/ecs/base/System.ts:24](https://github.com/jlehett/pulse-ts/blob/d786433c7cb88fe7c30a7029f46dff58815931cc/packages/core/src/domain/ecs/base/System.ts#L24)
+Defined in: [packages/core/src/domain/ecs/base/System.ts:24](https://github.com/jlehett/pulse-ts/blob/4869ef2c4af7bf37d31e2edd2d6d1ba148133fb2/packages/core/src/domain/ecs/base/System.ts#L24)
 
 The order of the update that this system is registered for.
 
@@ -48,7 +48,7 @@ The order of the update that this system is registered for.
 
 > `static` **updateKind**: [`UpdateKind`](../type-aliases/UpdateKind.md) = `'frame'`
 
-Defined in: [packages/core/src/domain/systems/Culling.ts:117](https://github.com/jlehett/pulse-ts/blob/d786433c7cb88fe7c30a7029f46dff58815931cc/packages/core/src/domain/systems/Culling.ts#L117)
+Defined in: [packages/core/src/domain/systems/Culling.ts:117](https://github.com/jlehett/pulse-ts/blob/4869ef2c4af7bf37d31e2edd2d6d1ba148133fb2/packages/core/src/domain/systems/Culling.ts#L117)
 
 The kind of update that this system is registered for.
 Defaults to 'fixed'.
@@ -63,7 +63,7 @@ Defaults to 'fixed'.
 
 > `static` **updatePhase**: [`UpdatePhase`](../type-aliases/UpdatePhase.md) = `'update'`
 
-Defined in: [packages/core/src/domain/systems/Culling.ts:118](https://github.com/jlehett/pulse-ts/blob/d786433c7cb88fe7c30a7029f46dff58815931cc/packages/core/src/domain/systems/Culling.ts#L118)
+Defined in: [packages/core/src/domain/systems/Culling.ts:118](https://github.com/jlehett/pulse-ts/blob/4869ef2c4af7bf37d31e2edd2d6d1ba148133fb2/packages/core/src/domain/systems/Culling.ts#L118)
 
 The phase of the update that this system is registered for.
 Defaults to 'update'.
@@ -78,7 +78,7 @@ Defaults to 'update'.
 
 > **attach**(`world`): `void`
 
-Defined in: [packages/core/src/domain/ecs/base/System.ts:37](https://github.com/jlehett/pulse-ts/blob/d786433c7cb88fe7c30a7029f46dff58815931cc/packages/core/src/domain/ecs/base/System.ts#L37)
+Defined in: [packages/core/src/domain/ecs/base/System.ts:37](https://github.com/jlehett/pulse-ts/blob/4869ef2c4af7bf37d31e2edd2d6d1ba148133fb2/packages/core/src/domain/ecs/base/System.ts#L37)
 
 Attaches the system to the world.
 
@@ -104,7 +104,7 @@ The world to attach the system to.
 
 > **detach**(): `void`
 
-Defined in: [packages/core/src/domain/ecs/base/System.ts:54](https://github.com/jlehett/pulse-ts/blob/d786433c7cb88fe7c30a7029f46dff58815931cc/packages/core/src/domain/ecs/base/System.ts#L54)
+Defined in: [packages/core/src/domain/ecs/base/System.ts:54](https://github.com/jlehett/pulse-ts/blob/4869ef2c4af7bf37d31e2edd2d6d1ba148133fb2/packages/core/src/domain/ecs/base/System.ts#L54)
 
 Detaches the system from the world.
 
@@ -122,7 +122,7 @@ Detaches the system from the world.
 
 > **update**(): `void`
 
-Defined in: [packages/core/src/domain/systems/Culling.ts:127](https://github.com/jlehett/pulse-ts/blob/d786433c7cb88fe7c30a7029f46dff58815931cc/packages/core/src/domain/systems/Culling.ts#L127)
+Defined in: [packages/core/src/domain/systems/Culling.ts:127](https://github.com/jlehett/pulse-ts/blob/4869ef2c4af7bf37d31e2edd2d6d1ba148133fb2/packages/core/src/domain/systems/Culling.ts#L127)
 
 Updates the frustum and culls nodes.
 

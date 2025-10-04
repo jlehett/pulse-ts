@@ -6,7 +6,7 @@
 
 # Interface: ReliableResult\<T\>
 
-Defined in: [packages/network/src/services/ReliableChannel.ts:25](https://github.com/jlehett/pulse-ts/blob/d786433c7cb88fe7c30a7029f46dff58815931cc/packages/network/src/services/ReliableChannel.ts#L25)
+Defined in: [packages/network/src/services/ReliableChannel.ts:25](https://github.com/jlehett/pulse-ts/blob/4869ef2c4af7bf37d31e2edd2d6d1ba148133fb2/packages/network/src/services/ReliableChannel.ts#L25)
 
 Result of a reliable send.
 
@@ -22,7 +22,7 @@ Result of a reliable send.
 
 > `optional` **reason**: `string`
 
-Defined in: [packages/network/src/services/ReliableChannel.ts:28](https://github.com/jlehett/pulse-ts/blob/d786433c7cb88fe7c30a7029f46dff58815931cc/packages/network/src/services/ReliableChannel.ts#L28)
+Defined in: [packages/network/src/services/ReliableChannel.ts:28](https://github.com/jlehett/pulse-ts/blob/4869ef2c4af7bf37d31e2edd2d6d1ba148133fb2/packages/network/src/services/ReliableChannel.ts#L28)
 
 ***
 
@@ -30,7 +30,7 @@ Defined in: [packages/network/src/services/ReliableChannel.ts:28](https://github
 
 > `optional` **result**: `T`
 
-Defined in: [packages/network/src/services/ReliableChannel.ts:27](https://github.com/jlehett/pulse-ts/blob/d786433c7cb88fe7c30a7029f46dff58815931cc/packages/network/src/services/ReliableChannel.ts#L27)
+Defined in: [packages/network/src/services/ReliableChannel.ts:27](https://github.com/jlehett/pulse-ts/blob/4869ef2c4af7bf37d31e2edd2d6d1ba148133fb2/packages/network/src/services/ReliableChannel.ts#L27)
 
 ***
 
@@ -38,7 +38,7 @@ Defined in: [packages/network/src/services/ReliableChannel.ts:27](https://github
 
 > `optional` **serverSeq**: `number`
 
-Defined in: [packages/network/src/services/ReliableChannel.ts:29](https://github.com/jlehett/pulse-ts/blob/d786433c7cb88fe7c30a7029f46dff58815931cc/packages/network/src/services/ReliableChannel.ts#L29)
+Defined in: [packages/network/src/services/ReliableChannel.ts:29](https://github.com/jlehett/pulse-ts/blob/4869ef2c4af7bf37d31e2edd2d6d1ba148133fb2/packages/network/src/services/ReliableChannel.ts#L29)
 
 ***
 
@@ -46,4 +46,4 @@ Defined in: [packages/network/src/services/ReliableChannel.ts:29](https://github
 
 > **status**: `"error"` \| `"ok"`
 
-Defined in: [packages/network/src/services/ReliableChannel.ts:26](https://github.com/jlehett/pulse-ts/blob/d786433c7cb88fe7c30a7029f46dff58815931cc/packages/network/src/services/ReliableChannel.ts#L26)
+Defined in: [packages/network/src/services/ReliableChannel.ts:26](https://github.com/jlehett/pulse-ts/blob/4869ef2c4af7bf37d31e2edd2d6d1ba148133fb2/packages/network/src/services/ReliableChannel.ts#L26)

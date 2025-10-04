@@ -8,7 +8,7 @@
 
 > **WebRtcMeshOptions** = `object`
 
-Defined in: [packages/network/src/transports/webrtc/transport.ts:5](https://github.com/jlehett/pulse-ts/blob/d786433c7cb88fe7c30a7029f46dff58815931cc/packages/network/src/transports/webrtc/transport.ts#L5)
+Defined in: [packages/network/src/transports/webrtc/transport.ts:5](https://github.com/jlehett/pulse-ts/blob/4869ef2c4af7bf37d31e2edd2d6d1ba148133fb2/packages/network/src/transports/webrtc/transport.ts#L5)
 
 ## Properties
 
@@ -16,7 +16,7 @@ Defined in: [packages/network/src/transports/webrtc/transport.ts:5](https://gith
 
 > `optional` **iceServers**: `RTCIceServer`[]
 
-Defined in: [packages/network/src/transports/webrtc/transport.ts:8](https://github.com/jlehett/pulse-ts/blob/d786433c7cb88fe7c30a7029f46dff58815931cc/packages/network/src/transports/webrtc/transport.ts#L8)
+Defined in: [packages/network/src/transports/webrtc/transport.ts:8](https://github.com/jlehett/pulse-ts/blob/4869ef2c4af7bf37d31e2edd2d6d1ba148133fb2/packages/network/src/transports/webrtc/transport.ts#L8)
 
 STUN/TURN config
 
@@ -26,7 +26,7 @@ STUN/TURN config
 
 > **selfId**: `string`
 
-Defined in: [packages/network/src/transports/webrtc/transport.ts:6](https://github.com/jlehett/pulse-ts/blob/d786433c7cb88fe7c30a7029f46dff58815931cc/packages/network/src/transports/webrtc/transport.ts#L6)
+Defined in: [packages/network/src/transports/webrtc/transport.ts:6](https://github.com/jlehett/pulse-ts/blob/4869ef2c4af7bf37d31e2edd2d6d1ba148133fb2/packages/network/src/transports/webrtc/transport.ts#L6)
 
 ***
 
@@ -34,7 +34,7 @@ Defined in: [packages/network/src/transports/webrtc/transport.ts:6](https://gith
 
 > **signaling**: `object`
 
-Defined in: [packages/network/src/transports/webrtc/transport.ts:10](https://github.com/jlehett/pulse-ts/blob/d786433c7cb88fe7c30a7029f46dff58815931cc/packages/network/src/transports/webrtc/transport.ts#L10)
+Defined in: [packages/network/src/transports/webrtc/transport.ts:10](https://github.com/jlehett/pulse-ts/blob/4869ef2c4af7bf37d31e2edd2d6d1ba148133fb2/packages/network/src/transports/webrtc/transport.ts#L10)
 
 Signaling adapter
 
@@ -94,7 +94,7 @@ Optional: list of known peers to proactively connect to.
 
 > `optional` **webRTC**: `object`
 
-Defined in: [packages/network/src/transports/webrtc/transport.ts:28](https://github.com/jlehett/pulse-ts/blob/d786433c7cb88fe7c30a7029f46dff58815931cc/packages/network/src/transports/webrtc/transport.ts#L28)
+Defined in: [packages/network/src/transports/webrtc/transport.ts:28](https://github.com/jlehett/pulse-ts/blob/4869ef2c4af7bf37d31e2edd2d6d1ba148133fb2/packages/network/src/transports/webrtc/transport.ts#L28)
 
 Provide WebRTC constructors in non-browser environments.
 

@@ -8,7 +8,7 @@
 
 > **mount**\<`P`\>(`world`, `fc`, `props`, `opts?`): [`Node`](../classes/Node.md)
 
-Defined in: [packages/core/src/domain/fc/runtime.ts:33](https://github.com/jlehett/pulse-ts/blob/d786433c7cb88fe7c30a7029f46dff58815931cc/packages/core/src/domain/fc/runtime.ts#L33)
+Defined in: [packages/core/src/domain/fc/runtime.ts:33](https://github.com/jlehett/pulse-ts/blob/4869ef2c4af7bf37d31e2edd2d6d1ba148133fb2/packages/core/src/domain/fc/runtime.ts#L33)
 
 Mounts a function component.
 

@@ -8,7 +8,7 @@
 
 > **siblings**(`node`): `Iterable`\<[`Node`](../classes/Node.md)\>
 
-Defined in: [packages/core/src/domain/world/traversal.ts:52](https://github.com/jlehett/pulse-ts/blob/d786433c7cb88fe7c30a7029f46dff58815931cc/packages/core/src/domain/world/traversal.ts#L52)
+Defined in: [packages/core/src/domain/world/traversal.ts:52](https://github.com/jlehett/pulse-ts/blob/4869ef2c4af7bf37d31e2edd2d6d1ba148133fb2/packages/core/src/domain/world/traversal.ts#L52)
 
 Iterates over the siblings of a node.
 

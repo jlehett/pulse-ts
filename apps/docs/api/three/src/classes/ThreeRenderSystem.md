@@ -6,7 +6,7 @@
 
 # Class: ThreeRenderSystem
 
-Defined in: [packages/three/src/systems/render.ts:8](https://github.com/jlehett/pulse-ts/blob/d786433c7cb88fe7c30a7029f46dff58815931cc/packages/three/src/systems/render.ts#L8)
+Defined in: [packages/three/src/systems/render.ts:8](https://github.com/jlehett/pulse-ts/blob/4869ef2c4af7bf37d31e2edd2d6d1ba148133fb2/packages/three/src/systems/render.ts#L8)
 
 Renders the Three scene each frame.
 
@@ -34,7 +34,7 @@ Renders the Three scene each frame.
 
 > `static` **order**: `number` = `Number.MAX_SAFE_INTEGER`
 
-Defined in: [packages/three/src/systems/render.ts:11](https://github.com/jlehett/pulse-ts/blob/d786433c7cb88fe7c30a7029f46dff58815931cc/packages/three/src/systems/render.ts#L11)
+Defined in: [packages/three/src/systems/render.ts:11](https://github.com/jlehett/pulse-ts/blob/4869ef2c4af7bf37d31e2edd2d6d1ba148133fb2/packages/three/src/systems/render.ts#L11)
 
 The order of the update that this system is registered for.
 
@@ -48,7 +48,7 @@ The order of the update that this system is registered for.
 
 > `static` **updateKind**: `UpdateKind` = `'frame'`
 
-Defined in: [packages/three/src/systems/render.ts:9](https://github.com/jlehett/pulse-ts/blob/d786433c7cb88fe7c30a7029f46dff58815931cc/packages/three/src/systems/render.ts#L9)
+Defined in: [packages/three/src/systems/render.ts:9](https://github.com/jlehett/pulse-ts/blob/4869ef2c4af7bf37d31e2edd2d6d1ba148133fb2/packages/three/src/systems/render.ts#L9)
 
 The kind of update that this system is registered for.
 Defaults to 'fixed'.
@@ -63,7 +63,7 @@ Defaults to 'fixed'.
 
 > `static` **updatePhase**: `UpdatePhase` = `'late'`
 
-Defined in: [packages/three/src/systems/render.ts:10](https://github.com/jlehett/pulse-ts/blob/d786433c7cb88fe7c30a7029f46dff58815931cc/packages/three/src/systems/render.ts#L10)
+Defined in: [packages/three/src/systems/render.ts:10](https://github.com/jlehett/pulse-ts/blob/4869ef2c4af7bf37d31e2edd2d6d1ba148133fb2/packages/three/src/systems/render.ts#L10)
 
 The phase of the update that this system is registered for.
 Defaults to 'update'.
@@ -122,7 +122,7 @@ Detaches the system from the world.
 
 > **update**(): `void`
 
-Defined in: [packages/three/src/systems/render.ts:13](https://github.com/jlehett/pulse-ts/blob/d786433c7cb88fe7c30a7029f46dff58815931cc/packages/three/src/systems/render.ts#L13)
+Defined in: [packages/three/src/systems/render.ts:13](https://github.com/jlehett/pulse-ts/blob/4869ef2c4af7bf37d31e2edd2d6d1ba148133fb2/packages/three/src/systems/render.ts#L13)
 
 Method that will be called on every tick that this system is registered for.
 

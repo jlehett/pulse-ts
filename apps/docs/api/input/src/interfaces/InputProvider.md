@@ -6,9 +6,9 @@
 
 # Interface: InputProvider
 
-Defined in: packages/input/src/domain/bindings/types.ts:97
+Defined in: [packages/input/src/domain/bindings/types.ts:97](https://github.com/jlehett/pulse-ts/blob/4869ef2c4af7bf37d31e2edd2d6d1ba148133fb2/packages/input/src/domain/bindings/types.ts#L97)
 
-A provider for the input service.
+Provider interface for feeding device input into the InputService.
 
 ## Methods
 
@@ -16,7 +16,7 @@ A provider for the input service.
 
 > **start**(`target`): `void`
 
-Defined in: packages/input/src/domain/bindings/types.ts:102
+Defined in: [packages/input/src/domain/bindings/types.ts:102](https://github.com/jlehett/pulse-ts/blob/4869ef2c4af7bf37d31e2edd2d6d1ba148133fb2/packages/input/src/domain/bindings/types.ts#L102)
 
 Start the provider.
 
@@ -38,7 +38,7 @@ The target to listen for events on.
 
 > **stop**(): `void`
 
-Defined in: packages/input/src/domain/bindings/types.ts:106
+Defined in: [packages/input/src/domain/bindings/types.ts:106](https://github.com/jlehett/pulse-ts/blob/4869ef2c4af7bf37d31e2edd2d6d1ba148133fb2/packages/input/src/domain/bindings/types.ts#L106)
 
 Stop the provider.
 
@@ -52,7 +52,7 @@ Stop the provider.
 
 > `optional` **update**(): `void`
 
-Defined in: packages/input/src/domain/bindings/types.ts:110
+Defined in: [packages/input/src/domain/bindings/types.ts:110](https://github.com/jlehett/pulse-ts/blob/4869ef2c4af7bf37d31e2edd2d6d1ba148133fb2/packages/input/src/domain/bindings/types.ts#L110)
 
 Update the provider.
 

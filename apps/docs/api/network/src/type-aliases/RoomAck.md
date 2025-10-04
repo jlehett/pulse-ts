@@ -8,4 +8,4 @@
 
 > **RoomAck** = \{ `action`: [`RoomAction`](RoomAction.md); `room`: `string`; `t`: `"ack"`; \} \| \{ `action`: [`RoomAction`](RoomAction.md); `reason`: [`RoomErrorReason`](RoomErrorReason.md); `room`: `string`; `t`: `"err"`; \}
 
-Defined in: [packages/network/src/server/rooms.ts:8](https://github.com/jlehett/pulse-ts/blob/d786433c7cb88fe7c30a7029f46dff58815931cc/packages/network/src/server/rooms.ts#L8)
+Defined in: [packages/network/src/server/rooms.ts:8](https://github.com/jlehett/pulse-ts/blob/4869ef2c4af7bf37d31e2edd2d6d1ba148133fb2/packages/network/src/server/rooms.ts#L8)

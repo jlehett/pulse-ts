@@ -6,7 +6,7 @@
 
 # Interface: SaveOptions
 
-Defined in: [packages/save/src/types.ts:9](https://github.com/jlehett/pulse-ts/blob/d786433c7cb88fe7c30a7029f46dff58815931cc/packages/save/src/types.ts#L9)
+Defined in: [packages/save/src/types.ts:9](https://github.com/jlehett/pulse-ts/blob/4869ef2c4af7bf37d31e2edd2d6d1ba148133fb2/packages/save/src/types.ts#L9)
 
 Options for saving a world.
 
@@ -16,7 +16,7 @@ Options for saving a world.
 
 > `optional` **includeTime**: `boolean`
 
-Defined in: [packages/save/src/types.ts:13](https://github.com/jlehett/pulse-ts/blob/d786433c7cb88fe7c30a7029f46dff58815931cc/packages/save/src/types.ts#L13)
+Defined in: [packages/save/src/types.ts:13](https://github.com/jlehett/pulse-ts/blob/4869ef2c4af7bf37d31e2edd2d6d1ba148133fb2/packages/save/src/types.ts#L13)
 
 Whether to include the time state in the save file.
 
@@ -26,6 +26,6 @@ Whether to include the time state in the save file.
 
 > `optional` **version**: `number`
 
-Defined in: [packages/save/src/types.ts:11](https://github.com/jlehett/pulse-ts/blob/d786433c7cb88fe7c30a7029f46dff58815931cc/packages/save/src/types.ts#L11)
+Defined in: [packages/save/src/types.ts:11](https://github.com/jlehett/pulse-ts/blob/4869ef2c4af7bf37d31e2edd2d6d1ba148133fb2/packages/save/src/types.ts#L11)
 
 The version of the save file; defaults to 1.

@@ -6,7 +6,7 @@
 
 # Interface: NetworkInstallOptions
 
-Defined in: [packages/network/src/install.ts:12](https://github.com/jlehett/pulse-ts/blob/d786433c7cb88fe7c30a7029f46dff58815931cc/packages/network/src/install.ts#L12)
+Defined in: [packages/network/src/install.ts:12](https://github.com/jlehett/pulse-ts/blob/4869ef2c4af7bf37d31e2edd2d6d1ba148133fb2/packages/network/src/install.ts#L12)
 
 Options for installing @pulse-ts/network into a World.
 
@@ -16,7 +16,7 @@ Options for installing @pulse-ts/network into a World.
 
 > `optional` **autoConnect**: `boolean`
 
-Defined in: [packages/network/src/install.ts:16](https://github.com/jlehett/pulse-ts/blob/d786433c7cb88fe7c30a7029f46dff58815931cc/packages/network/src/install.ts#L16)
+Defined in: [packages/network/src/install.ts:16](https://github.com/jlehett/pulse-ts/blob/4869ef2c4af7bf37d31e2edd2d6d1ba148133fb2/packages/network/src/install.ts#L16)
 
 Auto-connect the transport when provided. Default: true.
 
@@ -26,7 +26,7 @@ Auto-connect the transport when provided. Default: true.
 
 > `optional` **codec**: [`Codec`](Codec.md)
 
-Defined in: [packages/network/src/install.ts:18](https://github.com/jlehett/pulse-ts/blob/d786433c7cb88fe7c30a7029f46dff58815931cc/packages/network/src/install.ts#L18)
+Defined in: [packages/network/src/install.ts:18](https://github.com/jlehett/pulse-ts/blob/4869ef2c4af7bf37d31e2edd2d6d1ba148133fb2/packages/network/src/install.ts#L18)
 
 Optional packet codec for TransportService.
 
@@ -36,7 +36,7 @@ Optional packet codec for TransportService.
 
 > `optional` **replication**: `object`
 
-Defined in: [packages/network/src/install.ts:20](https://github.com/jlehett/pulse-ts/blob/d786433c7cb88fe7c30a7029f46dff58815931cc/packages/network/src/install.ts#L20)
+Defined in: [packages/network/src/install.ts:20](https://github.com/jlehett/pulse-ts/blob/4869ef2c4af7bf37d31e2edd2d6d1ba148133fb2/packages/network/src/install.ts#L20)
 
 Replication configuration.
 
@@ -54,7 +54,7 @@ Replication configuration.
 
 > `optional` **systems**: `object`
 
-Defined in: [packages/network/src/install.ts:22](https://github.com/jlehett/pulse-ts/blob/d786433c7cb88fe7c30a7029f46dff58815931cc/packages/network/src/install.ts#L22)
+Defined in: [packages/network/src/install.ts:22](https://github.com/jlehett/pulse-ts/blob/4869ef2c4af7bf37d31e2edd2d6d1ba148133fb2/packages/network/src/install.ts#L22)
 
 Enable/disable systems. All enabled by default.
 
@@ -76,6 +76,6 @@ Enable/disable systems. All enabled by default.
 
 > `optional` **transport**: [`Transport`](Transport.md) \| () => [`Transport`](Transport.md)
 
-Defined in: [packages/network/src/install.ts:14](https://github.com/jlehett/pulse-ts/blob/d786433c7cb88fe7c30a7029f46dff58815931cc/packages/network/src/install.ts#L14)
+Defined in: [packages/network/src/install.ts:14](https://github.com/jlehett/pulse-ts/blob/4869ef2c4af7bf37d31e2edd2d6d1ba148133fb2/packages/network/src/install.ts#L14)
 
 Optional transport instance or factory; if provided, it is set on TransportService.

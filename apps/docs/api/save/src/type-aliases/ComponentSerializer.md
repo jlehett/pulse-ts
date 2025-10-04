@@ -8,7 +8,7 @@
 
 > **ComponentSerializer**\<`T`\> = `object`
 
-Defined in: [packages/save/src/types.ts:33](https://github.com/jlehett/pulse-ts/blob/d786433c7cb88fe7c30a7029f46dff58815931cc/packages/save/src/types.ts#L33)
+Defined in: [packages/save/src/types.ts:33](https://github.com/jlehett/pulse-ts/blob/4869ef2c4af7bf37d31e2edd2d6d1ba148133fb2/packages/save/src/types.ts#L33)
 
 A serializer for a component.
 
@@ -24,7 +24,7 @@ A serializer for a component.
 
 > **id**: `string`
 
-Defined in: [packages/save/src/types.ts:35](https://github.com/jlehett/pulse-ts/blob/d786433c7cb88fe7c30a7029f46dff58815931cc/packages/save/src/types.ts#L35)
+Defined in: [packages/save/src/types.ts:35](https://github.com/jlehett/pulse-ts/blob/4869ef2c4af7bf37d31e2edd2d6d1ba148133fb2/packages/save/src/types.ts#L35)
 
 Stable identifier for this component type in save files.
 
@@ -34,7 +34,7 @@ Stable identifier for this component type in save files.
 
 > **deserialize**(`owner`, `data`): `void`
 
-Defined in: [packages/save/src/types.ts:42](https://github.com/jlehett/pulse-ts/blob/d786433c7cb88fe7c30a7029f46dff58815931cc/packages/save/src/types.ts#L42)
+Defined in: [packages/save/src/types.ts:42](https://github.com/jlehett/pulse-ts/blob/4869ef2c4af7bf37d31e2edd2d6d1ba148133fb2/packages/save/src/types.ts#L42)
 
 Apply the serialized data back onto the component.
 
@@ -58,7 +58,7 @@ Apply the serialized data back onto the component.
 
 > **serialize**(`owner`, `comp`): `unknown`
 
-Defined in: [packages/save/src/types.ts:40](https://github.com/jlehett/pulse-ts/blob/d786433c7cb88fe7c30a7029f46dff58815931cc/packages/save/src/types.ts#L40)
+Defined in: [packages/save/src/types.ts:40](https://github.com/jlehett/pulse-ts/blob/4869ef2c4af7bf37d31e2edd2d6d1ba148133fb2/packages/save/src/types.ts#L40)
 
 Serialize the component into JSON-safe data.
 Return undefined to skip writing this component.

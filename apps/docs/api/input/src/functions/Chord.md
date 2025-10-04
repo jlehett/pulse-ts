@@ -8,15 +8,9 @@
 
 > **Chord**(`keys`): [`ChordBinding`](../type-aliases/ChordBinding.md)
 
-Defined in: packages/input/src/domain/bindings/expr.ts:160
+Defined in: [packages/input/src/domain/bindings/expr.ts:156](https://github.com/jlehett/pulse-ts/blob/4869ef2c4af7bf37d31e2edd2d6d1ba148133fb2/packages/input/src/domain/bindings/expr.ts#L156)
 
-Create a Chord binding (simultaneous keys).
-
-Example
-```ts
-import { Chord, Key } from '@pulse-ts/input';
-const jump = Chord([Key('Space')]);
-```
+Create a chord binding (simultaneous keys must be held down together).
 
 ## Parameters
 
@@ -24,6 +18,17 @@ const jump = Chord([Key('Space')]);
 
 (`string` \| [`KeyBinding`](../type-aliases/KeyBinding.md))[]
 
+Array of `Key(...)` or shorthand strings.
+
 ## Returns
 
 [`ChordBinding`](../type-aliases/ChordBinding.md)
+
+The chord binding expression.
+
+## Example
+
+```ts
+import { Chord, Key } from '@pulse-ts/input';
+const jump = Chord([Key('Space')]);
+```

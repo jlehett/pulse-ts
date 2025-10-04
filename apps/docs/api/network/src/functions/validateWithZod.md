@@ -8,7 +8,7 @@
 
 > **validateWithZod**(`schema`): (`data`) => `boolean`
 
-Defined in: [packages/network/src/server/validate.ts:6](https://github.com/jlehett/pulse-ts/blob/d786433c7cb88fe7c30a7029f46dff58815931cc/packages/network/src/server/validate.ts#L6)
+Defined in: [packages/network/src/server/validate.ts:6](https://github.com/jlehett/pulse-ts/blob/4869ef2c4af7bf37d31e2edd2d6d1ba148133fb2/packages/network/src/server/validate.ts#L6)
 
 ## Parameters
 

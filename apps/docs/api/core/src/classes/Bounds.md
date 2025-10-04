@@ -6,7 +6,7 @@
 
 # Class: Bounds
 
-Defined in: [packages/core/src/domain/components/spatial/Bounds.ts:21](https://github.com/jlehett/pulse-ts/blob/d786433c7cb88fe7c30a7029f46dff58815931cc/packages/core/src/domain/components/spatial/Bounds.ts#L21)
+Defined in: [packages/core/src/domain/components/spatial/Bounds.ts:21](https://github.com/jlehett/pulse-ts/blob/4869ef2c4af7bf37d31e2edd2d6d1ba148133fb2/packages/core/src/domain/components/spatial/Bounds.ts#L21)
 
 Bounds component: local AABB + cached/calc world AABB.
 
@@ -36,7 +36,7 @@ Bounds component: local AABB + cached/calc world AABB.
 
 > **get** **owner**(): [`Node`](Node.md)
 
-Defined in: [packages/core/src/domain/ecs/base/Component.ts:17](https://github.com/jlehett/pulse-ts/blob/d786433c7cb88fe7c30a7029f46dff58815931cc/packages/core/src/domain/ecs/base/Component.ts#L17)
+Defined in: [packages/core/src/domain/ecs/base/Component.ts:17](https://github.com/jlehett/pulse-ts/blob/4869ef2c4af7bf37d31e2edd2d6d1ba148133fb2/packages/core/src/domain/ecs/base/Component.ts#L17)
 
 The owner of the component.
 
@@ -54,7 +54,7 @@ The owner of the component.
 
 > **\[kSetComponentOwner\]**(`owner`): `void`
 
-Defined in: [packages/core/src/domain/ecs/base/Component.ts:10](https://github.com/jlehett/pulse-ts/blob/d786433c7cb88fe7c30a7029f46dff58815931cc/packages/core/src/domain/ecs/base/Component.ts#L10)
+Defined in: [packages/core/src/domain/ecs/base/Component.ts:10](https://github.com/jlehett/pulse-ts/blob/4869ef2c4af7bf37d31e2edd2d6d1ba148133fb2/packages/core/src/domain/ecs/base/Component.ts#L10)
 
 #### Parameters
 
@@ -76,7 +76,7 @@ Defined in: [packages/core/src/domain/ecs/base/Component.ts:10](https://github.c
 
 > **getLocal**(): `null` \| [`AABB`](../interfaces/AABB.md)
 
-Defined in: [packages/core/src/domain/components/spatial/Bounds.ts:53](https://github.com/jlehett/pulse-ts/blob/d786433c7cb88fe7c30a7029f46dff58815931cc/packages/core/src/domain/components/spatial/Bounds.ts#L53)
+Defined in: [packages/core/src/domain/components/spatial/Bounds.ts:53](https://github.com/jlehett/pulse-ts/blob/4869ef2c4af7bf37d31e2edd2d6d1ba148133fb2/packages/core/src/domain/components/spatial/Bounds.ts#L53)
 
 #### Returns
 
@@ -88,7 +88,7 @@ Defined in: [packages/core/src/domain/components/spatial/Bounds.ts:53](https://g
 
 > **getWorld**(`out?`, `alpha?`): `null` \| [`AABB`](../interfaces/AABB.md)
 
-Defined in: [packages/core/src/domain/components/spatial/Bounds.ts:57](https://github.com/jlehett/pulse-ts/blob/d786433c7cb88fe7c30a7029f46dff58815931cc/packages/core/src/domain/components/spatial/Bounds.ts#L57)
+Defined in: [packages/core/src/domain/components/spatial/Bounds.ts:57](https://github.com/jlehett/pulse-ts/blob/4869ef2c4af7bf37d31e2edd2d6d1ba148133fb2/packages/core/src/domain/components/spatial/Bounds.ts#L57)
 
 #### Parameters
 
@@ -110,7 +110,7 @@ Defined in: [packages/core/src/domain/components/spatial/Bounds.ts:57](https://g
 
 > **setLocal**(`min`, `max`): `void`
 
-Defined in: [packages/core/src/domain/components/spatial/Bounds.ts:46](https://github.com/jlehett/pulse-ts/blob/d786433c7cb88fe7c30a7029f46dff58815931cc/packages/core/src/domain/components/spatial/Bounds.ts#L46)
+Defined in: [packages/core/src/domain/components/spatial/Bounds.ts:46](https://github.com/jlehett/pulse-ts/blob/4869ef2c4af7bf37d31e2edd2d6d1ba148133fb2/packages/core/src/domain/components/spatial/Bounds.ts#L46)
 
 #### Parameters
 
@@ -132,7 +132,7 @@ Defined in: [packages/core/src/domain/components/spatial/Bounds.ts:46](https://g
 
 > `static` **attach**\<`Bounds`\>(`owner`): `Bounds`
 
-Defined in: [packages/core/src/domain/components/spatial/Bounds.ts:22](https://github.com/jlehett/pulse-ts/blob/d786433c7cb88fe7c30a7029f46dff58815931cc/packages/core/src/domain/components/spatial/Bounds.ts#L22)
+Defined in: [packages/core/src/domain/components/spatial/Bounds.ts:22](https://github.com/jlehett/pulse-ts/blob/4869ef2c4af7bf37d31e2edd2d6d1ba148133fb2/packages/core/src/domain/components/spatial/Bounds.ts#L22)
 
 Attaches the component to an owner. Override this method to implement
 custom attachment logic.

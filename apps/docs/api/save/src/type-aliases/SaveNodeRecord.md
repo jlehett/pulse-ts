@@ -8,7 +8,7 @@
 
 > **SaveNodeRecord** = `object`
 
-Defined in: [packages/save/src/types.ts:56](https://github.com/jlehett/pulse-ts/blob/d786433c7cb88fe7c30a7029f46dff58815931cc/packages/save/src/types.ts#L56)
+Defined in: [packages/save/src/types.ts:56](https://github.com/jlehett/pulse-ts/blob/4869ef2c4af7bf37d31e2edd2d6d1ba148133fb2/packages/save/src/types.ts#L56)
 
 A record of a node in the save file.
 
@@ -18,7 +18,7 @@ A record of a node in the save file.
 
 > **components**: `object`[]
 
-Defined in: [packages/save/src/types.ts:62](https://github.com/jlehett/pulse-ts/blob/d786433c7cb88fe7c30a7029f46dff58815931cc/packages/save/src/types.ts#L62)
+Defined in: [packages/save/src/types.ts:62](https://github.com/jlehett/pulse-ts/blob/4869ef2c4af7bf37d31e2edd2d6d1ba148133fb2/packages/save/src/types.ts#L62)
 
 The components of the node.
 
@@ -36,7 +36,7 @@ The components of the node.
 
 > `optional` **fc**: `object`
 
-Defined in: [packages/save/src/types.ts:64](https://github.com/jlehett/pulse-ts/blob/d786433c7cb88fe7c30a7029f46dff58815931cc/packages/save/src/types.ts#L64)
+Defined in: [packages/save/src/types.ts:64](https://github.com/jlehett/pulse-ts/blob/4869ef2c4af7bf37d31e2edd2d6d1ba148133fb2/packages/save/src/types.ts#L64)
 
 Optional function-component descriptor for re-mounting in rebuild mode.
 
@@ -54,7 +54,7 @@ Optional function-component descriptor for re-mounting in rebuild mode.
 
 > **id**: `number`
 
-Defined in: [packages/save/src/types.ts:58](https://github.com/jlehett/pulse-ts/blob/d786433c7cb88fe7c30a7029f46dff58815931cc/packages/save/src/types.ts#L58)
+Defined in: [packages/save/src/types.ts:58](https://github.com/jlehett/pulse-ts/blob/4869ef2c4af7bf37d31e2edd2d6d1ba148133fb2/packages/save/src/types.ts#L58)
 
 The unique ID of the node.
 
@@ -64,6 +64,6 @@ The unique ID of the node.
 
 > **parent**: `number` \| `null`
 
-Defined in: [packages/save/src/types.ts:60](https://github.com/jlehett/pulse-ts/blob/d786433c7cb88fe7c30a7029f46dff58815931cc/packages/save/src/types.ts#L60)
+Defined in: [packages/save/src/types.ts:60](https://github.com/jlehett/pulse-ts/blob/4869ef2c4af7bf37d31e2edd2d6d1ba148133fb2/packages/save/src/types.ts#L60)
 
 The parent ID of the node.

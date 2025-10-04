@@ -8,9 +8,9 @@
 
 > **KeyBinding** = `object`
 
-Defined in: packages/input/src/domain/bindings/types.ts:116
+Defined in: [packages/input/src/domain/bindings/types.ts:116](https://github.com/jlehett/pulse-ts/blob/4869ef2c4af7bf37d31e2edd2d6d1ba148133fb2/packages/input/src/domain/bindings/types.ts#L116)
 
-A key binding.
+A key binding expression.
 
 ## Properties
 
@@ -18,7 +18,7 @@ A key binding.
 
 > **code**: `string`
 
-Defined in: packages/input/src/domain/bindings/types.ts:116
+Defined in: [packages/input/src/domain/bindings/types.ts:116](https://github.com/jlehett/pulse-ts/blob/4869ef2c4af7bf37d31e2edd2d6d1ba148133fb2/packages/input/src/domain/bindings/types.ts#L116)
 
 ***
 
@@ -26,4 +26,4 @@ Defined in: packages/input/src/domain/bindings/types.ts:116
 
 > **type**: `"key"`
 
-Defined in: packages/input/src/domain/bindings/types.ts:116
+Defined in: [packages/input/src/domain/bindings/types.ts:116](https://github.com/jlehett/pulse-ts/blob/4869ef2c4af7bf37d31e2edd2d6d1ba148133fb2/packages/input/src/domain/bindings/types.ts#L116)

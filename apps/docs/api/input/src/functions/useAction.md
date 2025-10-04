@@ -8,9 +8,9 @@
 
 > **useAction**(`name`): () => [`ActionState`](../type-aliases/ActionState.md)
 
-Defined in: packages/input/src/public/hooks.ts:43
+Defined in: [packages/input/src/public/hooks.ts:43](https://github.com/jlehett/pulse-ts/blob/4869ef2c4af7bf37d31e2edd2d6d1ba148133fb2/packages/input/src/public/hooks.ts#L43)
 
-Get the action state for a given action name.
+Create an accessor for an action's state.
 
 ## Parameters
 
@@ -18,22 +18,23 @@ Get the action state for a given action name.
 
 `string`
 
-The name of the action.
+Action name.
 
 ## Returns
 
-The action state accessor.
-
-Example
-```ts
-import { useAction } from '@pulse-ts/input';
-const jump = useAction('jump');
-// inside frame update
-const { pressed } = jump();
-```
+A function that returns the latest `ActionState` when called.
 
 > (): [`ActionState`](../type-aliases/ActionState.md)
 
 ### Returns
 
 [`ActionState`](../type-aliases/ActionState.md)
+
+## Example
+
+```ts
+import { useAction } from '@pulse-ts/input';
+const jump = useAction('jump');
+// inside frame update
+const { pressed } = jump();
+```

@@ -6,7 +6,7 @@
 
 # Class: ClockSyncService
 
-Defined in: [packages/network/src/services/ClockSyncService.ts:16](https://github.com/jlehett/pulse-ts/blob/d786433c7cb88fe7c30a7029f46dff58815931cc/packages/network/src/services/ClockSyncService.ts#L16)
+Defined in: [packages/network/src/services/ClockSyncService.ts:16](https://github.com/jlehett/pulse-ts/blob/4869ef2c4af7bf37d31e2edd2d6d1ba148133fb2/packages/network/src/services/ClockSyncService.ts#L16)
 
 Estimates server clock offset/drift via periodic pings over a reserved channel.
 
@@ -23,7 +23,7 @@ Estimates server clock offset/drift via periodic pings over a reserved channel.
 
 > **new ClockSyncService**(`opts`): `ClockSyncService`
 
-Defined in: [packages/network/src/services/ClockSyncService.ts:28](https://github.com/jlehett/pulse-ts/blob/d786433c7cb88fe7c30a7029f46dff58815931cc/packages/network/src/services/ClockSyncService.ts#L28)
+Defined in: [packages/network/src/services/ClockSyncService.ts:28](https://github.com/jlehett/pulse-ts/blob/4869ef2c4af7bf37d31e2edd2d6d1ba148133fb2/packages/network/src/services/ClockSyncService.ts#L28)
 
 #### Parameters
 
@@ -51,7 +51,7 @@ Defined in: [packages/network/src/services/ClockSyncService.ts:28](https://githu
 
 > `readonly` **onSample**: `TypedEvent`\<\{ `offsetMs`: `number`; `rttMs`: `number`; \}\>
 
-Defined in: [packages/network/src/services/ClockSyncService.ts:26](https://github.com/jlehett/pulse-ts/blob/d786433c7cb88fe7c30a7029f46dff58815931cc/packages/network/src/services/ClockSyncService.ts#L26)
+Defined in: [packages/network/src/services/ClockSyncService.ts:26](https://github.com/jlehett/pulse-ts/blob/4869ef2c4af7bf37d31e2edd2d6d1ba148133fb2/packages/network/src/services/ClockSyncService.ts#L26)
 
 ## Methods
 
@@ -103,7 +103,7 @@ Detaches the service from the world.
 
 > **getOffsetMs**(): `number`
 
-Defined in: [packages/network/src/services/ClockSyncService.ts:65](https://github.com/jlehett/pulse-ts/blob/d786433c7cb88fe7c30a7029f46dff58815931cc/packages/network/src/services/ClockSyncService.ts#L65)
+Defined in: [packages/network/src/services/ClockSyncService.ts:65](https://github.com/jlehett/pulse-ts/blob/4869ef2c4af7bf37d31e2edd2d6d1ba148133fb2/packages/network/src/services/ClockSyncService.ts#L65)
 
 Returns the current best-known server->client offset in ms.
 
@@ -117,7 +117,7 @@ Returns the current best-known server->client offset in ms.
 
 > **getServerNowMs**(): `number`
 
-Defined in: [packages/network/src/services/ClockSyncService.ts:70](https://github.com/jlehett/pulse-ts/blob/d786433c7cb88fe7c30a7029f46dff58815931cc/packages/network/src/services/ClockSyncService.ts#L70)
+Defined in: [packages/network/src/services/ClockSyncService.ts:70](https://github.com/jlehett/pulse-ts/blob/4869ef2c4af7bf37d31e2edd2d6d1ba148133fb2/packages/network/src/services/ClockSyncService.ts#L70)
 
 Returns an estimated server time in ms.
 
@@ -131,7 +131,7 @@ Returns an estimated server time in ms.
 
 > **getStats**(): `object`
 
-Defined in: [packages/network/src/services/ClockSyncService.ts:75](https://github.com/jlehett/pulse-ts/blob/d786433c7cb88fe7c30a7029f46dff58815931cc/packages/network/src/services/ClockSyncService.ts#L75)
+Defined in: [packages/network/src/services/ClockSyncService.ts:75](https://github.com/jlehett/pulse-ts/blob/4869ef2c4af7bf37d31e2edd2d6d1ba148133fb2/packages/network/src/services/ClockSyncService.ts#L75)
 
 Returns sampling stats.
 
@@ -157,7 +157,7 @@ Returns sampling stats.
 
 > **start**(): `void`
 
-Defined in: [packages/network/src/services/ClockSyncService.ts:35](https://github.com/jlehett/pulse-ts/blob/d786433c7cb88fe7c30a7029f46dff58815931cc/packages/network/src/services/ClockSyncService.ts#L35)
+Defined in: [packages/network/src/services/ClockSyncService.ts:35](https://github.com/jlehett/pulse-ts/blob/4869ef2c4af7bf37d31e2edd2d6d1ba148133fb2/packages/network/src/services/ClockSyncService.ts#L35)
 
 Starts periodic clock sync pings. Idempotent.
 
@@ -171,7 +171,7 @@ Starts periodic clock sync pings. Idempotent.
 
 > **stop**(): `void`
 
-Defined in: [packages/network/src/services/ClockSyncService.ts:57](https://github.com/jlehett/pulse-ts/blob/d786433c7cb88fe7c30a7029f46dff58815931cc/packages/network/src/services/ClockSyncService.ts#L57)
+Defined in: [packages/network/src/services/ClockSyncService.ts:57](https://github.com/jlehett/pulse-ts/blob/4869ef2c4af7bf37d31e2edd2d6d1ba148133fb2/packages/network/src/services/ClockSyncService.ts#L57)
 
 Stops clock sync.
 

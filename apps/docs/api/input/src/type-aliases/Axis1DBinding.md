@@ -8,9 +8,9 @@
 
 > **Axis1DBinding** = `object`
 
-Defined in: packages/input/src/domain/bindings/types.ts:121
+Defined in: [packages/input/src/domain/bindings/types.ts:121](https://github.com/jlehett/pulse-ts/blob/4869ef2c4af7bf37d31e2edd2d6d1ba148133fb2/packages/input/src/domain/bindings/types.ts#L121)
 
-An axis 1D binding.
+An axis 1D binding expression.
 
 ## Properties
 
@@ -18,7 +18,7 @@ An axis 1D binding.
 
 > **neg**: [`KeyBinding`](KeyBinding.md)[]
 
-Defined in: packages/input/src/domain/bindings/types.ts:130
+Defined in: [packages/input/src/domain/bindings/types.ts:130](https://github.com/jlehett/pulse-ts/blob/4869ef2c4af7bf37d31e2edd2d6d1ba148133fb2/packages/input/src/domain/bindings/types.ts#L130)
 
 The negative key binding.
 
@@ -28,7 +28,7 @@ The negative key binding.
 
 > **pos**: [`KeyBinding`](KeyBinding.md)[]
 
-Defined in: packages/input/src/domain/bindings/types.ts:126
+Defined in: [packages/input/src/domain/bindings/types.ts:126](https://github.com/jlehett/pulse-ts/blob/4869ef2c4af7bf37d31e2edd2d6d1ba148133fb2/packages/input/src/domain/bindings/types.ts#L126)
 
 The positive key binding.
 
@@ -38,7 +38,7 @@ The positive key binding.
 
 > `optional` **scale**: `number`
 
-Defined in: packages/input/src/domain/bindings/types.ts:134
+Defined in: [packages/input/src/domain/bindings/types.ts:134](https://github.com/jlehett/pulse-ts/blob/4869ef2c4af7bf37d31e2edd2d6d1ba148133fb2/packages/input/src/domain/bindings/types.ts#L134)
 
 The scale of the axis.
 
@@ -48,4 +48,4 @@ The scale of the axis.
 
 > **type**: `"axis1d"`
 
-Defined in: packages/input/src/domain/bindings/types.ts:122
+Defined in: [packages/input/src/domain/bindings/types.ts:122](https://github.com/jlehett/pulse-ts/blob/4869ef2c4af7bf37d31e2edd2d6d1ba148133fb2/packages/input/src/domain/bindings/types.ts#L122)

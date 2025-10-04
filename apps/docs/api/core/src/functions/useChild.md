@@ -8,7 +8,7 @@
 
 > **useChild**\<`P`\>(`fc`, `props?`): [`Node`](../classes/Node.md)
 
-Defined in: [packages/core/src/domain/fc/hooks.ts:241](https://github.com/jlehett/pulse-ts/blob/d786433c7cb88fe7c30a7029f46dff58815931cc/packages/core/src/domain/fc/hooks.ts#L241)
+Defined in: [packages/core/src/domain/fc/hooks.ts:241](https://github.com/jlehett/pulse-ts/blob/4869ef2c4af7bf37d31e2edd2d6d1ba148133fb2/packages/core/src/domain/fc/hooks.ts#L241)
 
 Mounts a child function component as a `Node` parented to the current component's `Node`.
 

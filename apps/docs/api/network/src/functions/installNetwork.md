@@ -8,7 +8,7 @@
 
 > **installNetwork**(`world`, `opts`): `Promise`\<[`InstalledNetwork`](../interfaces/InstalledNetwork.md)\>
 
-Defined in: [packages/network/src/install.ts:43](https://github.com/jlehett/pulse-ts/blob/d786433c7cb88fe7c30a7029f46dff58815931cc/packages/network/src/install.ts#L43)
+Defined in: [packages/network/src/install.ts:43](https://github.com/jlehett/pulse-ts/blob/4869ef2c4af7bf37d31e2edd2d6d1ba148133fb2/packages/network/src/install.ts#L43)
 
 Installs @pulse-ts/network services and systems into a World.
 

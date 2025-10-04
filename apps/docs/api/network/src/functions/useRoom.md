@@ -8,7 +8,7 @@
 
 > **useRoom**(`room`): `void`
 
-Defined in: [packages/network/src/fc/hooks.ts:390](https://github.com/jlehett/pulse-ts/blob/d786433c7cb88fe7c30a7029f46dff58815931cc/packages/network/src/fc/hooks.ts#L390)
+Defined in: [packages/network/src/fc/hooks.ts:390](https://github.com/jlehett/pulse-ts/blob/4869ef2c4af7bf37d31e2edd2d6d1ba148133fb2/packages/network/src/fc/hooks.ts#L390)
 
 Joins a server-side room for channel routing and leaves on unmount.
 

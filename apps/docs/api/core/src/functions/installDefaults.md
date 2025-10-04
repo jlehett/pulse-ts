@@ -8,7 +8,7 @@
 
 > **installDefaults**(`world`): `void`
 
-Defined in: [packages/core/src/public/bootstrap.ts:21](https://github.com/jlehett/pulse-ts/blob/d786433c7cb88fe7c30a7029f46dff58815931cc/packages/core/src/public/bootstrap.ts#L21)
+Defined in: [packages/core/src/public/bootstrap.ts:21](https://github.com/jlehett/pulse-ts/blob/4869ef2c4af7bf37d31e2edd2d6d1ba148133fb2/packages/core/src/public/bootstrap.ts#L21)
 
 Installs the default services and systems onto a world.
 

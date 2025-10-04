@@ -8,7 +8,7 @@
 
 > **defineFC**\<`P`\>(`id`, `fc`, `opts`): `FC`\<`P`\>
 
-Defined in: [packages/save/src/hooks/fc.ts:33](https://github.com/jlehett/pulse-ts/blob/d786433c7cb88fe7c30a7029f46dff58815931cc/packages/save/src/hooks/fc.ts#L33)
+Defined in: [packages/save/src/hooks/fc.ts:33](https://github.com/jlehett/pulse-ts/blob/4869ef2c4af7bf37d31e2edd2d6d1ba148133fb2/packages/save/src/hooks/fc.ts#L33)
 
 Wraps an FC so it auto-registers for rebuild and auto-attaches save metadata on mount.
 

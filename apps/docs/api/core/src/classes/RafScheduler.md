@@ -6,7 +6,7 @@
 
 # Class: RafScheduler
 
-Defined in: [packages/core/src/infra/scheduler/RafScheduler.ts:6](https://github.com/jlehett/pulse-ts/blob/d786433c7cb88fe7c30a7029f46dff58815931cc/packages/core/src/infra/scheduler/RafScheduler.ts#L6)
+Defined in: [packages/core/src/infra/scheduler/RafScheduler.ts:6](https://github.com/jlehett/pulse-ts/blob/4869ef2c4af7bf37d31e2edd2d6d1ba148133fb2/packages/core/src/infra/scheduler/RafScheduler.ts#L6)
 
 A scheduler that uses requestAnimationFrame.
 
@@ -30,7 +30,7 @@ A scheduler that uses requestAnimationFrame.
 
 > **start**(`loop`): `void`
 
-Defined in: [packages/core/src/infra/scheduler/RafScheduler.ts:9](https://github.com/jlehett/pulse-ts/blob/d786433c7cb88fe7c30a7029f46dff58815931cc/packages/core/src/infra/scheduler/RafScheduler.ts#L9)
+Defined in: [packages/core/src/infra/scheduler/RafScheduler.ts:9](https://github.com/jlehett/pulse-ts/blob/4869ef2c4af7bf37d31e2edd2d6d1ba148133fb2/packages/core/src/infra/scheduler/RafScheduler.ts#L9)
 
 #### Parameters
 
@@ -52,7 +52,7 @@ Defined in: [packages/core/src/infra/scheduler/RafScheduler.ts:9](https://github
 
 > **stop**(): `void`
 
-Defined in: [packages/core/src/infra/scheduler/RafScheduler.ts:17](https://github.com/jlehett/pulse-ts/blob/d786433c7cb88fe7c30a7029f46dff58815931cc/packages/core/src/infra/scheduler/RafScheduler.ts#L17)
+Defined in: [packages/core/src/infra/scheduler/RafScheduler.ts:17](https://github.com/jlehett/pulse-ts/blob/4869ef2c4af7bf37d31e2edd2d6d1ba148133fb2/packages/core/src/infra/scheduler/RafScheduler.ts#L17)
 
 #### Returns
 
