@@ -24,4 +24,3 @@ describe('expr helpers', () => {
         expect((a2 as any).invertY).toBeUndefined();
     });
 });
-

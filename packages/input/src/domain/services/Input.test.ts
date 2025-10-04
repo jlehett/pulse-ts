@@ -352,4 +352,37 @@ describe('InputService', () => {
         w._inc();
         expect(svc.action('combo').pressed).toBe(false);
     });
+
+    test('Axis1D opposing keys cancel and re-emit pressed on uncancel', () => {
+        const svc = new InputService();
+        const w = worldStub();
+        svc.attach(w);
+        svc.setBindings({
+            moveX: Axis1D({ pos: Key('KeyD'), neg: Key('KeyA') }),
+        });
+
+        const events: any[] = [];
+        svc.actionEvent.on((e) => events.push(e));
+
+        // Press positive -> pressed
+        svc.handleKey('KeyD', true);
+        svc.commit();
+        w._inc();
+        expect(svc.axis('moveX')).toBe(1);
+        expect(events.pop()?.state.pressed).toBe(true);
+
+        // Also press negative -> cancels to 0 -> released
+        svc.handleKey('KeyA', true);
+        svc.commit();
+        w._inc();
+        expect(svc.axis('moveX')).toBe(0);
+        expect(events.pop()?.state.released).toBe(true);
+
+        // Release negative -> back to +1 -> pressed again
+        svc.handleKey('KeyA', false);
+        svc.commit();
+        w._inc();
+        expect(svc.axis('moveX')).toBe(1);
+        expect(events.pop()?.state.pressed).toBe(true);
+    });
 });

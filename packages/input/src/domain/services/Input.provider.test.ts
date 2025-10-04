@@ -15,7 +15,8 @@ class FakeProvider implements InputProvider {
     started = false;
     stopped = false;
     updates = 0;
-    start(_target: EventTarget): void {
+    start(target: EventTarget): void {
+        void target;
         this.started = true;
     }
     stop(): void {
@@ -49,5 +50,21 @@ describe('InputService provider lifecycle', () => {
         svc.attach(w);
         expect(p.started).toBe(true);
     });
-});
 
+    test('unregisterProvider stops provider and prevents further updates', () => {
+        const svc = new InputService();
+        const w = worldStub();
+        svc.attach(w);
+        const p = new FakeProvider();
+        svc.registerProvider(p);
+        expect(p.started).toBe(true);
+        svc.commit();
+        expect(p.updates).toBe(1);
+
+        svc.unregisterProvider(p);
+        expect(p.stopped).toBe(true);
+        // No longer updated after unregister
+        svc.commit();
+        expect(p.updates).toBe(1);
+    });
+});

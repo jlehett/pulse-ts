@@ -1,4 +1,5 @@
 import { Service, TypedEvent } from '@pulse-ts/core';
+import type { World } from '@pulse-ts/core';
 import type {
     ActionState,
     InputOptions,
@@ -72,6 +73,20 @@ export class InputService extends Service {
     private pWheel = { x: 0, y: 0, z: 0 };
 
     // events for consumers who prefer subscriptions
+    /**
+     * Event fired when an action changes its pressed/released state during commit.
+     * Useful for event-driven input handling.
+     *
+     * @example
+     * ```ts
+     * const svc = new InputService();
+     * svc.setBindings({ jump: { type: 'key', code: 'Space' } });
+     * const off = svc.actionEvent.on(({ name, state }) => {
+     *   if (name === 'jump' && state.pressed) console.log('JUMP!');
+     * });
+     * // later: off();
+     * ```
+     */
     readonly actionEvent = new TypedEvent<{
         name: string;
         state: ActionState;
@@ -90,7 +105,7 @@ export class InputService extends Service {
      * Attach the service to a world.
      * @param world The world to attach to.
      */
-    attach(world: any): void {
+    attach(world: World): void {
         super.attach(world);
         const target = this.getTarget();
         if (target) for (const p of this.providers) p.start(target);
@@ -116,6 +131,30 @@ export class InputService extends Service {
         this.providers.push(p);
         const target = this.getTarget();
         if (target && this.world) p.start(target);
+    }
+
+    /**
+     * Unregister a previously registered input provider.
+     * If attached, the provider is stopped and removed.
+     * @param p Provider instance to remove.
+     *
+     * @example
+     * ```ts
+     * const kbd = new DOMKeyboardProvider(svc);
+     * svc.registerProvider(kbd);
+     * // later
+     * svc.unregisterProvider(kbd);
+     * ```
+     */
+    unregisterProvider(p: InputProvider): void {
+        const idx = this.providers.indexOf(p);
+        if (idx >= 0) {
+            try {
+                if (this.world) p.stop();
+            } finally {
+                this.providers.splice(idx, 1);
+            }
+        }
     }
 
     /**
@@ -255,102 +294,16 @@ export class InputService extends Service {
 
         const frameId = (this.world as any)?.getFrameId?.() ?? 0;
 
-        // Chords: evaluate current key-down set
-        const chordDown = computeChordDownActions(
-            this.keysDown,
-            this.bindings.getChords(),
-        );
-        for (const [action] of this.bindings.getChords())
-            this.setDigitalSource(action, 'chord', chordDown.has(action));
-
-        // Sequence pulses from key events
-        for (const action of this.seqPulse)
-            this.setDigitalSource(action, 'seq', true);
-
-        // Digital actions (only entries that originated from digital sources)
-        for (const [name, sources] of this.digitalSources.entries()) {
-            const nextValue = sources.size > 0 ? 1 : 0;
-            const prev = this.actions.get(name);
-            const state = computeActionState(prev, nextValue, frameId);
-            this.actions.set(name, state);
-            if (state.pressed || state.released)
-                this.actionEvent.emit({ name, state });
-        }
-
-        // Axes (1D) from key pairs -> produces analog values [-1, 0, +1]
-        for (const [name, def] of this.bindings.getAxes1DKeys()) {
-            const posActive = def.pos.some((c) => this.keysDown.has(c));
-            const negActive = def.neg.some((c) => this.keysDown.has(c));
-            let nextValue = (posActive ? 1 : 0) - (negActive ? 1 : 0);
-            nextValue *= def.scale;
-            const prev = this.actions.get(name);
-            const state = computeActionState(prev, nextValue, frameId);
-            this.actions.set(name, state);
-            if (state.pressed || state.released)
-                this.actionEvent.emit({ name, state });
-        }
-
-        // Pointer vec2 (per-frame deltas): reset to {x:0,y:0} and apply accum
-        const pActions = this.bindings.getPointerMoveActions();
-        for (const name of pActions) this.vec2State.set(name, { x: 0, y: 0 });
-        for (const [name, v] of this.vec2Accum)
-            this.vec2State.set(name, { ...v });
-        // Clear accumulators for next frame
-        this.vec2Accum.clear();
-
-        // Wheel -> axis (per-frame), vertical only
-        for (const [name, def] of this.bindings.getWheelBindings()) {
-            const nextValue = this.pWheel.y * def.scale;
-            const prev = this.actions.get(name);
-            const state = computeActionState(prev, nextValue, frameId);
-            this.actions.set(name, state);
-            if (state.pressed || state.released)
-                this.actionEvent.emit({ name, state });
-        }
-
-        // Snapshot pointer deltas and wheel and clear accumulators
-        this.pointer.deltaX = this.pDelta.dx;
-        this.pointer.deltaY = this.pDelta.dy;
-        this.pDelta.dx = 0;
-        this.pDelta.dy = 0;
-        this.pointer.wheelX = this.pWheel.x;
-        this.pointer.wheelY = this.pWheel.y;
-        this.pointer.wheelZ = this.pWheel.z;
-        this.pWheel.x = this.pWheel.y = this.pWheel.z = 0;
-
-        // Injected 1D axes (per-frame): apply current and clear previous
-        const injectedNow = new Set<string>();
-        for (const [name, value] of this.axis1Accum.entries()) {
-            injectedNow.add(name);
-            const prev = this.actions.get(name);
-            const state = computeActionState(prev, value, frameId);
-            this.actions.set(name, state);
-            if (state.pressed || state.released)
-                this.actionEvent.emit({ name, state });
-        }
-        // For any axis injected in the previous frame but not this one, set to 0
-        for (const name of this.axis1PrevInjected) {
-            if (!injectedNow.has(name)) {
-                const prev = this.actions.get(name);
-                const state = computeActionState(prev, 0, frameId);
-                this.actions.set(name, state);
-                if (state.pressed || state.released)
-                    this.actionEvent.emit({ name, state });
-            }
-        }
-        this.axis1PrevInjected = injectedNow;
-        this.axis1Accum.clear();
-
-        // Derived axis 2D from 1D axes (continuous vectors) with custom keys
-        for (const [name, def] of this.bindings.getVec2Defs()) {
-            const obj = composeVec2From1D(def, this.actions);
-            this.vec2State.set(name, obj);
-        }
-
-        // Cleanup sequence pulses (one-frame)
-        for (const action of this.seqPulse)
-            this.setDigitalSource(action, 'seq', false);
-        this.seqPulse.clear();
+        this.commitChordStates();
+        this.commitSequencePulses();
+        this.commitDigitalActions(frameId);
+        this.commitAxes1DFromKeys(frameId);
+        this.commitPointerVec2();
+        this.commitWheel(frameId);
+        this.commitPointerSnapshot();
+        this.commitInjectedAxes1D(frameId);
+        this.commitDerivedVec2();
+        this.finalizeSequences();
     }
 
     /**
@@ -445,6 +398,115 @@ export class InputService extends Service {
     }
 
     // Sequence advancement moved to internal helper
+
+    //#endregion
+
+    //#region Commit helpers
+
+    private commitChordStates(): void {
+        const chordDown = computeChordDownActions(
+            this.keysDown,
+            this.bindings.getChords(),
+        );
+        for (const [action] of this.bindings.getChords())
+            this.setDigitalSource(action, 'chord', chordDown.has(action));
+    }
+
+    private commitSequencePulses(): void {
+        for (const action of this.seqPulse)
+            this.setDigitalSource(action, 'seq', true);
+    }
+
+    private commitDigitalActions(frameId: number): void {
+        for (const [name, sources] of this.digitalSources.entries()) {
+            const nextValue = sources.size > 0 ? 1 : 0;
+            const prev = this.actions.get(name);
+            const state = computeActionState(prev, nextValue, frameId);
+            this.actions.set(name, state);
+            if (state.pressed || state.released)
+                this.actionEvent.emit({ name, state });
+        }
+    }
+
+    private commitAxes1DFromKeys(frameId: number): void {
+        for (const [name, def] of this.bindings.getAxes1DKeys()) {
+            const posActive = def.pos.some((c) => this.keysDown.has(c));
+            const negActive = def.neg.some((c) => this.keysDown.has(c));
+            let nextValue = (posActive ? 1 : 0) - (negActive ? 1 : 0);
+            nextValue *= def.scale;
+            const prev = this.actions.get(name);
+            const state = computeActionState(prev, nextValue, frameId);
+            this.actions.set(name, state);
+            if (state.pressed || state.released)
+                this.actionEvent.emit({ name, state });
+        }
+    }
+
+    private commitPointerVec2(): void {
+        const pActions = this.bindings.getPointerMoveActions();
+        for (const name of pActions) this.vec2State.set(name, { x: 0, y: 0 });
+        for (const [name, v] of this.vec2Accum)
+            this.vec2State.set(name, { ...v });
+        this.vec2Accum.clear();
+    }
+
+    private commitWheel(frameId: number): void {
+        for (const [name, def] of this.bindings.getWheelBindings()) {
+            const nextValue = this.pWheel.y * def.scale;
+            const prev = this.actions.get(name);
+            const state = computeActionState(prev, nextValue, frameId);
+            this.actions.set(name, state);
+            if (state.pressed || state.released)
+                this.actionEvent.emit({ name, state });
+        }
+    }
+
+    private commitPointerSnapshot(): void {
+        this.pointer.deltaX = this.pDelta.dx;
+        this.pointer.deltaY = this.pDelta.dy;
+        this.pDelta.dx = 0;
+        this.pDelta.dy = 0;
+        this.pointer.wheelX = this.pWheel.x;
+        this.pointer.wheelY = this.pWheel.y;
+        this.pointer.wheelZ = this.pWheel.z;
+        this.pWheel.x = this.pWheel.y = this.pWheel.z = 0;
+    }
+
+    private commitInjectedAxes1D(frameId: number): void {
+        const injectedNow = new Set<string>();
+        for (const [name, value] of this.axis1Accum.entries()) {
+            injectedNow.add(name);
+            const prev = this.actions.get(name);
+            const state = computeActionState(prev, value, frameId);
+            this.actions.set(name, state);
+            if (state.pressed || state.released)
+                this.actionEvent.emit({ name, state });
+        }
+        for (const name of this.axis1PrevInjected) {
+            if (!injectedNow.has(name)) {
+                const prev = this.actions.get(name);
+                const state = computeActionState(prev, 0, frameId);
+                this.actions.set(name, state);
+                if (state.pressed || state.released)
+                    this.actionEvent.emit({ name, state });
+            }
+        }
+        this.axis1PrevInjected = injectedNow;
+        this.axis1Accum.clear();
+    }
+
+    private commitDerivedVec2(): void {
+        for (const [name, def] of this.bindings.getVec2Defs()) {
+            const obj = composeVec2From1D(def, this.actions);
+            this.vec2State.set(name, obj);
+        }
+    }
+
+    private finalizeSequences(): void {
+        for (const action of this.seqPulse)
+            this.setDigitalSource(action, 'seq', false);
+        this.seqPulse.clear();
+    }
 
     //#endregion
 }

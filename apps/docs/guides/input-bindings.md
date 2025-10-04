@@ -66,6 +66,25 @@ vi.press('jump');
 vi.axis2D('move', { x: 1, y: 0 });
 ```
 
+## Subscribing to action events
+
+Prefer polling via hooks in gameplay code. For event-driven flows (UI, analytics), you can subscribe to action state changes that occur during `commit()`:
+
+```ts
+import { installInput, Key } from '@pulse-ts/input';
+
+const input = installInput(world, { bindings: { jump: Key('Space') } });
+const off = input.actionEvent.on(({ name, state }) => {
+  if (name === 'jump') {
+    if (state.pressed) console.log('Jump pressed!');
+    if (state.released) console.log('Jump released!');
+  }
+});
+
+// later, to unsubscribe
+off();
+```
+
 ## Tips
 
 - Set `preventDefault` to avoid scrolling/back/forward during gameplay.
