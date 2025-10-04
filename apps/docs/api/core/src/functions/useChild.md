@@ -8,7 +8,7 @@
 
 > **useChild**\<`P`\>(`fc`, `props?`): [`Node`](../classes/Node.md)
 
-Defined in: [core/src/fc/hooks.ts:184](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/core/src/fc/hooks.ts#L184)
+Defined in: [packages/core/src/domain/fc/hooks.ts:241](https://github.com/jlehett/pulse-ts/blob/d786433c7cb88fe7c30a7029f46dff58815931cc/packages/core/src/domain/fc/hooks.ts#L241)
 
 Mounts a child function component as a `Node` parented to the current component's `Node`.
 
@@ -40,3 +40,14 @@ Optional props to pass to the child component.
 [`Node`](../classes/Node.md)
 
 The newly mounted child `Node`.
+
+## Example
+
+```ts
+import { World, useChild } from '@pulse-ts/core';
+function Child() {}
+function Parent() {
+  useChild(Child);
+}
+new World().mount(Parent);
+```

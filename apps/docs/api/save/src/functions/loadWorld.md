@@ -8,7 +8,7 @@
 
 > **loadWorld**(`world`, `save`, `opts`): `void`
 
-Defined in: [save/src/world.ts:95](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/save/src/world.ts#L95)
+Defined in: [packages/save/src/world.ts:95](https://github.com/jlehett/pulse-ts/blob/d786433c7cb88fe7c30a7029f46dff58815931cc/packages/save/src/world.ts#L95)
 
 Loads the world from a save file in-place.
 - Updates the world's nodes and hierarchy

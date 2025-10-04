@@ -1,3 +1,7 @@
+/**
+ * World-level primitives and helpers.
+ * Re-exports `World`, ECS base types, and traversal helpers.
+ */
 export { System } from '../domain/ecs/base/System';
 export { Service } from '../domain/ecs/base/Service';
 export { Component } from '../domain/ecs/base/Component';

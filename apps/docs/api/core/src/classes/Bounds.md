@@ -6,9 +6,9 @@
 
 # Class: Bounds
 
-Defined in: [core/src/components/Bounds.ts:20](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/core/src/components/Bounds.ts#L20)
+Defined in: [packages/core/src/domain/components/spatial/Bounds.ts:21](https://github.com/jlehett/pulse-ts/blob/d786433c7cb88fe7c30a7029f46dff58815931cc/packages/core/src/domain/components/spatial/Bounds.ts#L21)
 
-Bounds component: local AABB + cached world AABB + visibility flag.
+Bounds component: local AABB + cached/calc world AABB.
 
 ## Extends
 
@@ -36,7 +36,7 @@ Bounds component: local AABB + cached world AABB + visibility flag.
 
 > **get** **owner**(): [`Node`](Node.md)
 
-Defined in: [core/src/Component.ts:17](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/core/src/Component.ts#L17)
+Defined in: [packages/core/src/domain/ecs/base/Component.ts:17](https://github.com/jlehett/pulse-ts/blob/d786433c7cb88fe7c30a7029f46dff58815931cc/packages/core/src/domain/ecs/base/Component.ts#L17)
 
 The owner of the component.
 
@@ -54,7 +54,7 @@ The owner of the component.
 
 > **\[kSetComponentOwner\]**(`owner`): `void`
 
-Defined in: [core/src/Component.ts:10](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/core/src/Component.ts#L10)
+Defined in: [packages/core/src/domain/ecs/base/Component.ts:10](https://github.com/jlehett/pulse-ts/blob/d786433c7cb88fe7c30a7029f46dff58815931cc/packages/core/src/domain/ecs/base/Component.ts#L10)
 
 #### Parameters
 
@@ -76,9 +76,7 @@ Defined in: [core/src/Component.ts:10](https://github.com/jlehett/pulse-ts/blob/
 
 > **getLocal**(): `null` \| [`AABB`](../interfaces/AABB.md)
 
-Defined in: [core/src/components/Bounds.ts:54](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/core/src/components/Bounds.ts#L54)
-
-Gets the local bounds.
+Defined in: [packages/core/src/domain/components/spatial/Bounds.ts:53](https://github.com/jlehett/pulse-ts/blob/d786433c7cb88fe7c30a7029f46dff58815931cc/packages/core/src/domain/components/spatial/Bounds.ts#L53)
 
 #### Returns
 
@@ -90,9 +88,7 @@ Gets the local bounds.
 
 > **getWorld**(`out?`, `alpha?`): `null` \| [`AABB`](../interfaces/AABB.md)
 
-Defined in: [core/src/components/Bounds.ts:63](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/core/src/components/Bounds.ts#L63)
-
-Gets the world bounds.
+Defined in: [packages/core/src/domain/components/spatial/Bounds.ts:57](https://github.com/jlehett/pulse-ts/blob/d786433c7cb88fe7c30a7029f46dff58815931cc/packages/core/src/domain/components/spatial/Bounds.ts#L57)
 
 #### Parameters
 
@@ -100,13 +96,9 @@ Gets the world bounds.
 
 [`AABB`](../interfaces/AABB.md)
 
-The output bounds.
-
 ##### alpha?
 
 `number`
-
-The alpha for the interpolation.
 
 #### Returns
 
@@ -118,9 +110,7 @@ The alpha for the interpolation.
 
 > **setLocal**(`min`, `max`): `void`
 
-Defined in: [core/src/components/Bounds.ts:46](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/core/src/components/Bounds.ts#L46)
-
-Sets the local bounds.
+Defined in: [packages/core/src/domain/components/spatial/Bounds.ts:46](https://github.com/jlehett/pulse-ts/blob/d786433c7cb88fe7c30a7029f46dff58815931cc/packages/core/src/domain/components/spatial/Bounds.ts#L46)
 
 #### Parameters
 
@@ -142,7 +132,7 @@ Sets the local bounds.
 
 > `static` **attach**\<`Bounds`\>(`owner`): `Bounds`
 
-Defined in: [core/src/components/Bounds.ts:21](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/core/src/components/Bounds.ts#L21)
+Defined in: [packages/core/src/domain/components/spatial/Bounds.ts:22](https://github.com/jlehett/pulse-ts/blob/d786433c7cb88fe7c30a7029f46dff58815931cc/packages/core/src/domain/components/spatial/Bounds.ts#L22)
 
 Attaches the component to an owner. Override this method to implement
 custom attachment logic.

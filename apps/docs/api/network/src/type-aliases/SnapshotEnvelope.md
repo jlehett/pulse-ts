@@ -8,7 +8,7 @@
 
 > **SnapshotEnvelope** = `object`
 
-Defined in: [network/src/replication/protocol.ts:4](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/network/src/replication/protocol.ts#L4)
+Defined in: [packages/network/src/replication/protocol.ts:4](https://github.com/jlehett/pulse-ts/blob/d786433c7cb88fe7c30a7029f46dff58815931cc/packages/network/src/replication/protocol.ts#L4)
 
 Snapshot message envelope for replication. Sent over the `__rep` channel.
 
@@ -18,7 +18,7 @@ Snapshot message envelope for replication. Sent over the `__rep` channel.
 
 > **ents**: `object`[]
 
-Defined in: [network/src/replication/protocol.ts:12](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/network/src/replication/protocol.ts#L12)
+Defined in: [packages/network/src/replication/protocol.ts:12](https://github.com/jlehett/pulse-ts/blob/d786433c7cb88fe7c30a7029f46dff58815931cc/packages/network/src/replication/protocol.ts#L12)
 
 Entities with replica patches.
 
@@ -40,7 +40,7 @@ Replica key -> shallow patch object.
 
 > `optional` **full**: `boolean`
 
-Defined in: [network/src/replication/protocol.ts:10](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/network/src/replication/protocol.ts#L10)
+Defined in: [packages/network/src/replication/protocol.ts:10](https://github.com/jlehett/pulse-ts/blob/d786433c7cb88fe7c30a7029f46dff58815931cc/packages/network/src/replication/protocol.ts#L10)
 
 True for full snapshot; omitted/false for delta.
 
@@ -50,7 +50,7 @@ True for full snapshot; omitted/false for delta.
 
 > **seq**: `number`
 
-Defined in: [network/src/replication/protocol.ts:8](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/network/src/replication/protocol.ts#L8)
+Defined in: [packages/network/src/replication/protocol.ts:8](https://github.com/jlehett/pulse-ts/blob/d786433c7cb88fe7c30a7029f46dff58815931cc/packages/network/src/replication/protocol.ts#L8)
 
 Monotonic sequence for ordering.
 
@@ -60,6 +60,6 @@ Monotonic sequence for ordering.
 
 > **t**: `"snap"`
 
-Defined in: [network/src/replication/protocol.ts:6](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/network/src/replication/protocol.ts#L6)
+Defined in: [packages/network/src/replication/protocol.ts:6](https://github.com/jlehett/pulse-ts/blob/d786433c7cb88fe7c30a7029f46dff58815931cc/packages/network/src/replication/protocol.ts#L6)
 
 Message type. Currently only 'snap'.

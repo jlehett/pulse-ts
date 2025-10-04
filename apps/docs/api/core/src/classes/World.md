@@ -6,10 +6,15 @@
 
 # Class: World
 
-Defined in: [core/src/world.ts:52](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/core/src/world.ts#L52)
+Defined in: [packages/core/src/domain/world/world.ts:57](https://github.com/jlehett/pulse-ts/blob/d786433c7cb88fe7c30a7029f46dff58815931cc/packages/core/src/domain/world/world.ts#L57)
 
 The World class is the main class for the Pulse engine.
 It manages the nodes and the tick system.
+
+## Implements
+
+- `WorldTimingApi`
+- `WorldTransformRegistry`
 
 ## Constructors
 
@@ -17,7 +22,7 @@ It manages the nodes and the tick system.
 
 > **new World**(`opts`): `World`
 
-Defined in: [core/src/world.ts:70](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/core/src/world.ts#L70)
+Defined in: [packages/core/src/domain/world/world.ts:75](https://github.com/jlehett/pulse-ts/blob/d786433c7cb88fe7c30a7029f46dff58815931cc/packages/core/src/domain/world/world.ts#L75)
 
 #### Parameters
 
@@ -35,7 +40,7 @@ Defined in: [core/src/world.ts:70](https://github.com/jlehett/pulse-ts/blob/95f7
 
 > `readonly` **nodes**: `Set`\<[`Node`](Node.md)\>
 
-Defined in: [core/src/world.ts:55](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/core/src/world.ts#L55)
+Defined in: [packages/core/src/domain/world/world.ts:60](https://github.com/jlehett/pulse-ts/blob/d786433c7cb88fe7c30a7029f46dff58815931cc/packages/core/src/domain/world/world.ts#L60)
 
 ## Methods
 
@@ -43,7 +48,7 @@ Defined in: [core/src/world.ts:55](https://github.com/jlehett/pulse-ts/blob/95f7
 
 > **add**\<`T`\>(`node`): `T`
 
-Defined in: [core/src/world.ts:157](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/core/src/world.ts#L157)
+Defined in: [packages/core/src/domain/world/world.ts:175](https://github.com/jlehett/pulse-ts/blob/d786433c7cb88fe7c30a7029f46dff58815931cc/packages/core/src/domain/world/world.ts#L175)
 
 Adds a node to the world.
 
@@ -73,7 +78,7 @@ The node.
 
 > **addSystem**\<`T`\>(`system`): `T`
 
-Defined in: [core/src/world.ts:412](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/core/src/world.ts#L412)
+Defined in: [packages/core/src/domain/world/world.ts:430](https://github.com/jlehett/pulse-ts/blob/d786433c7cb88fe7c30a7029f46dff58815931cc/packages/core/src/domain/world/world.ts#L430)
 
 Adds a system to the world.
 
@@ -103,10 +108,17 @@ The system.
 
 > **clearScene**(): `void`
 
-Defined in: [core/src/world.ts:124](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/core/src/world.ts#L124)
+Defined in: [packages/core/src/domain/world/world.ts:133](https://github.com/jlehett/pulse-ts/blob/d786433c7cb88fe7c30a7029f46dff58815931cc/packages/core/src/domain/world/world.ts#L133)
 
 Removes all user nodes from the world while preserving internal system nodes.
 Destroys root nodes (and their subtrees) excluding the internal system node.
+
+Example:
+```ts
+const w = new World();
+w.add(new Node());
+w.clearScene(); // removes user nodes; internal system node remains
+```
 
 #### Returns
 
@@ -118,7 +130,7 @@ Destroys root nodes (and their subtrees) excluding the internal system node.
 
 > **debugStats**(): `object`
 
-Defined in: [core/src/world.ts:270](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/core/src/world.ts#L270)
+Defined in: [packages/core/src/domain/world/world.ts:288](https://github.com/jlehett/pulse-ts/blob/d786433c7cb88fe7c30a7029f46dff58815931cc/packages/core/src/domain/world/world.ts#L288)
 
 Gets the debug stats of the world.
 
@@ -310,7 +322,7 @@ The debug stats.
 
 > **getAmbientAlpha**(): `number`
 
-Defined in: [core/src/world.ts:285](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/core/src/world.ts#L285)
+Defined in: [packages/core/src/domain/world/world.ts:303](https://github.com/jlehett/pulse-ts/blob/d786433c7cb88fe7c30a7029f46dff58815931cc/packages/core/src/domain/world/world.ts#L303)
 
 Gets the ambient alpha.
 
@@ -320,13 +332,17 @@ Gets the ambient alpha.
 
 The ambient alpha.
 
+#### Implementation of
+
+`WorldTimingApi.getAmbientAlpha`
+
 ***
 
 ### getFrameId()
 
 > **getFrameId**(): `number`
 
-Defined in: [core/src/world.ts:293](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/core/src/world.ts#L293)
+Defined in: [packages/core/src/domain/world/world.ts:311](https://github.com/jlehett/pulse-ts/blob/d786433c7cb88fe7c30a7029f46dff58815931cc/packages/core/src/domain/world/world.ts#L311)
 
 Gets the frame ID.
 
@@ -336,13 +352,17 @@ Gets the frame ID.
 
 The frame ID.
 
+#### Implementation of
+
+`WorldTimingApi.getFrameId`
+
 ***
 
 ### getPerf()
 
 > **getPerf**(): `object`
 
-Defined in: [core/src/world.ts:300](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/core/src/world.ts#L300)
+Defined in: [packages/core/src/domain/world/world.ts:318](https://github.com/jlehett/pulse-ts/blob/d786433c7cb88fe7c30a7029f46dff58815931cc/packages/core/src/domain/world/world.ts#L318)
 
 Returns current performance stats.
 
@@ -364,7 +384,7 @@ Returns current performance stats.
 
 > **getService**\<`T`\>(`service`): `undefined` \| `T`
 
-Defined in: [core/src/world.ts:386](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/core/src/world.ts#L386)
+Defined in: [packages/core/src/domain/world/world.ts:404](https://github.com/jlehett/pulse-ts/blob/d786433c7cb88fe7c30a7029f46dff58815931cc/packages/core/src/domain/world/world.ts#L404)
 
 Gets a service.
 
@@ -394,7 +414,7 @@ The service.
 
 > **getSystem**\<`T`\>(`system`): `undefined` \| `T`
 
-Defined in: [core/src/world.ts:423](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/core/src/world.ts#L423)
+Defined in: [packages/core/src/domain/world/world.ts:441](https://github.com/jlehett/pulse-ts/blob/d786433c7cb88fe7c30a7029f46dff58815931cc/packages/core/src/domain/world/world.ts#L441)
 
 Gets a system.
 
@@ -424,7 +444,7 @@ The system.
 
 > **getTimeScale**(): `number`
 
-Defined in: [core/src/world.ts:362](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/core/src/world.ts#L362)
+Defined in: [packages/core/src/domain/world/world.ts:380](https://github.com/jlehett/pulse-ts/blob/d786433c7cb88fe7c30a7029f46dff58815931cc/packages/core/src/domain/world/world.ts#L380)
 
 Gets the time scale of the world.
 
@@ -440,7 +460,7 @@ The time scale.
 
 > **isPaused**(): `boolean`
 
-Defined in: [core/src/world.ts:346](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/core/src/world.ts#L346)
+Defined in: [packages/core/src/domain/world/world.ts:364](https://github.com/jlehett/pulse-ts/blob/d786433c7cb88fe7c30a7029f46dff58815931cc/packages/core/src/domain/world/world.ts#L364)
 
 Checks if the world is paused.
 
@@ -456,9 +476,9 @@ True if the world is paused, false otherwise.
 
 > **mount**\<`P`\>(`fc`, `props?`, `opts?`): [`Node`](Node.md)
 
-Defined in: [core/src/world.ts:148](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/core/src/world.ts#L148)
+Defined in: [packages/core/src/domain/world/world.ts:166](https://github.com/jlehett/pulse-ts/blob/d786433c7cb88fe7c30a7029f46dff58815931cc/packages/core/src/domain/world/world.ts#L166)
 
-Mounts a function component.
+Mounts a function component into the world.
 
 #### Type Parameters
 
@@ -478,11 +498,11 @@ The function component to mount.
 
 `P`
 
-The props to pass to the component.
+Optional props to pass to the component.
 
 ##### opts?
 
-The options for the mount.
+Optional parent to attach the created node under.
 
 ###### parent?
 
@@ -492,7 +512,16 @@ The options for the mount.
 
 [`Node`](Node.md)
 
-The node that was mounted.
+The mounted node.
+
+Example:
+```ts
+function Mover() {
+  useFrameUpdate((dt) => void 0);
+}
+const w = new World();
+const node = w.mount(Mover);
+```
 
 ***
 
@@ -500,7 +529,7 @@ The node that was mounted.
 
 > **onNodeAdded**(`fn`): () => `void`
 
-Defined in: [core/src/world.ts:132](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/core/src/world.ts#L132)
+Defined in: [packages/core/src/domain/world/world.ts:141](https://github.com/jlehett/pulse-ts/blob/d786433c7cb88fe7c30a7029f46dff58815931cc/packages/core/src/domain/world/world.ts#L141)
 
 Subscribes to node added events.
 
@@ -524,7 +553,7 @@ Subscribes to node added events.
 
 > **onNodeParentChanged**(`fn`): () => `void`
 
-Defined in: [core/src/world.ts:110](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/core/src/world.ts#L110)
+Defined in: [packages/core/src/domain/world/world.ts:112](https://github.com/jlehett/pulse-ts/blob/d786433c7cb88fe7c30a7029f46dff58815931cc/packages/core/src/domain/world/world.ts#L112)
 
 Subscribes to node parent change events.
 
@@ -552,7 +581,7 @@ A function to unsubscribe.
 
 > **onNodeRemoved**(`fn`): () => `void`
 
-Defined in: [core/src/world.ts:137](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/core/src/world.ts#L137)
+Defined in: [packages/core/src/domain/world/world.ts:146](https://github.com/jlehett/pulse-ts/blob/d786433c7cb88fe7c30a7029f46dff58815931cc/packages/core/src/domain/world/world.ts#L146)
 
 Subscribes to node removed events.
 
@@ -576,7 +605,7 @@ Subscribes to node removed events.
 
 > **pause**(): `void`
 
-Defined in: [core/src/world.ts:331](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/core/src/world.ts#L331)
+Defined in: [packages/core/src/domain/world/world.ts:349](https://github.com/jlehett/pulse-ts/blob/d786433c7cb88fe7c30a7029f46dff58815931cc/packages/core/src/domain/world/world.ts#L349)
 
 Pauses the world.
 
@@ -590,7 +619,7 @@ Pauses the world.
 
 > **provideService**\<`T`\>(`service`): `T`
 
-Defined in: [core/src/world.ts:375](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/core/src/world.ts#L375)
+Defined in: [packages/core/src/domain/world/world.ts:393](https://github.com/jlehett/pulse-ts/blob/d786433c7cb88fe7c30a7029f46dff58815931cc/packages/core/src/domain/world/world.ts#L393)
 
 Provides a service.
 
@@ -616,11 +645,73 @@ The service.
 
 ***
 
+### query()
+
+> **query**\<`Has`, `Not`\>(`has`, `opts?`): `object`
+
+Defined in: [packages/core/src/domain/world/world.ts:504](https://github.com/jlehett/pulse-ts/blob/d786433c7cb88fe7c30a7029f46dff58815931cc/packages/core/src/domain/world/world.ts#L504)
+
+Convenience typed query creator bound to this world.
+Equivalent to `defineQuery(has, opts).run(world)` but avoids re-creating the query
+if you hold onto the returned object.
+
+#### Type Parameters
+
+##### Has
+
+`Has` *extends* readonly [`ComponentCtor`](../type-aliases/ComponentCtor.md)[]
+
+##### Not
+
+`Not` *extends* readonly [`ComponentCtor`](../type-aliases/ComponentCtor.md)[] = \[\]
+
+#### Parameters
+
+##### has
+
+`Has`
+
+##### opts?
+
+###### not?
+
+`Not`
+
+#### Returns
+
+`object`
+
+##### count()
+
+> `readonly` **count**: () => `number`
+
+###### Returns
+
+`number`
+
+##### run()
+
+> `readonly` **run**: () => `IterableIterator`\<\[[`Node`](Node.md), ...\{ \[K in string \| number \| symbol\]: InstanceType\<Has\[K\<K\>\]\> \}\[\]\], `any`, `any`\>
+
+###### Returns
+
+`IterableIterator`\<\[[`Node`](Node.md), ...\{ \[K in string \| number \| symbol\]: InstanceType\<Has\[K\<K\>\]\> \}\[\]\], `any`, `any`\>
+
+##### some()
+
+> `readonly` **some**: () => `boolean`
+
+###### Returns
+
+`boolean`
+
+***
+
 ### registerSystemTick()
 
 > **registerSystemTick**(`kind`, `phase`, `fn`, `order`): `object`
 
-Defined in: [core/src/world.ts:209](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/core/src/world.ts#L209)
+Defined in: [packages/core/src/domain/world/world.ts:227](https://github.com/jlehett/pulse-ts/blob/d786433c7cb88fe7c30a7029f46dff58815931cc/packages/core/src/domain/world/world.ts#L227)
 
 Registers a system tick function.
 
@@ -668,9 +759,9 @@ The tick registration.
 
 ### registerTick()
 
-> **registerTick**(`node`, `kind`, `phase`, `fn`, `order`): [`TickRegistration`](../interfaces/TickRegistration.md)
+> **registerTick**(`node`, `kind`, `phase`, `fn`, `order`): `TickRegistration`
 
-Defined in: [core/src/world.ts:232](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/core/src/world.ts#L232)
+Defined in: [packages/core/src/domain/world/world.ts:250](https://github.com/jlehett/pulse-ts/blob/d786433c7cb88fe7c30a7029f46dff58815931cc/packages/core/src/domain/world/world.ts#L250)
 
 Registers a tick on a node.
 
@@ -708,7 +799,7 @@ The order of the tick.
 
 #### Returns
 
-[`TickRegistration`](../interfaces/TickRegistration.md)
+`TickRegistration`
 
 The tick registration.
 
@@ -718,7 +809,7 @@ The tick registration.
 
 > **registerTransform**(`t`): `void`
 
-Defined in: [core/src/world.ts:312](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/core/src/world.ts#L312)
+Defined in: [packages/core/src/domain/world/world.ts:330](https://github.com/jlehett/pulse-ts/blob/d786433c7cb88fe7c30a7029f46dff58815931cc/packages/core/src/domain/world/world.ts#L330)
 
 Registers a transform.
 
@@ -734,13 +825,17 @@ The transform to register.
 
 `void`
 
+#### Implementation of
+
+`WorldTransformRegistry.registerTransform`
+
 ***
 
 ### remove()
 
 > **remove**(`node`): `void`
 
-Defined in: [core/src/world.ts:181](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/core/src/world.ts#L181)
+Defined in: [packages/core/src/domain/world/world.ts:199](https://github.com/jlehett/pulse-ts/blob/d786433c7cb88fe7c30a7029f46dff58815931cc/packages/core/src/domain/world/world.ts#L199)
 
 Removes a node from the world.
 
@@ -762,7 +857,7 @@ The node to remove.
 
 > **removeService**\<`T`\>(`service`): `void`
 
-Defined in: [core/src/world.ts:396](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/core/src/world.ts#L396)
+Defined in: [packages/core/src/domain/world/world.ts:414](https://github.com/jlehett/pulse-ts/blob/d786433c7cb88fe7c30a7029f46dff58815931cc/packages/core/src/domain/world/world.ts#L414)
 
 Removes a service from the world.
 
@@ -790,7 +885,7 @@ The service to remove.
 
 > **removeSystem**\<`T`\>(`system`): `void`
 
-Defined in: [core/src/world.ts:433](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/core/src/world.ts#L433)
+Defined in: [packages/core/src/domain/world/world.ts:451](https://github.com/jlehett/pulse-ts/blob/d786433c7cb88fe7c30a7029f46dff58815931cc/packages/core/src/domain/world/world.ts#L451)
 
 Removes a system from the world.
 
@@ -818,7 +913,7 @@ The system to remove.
 
 > **reparent**(`child`, `newParent`): `void`
 
-Defined in: [core/src/world.ts:197](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/core/src/world.ts#L197)
+Defined in: [packages/core/src/domain/world/world.ts:215](https://github.com/jlehett/pulse-ts/blob/d786433c7cb88fe7c30a7029f46dff58815931cc/packages/core/src/domain/world/world.ts#L215)
 
 Reparents a child under a new parent (or detaches when null).
 
@@ -842,7 +937,7 @@ Reparents a child under a new parent (or detaches when null).
 
 > **resume**(): `void`
 
-Defined in: [core/src/world.ts:338](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/core/src/world.ts#L338)
+Defined in: [packages/core/src/domain/world/world.ts:356](https://github.com/jlehett/pulse-ts/blob/d786433c7cb88fe7c30a7029f46dff58815931cc/packages/core/src/domain/world/world.ts#L356)
 
 Resumes the world.
 
@@ -856,7 +951,7 @@ Resumes the world.
 
 > **setNodeTicksEnabled**(`node`, `enabled`): `void`
 
-Defined in: [core/src/world.ts:449](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/core/src/world.ts#L449)
+Defined in: [packages/core/src/domain/world/world.ts:467](https://github.com/jlehett/pulse-ts/blob/d786433c7cb88fe7c30a7029f46dff58815931cc/packages/core/src/domain/world/world.ts#L467)
 
 Sets the enabled state of a node.
 
@@ -884,7 +979,7 @@ The enabled state of the node.
 
 > **setPhaseEnabled**(`kind`, `phase`, `enabled`): `void`
 
-Defined in: [core/src/world.ts:459](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/core/src/world.ts#L459)
+Defined in: [packages/core/src/domain/world/world.ts:477](https://github.com/jlehett/pulse-ts/blob/d786433c7cb88fe7c30a7029f46dff58815931cc/packages/core/src/domain/world/world.ts#L477)
 
 Sets the enabled state of a phase.
 
@@ -918,7 +1013,7 @@ The enabled state of the phase.
 
 > **setTimeScale**(`scale`): `void`
 
-Defined in: [core/src/world.ts:354](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/core/src/world.ts#L354)
+Defined in: [packages/core/src/domain/world/world.ts:372](https://github.com/jlehett/pulse-ts/blob/d786433c7cb88fe7c30a7029f46dff58815931cc/packages/core/src/domain/world/world.ts#L372)
 
 Sets the time scale of the world.
 
@@ -940,7 +1035,7 @@ The time scale.
 
 > **start**(): `void`
 
-Defined in: [core/src/world.ts:247](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/core/src/world.ts#L247)
+Defined in: [packages/core/src/domain/world/world.ts:265](https://github.com/jlehett/pulse-ts/blob/d786433c7cb88fe7c30a7029f46dff58815931cc/packages/core/src/domain/world/world.ts#L265)
 
 Starts the world.
 
@@ -954,7 +1049,7 @@ Starts the world.
 
 > **stop**(): `void`
 
-Defined in: [core/src/world.ts:254](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/core/src/world.ts#L254)
+Defined in: [packages/core/src/domain/world/world.ts:272](https://github.com/jlehett/pulse-ts/blob/d786433c7cb88fe7c30a7029f46dff58815931cc/packages/core/src/domain/world/world.ts#L272)
 
 Stops the world.
 
@@ -968,7 +1063,7 @@ Stops the world.
 
 > **tick**(`dtMs`): `void`
 
-Defined in: [core/src/world.ts:262](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/core/src/world.ts#L262)
+Defined in: [packages/core/src/domain/world/world.ts:280](https://github.com/jlehett/pulse-ts/blob/d786433c7cb88fe7c30a7029f46dff58815931cc/packages/core/src/domain/world/world.ts#L280)
 
 Ticks the world.
 
@@ -990,7 +1085,7 @@ The delta time in milliseconds.
 
 > **unregisterTransform**(`t`): `void`
 
-Defined in: [core/src/world.ts:320](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/core/src/world.ts#L320)
+Defined in: [packages/core/src/domain/world/world.ts:338](https://github.com/jlehett/pulse-ts/blob/d786433c7cb88fe7c30a7029f46dff58815931cc/packages/core/src/domain/world/world.ts#L338)
 
 Unregisters a transform.
 
@@ -1005,3 +1100,7 @@ The transform to unregister.
 #### Returns
 
 `void`
+
+#### Implementation of
+
+`WorldTransformRegistry.unregisterTransform`

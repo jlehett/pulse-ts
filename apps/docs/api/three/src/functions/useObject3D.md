@@ -8,7 +8,7 @@
 
 > **useObject3D**(`object`): `void`
 
-Defined in: [three/src/fc/hooks.ts:56](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/three/src/fc/hooks.ts#L56)
+Defined in: [packages/three/src/fc/hooks.ts:56](https://github.com/jlehett/pulse-ts/blob/d786433c7cb88fe7c30a7029f46dff58815931cc/packages/three/src/fc/hooks.ts#L56)
 
 Attaches an `Object3D` to the current component's root for the lifetime of the component.
 

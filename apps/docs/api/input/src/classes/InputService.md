@@ -6,9 +6,21 @@
 
 # Class: InputService
 
-Defined in: [input/src/services/Input.ts:15](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/input/src/services/Input.ts#L15)
+Defined in: packages/input/src/domain/services/Input.ts:27
 
 World-scoped input service: collects device events, applies bindings, and exposes stable per-frame snapshots.
+
+Example
+```ts
+import { World } from '@pulse-ts/core';
+import { InputService } from '@pulse-ts/input';
+const world = new World();
+const svc = world.provideService(new InputService({ preventDefault: true }));
+svc.setBindings({ jump: { type: 'key', code: 'Space' } });
+svc.handleKey('Space', true);
+svc.commit();
+console.log(svc.action('jump').pressed); // true
+```
 
 ## Extends
 
@@ -20,7 +32,7 @@ World-scoped input service: collects device events, applies bindings, and expose
 
 > **new InputService**(`opts`): `InputService`
 
-Defined in: [input/src/services/Input.ts:61](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/input/src/services/Input.ts#L61)
+Defined in: packages/input/src/domain/services/Input.ts:73
 
 #### Parameters
 
@@ -42,7 +54,7 @@ Defined in: [input/src/services/Input.ts:61](https://github.com/jlehett/pulse-ts
 
 > `readonly` **actionEvent**: `TypedEvent`\<\{ `name`: `string`; `state`: [`ActionState`](../type-aliases/ActionState.md); \}\>
 
-Defined in: [input/src/services/Input.ts:54](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/input/src/services/Input.ts#L54)
+Defined in: packages/input/src/domain/services/Input.ts:66
 
 ***
 
@@ -50,7 +62,7 @@ Defined in: [input/src/services/Input.ts:54](https://github.com/jlehett/pulse-ts
 
 > `readonly` **options**: `Readonly`\<[`InputOptions`](../type-aliases/InputOptions.md)\>
 
-Defined in: [input/src/services/Input.ts:18](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/input/src/services/Input.ts#L18)
+Defined in: packages/input/src/domain/services/Input.ts:30
 
 ## Methods
 
@@ -58,7 +70,7 @@ Defined in: [input/src/services/Input.ts:18](https://github.com/jlehett/pulse-ts
 
 > **action**(`name`): [`ActionState`](../type-aliases/ActionState.md)
 
-Defined in: [input/src/services/Input.ts:357](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/input/src/services/Input.ts#L357)
+Defined in: packages/input/src/domain/services/Input.ts:366
 
 Get the action state for a given action name.
 
@@ -82,7 +94,7 @@ The action state.
 
 > **attach**(`world`): `void`
 
-Defined in: [input/src/services/Input.ts:72](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/input/src/services/Input.ts#L72)
+Defined in: packages/input/src/domain/services/Input.ts:84
 
 Attach the service to a world.
 
@@ -108,7 +120,7 @@ The world to attach to.
 
 > **axis**(`name`): `number`
 
-Defined in: [input/src/services/Input.ts:374](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/input/src/services/Input.ts#L374)
+Defined in: packages/input/src/domain/services/Input.ts:383
 
 Get the axis state for a given axis name.
 
@@ -132,7 +144,7 @@ The axis state.
 
 > **commit**(): `void`
 
-Defined in: [input/src/services/Input.ts:217](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/input/src/services/Input.ts#L217)
+Defined in: packages/input/src/domain/services/Input.ts:231
 
 Commit the input.
 
@@ -146,7 +158,7 @@ Commit the input.
 
 > **detach**(): `void`
 
-Defined in: [input/src/services/Input.ts:81](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/input/src/services/Input.ts#L81)
+Defined in: packages/input/src/domain/services/Input.ts:93
 
 Detach the service from a world.
 
@@ -164,7 +176,7 @@ Detach the service from a world.
 
 > **handleKey**(`code`, `down`): `void`
 
-Defined in: [input/src/services/Input.ts:121](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/input/src/services/Input.ts#L121)
+Defined in: packages/input/src/domain/services/Input.ts:133
 
 Handle a key.
 
@@ -192,7 +204,7 @@ Whether the key is down.
 
 > **handlePointerButton**(`button`, `down`): `void`
 
-Defined in: [input/src/services/Input.ts:137](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/input/src/services/Input.ts#L137)
+Defined in: packages/input/src/domain/services/Input.ts:151
 
 Handle a pointer button.
 
@@ -220,7 +232,7 @@ Whether the button is down.
 
 > **handlePointerMove**(`x`, `y`, `dx`, `dy`, `locked`, `buttons`): `void`
 
-Defined in: [input/src/services/Input.ts:152](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/input/src/services/Input.ts#L152)
+Defined in: packages/input/src/domain/services/Input.ts:166
 
 Handle a pointer move.
 
@@ -272,7 +284,7 @@ The buttons.
 
 > **handleWheel**(`dx`, `dy`, `dz`): `void`
 
-Defined in: [input/src/services/Input.ts:185](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/input/src/services/Input.ts#L185)
+Defined in: packages/input/src/domain/services/Input.ts:199
 
 Handle a wheel.
 
@@ -306,7 +318,7 @@ The z delta.
 
 > **injectAxis2D**(`action`, `axes`): `void`
 
-Defined in: [input/src/services/Input.ts:206](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/input/src/services/Input.ts#L206)
+Defined in: packages/input/src/domain/services/Input.ts:220
 
 Inject an axis 2D action (per-frame delta).
 
@@ -334,7 +346,7 @@ The axes to inject.
 
 > **injectDigital**(`action`, `sourceId`, `down`): `void`
 
-Defined in: [input/src/services/Input.ts:197](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/input/src/services/Input.ts#L197)
+Defined in: packages/input/src/domain/services/Input.ts:211
 
 Inject a digital action.
 
@@ -368,7 +380,7 @@ Whether the action is down.
 
 > **mergeBindings**(`b`): `void`
 
-Defined in: [input/src/services/Input.ts:112](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/input/src/services/Input.ts#L112)
+Defined in: packages/input/src/domain/services/Input.ts:124
 
 Merge the bindings.
 
@@ -390,7 +402,7 @@ The bindings to merge.
 
 > **pointerState**(): [`PointerSnapshot`](../type-aliases/PointerSnapshot.md)
 
-Defined in: [input/src/services/Input.ts:404](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/input/src/services/Input.ts#L404)
+Defined in: packages/input/src/domain/services/Input.ts:413
 
 Get the pointer state.
 
@@ -406,7 +418,7 @@ The pointer state.
 
 > **registerProvider**(`p`): `void`
 
-Defined in: [input/src/services/Input.ts:94](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/input/src/services/Input.ts#L94)
+Defined in: packages/input/src/domain/services/Input.ts:106
 
 Register a provider.
 
@@ -428,7 +440,7 @@ The provider to register.
 
 > **setBindings**(`b`): `void`
 
-Defined in: [input/src/services/Input.ts:104](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/input/src/services/Input.ts#L104)
+Defined in: packages/input/src/domain/services/Input.ts:116
 
 Set the bindings.
 
@@ -450,7 +462,7 @@ The bindings to set.
 
 > **vec2**(`name`): [`Vec`](../type-aliases/Vec.md)
 
-Defined in: [input/src/services/Input.ts:383](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/input/src/services/Input.ts#L383)
+Defined in: packages/input/src/domain/services/Input.ts:392
 
 Get the axis 2D state for a given axis 2D name.
 

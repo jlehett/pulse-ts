@@ -8,7 +8,7 @@
 
 > **useFrameUpdate**(`fn`, `opts`): `void`
 
-Defined in: [core/src/fc/hooks.ts:157](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/core/src/fc/hooks.ts#L157)
+Defined in: [packages/core/src/domain/fc/hooks.ts:204](https://github.com/jlehett/pulse-ts/blob/d786433c7cb88fe7c30a7029f46dff58815931cc/packages/core/src/domain/fc/hooks.ts#L204)
 
 Registers a frame tick in the `update` phase.
 
@@ -32,3 +32,15 @@ Optional scheduling options (lower `order` runs earlier; default 0).
 ## Returns
 
 `void`
+
+## Example
+
+```ts
+import { World, useFrameUpdate } from '@pulse-ts/core';
+function Rotator() {
+  useFrameUpdate((dt) => {
+    // advance state using dt
+  });
+}
+new World().mount(Rotator);
+```

@@ -6,9 +6,9 @@
 
 # Class: RpcService
 
-Defined in: [network/src/services/RpcService.ts:16](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/network/src/services/RpcService.ts#L16)
+Defined in: [packages/network/src/services/RpcService.ts:17](https://github.com/jlehett/pulse-ts/blob/d786433c7cb88fe7c30a7029f46dff58815931cc/packages/network/src/services/RpcService.ts#L17)
 
-Lightweight RPC over TransportService using a reserved channel (`__rpc`).
+Lightweight RPC over TransportService using a reserved channel.
 
 - Broadcast topology: any peer with a registered handler for `m` may respond.
 - Correlation via `id`; timeouts supported client-side.
@@ -38,7 +38,7 @@ Lightweight RPC over TransportService using a reserved channel (`__rpc`).
 
 > **attach**(`world`): `void`
 
-Defined in: core/dist/index.d.ts:284
+Defined in: packages/core/dist/index.d.ts:250
 
 Attaches the service to the world.
 
@@ -64,7 +64,7 @@ The world to attach the service to.
 
 > **call**\<`Req`, `Res`\>(`name`, `payload`, `opts`): `Promise`\<`Res`\>
 
-Defined in: [network/src/services/RpcService.ts:45](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/network/src/services/RpcService.ts#L45)
+Defined in: [packages/network/src/services/RpcService.ts:46](https://github.com/jlehett/pulse-ts/blob/d786433c7cb88fe7c30a7029f46dff58815931cc/packages/network/src/services/RpcService.ts#L46)
 
 Calls a remote method by broadcasting a request and awaiting the first response.
 
@@ -106,11 +106,55 @@ Timeout options.
 
 ***
 
+### callTo()
+
+> **callTo**\<`Req`, `Res`\>(`peerId`, `name`, `payload`, `opts`): `Promise`\<`Res`\>
+
+Defined in: [packages/network/src/services/RpcService.ts:71](https://github.com/jlehett/pulse-ts/blob/d786433c7cb88fe7c30a7029f46dff58815931cc/packages/network/src/services/RpcService.ts#L71)
+
+Calls a remote method on a specific peer and awaits the response.
+
+#### Type Parameters
+
+##### Req
+
+`Req` = `unknown`
+
+##### Res
+
+`Res` = `unknown`
+
+#### Parameters
+
+##### peerId
+
+`string`
+
+##### name
+
+`string`
+
+##### payload
+
+`Req`
+
+##### opts
+
+###### timeoutMs?
+
+`number`
+
+#### Returns
+
+`Promise`\<`Res`\>
+
+***
+
 ### detach()
 
 > **detach**(): `void`
 
-Defined in: core/dist/index.d.ts:288
+Defined in: packages/core/dist/index.d.ts:254
 
 Detaches the service from the world.
 
@@ -128,7 +172,7 @@ Detaches the service from the world.
 
 > **register**\<`Req`, `Res`\>(`name`, `fn`): [`Unsubscribe`](../type-aliases/Unsubscribe.md)
 
-Defined in: [network/src/services/RpcService.ts:30](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/network/src/services/RpcService.ts#L30)
+Defined in: [packages/network/src/services/RpcService.ts:31](https://github.com/jlehett/pulse-ts/blob/d786433c7cb88fe7c30a7029f46dff58815931cc/packages/network/src/services/RpcService.ts#L31)
 
 Registers a method handler.
 

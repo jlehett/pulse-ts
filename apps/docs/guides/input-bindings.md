@@ -45,7 +45,7 @@ function PlayerController() {
     const j = jump();         // { pressed, released, held }
     const d = dash();
     const z = zoom();         // wheel delta (scaled)
-    const { dx, dy } = pointer(); // mouse delta (scaled)
+  const { deltaX, deltaY } = pointer(); // mouse delta (scaled)
 
     // ...apply to movement/camera...
   });
@@ -55,7 +55,7 @@ function PlayerController() {
 ## Virtual input (tests/bots)
 
 ```ts
-import { VirtualInput } from '@pulse-ts/input/providers/virtual';
+import { VirtualInput } from '@pulse-ts/input';
 
 const vi = new VirtualInput(useInput());
 vi.press('jump');

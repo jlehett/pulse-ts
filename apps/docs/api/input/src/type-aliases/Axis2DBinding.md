@@ -8,7 +8,7 @@
 
 > **Axis2DBinding** = `object`
 
-Defined in: [input/src/bindings/types.ts:140](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/input/src/bindings/types.ts#L140)
+Defined in: packages/input/src/domain/bindings/types.ts:140
 
 An axis 2D binding.
 
@@ -18,7 +18,7 @@ An axis 2D binding.
 
 > **axes**: `Record`\<`string`, [`Axis1DBinding`](Axis1DBinding.md)\>
 
-Defined in: [input/src/bindings/types.ts:145](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/input/src/bindings/types.ts#L145)
+Defined in: packages/input/src/domain/bindings/types.ts:145
 
 The axes of the axis 2D binding. Each key is the name of the axis, and the value is the axis definition.
 
@@ -28,7 +28,7 @@ The axes of the axis 2D binding. Each key is the name of the axis, and the value
 
 > `optional` **invertX**: `boolean`
 
-Defined in: [input/src/bindings/types.ts:147](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/input/src/bindings/types.ts#L147)
+Defined in: packages/input/src/domain/bindings/types.ts:147
 
 Optional inversion for first component (commonly x).
 
@@ -38,7 +38,7 @@ Optional inversion for first component (commonly x).
 
 > `optional` **invertY**: `boolean`
 
-Defined in: [input/src/bindings/types.ts:149](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/input/src/bindings/types.ts#L149)
+Defined in: packages/input/src/domain/bindings/types.ts:149
 
 Optional inversion for second component (commonly y).
 
@@ -48,4 +48,4 @@ Optional inversion for second component (commonly y).
 
 > **type**: `"axis2d"`
 
-Defined in: [input/src/bindings/types.ts:141](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/input/src/bindings/types.ts#L141)
+Defined in: packages/input/src/domain/bindings/types.ts:141

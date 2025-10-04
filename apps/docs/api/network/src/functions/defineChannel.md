@@ -8,7 +8,7 @@
 
 > **defineChannel**\<`T`\>(`name`): `object` & `object`
 
-Defined in: [network/src/messaging/channel.ts:8](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/network/src/messaging/channel.ts#L8)
+Defined in: [packages/network/src/messaging/channel.ts:8](https://github.com/jlehett/pulse-ts/blob/d786433c7cb88fe7c30a7029f46dff58815931cc/packages/network/src/messaging/channel.ts#L8)
 
 Helper to define a typed channel name.
 

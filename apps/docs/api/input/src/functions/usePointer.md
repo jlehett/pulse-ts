@@ -8,13 +8,20 @@
 
 > **usePointer**(): () => [`PointerSnapshot`](../type-aliases/PointerSnapshot.md)
 
-Defined in: [input/src/fc/hooks.ts:53](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/input/src/fc/hooks.ts#L53)
+Defined in: packages/input/src/public/hooks.ts:93
 
 Get the pointer state.
 
 ## Returns
 
-The pointer state.
+The pointer snapshot accessor.
+
+Example
+```ts
+import { usePointer } from '@pulse-ts/input';
+const pointer = usePointer();
+const { deltaX, deltaY } = pointer();
+```
 
 > (): [`PointerSnapshot`](../type-aliases/PointerSnapshot.md)
 

@@ -8,7 +8,9 @@
 
 > **Ctor**\<`T`\> = () => `T`
 
-Defined in: [core/src/types.ts:1](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/core/src/types.ts#L1)
+Defined in: [packages/core/src/domain/ecs/base/types.ts:4](https://github.com/jlehett/pulse-ts/blob/d786433c7cb88fe7c30a7029f46dff58815931cc/packages/core/src/domain/ecs/base/types.ts#L4)
+
+Constructor type for class-based APIs.
 
 ## Type Parameters
 

@@ -8,7 +8,7 @@
 
 > **installThree**(`world`, `opts`): [`ThreeService`](../classes/ThreeService.md)
 
-Defined in: [three/src/install.ts:11](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/three/src/install.ts#L11)
+Defined in: [packages/three/src/install.ts:11](https://github.com/jlehett/pulse-ts/blob/d786433c7cb88fe7c30a7029f46dff58815931cc/packages/three/src/install.ts#L11)
 
 Convenience installer: provides ThreeService and registers default systems.
 Returns the created ThreeService instance.

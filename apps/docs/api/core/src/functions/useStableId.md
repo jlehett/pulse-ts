@@ -8,7 +8,7 @@
 
 > **useStableId**(`id`): `void`
 
-Defined in: [core/src/fc/hooks.ts:221](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/core/src/fc/hooks.ts#L221)
+Defined in: [packages/core/src/domain/fc/hooks.ts:288](https://github.com/jlehett/pulse-ts/blob/d786433c7cb88fe7c30a7029f46dff58815931cc/packages/core/src/domain/fc/hooks.ts#L288)
 
 Assigns a stable string identifier to the current node for save/load mapping.
 

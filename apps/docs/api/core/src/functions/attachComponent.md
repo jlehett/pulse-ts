@@ -8,7 +8,7 @@
 
 > **attachComponent**\<`O`, `T`\>(`owner`, `Component`): `T`
 
-Defined in: [core/src/componentRegistry.ts:46](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/core/src/componentRegistry.ts#L46)
+Defined in: [packages/core/src/domain/ecs/registry/componentRegistry.ts:49](https://github.com/jlehett/pulse-ts/blob/d786433c7cb88fe7c30a7029f46dff58815931cc/packages/core/src/domain/ecs/registry/componentRegistry.ts#L49)
 
 Attaches a component to the owner.
 

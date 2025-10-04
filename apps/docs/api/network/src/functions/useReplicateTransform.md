@@ -8,7 +8,7 @@
 
 > **useReplicateTransform**(`opts`): `void`
 
-Defined in: [network/src/fc/transform.ts:22](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/network/src/fc/transform.ts#L22)
+Defined in: [packages/network/src/fc/transform.ts:22](https://github.com/jlehett/pulse-ts/blob/d786433c7cb88fe7c30a7029f46dff58815931cc/packages/network/src/fc/transform.ts#L22)
 
 Replicates the local Transform of this node under replica key 'transform'.
 

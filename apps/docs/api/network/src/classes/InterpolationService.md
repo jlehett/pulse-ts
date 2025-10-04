@@ -6,7 +6,7 @@
 
 # Class: InterpolationService
 
-Defined in: [network/src/services/InterpolationService.ts:29](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/network/src/services/InterpolationService.ts#L29)
+Defined in: [packages/network/src/services/InterpolationService.ts:29](https://github.com/jlehett/pulse-ts/blob/d786433c7cb88fe7c30a7029f46dff58815931cc/packages/network/src/services/InterpolationService.ts#L29)
 
 Maintains target TRS for remote entities and smoothly interpolates toward them.
 
@@ -34,7 +34,7 @@ Maintains target TRS for remote entities and smoothly interpolates toward them.
 
 > **attach**(`world`): `void`
 
-Defined in: core/dist/index.d.ts:284
+Defined in: packages/core/dist/index.d.ts:250
 
 Attaches the service to the world.
 
@@ -60,7 +60,7 @@ The world to attach the service to.
 
 > **detach**(): `void`
 
-Defined in: core/dist/index.d.ts:288
+Defined in: packages/core/dist/index.d.ts:254
 
 Detaches the service from the world.
 
@@ -78,7 +78,7 @@ Detaches the service from the world.
 
 > **register**(`node`, `opts?`): `string`
 
-Defined in: [network/src/services/InterpolationService.ts:37](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/network/src/services/InterpolationService.ts#L37)
+Defined in: [packages/network/src/services/InterpolationService.ts:37](https://github.com/jlehett/pulse-ts/blob/d786433c7cb88fe7c30a7029f46dff58815931cc/packages/network/src/services/InterpolationService.ts#L37)
 
 Registers or updates the interpolation entry for an entity id.
 
@@ -116,7 +116,7 @@ Options including smoothing lambda and snap distance.
 
 > **setTarget**(`id`, `patch`): `void`
 
-Defined in: [network/src/services/InterpolationService.ts:71](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/network/src/services/InterpolationService.ts#L71)
+Defined in: [packages/network/src/services/InterpolationService.ts:71](https://github.com/jlehett/pulse-ts/blob/d786433c7cb88fe7c30a7029f46dff58815931cc/packages/network/src/services/InterpolationService.ts#L71)
 
 Updates the target for an entity's transform.
 
@@ -140,7 +140,7 @@ Updates the target for an entity's transform.
 
 > **tick**(`dt`): `void`
 
-Defined in: [network/src/services/InterpolationService.ts:81](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/network/src/services/InterpolationService.ts#L81)
+Defined in: [packages/network/src/services/InterpolationService.ts:81](https://github.com/jlehett/pulse-ts/blob/d786433c7cb88fe7c30a7029f46dff58815931cc/packages/network/src/services/InterpolationService.ts#L81)
 
 Steps interpolation toward targets for all registered entities.
 

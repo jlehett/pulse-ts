@@ -8,7 +8,7 @@
 
 > **registerFC**\<`P`\>(`id`, `fc`): `void`
 
-Defined in: [save/src/registries/fcRegistry.ts:13](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/save/src/registries/fcRegistry.ts#L13)
+Defined in: [packages/save/src/registries/fcRegistry.ts:13](https://github.com/jlehett/pulse-ts/blob/d786433c7cb88fe7c30a7029f46dff58815931cc/packages/save/src/registries/fcRegistry.ts#L13)
 
 Register a function component for save/load.
 

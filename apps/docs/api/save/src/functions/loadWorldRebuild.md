@@ -8,7 +8,7 @@
 
 > **loadWorldRebuild**(`world`, `save`, `opts`): `void`
 
-Defined in: [save/src/world.ts:144](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/save/src/world.ts#L144)
+Defined in: [packages/save/src/world.ts:144](https://github.com/jlehett/pulse-ts/blob/d786433c7cb88fe7c30a7029f46dff58815931cc/packages/save/src/world.ts#L144)
 
 Rebuilds the world from a save file:
 - Clears the current scene (preserving internal system node)

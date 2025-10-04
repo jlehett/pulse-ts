@@ -6,7 +6,7 @@
 
 # Interface: InstallSaveOptions
 
-Defined in: [save/src/install.ts:5](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/save/src/install.ts#L5)
+Defined in: [packages/save/src/install.ts:5](https://github.com/jlehett/pulse-ts/blob/d786433c7cb88fe7c30a7029f46dff58815931cc/packages/save/src/install.ts#L5)
 
 ## Properties
 
@@ -14,6 +14,6 @@ Defined in: [save/src/install.ts:5](https://github.com/jlehett/pulse-ts/blob/95f
 
 > `optional` **plugins**: `string`[]
 
-Defined in: [save/src/install.ts:7](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/save/src/install.ts#L7)
+Defined in: [packages/save/src/install.ts:7](https://github.com/jlehett/pulse-ts/blob/d786433c7cb88fe7c30a7029f46dff58815931cc/packages/save/src/install.ts#L7)
 
 Optional plugins to enable during installation.

@@ -8,7 +8,7 @@
 
 > **Axis2D**(`axes`): [`Axis2DBinding`](../type-aliases/Axis2DBinding.md)
 
-Defined in: [input/src/bindings/expr.ts:68](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/input/src/bindings/expr.ts#L68)
+Defined in: packages/input/src/domain/bindings/expr.ts:86
 
 Create an Axis2D binding.
 
@@ -25,3 +25,9 @@ The axes to bind. Each key is the name of the axis, and the value is the axis de
 [`Axis2DBinding`](../type-aliases/Axis2DBinding.md)
 
 The Axis2D binding.
+
+Example
+```ts
+import { Axis2D, Key } from '@pulse-ts/input';
+const move = Axis2D({ x: { pos: Key('D'), neg: Key('A') }, y: { pos: Key('W'), neg: Key('S') } });
+```

@@ -8,9 +8,15 @@
 
 > **Sequence**(`steps`, `opts`): [`SequenceBinding`](../type-aliases/SequenceBinding.md)
 
-Defined in: [input/src/bindings/expr.ts:134](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/input/src/bindings/expr.ts#L134)
+Defined in: packages/input/src/domain/bindings/expr.ts:176
 
 Create a Sequence binding (ordered key presses within a frame window).
+
+Example
+```ts
+import { Sequence, Key } from '@pulse-ts/input';
+const dash = Sequence([Key('KeyD'), Key('KeyS')], { maxGapFrames: 10 });
+```
 
 ## Parameters
 

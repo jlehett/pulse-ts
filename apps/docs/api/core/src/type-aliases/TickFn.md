@@ -8,7 +8,7 @@
 
 > **TickFn** = (`dt`) => `void`
 
-Defined in: [core/src/types.ts:22](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/core/src/types.ts#L22)
+Defined in: [packages/core/src/domain/ecs/base/types.ts:25](https://github.com/jlehett/pulse-ts/blob/d786433c7cb88fe7c30a7029f46dff58815931cc/packages/core/src/domain/ecs/base/types.ts#L25)
 
 A tick function.
 

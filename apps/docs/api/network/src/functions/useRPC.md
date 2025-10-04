@@ -8,7 +8,7 @@
 
 > **useRPC**\<`Req`, `Res`\>(`name`, `handler?`): `object`
 
-Defined in: [network/src/fc/hooks.ts:134](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/network/src/fc/hooks.ts#L134)
+Defined in: [packages/network/src/fc/hooks.ts:256](https://github.com/jlehett/pulse-ts/blob/d786433c7cb88fe7c30a7029f46dff58815931cc/packages/network/src/fc/hooks.ts#L256)
 
 Register or call an RPC method over the network.
 

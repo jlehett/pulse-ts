@@ -8,7 +8,7 @@
 
 > **useAxis1D**(`name`): () => `number`
 
-Defined in: [input/src/fc/hooks.ts:34](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/input/src/fc/hooks.ts#L34)
+Defined in: packages/input/src/public/hooks.ts:60
 
 Get the axis state for a given axis name.
 
@@ -22,7 +22,14 @@ The name of the axis.
 
 ## Returns
 
-The axis state.
+The axis value accessor.
+
+Example
+```ts
+import { useAxis1D } from '@pulse-ts/input';
+const zoom = useAxis1D('zoom');
+const value = zoom();
+```
 
 > (): `number`
 

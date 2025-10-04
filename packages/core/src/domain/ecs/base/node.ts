@@ -12,7 +12,7 @@ let NEXT_ID = 1;
  * - Components attach to nodes to hold data/state.
  * - Ticks registered on a node run according to the world's update loop.
  *
- * Example:
+ * @example
  * ```ts
  * const world = new World();
  * const parent = world.add(new Node());

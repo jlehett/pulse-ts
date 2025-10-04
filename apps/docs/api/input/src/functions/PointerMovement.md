@@ -8,7 +8,7 @@
 
 > **PointerMovement**(`opts`): [`PointerMovementBinding`](../type-aliases/PointerMovementBinding.md)
 
-Defined in: [input/src/bindings/expr.ts:98](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/input/src/bindings/expr.ts#L98)
+Defined in: packages/input/src/domain/bindings/expr.ts:122
 
 Create a PointerMovement binding.
 
@@ -47,3 +47,9 @@ The scale of the y axis.
 [`PointerMovementBinding`](../type-aliases/PointerMovementBinding.md)
 
 The PointerMovement binding.
+
+Example
+```ts
+import { PointerMovement } from '@pulse-ts/input';
+const look = PointerMovement({ scaleX: 0.1, scaleY: 0.1 });
+```

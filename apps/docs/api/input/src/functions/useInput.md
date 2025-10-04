@@ -8,7 +8,7 @@
 
 > **useInput**(): [`InputService`](../classes/InputService.md)
 
-Defined in: [input/src/fc/hooks.ts:9](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/input/src/fc/hooks.ts#L9)
+Defined in: packages/input/src/public/hooks.ts:20
 
 Get the InputService.
 
@@ -17,3 +17,10 @@ Get the InputService.
 [`InputService`](../classes/InputService.md)
 
 The InputService.
+
+Example
+```ts
+import { useInput } from '@pulse-ts/input';
+const getSvc = useInput();
+const svc = getSvc; // callable in FC hooks
+```

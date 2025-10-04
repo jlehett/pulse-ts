@@ -10,6 +10,7 @@
 
 - [InputCommitSystem](classes/InputCommitSystem.md)
 - [InputService](classes/InputService.md)
+- [VirtualInput](classes/VirtualInput.md)
 
 ## Interfaces
 

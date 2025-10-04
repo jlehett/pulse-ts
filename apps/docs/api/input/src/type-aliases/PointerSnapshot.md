@@ -8,7 +8,7 @@
 
 > **PointerSnapshot** = `object`
 
-Defined in: [input/src/bindings/types.ts:37](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/input/src/bindings/types.ts#L37)
+Defined in: packages/input/src/domain/bindings/types.ts:37
 
 A snapshot of the pointer state.
 
@@ -18,7 +18,7 @@ A snapshot of the pointer state.
 
 > **buttons**: `number`
 
-Defined in: [input/src/bindings/types.ts:69](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/input/src/bindings/types.ts#L69)
+Defined in: packages/input/src/domain/bindings/types.ts:69
 
 The buttons of the pointer.
 
@@ -28,7 +28,7 @@ The buttons of the pointer.
 
 > **deltaX**: `number`
 
-Defined in: [input/src/bindings/types.ts:49](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/input/src/bindings/types.ts#L49)
+Defined in: packages/input/src/domain/bindings/types.ts:49
 
 The x delta of the pointer.
 
@@ -38,7 +38,7 @@ The x delta of the pointer.
 
 > **deltaY**: `number`
 
-Defined in: [input/src/bindings/types.ts:53](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/input/src/bindings/types.ts#L53)
+Defined in: packages/input/src/domain/bindings/types.ts:53
 
 The y delta of the pointer.
 
@@ -48,7 +48,7 @@ The y delta of the pointer.
 
 > **locked**: `boolean`
 
-Defined in: [input/src/bindings/types.ts:73](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/input/src/bindings/types.ts#L73)
+Defined in: packages/input/src/domain/bindings/types.ts:73
 
 Whether the pointer is locked.
 
@@ -58,7 +58,7 @@ Whether the pointer is locked.
 
 > **wheelX**: `number`
 
-Defined in: [input/src/bindings/types.ts:57](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/input/src/bindings/types.ts#L57)
+Defined in: packages/input/src/domain/bindings/types.ts:57
 
 The x wheel delta of the pointer.
 
@@ -68,7 +68,7 @@ The x wheel delta of the pointer.
 
 > **wheelY**: `number`
 
-Defined in: [input/src/bindings/types.ts:61](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/input/src/bindings/types.ts#L61)
+Defined in: packages/input/src/domain/bindings/types.ts:61
 
 The y wheel delta of the pointer.
 
@@ -78,7 +78,7 @@ The y wheel delta of the pointer.
 
 > **wheelZ**: `number`
 
-Defined in: [input/src/bindings/types.ts:65](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/input/src/bindings/types.ts#L65)
+Defined in: packages/input/src/domain/bindings/types.ts:65
 
 The z wheel delta of the pointer.
 
@@ -88,7 +88,7 @@ The z wheel delta of the pointer.
 
 > **x**: `number`
 
-Defined in: [input/src/bindings/types.ts:41](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/input/src/bindings/types.ts#L41)
+Defined in: packages/input/src/domain/bindings/types.ts:41
 
 The x coordinate of the pointer.
 
@@ -98,6 +98,6 @@ The x coordinate of the pointer.
 
 > **y**: `number`
 
-Defined in: [input/src/bindings/types.ts:45](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/input/src/bindings/types.ts#L45)
+Defined in: packages/input/src/domain/bindings/types.ts:45
 
 The y coordinate of the pointer.

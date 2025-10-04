@@ -8,7 +8,7 @@
 
 > **PointerWheelScroll**(`opts`): [`PointerWheelBinding`](../type-aliases/PointerWheelBinding.md)
 
-Defined in: [input/src/bindings/expr.ts:115](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/input/src/bindings/expr.ts#L115)
+Defined in: packages/input/src/domain/bindings/expr.ts:145
 
 Create a PointerWheelScroll binding.
 
@@ -29,3 +29,9 @@ The scale of the wheel scroll.
 [`PointerWheelBinding`](../type-aliases/PointerWheelBinding.md)
 
 The PointerWheelScroll binding.
+
+Example
+```ts
+import { PointerWheelScroll } from '@pulse-ts/input';
+const zoom = PointerWheelScroll({ scale: 1.0 });
+```

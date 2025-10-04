@@ -8,7 +8,7 @@
 
 > **Unsubscribe** = () => `void`
 
-Defined in: [network/src/types.ts:98](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/network/src/types.ts#L98)
+Defined in: [packages/network/src/types.ts:107](https://github.com/jlehett/pulse-ts/blob/d786433c7cb88fe7c30a7029f46dff58815931cc/packages/network/src/types.ts#L107)
 
 A function to unsubscribe from a channel.
 

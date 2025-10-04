@@ -52,7 +52,15 @@ export interface WorldOptions {
 
 /**
  * The World class is the main class for the Pulse engine.
- * It manages the nodes and the tick system.
+ * It manages nodes, services/systems, and the tick system.
+ *
+ * @example
+ * ```ts
+ * import { World } from '@pulse-ts/core';
+ * const world = new World();
+ * world.start(); // begin ticking with default scheduler
+ * world.stop();  // stop when done
+ * ```
  */
 export class World implements WorldTimingApi, WorldTransformRegistry {
     //#region Fields
@@ -123,7 +131,7 @@ export class World implements WorldTimingApi, WorldTransformRegistry {
      * Removes all user nodes from the world while preserving internal system nodes.
      * Destroys root nodes (and their subtrees) excluding the internal system node.
      *
-     * Example:
+     * @example
      * ```ts
      * const w = new World();
      * w.add(new Node());
@@ -154,7 +162,7 @@ export class World implements WorldTimingApi, WorldTransformRegistry {
      * @param opts Optional parent to attach the created node under.
      * @returns The mounted node.
      *
-     * Example:
+     * @example
      * ```ts
      * function Mover() {
      *   useFrameUpdate((dt) => void 0);

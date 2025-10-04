@@ -8,7 +8,7 @@
 
 > **useReplication**\<`T`\>(`key`, `opts`): `object`
 
-Defined in: [network/src/fc/hooks.ts:187](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/network/src/fc/hooks.ts#L187)
+Defined in: [packages/network/src/fc/hooks.ts:413](https://github.com/jlehett/pulse-ts/blob/d786433c7cb88fe7c30a7029f46dff58815931cc/packages/network/src/fc/hooks.ts#L413)
 
 Declares a replicated state slice for the current node.
 

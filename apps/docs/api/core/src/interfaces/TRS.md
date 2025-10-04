@@ -6,7 +6,7 @@
 
 # Interface: TRS
 
-Defined in: [core/src/components/Transform.ts:11](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/core/src/components/Transform.ts#L11)
+Defined in: [packages/core/src/domain/components/spatial/Transform.ts:12](https://github.com/jlehett/pulse-ts/blob/d786433c7cb88fe7c30a7029f46dff58815931cc/packages/core/src/domain/components/spatial/Transform.ts#L12)
 
 Reusable container for position/rotation/scale triples.
 
@@ -16,7 +16,7 @@ Reusable container for position/rotation/scale triples.
 
 > **position**: [`Vec3`](../classes/Vec3.md)
 
-Defined in: [core/src/components/Transform.ts:12](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/core/src/components/Transform.ts#L12)
+Defined in: [packages/core/src/domain/components/spatial/Transform.ts:13](https://github.com/jlehett/pulse-ts/blob/d786433c7cb88fe7c30a7029f46dff58815931cc/packages/core/src/domain/components/spatial/Transform.ts#L13)
 
 ***
 
@@ -24,7 +24,7 @@ Defined in: [core/src/components/Transform.ts:12](https://github.com/jlehett/pul
 
 > **rotation**: [`Quat`](../classes/Quat.md)
 
-Defined in: [core/src/components/Transform.ts:13](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/core/src/components/Transform.ts#L13)
+Defined in: [packages/core/src/domain/components/spatial/Transform.ts:14](https://github.com/jlehett/pulse-ts/blob/d786433c7cb88fe7c30a7029f46dff58815931cc/packages/core/src/domain/components/spatial/Transform.ts#L14)
 
 ***
 
@@ -32,4 +32,4 @@ Defined in: [core/src/components/Transform.ts:13](https://github.com/jlehett/pul
 
 > **scale**: [`Vec3`](../classes/Vec3.md)
 
-Defined in: [core/src/components/Transform.ts:14](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/core/src/components/Transform.ts#L14)
+Defined in: [packages/core/src/domain/components/spatial/Transform.ts:15](https://github.com/jlehett/pulse-ts/blob/d786433c7cb88fe7c30a7029f46dff58815931cc/packages/core/src/domain/components/spatial/Transform.ts#L15)

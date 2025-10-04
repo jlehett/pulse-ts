@@ -6,7 +6,7 @@
 
 # Class: StatsService
 
-Defined in: [core/src/services/Stats.ts:24](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/core/src/services/Stats.ts#L24)
+Defined in: [packages/core/src/domain/services/Stats.ts:24](https://github.com/jlehett/pulse-ts/blob/d786433c7cb88fe7c30a7029f46dff58815931cc/packages/core/src/domain/services/Stats.ts#L24)
 
 The world stats service.
 
@@ -34,7 +34,7 @@ The world stats service.
 
 > **attach**(`world`): `void`
 
-Defined in: [core/src/Service.ts:16](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/core/src/Service.ts#L16)
+Defined in: [packages/core/src/domain/ecs/base/Service.ts:16](https://github.com/jlehett/pulse-ts/blob/d786433c7cb88fe7c30a7029f46dff58815931cc/packages/core/src/domain/ecs/base/Service.ts#L16)
 
 Attaches the service to the world.
 
@@ -60,7 +60,7 @@ The world to attach the service to.
 
 > **detach**(): `void`
 
-Defined in: [core/src/Service.ts:23](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/core/src/Service.ts#L23)
+Defined in: [packages/core/src/domain/ecs/base/Service.ts:23](https://github.com/jlehett/pulse-ts/blob/d786433c7cb88fe7c30a7029f46dff58815931cc/packages/core/src/domain/ecs/base/Service.ts#L23)
 
 Detaches the service from the world.
 
@@ -78,7 +78,7 @@ Detaches the service from the world.
 
 > **get**(): `StatsSnapshot`
 
-Defined in: [core/src/services/Stats.ts:29](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/core/src/services/Stats.ts#L29)
+Defined in: [packages/core/src/domain/services/Stats.ts:29](https://github.com/jlehett/pulse-ts/blob/d786433c7cb88fe7c30a7029f46dff58815931cc/packages/core/src/domain/services/Stats.ts#L29)
 
 Gets the stats snapshot.
 

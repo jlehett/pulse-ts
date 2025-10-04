@@ -6,7 +6,7 @@
 
 # Class: Transform
 
-Defined in: [core/src/components/Transform.ts:65](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/core/src/components/Transform.ts#L65)
+Defined in: [packages/core/src/domain/components/spatial/Transform.ts:54](https://github.com/jlehett/pulse-ts/blob/d786433c7cb88fe7c30a7029f46dff58815931cc/packages/core/src/domain/components/spatial/Transform.ts#L54)
 
 A transform.
 
@@ -20,7 +20,7 @@ A transform.
 
 > **new Transform**(): `Transform`
 
-Defined in: [core/src/components/Transform.ts:94](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/core/src/components/Transform.ts#L94)
+Defined in: [packages/core/src/domain/components/spatial/Transform.ts:81](https://github.com/jlehett/pulse-ts/blob/d786433c7cb88fe7c30a7029f46dff58815931cc/packages/core/src/domain/components/spatial/Transform.ts#L81)
 
 #### Returns
 
@@ -36,7 +36,7 @@ Defined in: [core/src/components/Transform.ts:94](https://github.com/jlehett/pul
 
 > **\_localVersion**: `number` = `0`
 
-Defined in: [core/src/components/Transform.ts:87](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/core/src/components/Transform.ts#L87)
+Defined in: [packages/core/src/domain/components/spatial/Transform.ts:74](https://github.com/jlehett/pulse-ts/blob/d786433c7cb88fe7c30a7029f46dff58815931cc/packages/core/src/domain/components/spatial/Transform.ts#L74)
 
 ***
 
@@ -44,7 +44,7 @@ Defined in: [core/src/components/Transform.ts:87](https://github.com/jlehett/pul
 
 > **\[kTransformDirty\]**: `any`
 
-Defined in: [core/src/components/Transform.ts:73](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/core/src/components/Transform.ts#L73)
+Defined in: [packages/core/src/domain/components/spatial/Transform.ts:62](https://github.com/jlehett/pulse-ts/blob/d786433c7cb88fe7c30a7029f46dff58815931cc/packages/core/src/domain/components/spatial/Transform.ts#L62)
 
 ***
 
@@ -52,7 +52,7 @@ Defined in: [core/src/components/Transform.ts:73](https://github.com/jlehett/pul
 
 > `readonly` **localPosition**: [`Vec3`](Vec3.md)
 
-Defined in: [core/src/components/Transform.ts:75](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/core/src/components/Transform.ts#L75)
+Defined in: [packages/core/src/domain/components/spatial/Transform.ts:64](https://github.com/jlehett/pulse-ts/blob/d786433c7cb88fe7c30a7029f46dff58815931cc/packages/core/src/domain/components/spatial/Transform.ts#L64)
 
 ***
 
@@ -60,7 +60,7 @@ Defined in: [core/src/components/Transform.ts:75](https://github.com/jlehett/pul
 
 > `readonly` **localRotation**: [`Quat`](Quat.md)
 
-Defined in: [core/src/components/Transform.ts:77](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/core/src/components/Transform.ts#L77)
+Defined in: [packages/core/src/domain/components/spatial/Transform.ts:66](https://github.com/jlehett/pulse-ts/blob/d786433c7cb88fe7c30a7029f46dff58815931cc/packages/core/src/domain/components/spatial/Transform.ts#L66)
 
 ***
 
@@ -68,7 +68,7 @@ Defined in: [core/src/components/Transform.ts:77](https://github.com/jlehett/pul
 
 > `readonly` **localScale**: [`Vec3`](Vec3.md)
 
-Defined in: [core/src/components/Transform.ts:79](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/core/src/components/Transform.ts#L79)
+Defined in: [packages/core/src/domain/components/spatial/Transform.ts:68](https://github.com/jlehett/pulse-ts/blob/d786433c7cb88fe7c30a7029f46dff58815931cc/packages/core/src/domain/components/spatial/Transform.ts#L68)
 
 ***
 
@@ -76,7 +76,7 @@ Defined in: [core/src/components/Transform.ts:79](https://github.com/jlehett/pul
 
 > `readonly` **previousLocalPosition**: [`Vec3`](Vec3.md)
 
-Defined in: [core/src/components/Transform.ts:76](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/core/src/components/Transform.ts#L76)
+Defined in: [packages/core/src/domain/components/spatial/Transform.ts:65](https://github.com/jlehett/pulse-ts/blob/d786433c7cb88fe7c30a7029f46dff58815931cc/packages/core/src/domain/components/spatial/Transform.ts#L65)
 
 ***
 
@@ -84,7 +84,7 @@ Defined in: [core/src/components/Transform.ts:76](https://github.com/jlehett/pul
 
 > `readonly` **previousLocalRotation**: [`Quat`](Quat.md)
 
-Defined in: [core/src/components/Transform.ts:78](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/core/src/components/Transform.ts#L78)
+Defined in: [packages/core/src/domain/components/spatial/Transform.ts:67](https://github.com/jlehett/pulse-ts/blob/d786433c7cb88fe7c30a7029f46dff58815931cc/packages/core/src/domain/components/spatial/Transform.ts#L67)
 
 ***
 
@@ -92,7 +92,7 @@ Defined in: [core/src/components/Transform.ts:78](https://github.com/jlehett/pul
 
 > `readonly` **previousLocalScale**: [`Vec3`](Vec3.md)
 
-Defined in: [core/src/components/Transform.ts:80](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/core/src/components/Transform.ts#L80)
+Defined in: [packages/core/src/domain/components/spatial/Transform.ts:69](https://github.com/jlehett/pulse-ts/blob/d786433c7cb88fe7c30a7029f46dff58815931cc/packages/core/src/domain/components/spatial/Transform.ts#L69)
 
 ## Accessors
 
@@ -102,7 +102,7 @@ Defined in: [core/src/components/Transform.ts:80](https://github.com/jlehett/pul
 
 > **get** **owner**(): [`Node`](Node.md)
 
-Defined in: [core/src/Component.ts:17](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/core/src/Component.ts#L17)
+Defined in: [packages/core/src/domain/ecs/base/Component.ts:17](https://github.com/jlehett/pulse-ts/blob/d786433c7cb88fe7c30a7029f46dff58815931cc/packages/core/src/domain/ecs/base/Component.ts#L17)
 
 The owner of the component.
 
@@ -122,9 +122,7 @@ The owner of the component.
 
 > **get** **worldPosition**(): [`Vec3`](Vec3.md)
 
-Defined in: [core/src/components/Transform.ts:284](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/core/src/components/Transform.ts#L284)
-
-Gets the world position.
+Defined in: [packages/core/src/domain/components/spatial/Transform.ts:238](https://github.com/jlehett/pulse-ts/blob/d786433c7cb88fe7c30a7029f46dff58815931cc/packages/core/src/domain/components/spatial/Transform.ts#L238)
 
 ##### Returns
 
@@ -138,9 +136,7 @@ Gets the world position.
 
 > **get** **worldRotation**(): [`Quat`](Quat.md)
 
-Defined in: [core/src/components/Transform.ts:289](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/core/src/components/Transform.ts#L289)
-
-Gets the world rotation.
+Defined in: [packages/core/src/domain/components/spatial/Transform.ts:241](https://github.com/jlehett/pulse-ts/blob/d786433c7cb88fe7c30a7029f46dff58815931cc/packages/core/src/domain/components/spatial/Transform.ts#L241)
 
 ##### Returns
 
@@ -154,9 +150,7 @@ Gets the world rotation.
 
 > **get** **worldScale**(): [`Vec3`](Vec3.md)
 
-Defined in: [core/src/components/Transform.ts:294](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/core/src/components/Transform.ts#L294)
-
-Gets the world scale.
+Defined in: [packages/core/src/domain/components/spatial/Transform.ts:244](https://github.com/jlehett/pulse-ts/blob/d786433c7cb88fe7c30a7029f46dff58815931cc/packages/core/src/domain/components/spatial/Transform.ts#L244)
 
 ##### Returns
 
@@ -168,7 +162,7 @@ Gets the world scale.
 
 > **\[kSetComponentOwner\]**(`owner`): `void`
 
-Defined in: [core/src/Component.ts:10](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/core/src/Component.ts#L10)
+Defined in: [packages/core/src/domain/ecs/base/Component.ts:10](https://github.com/jlehett/pulse-ts/blob/d786433c7cb88fe7c30a7029f46dff58815931cc/packages/core/src/domain/ecs/base/Component.ts#L10)
 
 #### Parameters
 
@@ -190,17 +184,13 @@ Defined in: [core/src/Component.ts:10](https://github.com/jlehett/pulse-ts/blob/
 
 > **editLocal**(`fn`): `void`
 
-Defined in: [core/src/components/Transform.ts:155](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/core/src/components/Transform.ts#L155)
-
-Edits the local position, rotation, and scale.
+Defined in: [packages/core/src/domain/components/spatial/Transform.ts:125](https://github.com/jlehett/pulse-ts/blob/d786433c7cb88fe7c30a7029f46dff58815931cc/packages/core/src/domain/components/spatial/Transform.ts#L125)
 
 #### Parameters
 
 ##### fn
 
 (`t`) => `void`
-
-The function to edit the transform.
 
 #### Returns
 
@@ -212,9 +202,7 @@ The function to edit the transform.
 
 > **getAncestryVersion**(`frameId`): `number`
 
-Defined in: [core/src/components/Transform.ts:109](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/core/src/components/Transform.ts#L109)
-
-Gets the ancestry version.
+Defined in: [packages/core/src/domain/components/spatial/Transform.ts:91](https://github.com/jlehett/pulse-ts/blob/d786433c7cb88fe7c30a7029f46dff58815931cc/packages/core/src/domain/components/spatial/Transform.ts#L91)
 
 #### Parameters
 
@@ -222,13 +210,9 @@ Gets the ancestry version.
 
 `number`
 
-The frame id.
-
 #### Returns
 
 `number`
-
-The ancestry version.
 
 ***
 
@@ -236,9 +220,7 @@ The ancestry version.
 
 > **getLocalTRS**(`out?`, `alpha?`): [`TRS`](../interfaces/TRS.md)
 
-Defined in: [core/src/components/Transform.ts:167](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/core/src/components/Transform.ts#L167)
-
-Gets the local position, rotation, and scale.
+Defined in: [packages/core/src/domain/components/spatial/Transform.ts:131](https://github.com/jlehett/pulse-ts/blob/d786433c7cb88fe7c30a7029f46dff58815931cc/packages/core/src/domain/components/spatial/Transform.ts#L131)
 
 #### Parameters
 
@@ -246,19 +228,13 @@ Gets the local position, rotation, and scale.
 
 [`TRS`](../interfaces/TRS.md)
 
-The output TRS. If not provided, a new TRS will be created.
-
 ##### alpha?
 
 `number`
 
-The alpha value.
-
 #### Returns
 
 [`TRS`](../interfaces/TRS.md)
-
-The local position, rotation, and scale.
 
 ***
 
@@ -266,9 +242,7 @@ The local position, rotation, and scale.
 
 > **getWorldTRS**(`out?`, `alpha?`): [`TRS`](../interfaces/TRS.md)
 
-Defined in: [core/src/components/Transform.ts:200](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/core/src/components/Transform.ts#L200)
-
-Gets the world position, rotation, and scale.
+Defined in: [packages/core/src/domain/components/spatial/Transform.ts:158](https://github.com/jlehett/pulse-ts/blob/d786433c7cb88fe7c30a7029f46dff58815931cc/packages/core/src/domain/components/spatial/Transform.ts#L158)
 
 #### Parameters
 
@@ -276,19 +250,13 @@ Gets the world position, rotation, and scale.
 
 [`TRS`](../interfaces/TRS.md)
 
-The output TRS. If not provided, a new TRS will be created.
-
 ##### alpha?
 
 `number`
 
-The alpha value.
-
 #### Returns
 
 [`TRS`](../interfaces/TRS.md)
-
-The world position, rotation, and scale.
 
 ***
 
@@ -296,10 +264,7 @@ The world position, rotation, and scale.
 
 > **getWorldVersion**(): `number`
 
-Defined in: [core/src/components/Transform.ts:302](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/core/src/components/Transform.ts#L302)
-
-A monotonically increasing version that changes whenever the cached world TRS updates.
-Useful for external sync systems to detect whether a recomposition occurred for alpha=0.
+Defined in: [packages/core/src/domain/components/spatial/Transform.ts:248](https://github.com/jlehett/pulse-ts/blob/d786433c7cb88fe7c30a7029f46dff58815931cc/packages/core/src/domain/components/spatial/Transform.ts#L248)
 
 #### Returns
 
@@ -311,15 +276,11 @@ Useful for external sync systems to detect whether a recomposition occurred for 
 
 > **setLocal**(`opts`): `void`
 
-Defined in: [core/src/components/Transform.ts:138](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/core/src/components/Transform.ts#L138)
-
-Sets the local position, rotation, and scale.
+Defined in: [packages/core/src/domain/components/spatial/Transform.ts:112](https://github.com/jlehett/pulse-ts/blob/d786433c7cb88fe7c30a7029f46dff58815931cc/packages/core/src/domain/components/spatial/Transform.ts#L112)
 
 #### Parameters
 
 ##### opts
-
-The options to set.
 
 ###### position?
 
@@ -343,9 +304,7 @@ The options to set.
 
 > **snapshotPrevious**(): `void`
 
-Defined in: [core/src/components/Transform.ts:126](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/core/src/components/Transform.ts#L126)
-
-Copies the current local position, rotation, and scale to the previous values.
+Defined in: [packages/core/src/domain/components/spatial/Transform.ts:105](https://github.com/jlehett/pulse-ts/blob/d786433c7cb88fe7c30a7029f46dff58815931cc/packages/core/src/domain/components/spatial/Transform.ts#L105)
 
 #### Returns
 
@@ -357,7 +316,7 @@ Copies the current local position, rotation, and scale to the previous values.
 
 > `static` **attach**\<`Transform`\>(`owner`): `Transform`
 
-Defined in: [core/src/components/Transform.ts:66](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/core/src/components/Transform.ts#L66)
+Defined in: [packages/core/src/domain/components/spatial/Transform.ts:55](https://github.com/jlehett/pulse-ts/blob/d786433c7cb88fe7c30a7029f46dff58815931cc/packages/core/src/domain/components/spatial/Transform.ts#L55)
 
 Attaches the component to an owner. Override this method to implement
 custom attachment logic.

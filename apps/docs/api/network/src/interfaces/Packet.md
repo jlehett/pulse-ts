@@ -6,7 +6,7 @@
 
 # Interface: Packet\<T\>
 
-Defined in: [network/src/types.ts:62](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/network/src/types.ts#L62)
+Defined in: [packages/network/src/types.ts:67](https://github.com/jlehett/pulse-ts/blob/d786433c7cb88fe7c30a7029f46dff58815931cc/packages/network/src/types.ts#L67)
 
 A packet of data.
 
@@ -22,7 +22,7 @@ A packet of data.
 
 > **channel**: `string`
 
-Defined in: [network/src/types.ts:66](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/network/src/types.ts#L66)
+Defined in: [packages/network/src/types.ts:71](https://github.com/jlehett/pulse-ts/blob/d786433c7cb88fe7c30a7029f46dff58815931cc/packages/network/src/types.ts#L71)
 
 The channel of the packet.
 
@@ -32,7 +32,7 @@ The channel of the packet.
 
 > **data**: `T`
 
-Defined in: [network/src/types.ts:70](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/network/src/types.ts#L70)
+Defined in: [packages/network/src/types.ts:75](https://github.com/jlehett/pulse-ts/blob/d786433c7cb88fe7c30a7029f46dff58815931cc/packages/network/src/types.ts#L75)
 
 The data of the packet.
 
@@ -42,6 +42,16 @@ The data of the packet.
 
 > `optional` **from**: `string`
 
-Defined in: [network/src/types.ts:74](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/network/src/types.ts#L74)
+Defined in: [packages/network/src/types.ts:79](https://github.com/jlehett/pulse-ts/blob/d786433c7cb88fe7c30a7029f46dff58815931cc/packages/network/src/types.ts#L79)
 
 Optional metadata (populated if transport can provide it)
+
+***
+
+### to?
+
+> `optional` **to**: `string` \| `string`[]
+
+Defined in: [packages/network/src/types.ts:83](https://github.com/jlehett/pulse-ts/blob/d786433c7cb88fe7c30a7029f46dff58815931cc/packages/network/src/types.ts#L83)
+
+Optional addressing. If present, only the addressed peer(s) should consume.

@@ -8,7 +8,7 @@
 
 > **SequenceBinding** = `object`
 
-Defined in: [input/src/bindings/types.ts:194](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/input/src/bindings/types.ts#L194)
+Defined in: packages/input/src/domain/bindings/types.ts:194
 
 A sequence (ordered key presses) binding.
 
@@ -18,7 +18,7 @@ A sequence (ordered key presses) binding.
 
 > `optional` **maxGapFrames**: `number`
 
-Defined in: [input/src/bindings/types.ts:199](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/input/src/bindings/types.ts#L199)
+Defined in: packages/input/src/domain/bindings/types.ts:199
 
 Max frames allowed between successive steps. Default 15.
 
@@ -28,7 +28,7 @@ Max frames allowed between successive steps. Default 15.
 
 > `optional` **resetOnWrong**: `boolean`
 
-Defined in: [input/src/bindings/types.ts:201](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/input/src/bindings/types.ts#L201)
+Defined in: packages/input/src/domain/bindings/types.ts:201
 
 Reset to start when a wrong key is pressed. Default true.
 
@@ -38,7 +38,7 @@ Reset to start when a wrong key is pressed. Default true.
 
 > **steps**: [`KeyBinding`](KeyBinding.md)[]
 
-Defined in: [input/src/bindings/types.ts:197](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/input/src/bindings/types.ts#L197)
+Defined in: packages/input/src/domain/bindings/types.ts:197
 
 Keys to press in order.
 
@@ -48,4 +48,4 @@ Keys to press in order.
 
 > **type**: `"sequence"`
 
-Defined in: [input/src/bindings/types.ts:195](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/input/src/bindings/types.ts#L195)
+Defined in: packages/input/src/domain/bindings/types.ts:195

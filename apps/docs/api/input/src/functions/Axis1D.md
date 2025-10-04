@@ -8,7 +8,7 @@
 
 > **Axis1D**(`opts`): [`Axis1DBinding`](../type-aliases/Axis1DBinding.md)
 
-Defined in: [input/src/bindings/expr.ts:45](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/input/src/bindings/expr.ts#L45)
+Defined in: packages/input/src/domain/bindings/expr.ts:57
 
 Create an Axis1D binding.
 
@@ -41,3 +41,9 @@ The scale of the axis.
 [`Axis1DBinding`](../type-aliases/Axis1DBinding.md)
 
 The Axis1D binding.
+
+Example
+```ts
+import { Axis1D, Key } from '@pulse-ts/input';
+const moveX = Axis1D({ pos: Key('D'), neg: Key('A') });
+```

@@ -8,7 +8,7 @@
 
 > **createAABB**(): [`AABB`](../interfaces/AABB.md)
 
-Defined in: [core/src/components/Bounds.ts:13](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/core/src/components/Bounds.ts#L13)
+Defined in: [packages/core/src/domain/components/spatial/Bounds.ts:14](https://github.com/jlehett/pulse-ts/blob/d786433c7cb88fe7c30a7029f46dff58815931cc/packages/core/src/domain/components/spatial/Bounds.ts#L14)
 
 ## Returns
 

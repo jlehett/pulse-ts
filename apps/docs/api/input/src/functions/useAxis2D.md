@@ -8,7 +8,7 @@
 
 > **useAxis2D**(`name`): () => [`Vec`](../type-aliases/Vec.md)
 
-Defined in: [input/src/fc/hooks.ts:44](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/input/src/fc/hooks.ts#L44)
+Defined in: packages/input/src/public/hooks.ts:77
 
 Get the axis 2D state for a given axis name.
 
@@ -22,7 +22,14 @@ The name of the axis 2D.
 
 ## Returns
 
-The axis 2D state.
+The axis 2D accessor.
+
+Example
+```ts
+import { useAxis2D } from '@pulse-ts/input';
+const move = useAxis2D('move');
+const { x, y } = move();
+```
 
 > (): [`Vec`](../type-aliases/Vec.md)
 

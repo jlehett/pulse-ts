@@ -8,7 +8,7 @@
 
 > **Key**(`code`): [`KeyBinding`](../type-aliases/KeyBinding.md)
 
-Defined in: [input/src/bindings/expr.ts:33](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/input/src/bindings/expr.ts#L33)
+Defined in: packages/input/src/domain/bindings/expr.ts:39
 
 Create a key binding.
 
