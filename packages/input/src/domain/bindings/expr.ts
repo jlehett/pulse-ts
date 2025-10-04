@@ -4,6 +4,7 @@ import type {
     KeyBinding,
     PointerMovementBinding,
     PointerWheelBinding,
+    PointerButtonBinding,
     ChordBinding,
     SequenceBinding,
 } from './types';
@@ -140,6 +141,21 @@ export function PointerWheelScroll(
     opts: { scale?: number } = {},
 ): PointerWheelBinding {
     return { type: 'wheel', scale: opts.scale ?? 1 } as PointerWheelBinding;
+}
+
+/**
+ * Create a pointer button binding (maps a specific pointer/mouse button to a digital action).
+ * @param button Button index (0 = primary, 1 = middle, 2 = secondary, ...).
+ * @returns The pointer button binding expression.
+ *
+ * @example
+ * ```ts
+ * import { PointerButton } from '@pulse-ts/input';
+ * const fire = PointerButton(0);
+ * ```
+ */
+export function PointerButton(button: number): PointerButtonBinding {
+    return { type: 'pointerButton', button } as PointerButtonBinding;
 }
 
 /**

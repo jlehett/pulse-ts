@@ -188,6 +188,9 @@ export class BindingRegistry {
                     case 'key':
                         this.addKeyBinding(expr.code, action);
                         break;
+                    case 'pointerButton':
+                        this.addButtonBinding(expr.button, action);
+                        break;
                     case 'axis1d':
                         this.addAxis1D(action, expr);
                         break;
@@ -230,6 +233,17 @@ export class BindingRegistry {
         const arr = this.keyBindings.get(code) ?? [];
         arr.push(action);
         this.keyBindings.set(code, arr);
+    }
+
+    /**
+     * Add a pointer button binding.
+     * @param button The button index to bind.
+     * @param action The action to bind the button to.
+     */
+    private addButtonBinding(button: number, action: string) {
+        const arr = this.buttonBindings.get(button) ?? [];
+        arr.push(action);
+        this.buttonBindings.set(button, arr);
     }
 
     /**

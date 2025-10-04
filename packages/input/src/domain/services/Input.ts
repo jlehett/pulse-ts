@@ -248,27 +248,12 @@ export class InputService extends Service {
 
         // Digital actions (only entries that originated from digital sources)
         for (const [name, sources] of this.digitalSources.entries()) {
-            const nextDown = sources.size > 0;
-            const prev = this.actions.get(name) ?? {
-                down: false,
-                pressed: false,
-                released: false,
-                value: 0,
-                since: frameId,
-            };
-            const pressed = nextDown && !prev.down;
-            const released = !nextDown && prev.down;
-            const since = pressed || released ? frameId : prev.since;
-            const value = nextDown ? 1 : 0;
-            const state: ActionState = {
-                down: nextDown,
-                pressed,
-                released,
-                value,
-                since,
-            };
+            const nextValue = sources.size > 0 ? 1 : 0;
+            const prev = this.actions.get(name);
+            const state = this.computeState(prev, nextValue, frameId);
             this.actions.set(name, state);
-            if (pressed || released) this.actionEvent.emit({ name, state });
+            if (state.pressed || state.released)
+                this.actionEvent.emit({ name, state });
         }
 
         // Axes (1D) from key pairs -> produces analog values [-1, 0, +1]
@@ -277,26 +262,11 @@ export class InputService extends Service {
             const negActive = def.neg.some((c) => this.keysDown.has(c));
             let nextValue = (posActive ? 1 : 0) - (negActive ? 1 : 0);
             nextValue *= def.scale;
-            const prev = this.actions.get(name) ?? {
-                down: false,
-                pressed: false,
-                released: false,
-                value: 0,
-                since: frameId,
-            };
-            const down = nextValue !== 0;
-            const pressed = down && !prev.down;
-            const released = !down && prev.down;
-            const since = pressed || released ? frameId : prev.since;
-            const state: ActionState = {
-                down,
-                pressed,
-                released,
-                value: nextValue,
-                since,
-            };
+            const prev = this.actions.get(name);
+            const state = this.computeState(prev, nextValue, frameId);
             this.actions.set(name, state);
-            if (pressed || released) this.actionEvent.emit({ name, state });
+            if (state.pressed || state.released)
+                this.actionEvent.emit({ name, state });
         }
 
         // Pointer vec2 (per-frame deltas): reset to {x:0,y:0} and apply accum
@@ -310,26 +280,11 @@ export class InputService extends Service {
         // Wheel -> axis (per-frame), vertical only
         for (const [name, def] of this.bindings.getWheelBindings()) {
             const nextValue = this.pWheel.y * def.scale;
-            const prev = this.actions.get(name) ?? {
-                down: false,
-                pressed: false,
-                released: false,
-                value: 0,
-                since: frameId,
-            };
-            const down = nextValue !== 0;
-            const pressed = down && !prev.down;
-            const released = !down && prev.down;
-            const since = pressed || released ? frameId : prev.since;
-            const state: ActionState = {
-                down,
-                pressed,
-                released,
-                value: nextValue,
-                since,
-            };
+            const prev = this.actions.get(name);
+            const state = this.computeState(prev, nextValue, frameId);
             this.actions.set(name, state);
-            if (pressed || released) this.actionEvent.emit({ name, state });
+            if (state.pressed || state.released)
+                this.actionEvent.emit({ name, state });
         }
 
         // Snapshot pointer deltas and wheel and clear accumulators
@@ -419,6 +374,23 @@ export class InputService extends Service {
     //#endregion
 
     //#region Private Methods
+
+    /**
+     * Compute the next ActionState from a previous state and a numeric value.
+     * Down is interpreted as `value !== 0`.
+     */
+    private computeState(
+        prev: ActionState | undefined,
+        nextValue: number,
+        frameId: number,
+    ): ActionState {
+        const wasDown = prev?.down ?? false;
+        const down = nextValue !== 0;
+        const pressed = down && !wasDown;
+        const released = !down && wasDown;
+        const since = pressed || released ? frameId : (prev?.since ?? frameId);
+        return { down, pressed, released, value: nextValue, since };
+    }
 
     /**
      * Get the target.

@@ -5,6 +5,7 @@ import {
     Key,
     PointerMovement,
     PointerWheelScroll,
+    PointerButton,
     Chord,
     Sequence,
 } from '../../domain/bindings/expr';
@@ -97,6 +98,31 @@ describe('InputService', () => {
         svc.commit();
         w._inc();
         expect(svc.axis('zoom')).toBe(0);
+    });
+
+    test('pointer button maps to digital action', () => {
+        const svc = new InputService();
+        const w = worldStub();
+        svc.attach(w);
+        svc.setBindings({ fire: PointerButton(0) });
+
+        svc.handlePointerButton(0, true);
+        svc.commit();
+        w._inc();
+        expect(svc.action('fire')).toMatchObject({
+            down: true,
+            pressed: true,
+            value: 1,
+        });
+
+        svc.handlePointerButton(0, false);
+        svc.commit();
+        w._inc();
+        expect(svc.action('fire')).toMatchObject({
+            down: false,
+            released: true,
+            value: 0,
+        });
     });
 
     test('chord and sequence pulses', () => {

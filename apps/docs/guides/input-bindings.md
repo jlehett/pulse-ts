@@ -5,7 +5,7 @@ Configure keyboard, mouse, and custom bindings with `@pulse-ts/input`, and consu
 ## Install service and providers
 
 ```ts
-import { installInput, Axis1D, Axis2D, PointerMovement, PointerWheelScroll, Key, Chord, Sequence } from '@pulse-ts/input';
+import { installInput, Axis1D, Axis2D, PointerMovement, PointerWheelScroll, PointerButton, Key, Chord, Sequence } from '@pulse-ts/input';
 
 installInput(world, {
   preventDefault: true,
@@ -22,7 +22,10 @@ installInput(world, {
 
     // Pointer
     look: PointerMovement({ scaleX: 0.1, scaleY: 0.1 }),
-    zoom: PointerWheelScroll({ scale: 1.0 })
+    zoom: PointerWheelScroll({ scale: 1.0 }),
+
+    // Pointer button (mouse)
+    fire: PointerButton(0)
   }
 });
 ```
@@ -37,6 +40,7 @@ function PlayerController() {
   const move = useAxis2D('move');
   const jump = useAction('jump');
   const dash = useAction('dash');
+  const fire = useAction('fire');
   const zoom = useAxis1D('zoom');
   const pointer = usePointer();
 

@@ -183,6 +183,17 @@ export type PointerWheelBinding = {
     scale?: number;
 };
 
+/**
+ * A pointer button binding expression (e.g., Mouse0 → action).
+ */
+export type PointerButtonBinding = {
+    type: 'pointerButton';
+    /**
+     * Pointer button index (0 = primary, 1 = middle, 2 = secondary, ...).
+     */
+    button: number;
+};
+
 /** A chord (simultaneous keys) binding expression. */
 export type ChordBinding = {
     type: 'chord';
@@ -210,6 +221,7 @@ export type BindingExpr =
     | Axis2DBinding
     | PointerMovementBinding
     | PointerWheelBinding
+    | PointerButtonBinding
     | ChordBinding
     | SequenceBinding;
 

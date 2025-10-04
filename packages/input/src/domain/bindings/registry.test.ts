@@ -5,12 +5,13 @@ import {
     Axis2D,
     PointerMovement,
     PointerWheelScroll,
+    PointerButton,
     Chord,
     Sequence,
 } from './expr';
 
 describe('BindingRegistry', () => {
-    test('compiles key, axes, pointer, wheel, chord, sequence', () => {
+    test('compiles key, axes, pointer, wheel, button, chord, sequence', () => {
         const reg = new BindingRegistry();
         reg.setBindings({
             jump: Key('Space'),
@@ -21,6 +22,7 @@ describe('BindingRegistry', () => {
             }),
             look: PointerMovement({ scaleX: 0.5, invertY: true }),
             zoom: PointerWheelScroll({ scale: 2 }),
+            fire: PointerButton(0),
             combo: Chord([Key('ControlLeft'), Key('KeyC')]),
             konami: Sequence(
                 [
@@ -54,6 +56,9 @@ describe('BindingRegistry', () => {
         // wheel
         const wheel = Array.from(reg.getWheelBindings());
         expect(wheel.find(([name]) => name === 'zoom')![1].scale).toBe(2);
+
+        // button
+        expect(reg.getActionsForButton(0)).toContain('fire');
 
         // chord
         const chords = Array.from(reg.getChords());
