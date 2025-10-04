@@ -1,8 +1,8 @@
 import type { World } from '@pulse-ts/core';
-import { ThreeService, type ThreeOptions } from '../services/Three';
-import { ThreeCameraPVSystem } from '../systems/cameraPV';
-import { ThreeTRSSyncSystem } from '../systems/trsSync';
-import { ThreeRenderSystem } from '../systems/render';
+import { ThreeService, type ThreeOptions } from '../domain/services/Three';
+import { ThreeCameraPVSystem } from '../domain/systems/cameraPV';
+import { ThreeTRSSyncSystem } from '../domain/systems/trsSync';
+import { ThreeRenderSystem } from '../domain/systems/render';
 
 /**
  * Convenience installer for Three.js rendering.

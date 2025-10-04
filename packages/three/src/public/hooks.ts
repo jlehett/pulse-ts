@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { __fcCurrent } from '@pulse-ts/core';
-import { ThreeService } from '../services/Three';
+import { ThreeService } from '../domain/services/Three';
 
 /**
  * Returns Three.js context bound to the current `World`.
