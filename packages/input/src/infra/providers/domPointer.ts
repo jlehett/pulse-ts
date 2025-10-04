@@ -2,7 +2,9 @@ import type { InputProvider } from '../../domain/bindings/types';
 import { InputService } from '../../domain/services/Input';
 
 /**
- * A provider for the DOM pointer.
+ * DOM pointer provider.
+ * Maps pointer events to pointer state and pointer‑movement bindings.
+ * Optionally prevents default behavior and can request pointer lock on down.
  * @internal
  */
 export class DOMPointerProvider implements InputProvider {
@@ -16,6 +18,11 @@ export class DOMPointerProvider implements InputProvider {
     private lastX = 0;
     private lastY = 0;
 
+    /**
+     * Create the DOM pointer provider.
+     * @param service Target `InputService` to forward pointer events to.
+     * @param opts `{ preventDefault, pointerLock }` behavior toggles.
+     */
     constructor(
         private service: InputService,
         private opts: { preventDefault?: boolean; pointerLock?: boolean } = {},
@@ -29,8 +36,8 @@ export class DOMPointerProvider implements InputProvider {
     }
 
     /**
-     * Start the provider.
-     * @param target The target to listen for events on.
+     * Start listening to pointer and wheel events on `target`.
+     * @param target An `EventTarget` (e.g., `window` or a canvas element).
      */
     start(target: EventTarget): void {
         this.target = target;
@@ -123,7 +130,7 @@ export class DOMPointerProvider implements InputProvider {
     }
 
     /**
-     * Stop the provider.
+     * Remove installed listeners and release references.
      */
     stop(): void {
         if (!this.target) return;

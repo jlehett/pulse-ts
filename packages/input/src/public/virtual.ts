@@ -13,6 +13,20 @@ import { InputService } from '../domain/services/Input';
  * ```
  */
 export class VirtualInput {
+    /**
+     * Create a virtual input injector bound to an `InputService`.
+     * @param service The target input service to inject into.
+     *
+     * @example
+     * ```ts
+     * import { InputService, VirtualInput } from '@pulse-ts/input';
+     * const svc = new InputService();
+     * const vi = new VirtualInput(svc);
+     * vi.press('jump');
+     * svc.commit();
+     * console.log(svc.action('jump').pressed); // true
+     * ```
+     */
     constructor(private service: InputService) {}
 
     /**

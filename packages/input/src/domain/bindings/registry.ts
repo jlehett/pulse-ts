@@ -11,6 +11,17 @@ import type {
 
 /**
  * Minimal bindings registry: maps device inputs to action names.
+ * Compiles declarative binding expressions into lookup tables consumed by
+ * `InputService`. This is an internal utility and not part of the public API.
+ *
+ * @example
+ * ```ts
+ * import { BindingRegistry } from './registry';
+ * import { Key } from './expr';
+ * const reg = new BindingRegistry();
+ * reg.setBindings({ jump: Key('Space') });
+ * console.log(reg.getActionsForKey('Space')); // ['jump']
+ * ```
  */
 export class BindingRegistry {
     //#region Fields

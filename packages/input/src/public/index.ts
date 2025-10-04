@@ -1,4 +1,5 @@
 export { installInput } from './install';
+export type { InstallInputOptions } from './install';
 
 // Service and systems
 export { InputService } from '../domain/services/Input';

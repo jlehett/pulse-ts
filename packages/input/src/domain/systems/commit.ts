@@ -14,7 +14,9 @@ import { InputService } from '../services/Input';
  * ```
  */
 export class InputCommitSystem extends System {
+    /** Runs once per frame. */
     static updateKind: UpdateKind = 'frame';
+    /** Scheduled at the `early` phase, before user updates. */
     static updatePhase: UpdatePhase = 'early';
 
     update(): void {

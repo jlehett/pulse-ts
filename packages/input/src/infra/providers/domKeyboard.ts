@@ -2,7 +2,10 @@ import type { InputProvider } from '../../domain/bindings/types';
 import { InputService } from '../../domain/services/Input';
 
 /**
- * A provider for the DOM keyboard.
+ * DOM keyboard provider.
+ * Translates `keydown`/`keyup` events into `InputService.handleKey` calls and
+ * optionally prevents default browser behavior. Auto‑repeat keydowns are
+ * ignored to keep sequence/chord timing stable.
  * @internal
  */
 export class DOMKeyboardProvider implements InputProvider {
@@ -10,14 +13,19 @@ export class DOMKeyboardProvider implements InputProvider {
     private keydown?: (e: any) => void;
     private keyup?: (e: any) => void;
 
+    /**
+     * Create the DOM keyboard provider.
+     * @param service Target `InputService` to forward key events to.
+     * @param opts Optional `{ preventDefault }` to call `event.preventDefault()`.
+     */
     constructor(
         private service: InputService,
         private opts: { preventDefault?: boolean } = {},
     ) {}
 
     /**
-     * Start the provider.
-     * @param target The target to listen for events on.
+     * Start listening to keyboard events on the given target.
+     * @param target An `EventTarget` (e.g., `window` or a specific element).
      */
     start(target: EventTarget): void {
         this.target = target;
@@ -45,7 +53,7 @@ export class DOMKeyboardProvider implements InputProvider {
     }
 
     /**
-     * Stop the provider.
+     * Remove installed listeners and release references.
      */
     stop(): void {
         if (!this.target) return;
