@@ -10,3 +10,5 @@ export * from './fc';
 export * from './events';
 export * from './math';
 export * from './queries';
+export * from './scheduler';
+export * from './bootstrap';

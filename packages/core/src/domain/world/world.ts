@@ -16,15 +16,13 @@ import type {
 } from '../ecs/base/types';
 import { getComponent } from '../ecs/registry/componentRegistry';
 import { Transform } from '../components/spatial/Transform';
-import { Ticker } from './ticker';
+import { Ticker } from '../time/ticker';
 import { ServiceRegistry } from '../ecs/registry/serviceRegistry';
 import { SystemRegistry } from '../ecs/registry/systemRegistry';
-import { EngineLoop } from './loop';
+import { EngineLoop } from '../time/loop';
 import { kRegisteredTicks } from '../ecs/base/keys';
-import { SceneGraph } from './sceneGraph';
-import { CullingSystem } from '../systems/Culling';
+import { SceneGraph } from '../scene/sceneGraph';
 import type { System } from '../ecs/base/System';
-import { StatsService } from '../services/Stats';
 import { TypedEvent } from '../../utils/event';
 import type { Service } from '../ecs/base/Service';
 import { defineQuery } from '../ecs/query';
@@ -101,10 +99,7 @@ export class World implements WorldTimingApi, WorldTransformRegistry {
                 runPhase: (kind, phase, dt) => this.runPhase(kind, phase, dt),
             },
         );
-        // Provide stats service for consumers
-        this.provideService(new StatsService());
-        // Install default systems
-        this.addSystem(new CullingSystem());
+        // Defaults are now opt-in via public/bootstrap.installDefaults(world)
     }
 
     //#region Public API

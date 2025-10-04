@@ -8,6 +8,7 @@ import { Bounds } from '../components/spatial/Bounds';
 import { Vec3 } from '../../utils/math/vec3';
 import { Transform } from '../components/spatial/Transform';
 import { CullingCamera } from '../services/CullingCamera';
+import { CullingSystem } from './Culling';
 import { Visibility } from '../components/meta/Visibility';
 
 function identityPV(): Float32Array {
@@ -24,7 +25,8 @@ function identityPV(): Float32Array {
 describe('CullingSystem', () => {
     test('updates Visibility based on frustum vs world AABB', () => {
         const w = new World();
-        // Provide a simple camera frustum (identity clip cube)
+        // Install culling system and provide a simple camera frustum (identity clip cube)
+        w.addSystem(new CullingSystem());
         w.provideService(new CullingCamera(identityPV()));
 
         // Inside cube: centered at origin, radius 0.5

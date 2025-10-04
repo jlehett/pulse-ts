@@ -4,8 +4,8 @@ import { StatsService } from './Stats';
 describe('StatsService', () => {
     test('returns snapshot from world', () => {
         const w = new World({ fixedStepMs: 10 });
-        const stats = w.getService(StatsService);
-        expect(stats).toBeTruthy();
+        // StatsService is not auto-installed; provide explicitly for tests
+        const stats = w.provideService(new StatsService());
         // run some time to sample fps/sps
         w.tick(50);
         const snap = stats!.get();

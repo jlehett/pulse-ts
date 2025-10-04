@@ -7,7 +7,12 @@ The container that owns time, the scene graph, systems, and services. Create one
 
 - Manage lifecycle with `start()`, `stop()`, and `tick(dtMs)`.
 - Clean the scene with `clearScene()` (preserves internal system nodes).
-- Query stats via `getPerf()` or `StatsService`.
+- Query stats via `getPerf()`. Optionally install defaults to use `StatsService`:
+  ```ts
+  import { World, installDefaults } from '@pulse-ts/core'
+  const world = new World()
+  installDefaults(world)
+  ```
 
 ## Nodes
 Entities in the scene graph. Nodes form parent/child hierarchies and hold components.

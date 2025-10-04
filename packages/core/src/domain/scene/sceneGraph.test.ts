@@ -1,5 +1,5 @@
 import { Node } from '../ecs/base/node';
-import { World } from './world';
+import { World } from '../world/world';
 
 describe('SceneGraph parent changes', () => {
     test('onNodeParentChanged fires with correct old/new', () => {
