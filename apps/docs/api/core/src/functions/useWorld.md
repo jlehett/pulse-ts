@@ -8,7 +8,7 @@
 
 > **useWorld**(): [`World`](../classes/World.md)
 
-Defined in: [packages/core/src/domain/fc/hooks.ts:33](https://github.com/jlehett/pulse-ts/blob/4869ef2c4af7bf37d31e2edd2d6d1ba148133fb2/packages/core/src/domain/fc/hooks.ts#L33)
+Defined in: [packages/core/src/domain/fc/hooks.ts:33](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/core/src/domain/fc/hooks.ts#L33)
 
 Returns the `World` that is currently mounting the active function component.
 

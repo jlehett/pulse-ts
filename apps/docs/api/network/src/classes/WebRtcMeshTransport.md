@@ -6,7 +6,7 @@
 
 # Class: WebRtcMeshTransport
 
-Defined in: [packages/network/src/transports/webrtc/transport.ts:42](https://github.com/jlehett/pulse-ts/blob/4869ef2c4af7bf37d31e2edd2d6d1ba148133fb2/packages/network/src/transports/webrtc/transport.ts#L42)
+Defined in: [packages/network/src/transports/webrtc/transport.ts:42](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/network/src/transports/webrtc/transport.ts#L42)
 
 Experimental WebRTC mesh transport (skeleton). Broadcasts to all connected peers.
 
@@ -24,7 +24,7 @@ Notes:
 
 > **new WebRtcMeshTransport**(`opts`): `WebRtcMeshTransport`
 
-Defined in: [packages/network/src/transports/webrtc/transport.ts:60](https://github.com/jlehett/pulse-ts/blob/4869ef2c4af7bf37d31e2edd2d6d1ba148133fb2/packages/network/src/transports/webrtc/transport.ts#L60)
+Defined in: [packages/network/src/transports/webrtc/transport.ts:60](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/network/src/transports/webrtc/transport.ts#L60)
 
 #### Parameters
 
@@ -42,7 +42,7 @@ Defined in: [packages/network/src/transports/webrtc/transport.ts:60](https://git
 
 > `readonly` **kind**: `"webrtc-mesh"` = `'webrtc-mesh'`
 
-Defined in: [packages/network/src/transports/webrtc/transport.ts:43](https://github.com/jlehett/pulse-ts/blob/4869ef2c4af7bf37d31e2edd2d6d1ba148133fb2/packages/network/src/transports/webrtc/transport.ts#L43)
+Defined in: [packages/network/src/transports/webrtc/transport.ts:43](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/network/src/transports/webrtc/transport.ts#L43)
 
 The kind of transport.
 
@@ -56,7 +56,7 @@ The kind of transport.
 
 > `readonly` **supportsBinary**: `true` = `true`
 
-Defined in: [packages/network/src/transports/webrtc/transport.ts:44](https://github.com/jlehett/pulse-ts/blob/4869ef2c4af7bf37d31e2edd2d6d1ba148133fb2/packages/network/src/transports/webrtc/transport.ts#L44)
+Defined in: [packages/network/src/transports/webrtc/transport.ts:44](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/network/src/transports/webrtc/transport.ts#L44)
 
 Whether the transport supports binary.
 
@@ -70,7 +70,7 @@ Whether the transport supports binary.
 
 > **connect**(): `Promise`\<`void`\>
 
-Defined in: [packages/network/src/transports/webrtc/transport.ts:75](https://github.com/jlehett/pulse-ts/blob/4869ef2c4af7bf37d31e2edd2d6d1ba148133fb2/packages/network/src/transports/webrtc/transport.ts#L75)
+Defined in: [packages/network/src/transports/webrtc/transport.ts:75](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/network/src/transports/webrtc/transport.ts#L75)
 
 Connect to the transport.
 
@@ -88,7 +88,7 @@ Connect to the transport.
 
 > **disconnect**(): `Promise`\<`void`\>
 
-Defined in: [packages/network/src/transports/webrtc/transport.ts:92](https://github.com/jlehett/pulse-ts/blob/4869ef2c4af7bf37d31e2edd2d6d1ba148133fb2/packages/network/src/transports/webrtc/transport.ts#L92)
+Defined in: [packages/network/src/transports/webrtc/transport.ts:92](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/network/src/transports/webrtc/transport.ts#L92)
 
 Disconnect from the transport.
 
@@ -106,7 +106,7 @@ Disconnect from the transport.
 
 > **getStatus**(): [`TransportStatus`](../type-aliases/TransportStatus.md)
 
-Defined in: [packages/network/src/transports/webrtc/transport.ts:71](https://github.com/jlehett/pulse-ts/blob/4869ef2c4af7bf37d31e2edd2d6d1ba148133fb2/packages/network/src/transports/webrtc/transport.ts#L71)
+Defined in: [packages/network/src/transports/webrtc/transport.ts:71](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/network/src/transports/webrtc/transport.ts#L71)
 
 Get the status of the transport.
 
@@ -126,7 +126,7 @@ The status.
 
 > **onMessage**(`fn`): () => `boolean`
 
-Defined in: [packages/network/src/transports/webrtc/transport.ts:119](https://github.com/jlehett/pulse-ts/blob/4869ef2c4af7bf37d31e2edd2d6d1ba148133fb2/packages/network/src/transports/webrtc/transport.ts#L119)
+Defined in: [packages/network/src/transports/webrtc/transport.ts:119](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/network/src/transports/webrtc/transport.ts#L119)
 
 On message handler.
 
@@ -158,7 +158,7 @@ The unsubscribe function.
 
 > **onPeerJoin**(`fn`): () => `boolean`
 
-Defined in: [packages/network/src/transports/webrtc/transport.ts:129](https://github.com/jlehett/pulse-ts/blob/4869ef2c4af7bf37d31e2edd2d6d1ba148133fb2/packages/network/src/transports/webrtc/transport.ts#L129)
+Defined in: [packages/network/src/transports/webrtc/transport.ts:129](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/network/src/transports/webrtc/transport.ts#L129)
 
 Optional peer lifecycle (for P2P transports).
 
@@ -186,7 +186,7 @@ Optional peer lifecycle (for P2P transports).
 
 > **onPeerLeave**(`fn`): () => `boolean`
 
-Defined in: [packages/network/src/transports/webrtc/transport.ts:134](https://github.com/jlehett/pulse-ts/blob/4869ef2c4af7bf37d31e2edd2d6d1ba148133fb2/packages/network/src/transports/webrtc/transport.ts#L134)
+Defined in: [packages/network/src/transports/webrtc/transport.ts:134](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/network/src/transports/webrtc/transport.ts#L134)
 
 #### Parameters
 
@@ -212,7 +212,7 @@ Defined in: [packages/network/src/transports/webrtc/transport.ts:134](https://gi
 
 > **onStatus**(`fn`): () => `boolean`
 
-Defined in: [packages/network/src/transports/webrtc/transport.ts:124](https://github.com/jlehett/pulse-ts/blob/4869ef2c4af7bf37d31e2edd2d6d1ba148133fb2/packages/network/src/transports/webrtc/transport.ts#L124)
+Defined in: [packages/network/src/transports/webrtc/transport.ts:124](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/network/src/transports/webrtc/transport.ts#L124)
 
 On status handler.
 
@@ -244,7 +244,7 @@ The unsubscribe function.
 
 > **peers**(): `string`[]
 
-Defined in: [packages/network/src/transports/webrtc/transport.ts:139](https://github.com/jlehett/pulse-ts/blob/4869ef2c4af7bf37d31e2edd2d6d1ba148133fb2/packages/network/src/transports/webrtc/transport.ts#L139)
+Defined in: [packages/network/src/transports/webrtc/transport.ts:139](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/network/src/transports/webrtc/transport.ts#L139)
 
 #### Returns
 
@@ -260,7 +260,7 @@ Defined in: [packages/network/src/transports/webrtc/transport.ts:139](https://gi
 
 > **send**(`data`): `void`
 
-Defined in: [packages/network/src/transports/webrtc/transport.ts:103](https://github.com/jlehett/pulse-ts/blob/4869ef2c4af7bf37d31e2edd2d6d1ba148133fb2/packages/network/src/transports/webrtc/transport.ts#L103)
+Defined in: [packages/network/src/transports/webrtc/transport.ts:103](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/network/src/transports/webrtc/transport.ts#L103)
 
 Send a message.
 

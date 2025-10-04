@@ -8,7 +8,7 @@
 
 > **useObject3D**(`object`): `void`
 
-Defined in: [packages/three/src/fc/hooks.ts:56](https://github.com/jlehett/pulse-ts/blob/4869ef2c4af7bf37d31e2edd2d6d1ba148133fb2/packages/three/src/fc/hooks.ts#L56)
+Defined in: [packages/three/src/public/hooks.ts:83](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/three/src/public/hooks.ts#L83)
 
 Attaches an `Object3D` to the current component's root for the lifetime of the component.
 
@@ -26,3 +26,13 @@ The `THREE.Object3D` to attach.
 ## Returns
 
 `void`
+
+## Example
+
+```ts
+import * as THREE from 'three';
+import { useObject3D } from '@pulse-ts/three';
+function Helpers() {
+  useObject3D(new THREE.AxesHelper(2));
+}
+```

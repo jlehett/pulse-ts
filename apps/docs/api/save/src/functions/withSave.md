@@ -8,7 +8,7 @@
 
 > **withSave**\<`P`\>(`id`, `opts`): (`fc`) => `FC`\<`P`\>
 
-Defined in: [packages/save/src/hooks/fc.ts:64](https://github.com/jlehett/pulse-ts/blob/4869ef2c4af7bf37d31e2edd2d6d1ba148133fb2/packages/save/src/hooks/fc.ts#L64)
+Defined in: [packages/save/src/hooks/fc.ts:64](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/save/src/hooks/fc.ts#L64)
 
 Curried variant of defineFC for ergonomic composition.
 

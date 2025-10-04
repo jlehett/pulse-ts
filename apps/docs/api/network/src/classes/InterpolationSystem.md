@@ -6,7 +6,7 @@
 
 # Class: InterpolationSystem
 
-Defined in: [packages/network/src/systems/InterpolationSystem.ts:7](https://github.com/jlehett/pulse-ts/blob/4869ef2c4af7bf37d31e2edd2d6d1ba148133fb2/packages/network/src/systems/InterpolationSystem.ts#L7)
+Defined in: [packages/network/src/systems/InterpolationSystem.ts:7](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/network/src/systems/InterpolationSystem.ts#L7)
 
 Smoothly moves transforms toward replicated targets each frame.
 
@@ -34,7 +34,7 @@ Smoothly moves transforms toward replicated targets each frame.
 
 > `static` **order**: `number` = `100`
 
-Defined in: [packages/network/src/systems/InterpolationSystem.ts:10](https://github.com/jlehett/pulse-ts/blob/4869ef2c4af7bf37d31e2edd2d6d1ba148133fb2/packages/network/src/systems/InterpolationSystem.ts#L10)
+Defined in: [packages/network/src/systems/InterpolationSystem.ts:10](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/network/src/systems/InterpolationSystem.ts#L10)
 
 The order of the update that this system is registered for.
 
@@ -48,7 +48,7 @@ The order of the update that this system is registered for.
 
 > `static` **updateKind**: `"fixed"` \| `"frame"` = `'frame'`
 
-Defined in: [packages/network/src/systems/InterpolationSystem.ts:8](https://github.com/jlehett/pulse-ts/blob/4869ef2c4af7bf37d31e2edd2d6d1ba148133fb2/packages/network/src/systems/InterpolationSystem.ts#L8)
+Defined in: [packages/network/src/systems/InterpolationSystem.ts:8](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/network/src/systems/InterpolationSystem.ts#L8)
 
 The kind of update that this system is registered for.
 Defaults to 'fixed'.
@@ -63,7 +63,7 @@ Defaults to 'fixed'.
 
 > `static` **updatePhase**: `"early"` \| `"update"` \| `"late"` = `'update'`
 
-Defined in: [packages/network/src/systems/InterpolationSystem.ts:9](https://github.com/jlehett/pulse-ts/blob/4869ef2c4af7bf37d31e2edd2d6d1ba148133fb2/packages/network/src/systems/InterpolationSystem.ts#L9)
+Defined in: [packages/network/src/systems/InterpolationSystem.ts:9](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/network/src/systems/InterpolationSystem.ts#L9)
 
 The phase of the update that this system is registered for.
 Defaults to 'update'.
@@ -122,7 +122,7 @@ Detaches the system from the world.
 
 > **update**(`dt`): `void`
 
-Defined in: [packages/network/src/systems/InterpolationSystem.ts:12](https://github.com/jlehett/pulse-ts/blob/4869ef2c4af7bf37d31e2edd2d6d1ba148133fb2/packages/network/src/systems/InterpolationSystem.ts#L12)
+Defined in: [packages/network/src/systems/InterpolationSystem.ts:12](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/network/src/systems/InterpolationSystem.ts#L12)
 
 Method that will be called on every tick that this system is registered for.
 

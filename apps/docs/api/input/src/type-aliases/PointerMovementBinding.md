@@ -8,7 +8,7 @@
 
 > **PointerMovementBinding** = `object`
 
-Defined in: [packages/input/src/domain/bindings/types.ts:155](https://github.com/jlehett/pulse-ts/blob/4869ef2c4af7bf37d31e2edd2d6d1ba148133fb2/packages/input/src/domain/bindings/types.ts#L155)
+Defined in: [packages/input/src/domain/bindings/types.ts:170](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/input/src/domain/bindings/types.ts#L170)
 
 A pointer movement binding expression.
 
@@ -18,7 +18,7 @@ A pointer movement binding expression.
 
 > `optional` **invertX**: `boolean`
 
-Defined in: [packages/input/src/domain/bindings/types.ts:160](https://github.com/jlehett/pulse-ts/blob/4869ef2c4af7bf37d31e2edd2d6d1ba148133fb2/packages/input/src/domain/bindings/types.ts#L160)
+Defined in: [packages/input/src/domain/bindings/types.ts:175](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/input/src/domain/bindings/types.ts#L175)
 
 Whether to invert the x axis.
 
@@ -28,7 +28,7 @@ Whether to invert the x axis.
 
 > `optional` **invertY**: `boolean`
 
-Defined in: [packages/input/src/domain/bindings/types.ts:164](https://github.com/jlehett/pulse-ts/blob/4869ef2c4af7bf37d31e2edd2d6d1ba148133fb2/packages/input/src/domain/bindings/types.ts#L164)
+Defined in: [packages/input/src/domain/bindings/types.ts:179](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/input/src/domain/bindings/types.ts#L179)
 
 Whether to invert the y axis.
 
@@ -38,7 +38,7 @@ Whether to invert the y axis.
 
 > `optional` **scaleX**: `number`
 
-Defined in: [packages/input/src/domain/bindings/types.ts:168](https://github.com/jlehett/pulse-ts/blob/4869ef2c4af7bf37d31e2edd2d6d1ba148133fb2/packages/input/src/domain/bindings/types.ts#L168)
+Defined in: [packages/input/src/domain/bindings/types.ts:183](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/input/src/domain/bindings/types.ts#L183)
 
 The scale of the x axis.
 
@@ -48,7 +48,7 @@ The scale of the x axis.
 
 > `optional` **scaleY**: `number`
 
-Defined in: [packages/input/src/domain/bindings/types.ts:172](https://github.com/jlehett/pulse-ts/blob/4869ef2c4af7bf37d31e2edd2d6d1ba148133fb2/packages/input/src/domain/bindings/types.ts#L172)
+Defined in: [packages/input/src/domain/bindings/types.ts:187](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/input/src/domain/bindings/types.ts#L187)
 
 The scale of the y axis.
 
@@ -58,4 +58,4 @@ The scale of the y axis.
 
 > **type**: `"pointerMove"`
 
-Defined in: [packages/input/src/domain/bindings/types.ts:156](https://github.com/jlehett/pulse-ts/blob/4869ef2c4af7bf37d31e2edd2d6d1ba148133fb2/packages/input/src/domain/bindings/types.ts#L156)
+Defined in: [packages/input/src/domain/bindings/types.ts:171](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/input/src/domain/bindings/types.ts#L171)

@@ -6,7 +6,7 @@
 
 # Interface: Scheduler
 
-Defined in: [packages/core/src/infra/scheduler/types.ts:4](https://github.com/jlehett/pulse-ts/blob/4869ef2c4af7bf37d31e2edd2d6d1ba148133fb2/packages/core/src/infra/scheduler/types.ts#L4)
+Defined in: [packages/core/src/infra/scheduler/types.ts:4](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/core/src/infra/scheduler/types.ts#L4)
 
 The scheduler interface.
 
@@ -16,7 +16,7 @@ The scheduler interface.
 
 > **start**(`loop`): `void`
 
-Defined in: [packages/core/src/infra/scheduler/types.ts:5](https://github.com/jlehett/pulse-ts/blob/4869ef2c4af7bf37d31e2edd2d6d1ba148133fb2/packages/core/src/infra/scheduler/types.ts#L5)
+Defined in: [packages/core/src/infra/scheduler/types.ts:5](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/core/src/infra/scheduler/types.ts#L5)
 
 #### Parameters
 
@@ -34,7 +34,7 @@ Defined in: [packages/core/src/infra/scheduler/types.ts:5](https://github.com/jl
 
 > **stop**(): `void`
 
-Defined in: [packages/core/src/infra/scheduler/types.ts:6](https://github.com/jlehett/pulse-ts/blob/4869ef2c4af7bf37d31e2edd2d6d1ba148133fb2/packages/core/src/infra/scheduler/types.ts#L6)
+Defined in: [packages/core/src/infra/scheduler/types.ts:6](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/core/src/infra/scheduler/types.ts#L6)
 
 #### Returns
 

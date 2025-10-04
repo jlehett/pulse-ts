@@ -8,7 +8,7 @@
 
 > **SignalEnvelope** = `object`
 
-Defined in: [packages/network/src/signaling/RtcSignalingClient.ts:4](https://github.com/jlehett/pulse-ts/blob/4869ef2c4af7bf37d31e2edd2d6d1ba148133fb2/packages/network/src/signaling/RtcSignalingClient.ts#L4)
+Defined in: [packages/network/src/signaling/RtcSignalingClient.ts:4](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/network/src/signaling/RtcSignalingClient.ts#L4)
 
 ## Properties
 
@@ -16,7 +16,7 @@ Defined in: [packages/network/src/signaling/RtcSignalingClient.ts:4](https://git
 
 > `optional` **from**: `string`
 
-Defined in: [packages/network/src/signaling/RtcSignalingClient.ts:6](https://github.com/jlehett/pulse-ts/blob/4869ef2c4af7bf37d31e2edd2d6d1ba148133fb2/packages/network/src/signaling/RtcSignalingClient.ts#L6)
+Defined in: [packages/network/src/signaling/RtcSignalingClient.ts:6](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/network/src/signaling/RtcSignalingClient.ts#L6)
 
 ***
 
@@ -24,7 +24,7 @@ Defined in: [packages/network/src/signaling/RtcSignalingClient.ts:6](https://git
 
 > **payload**: `any`
 
-Defined in: [packages/network/src/signaling/RtcSignalingClient.ts:8](https://github.com/jlehett/pulse-ts/blob/4869ef2c4af7bf37d31e2edd2d6d1ba148133fb2/packages/network/src/signaling/RtcSignalingClient.ts#L8)
+Defined in: [packages/network/src/signaling/RtcSignalingClient.ts:8](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/network/src/signaling/RtcSignalingClient.ts#L8)
 
 ***
 
@@ -32,7 +32,7 @@ Defined in: [packages/network/src/signaling/RtcSignalingClient.ts:8](https://git
 
 > **to**: `string`
 
-Defined in: [packages/network/src/signaling/RtcSignalingClient.ts:5](https://github.com/jlehett/pulse-ts/blob/4869ef2c4af7bf37d31e2edd2d6d1ba148133fb2/packages/network/src/signaling/RtcSignalingClient.ts#L5)
+Defined in: [packages/network/src/signaling/RtcSignalingClient.ts:5](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/network/src/signaling/RtcSignalingClient.ts#L5)
 
 ***
 
@@ -40,4 +40,4 @@ Defined in: [packages/network/src/signaling/RtcSignalingClient.ts:5](https://git
 
 > **type**: `"hello"` \| `"offer"` \| `"answer"` \| `"ice"`
 
-Defined in: [packages/network/src/signaling/RtcSignalingClient.ts:7](https://github.com/jlehett/pulse-ts/blob/4869ef2c4af7bf37d31e2edd2d6d1ba148133fb2/packages/network/src/signaling/RtcSignalingClient.ts#L7)
+Defined in: [packages/network/src/signaling/RtcSignalingClient.ts:7](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/network/src/signaling/RtcSignalingClient.ts#L7)

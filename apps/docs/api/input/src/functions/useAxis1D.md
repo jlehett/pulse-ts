@@ -8,7 +8,7 @@
 
 > **useAxis1D**(`name`): () => `number`
 
-Defined in: [packages/input/src/public/hooks.ts:60](https://github.com/jlehett/pulse-ts/blob/4869ef2c4af7bf37d31e2edd2d6d1ba148133fb2/packages/input/src/public/hooks.ts#L60)
+Defined in: [packages/input/src/public/hooks.ts:60](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/input/src/public/hooks.ts#L60)
 
 Create an accessor for a 1D axis value.
 

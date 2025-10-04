@@ -6,7 +6,9 @@
 
 # Interface: StatsOverlayOptions
 
-Defined in: [packages/three/src/systems/statsOverlay.ts:5](https://github.com/jlehett/pulse-ts/blob/4869ef2c4af7bf37d31e2edd2d6d1ba148133fb2/packages/three/src/systems/statsOverlay.ts#L5)
+Defined in: [packages/three/src/systems/statsOverlay.ts:8](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/three/src/systems/statsOverlay.ts#L8)
+
+Options for the on-screen performance stats overlay.
 
 ## Properties
 
@@ -14,7 +16,9 @@ Defined in: [packages/three/src/systems/statsOverlay.ts:5](https://github.com/jl
 
 > `optional` **background**: `string`
 
-Defined in: [packages/three/src/systems/statsOverlay.ts:7](https://github.com/jlehett/pulse-ts/blob/4869ef2c4af7bf37d31e2edd2d6d1ba148133fb2/packages/three/src/systems/statsOverlay.ts#L7)
+Defined in: [packages/three/src/systems/statsOverlay.ts:12](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/three/src/systems/statsOverlay.ts#L12)
+
+Background CSS color. Default: `rgba(0,0,0,0.4)`.
 
 ***
 
@@ -22,7 +26,9 @@ Defined in: [packages/three/src/systems/statsOverlay.ts:7](https://github.com/jl
 
 > `optional` **color**: `string`
 
-Defined in: [packages/three/src/systems/statsOverlay.ts:8](https://github.com/jlehett/pulse-ts/blob/4869ef2c4af7bf37d31e2edd2d6d1ba148133fb2/packages/three/src/systems/statsOverlay.ts#L8)
+Defined in: [packages/three/src/systems/statsOverlay.ts:14](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/three/src/systems/statsOverlay.ts#L14)
+
+Text color. Default: `#0f0`.
 
 ***
 
@@ -30,7 +36,9 @@ Defined in: [packages/three/src/systems/statsOverlay.ts:8](https://github.com/jl
 
 > `optional` **font**: `string`
 
-Defined in: [packages/three/src/systems/statsOverlay.ts:9](https://github.com/jlehett/pulse-ts/blob/4869ef2c4af7bf37d31e2edd2d6d1ba148133fb2/packages/three/src/systems/statsOverlay.ts#L9)
+Defined in: [packages/three/src/systems/statsOverlay.ts:16](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/three/src/systems/statsOverlay.ts#L16)
+
+CSS font. Default: `12px monospace`.
 
 ***
 
@@ -38,7 +46,9 @@ Defined in: [packages/three/src/systems/statsOverlay.ts:9](https://github.com/jl
 
 > `optional` **pad**: `string`
 
-Defined in: [packages/three/src/systems/statsOverlay.ts:10](https://github.com/jlehett/pulse-ts/blob/4869ef2c4af7bf37d31e2edd2d6d1ba148133fb2/packages/three/src/systems/statsOverlay.ts#L10)
+Defined in: [packages/three/src/systems/statsOverlay.ts:18](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/three/src/systems/statsOverlay.ts#L18)
+
+CSS padding. Default: `2px 6px`.
 
 ***
 
@@ -46,7 +56,9 @@ Defined in: [packages/three/src/systems/statsOverlay.ts:10](https://github.com/j
 
 > `optional` **position**: `"top-left"` \| `"top-right"` \| `"bottom-left"` \| `"bottom-right"`
 
-Defined in: [packages/three/src/systems/statsOverlay.ts:6](https://github.com/jlehett/pulse-ts/blob/4869ef2c4af7bf37d31e2edd2d6d1ba148133fb2/packages/three/src/systems/statsOverlay.ts#L6)
+Defined in: [packages/three/src/systems/statsOverlay.ts:10](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/three/src/systems/statsOverlay.ts#L10)
+
+Corner to anchor the overlay. Default: `top-left`.
 
 ***
 
@@ -54,7 +66,9 @@ Defined in: [packages/three/src/systems/statsOverlay.ts:6](https://github.com/jl
 
 > `optional` **updateMs**: `number`
 
-Defined in: [packages/three/src/systems/statsOverlay.ts:12](https://github.com/jlehett/pulse-ts/blob/4869ef2c4af7bf37d31e2edd2d6d1ba148133fb2/packages/three/src/systems/statsOverlay.ts#L12)
+Defined in: [packages/three/src/systems/statsOverlay.ts:22](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/three/src/systems/statsOverlay.ts#L22)
+
+Update interval in milliseconds. Default: `300`.
 
 ***
 
@@ -62,4 +76,6 @@ Defined in: [packages/three/src/systems/statsOverlay.ts:12](https://github.com/j
 
 > `optional` **zIndex**: `string` \| `number`
 
-Defined in: [packages/three/src/systems/statsOverlay.ts:11](https://github.com/jlehett/pulse-ts/blob/4869ef2c4af7bf37d31e2edd2d6d1ba148133fb2/packages/three/src/systems/statsOverlay.ts#L11)
+Defined in: [packages/three/src/systems/statsOverlay.ts:20](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/three/src/systems/statsOverlay.ts#L20)
+
+CSS z-index. Default: `1000`.

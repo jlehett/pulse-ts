@@ -6,7 +6,7 @@
 
 # Class: EventBus\<E\>
 
-Defined in: [packages/core/src/utils/event.ts:83](https://github.com/jlehett/pulse-ts/blob/4869ef2c4af7bf37d31e2edd2d6d1ba148133fb2/packages/core/src/utils/event.ts#L83)
+Defined in: [packages/core/src/utils/event.ts:83](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/core/src/utils/event.ts#L83)
 
 Multi-channel event bus. `E` maps event names to payloads.
 
@@ -40,7 +40,7 @@ bus.on('hit', e => ...);
 
 > **clear**\<`K`\>(`type?`): `void`
 
-Defined in: [packages/core/src/utils/event.ts:132](https://github.com/jlehett/pulse-ts/blob/4869ef2c4af7bf37d31e2edd2d6d1ba148133fb2/packages/core/src/utils/event.ts#L132)
+Defined in: [packages/core/src/utils/event.ts:132](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/core/src/utils/event.ts#L132)
 
 Remove all listeners.
 
@@ -68,7 +68,7 @@ The event type.
 
 > **emit**\<`K`\>(`type`, `e`): `void`
 
-Defined in: [packages/core/src/utils/event.ts:116](https://github.com/jlehett/pulse-ts/blob/4869ef2c4af7bf37d31e2edd2d6d1ba148133fb2/packages/core/src/utils/event.ts#L116)
+Defined in: [packages/core/src/utils/event.ts:116](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/core/src/utils/event.ts#L116)
 
 Emit an event to all listeners.
 
@@ -102,7 +102,7 @@ The event.
 
 > **on**\<`K`\>(`type`, `fn`): () => `void`
 
-Defined in: [packages/core/src/utils/event.ts:92](https://github.com/jlehett/pulse-ts/blob/4869ef2c4af7bf37d31e2edd2d6d1ba148133fb2/packages/core/src/utils/event.ts#L92)
+Defined in: [packages/core/src/utils/event.ts:92](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/core/src/utils/event.ts#L92)
 
 Subscribe to an event.
 
@@ -142,7 +142,7 @@ A disposer.
 
 > **once**\<`K`\>(`type`, `fn`): () => `void`
 
-Defined in: [packages/core/src/utils/event.ts:103](https://github.com/jlehett/pulse-ts/blob/4869ef2c4af7bf37d31e2edd2d6d1ba148133fb2/packages/core/src/utils/event.ts#L103)
+Defined in: [packages/core/src/utils/event.ts:103](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/core/src/utils/event.ts#L103)
 
 Subscribe once to an event; auto-unsubscribes after first emission.
 
@@ -182,7 +182,7 @@ A disposer.
 
 > **size**\<`K`\>(`type`): `number`
 
-Defined in: [packages/core/src/utils/event.ts:144](https://github.com/jlehett/pulse-ts/blob/4869ef2c4af7bf37d31e2edd2d6d1ba148133fb2/packages/core/src/utils/event.ts#L144)
+Defined in: [packages/core/src/utils/event.ts:144](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/core/src/utils/event.ts#L144)
 
 Current listener count (debug).
 

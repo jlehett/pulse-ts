@@ -6,7 +6,7 @@
 
 # Class: VirtualInput
 
-Defined in: [packages/input/src/public/virtual.ts:15](https://github.com/jlehett/pulse-ts/blob/4869ef2c4af7bf37d31e2edd2d6d1ba148133fb2/packages/input/src/public/virtual.ts#L15)
+Defined in: [packages/input/src/public/virtual.ts:15](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/input/src/public/virtual.ts#L15)
 
 Virtual input helper for tests and bots. Does not attach to DOM.
 
@@ -25,7 +25,9 @@ vi.axis2D('move', { x: 1, y: 0 });
 
 > **new VirtualInput**(`service`): `VirtualInput`
 
-Defined in: [packages/input/src/public/virtual.ts:16](https://github.com/jlehett/pulse-ts/blob/4869ef2c4af7bf37d31e2edd2d6d1ba148133fb2/packages/input/src/public/virtual.ts#L16)
+Defined in: [packages/input/src/public/virtual.ts:30](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/input/src/public/virtual.ts#L30)
+
+Create a virtual input injector bound to an `InputService`.
 
 #### Parameters
 
@@ -33,17 +35,58 @@ Defined in: [packages/input/src/public/virtual.ts:16](https://github.com/jlehett
 
 [`InputService`](InputService.md)
 
+The target input service to inject into.
+
 #### Returns
 
 `VirtualInput`
 
+#### Example
+
+```ts
+import { InputService, VirtualInput } from '@pulse-ts/input';
+const svc = new InputService();
+const vi = new VirtualInput(svc);
+vi.press('jump');
+svc.commit();
+console.log(svc.action('jump').pressed); // true
+```
+
 ## Methods
+
+### axis1D()
+
+> **axis1D**(`action`, `value`): `void`
+
+Defined in: [packages/input/src/public/virtual.ts:64](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/input/src/public/virtual.ts#L64)
+
+Inject a per-frame 1D axis value.
+
+#### Parameters
+
+##### action
+
+`string`
+
+Axis name.
+
+##### value
+
+`number`
+
+Numeric value to add this frame.
+
+#### Returns
+
+`void`
+
+***
 
 ### axis2D()
 
 > **axis2D**(`action`, `axes`): `void`
 
-Defined in: [packages/input/src/public/virtual.ts:41](https://github.com/jlehett/pulse-ts/blob/4869ef2c4af7bf37d31e2edd2d6d1ba148133fb2/packages/input/src/public/virtual.ts#L41)
+Defined in: [packages/input/src/public/virtual.ts:55](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/input/src/public/virtual.ts#L55)
 
 Inject per-frame 2D axis deltas.
 
@@ -71,7 +114,7 @@ Object with numeric components to accumulate this frame.
 
 > **press**(`action`, `sourceId`): `void`
 
-Defined in: [packages/input/src/public/virtual.ts:23](https://github.com/jlehett/pulse-ts/blob/4869ef2c4af7bf37d31e2edd2d6d1ba148133fb2/packages/input/src/public/virtual.ts#L23)
+Defined in: [packages/input/src/public/virtual.ts:37](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/input/src/public/virtual.ts#L37)
 
 Press an action.
 
@@ -99,7 +142,7 @@ Optional virtual source id for debugging.
 
 > **release**(`action`, `sourceId`): `void`
 
-Defined in: [packages/input/src/public/virtual.ts:32](https://github.com/jlehett/pulse-ts/blob/4869ef2c4af7bf37d31e2edd2d6d1ba148133fb2/packages/input/src/public/virtual.ts#L32)
+Defined in: [packages/input/src/public/virtual.ts:46](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/input/src/public/virtual.ts#L46)
 
 Release an action.
 

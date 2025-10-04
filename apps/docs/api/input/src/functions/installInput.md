@@ -8,7 +8,7 @@
 
 > **installInput**(`world`, `opts`): [`InputService`](../classes/InputService.md)
 
-Defined in: [packages/input/src/public/install.ts:42](https://github.com/jlehett/pulse-ts/blob/4869ef2c4af7bf37d31e2edd2d6d1ba148133fb2/packages/input/src/public/install.ts#L42)
+Defined in: [packages/input/src/public/install.ts:42](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/input/src/public/install.ts#L42)
 
 Convenience installer for `@pulse-ts/input`.
 Wires up the `InputService`, registers DOM providers when available, and
@@ -24,7 +24,7 @@ The world to install into.
 
 ### opts
 
-`InstallInputOptions` = `{}`
+[`InstallInputOptions`](../type-aliases/InstallInputOptions.md) = `{}`
 
 Optional install options and default bindings.
 

@@ -8,7 +8,7 @@
 
 > **UpdateKind** = `"fixed"` \| `"frame"`
 
-Defined in: [packages/core/src/domain/ecs/base/types.ts:11](https://github.com/jlehett/pulse-ts/blob/4869ef2c4af7bf37d31e2edd2d6d1ba148133fb2/packages/core/src/domain/ecs/base/types.ts#L11)
+Defined in: [packages/core/src/domain/ecs/base/types.ts:11](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/core/src/domain/ecs/base/types.ts#L11)
 
 The kind of update.
 - `fixed` is used for fixed time updates, like physics.

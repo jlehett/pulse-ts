@@ -6,7 +6,7 @@
 
 # Interface: Transport
 
-Defined in: [packages/network/src/types.ts:14](https://github.com/jlehett/pulse-ts/blob/4869ef2c4af7bf37d31e2edd2d6d1ba148133fb2/packages/network/src/types.ts#L14)
+Defined in: [packages/network/src/types.ts:14](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/network/src/types.ts#L14)
 
 Low-level transport deals only in bytes; higher layers handle encoding.
 
@@ -16,7 +16,7 @@ Low-level transport deals only in bytes; higher layers handle encoding.
 
 > `readonly` **kind**: `string`
 
-Defined in: [packages/network/src/types.ts:18](https://github.com/jlehett/pulse-ts/blob/4869ef2c4af7bf37d31e2edd2d6d1ba148133fb2/packages/network/src/types.ts#L18)
+Defined in: [packages/network/src/types.ts:18](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/network/src/types.ts#L18)
 
 The kind of transport.
 
@@ -26,7 +26,7 @@ The kind of transport.
 
 > `readonly` **supportsBinary**: `boolean`
 
-Defined in: [packages/network/src/types.ts:22](https://github.com/jlehett/pulse-ts/blob/4869ef2c4af7bf37d31e2edd2d6d1ba148133fb2/packages/network/src/types.ts#L22)
+Defined in: [packages/network/src/types.ts:22](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/network/src/types.ts#L22)
 
 Whether the transport supports binary.
 
@@ -36,7 +36,7 @@ Whether the transport supports binary.
 
 > **connect**(): `Promise`\<`void`\>
 
-Defined in: [packages/network/src/types.ts:31](https://github.com/jlehett/pulse-ts/blob/4869ef2c4af7bf37d31e2edd2d6d1ba148133fb2/packages/network/src/types.ts#L31)
+Defined in: [packages/network/src/types.ts:31](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/network/src/types.ts#L31)
 
 Connect to the transport.
 
@@ -50,7 +50,7 @@ Connect to the transport.
 
 > **disconnect**(`code?`, `reason?`): `Promise`\<`void`\>
 
-Defined in: [packages/network/src/types.ts:37](https://github.com/jlehett/pulse-ts/blob/4869ef2c4af7bf37d31e2edd2d6d1ba148133fb2/packages/network/src/types.ts#L37)
+Defined in: [packages/network/src/types.ts:37](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/network/src/types.ts#L37)
 
 Disconnect from the transport.
 
@@ -78,7 +78,7 @@ The reason.
 
 > **getStatus**(): [`TransportStatus`](../type-aliases/TransportStatus.md)
 
-Defined in: [packages/network/src/types.ts:27](https://github.com/jlehett/pulse-ts/blob/4869ef2c4af7bf37d31e2edd2d6d1ba148133fb2/packages/network/src/types.ts#L27)
+Defined in: [packages/network/src/types.ts:27](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/network/src/types.ts#L27)
 
 Get the status of the transport.
 
@@ -94,7 +94,7 @@ The status.
 
 > **onMessage**(`fn`): () => `void`
 
-Defined in: [packages/network/src/types.ts:48](https://github.com/jlehett/pulse-ts/blob/4869ef2c4af7bf37d31e2edd2d6d1ba148133fb2/packages/network/src/types.ts#L48)
+Defined in: [packages/network/src/types.ts:48](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/network/src/types.ts#L48)
 
 On message handler.
 
@@ -122,7 +122,7 @@ The unsubscribe function.
 
 > `optional` **onPeerJoin**(`fn`): () => `void`
 
-Defined in: [packages/network/src/types.ts:59](https://github.com/jlehett/pulse-ts/blob/4869ef2c4af7bf37d31e2edd2d6d1ba148133fb2/packages/network/src/types.ts#L59)
+Defined in: [packages/network/src/types.ts:59](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/network/src/types.ts#L59)
 
 Optional peer lifecycle (for P2P transports).
 
@@ -146,7 +146,7 @@ Optional peer lifecycle (for P2P transports).
 
 > `optional` **onPeerLeave**(`fn`): () => `void`
 
-Defined in: [packages/network/src/types.ts:60](https://github.com/jlehett/pulse-ts/blob/4869ef2c4af7bf37d31e2edd2d6d1ba148133fb2/packages/network/src/types.ts#L60)
+Defined in: [packages/network/src/types.ts:60](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/network/src/types.ts#L60)
 
 #### Parameters
 
@@ -168,7 +168,7 @@ Defined in: [packages/network/src/types.ts:60](https://github.com/jlehett/pulse-
 
 > **onStatus**(`fn`): () => `void`
 
-Defined in: [packages/network/src/types.ts:56](https://github.com/jlehett/pulse-ts/blob/4869ef2c4af7bf37d31e2edd2d6d1ba148133fb2/packages/network/src/types.ts#L56)
+Defined in: [packages/network/src/types.ts:56](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/network/src/types.ts#L56)
 
 On status handler.
 
@@ -196,7 +196,7 @@ The unsubscribe function.
 
 > `optional` **peers**(): `string`[]
 
-Defined in: [packages/network/src/types.ts:61](https://github.com/jlehett/pulse-ts/blob/4869ef2c4af7bf37d31e2edd2d6d1ba148133fb2/packages/network/src/types.ts#L61)
+Defined in: [packages/network/src/types.ts:61](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/network/src/types.ts#L61)
 
 #### Returns
 
@@ -208,7 +208,7 @@ Defined in: [packages/network/src/types.ts:61](https://github.com/jlehett/pulse-
 
 > **send**(`data`): `void` \| `Promise`\<`void`\>
 
-Defined in: [packages/network/src/types.ts:42](https://github.com/jlehett/pulse-ts/blob/4869ef2c4af7bf37d31e2edd2d6d1ba148133fb2/packages/network/src/types.ts#L42)
+Defined in: [packages/network/src/types.ts:42](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/network/src/types.ts#L42)
 
 Send a message.
 

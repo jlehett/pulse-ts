@@ -6,13 +6,26 @@
 
 # Class: ThreeService
 
-Defined in: [packages/three/src/services/Three.ts:26](https://github.com/jlehett/pulse-ts/blob/4869ef2c4af7bf37d31e2edd2d6d1ba148133fb2/packages/three/src/services/Three.ts#L26)
+Defined in: [packages/three/src/services/Three.ts:56](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/three/src/services/Three.ts#L56)
 
 ThreeService: provides renderer/scene/camera and scene-graph bridging.
 
-- Lifecycles with the World as a Service (not a System)
-- Focused Systems (render, camera PV, TRS sync) consume this service
-- Encapsulates node<->Object3D root mapping and parenting
+- Lifecycles with the `World` as a `Service` (not a `System`).
+- Focused systems (render, camera PV, TRS sync) consume this service.
+- Encapsulates Node ↔ Object3D root mapping and parenting.
+
+## Example
+
+```ts
+import { World, Node } from '@pulse-ts/core';
+import { ThreeService } from '@pulse-ts/three';
+
+const world = new World();
+const canvas = document.createElement('canvas');
+const three = world.provideService(new ThreeService({ canvas }));
+const node = world.add(new Node());
+const root = three.ensureRoot(node); // Object3D root for this node
+```
 
 ## Extends
 
@@ -24,7 +37,7 @@ ThreeService: provides renderer/scene/camera and scene-graph bridging.
 
 > **new ThreeService**(`opts`): `ThreeService`
 
-Defined in: [packages/three/src/services/Three.ts:37](https://github.com/jlehett/pulse-ts/blob/4869ef2c4af7bf37d31e2edd2d6d1ba148133fb2/packages/three/src/services/Three.ts#L37)
+Defined in: [packages/three/src/services/Three.ts:67](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/three/src/services/Three.ts#L67)
 
 #### Parameters
 
@@ -46,7 +59,7 @@ Defined in: [packages/three/src/services/Three.ts:37](https://github.com/jlehett
 
 > `readonly` **camera**: `PerspectiveCamera`
 
-Defined in: [packages/three/src/services/Three.ts:29](https://github.com/jlehett/pulse-ts/blob/4869ef2c4af7bf37d31e2edd2d6d1ba148133fb2/packages/three/src/services/Three.ts#L29)
+Defined in: [packages/three/src/services/Three.ts:59](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/three/src/services/Three.ts#L59)
 
 ***
 
@@ -54,7 +67,7 @@ Defined in: [packages/three/src/services/Three.ts:29](https://github.com/jlehett
 
 > `readonly` **options**: `Required`\<[`ThreeOptions`](../interfaces/ThreeOptions.md)\>
 
-Defined in: [packages/three/src/services/Three.ts:30](https://github.com/jlehett/pulse-ts/blob/4869ef2c4af7bf37d31e2edd2d6d1ba148133fb2/packages/three/src/services/Three.ts#L30)
+Defined in: [packages/three/src/services/Three.ts:60](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/three/src/services/Three.ts#L60)
 
 ***
 
@@ -62,7 +75,7 @@ Defined in: [packages/three/src/services/Three.ts:30](https://github.com/jlehett
 
 > `readonly` **renderer**: `WebGLRenderer`
 
-Defined in: [packages/three/src/services/Three.ts:27](https://github.com/jlehett/pulse-ts/blob/4869ef2c4af7bf37d31e2edd2d6d1ba148133fb2/packages/three/src/services/Three.ts#L27)
+Defined in: [packages/three/src/services/Three.ts:57](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/three/src/services/Three.ts#L57)
 
 ***
 
@@ -70,7 +83,7 @@ Defined in: [packages/three/src/services/Three.ts:27](https://github.com/jlehett
 
 > `readonly` **scene**: `Scene`
 
-Defined in: [packages/three/src/services/Three.ts:28](https://github.com/jlehett/pulse-ts/blob/4869ef2c4af7bf37d31e2edd2d6d1ba148133fb2/packages/three/src/services/Three.ts#L28)
+Defined in: [packages/three/src/services/Three.ts:58](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/three/src/services/Three.ts#L58)
 
 ## Methods
 
@@ -78,7 +91,7 @@ Defined in: [packages/three/src/services/Three.ts:28](https://github.com/jlehett
 
 > **attach**(`world`): `void`
 
-Defined in: [packages/three/src/services/Three.ts:67](https://github.com/jlehett/pulse-ts/blob/4869ef2c4af7bf37d31e2edd2d6d1ba148133fb2/packages/three/src/services/Three.ts#L67)
+Defined in: [packages/three/src/services/Three.ts:97](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/three/src/services/Three.ts#L97)
 
 Attaches the service to the world.
 
@@ -104,9 +117,9 @@ The world to attach the service to.
 
 > **attachChild**(`node`, `child`): `void`
 
-Defined in: [packages/three/src/services/Three.ts:126](https://github.com/jlehett/pulse-ts/blob/4869ef2c4af7bf37d31e2edd2d6d1ba148133fb2/packages/three/src/services/Three.ts#L126)
+Defined in: [packages/three/src/services/Three.ts:156](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/three/src/services/Three.ts#L156)
 
-Attaches a child Object3D to the root of the given node.
+Attaches a child `Object3D` to the root of the given node.
 
 #### Parameters
 
@@ -120,7 +133,7 @@ The node to attach the child to.
 
 `Object3D`
 
-The child Object3D to attach.
+The child `Object3D` to attach.
 
 #### Returns
 
@@ -132,7 +145,7 @@ The child Object3D to attach.
 
 > **detach**(): `void`
 
-Defined in: [packages/three/src/services/Three.ts:81](https://github.com/jlehett/pulse-ts/blob/4869ef2c4af7bf37d31e2edd2d6d1ba148133fb2/packages/three/src/services/Three.ts#L81)
+Defined in: [packages/three/src/services/Three.ts:111](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/three/src/services/Three.ts#L111)
 
 Detaches the service from the world.
 
@@ -150,9 +163,9 @@ Detaches the service from the world.
 
 > **detachChild**(`node`, `child`): `void`
 
-Defined in: [packages/three/src/services/Three.ts:136](https://github.com/jlehett/pulse-ts/blob/4869ef2c4af7bf37d31e2edd2d6d1ba148133fb2/packages/three/src/services/Three.ts#L136)
+Defined in: [packages/three/src/services/Three.ts:166](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/three/src/services/Three.ts#L166)
 
-Detaches a child Object3D from the root of the given node.
+Detaches a child `Object3D` from the root of the given node.
 
 #### Parameters
 
@@ -166,7 +179,7 @@ The node to detach the child from.
 
 `Object3D`
 
-The child Object3D to detach.
+The child `Object3D` to detach.
 
 #### Returns
 
@@ -178,9 +191,9 @@ The child Object3D to detach.
 
 > **disposeRoot**(`node`): `void`
 
-Defined in: [packages/three/src/services/Three.ts:146](https://github.com/jlehett/pulse-ts/blob/4869ef2c4af7bf37d31e2edd2d6d1ba148133fb2/packages/three/src/services/Three.ts#L146)
+Defined in: [packages/three/src/services/Three.ts:176](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/three/src/services/Three.ts#L176)
 
-Disposes the root Object3D for the given node.
+Disposes the root `Object3D` for the given node and removes it from the scene graph.
 
 #### Parameters
 
@@ -200,7 +213,7 @@ The node to dispose the root for.
 
 > **ensureRoot**(`node`): `Object3D`
 
-Defined in: [packages/three/src/services/Three.ts:105](https://github.com/jlehett/pulse-ts/blob/4869ef2c4af7bf37d31e2edd2d6d1ba148133fb2/packages/three/src/services/Three.ts#L105)
+Defined in: [packages/three/src/services/Three.ts:135](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/three/src/services/Three.ts#L135)
 
 Ensures a root Object3D for the given node.
 
@@ -216,7 +229,7 @@ The node to ensure a root for.
 
 `Object3D`
 
-The root Object3D.
+The root `THREE.Object3D`.
 
 ***
 
@@ -224,12 +237,12 @@ The root Object3D.
 
 > **iterateRoots**(): `IterableIterator`\<\[`Node`, `RootRecord`\]\>
 
-Defined in: [packages/three/src/services/Three.ts:157](https://github.com/jlehett/pulse-ts/blob/4869ef2c4af7bf37d31e2edd2d6d1ba148133fb2/packages/three/src/services/Three.ts#L157)
+Defined in: [packages/three/src/services/Three.ts:187](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/three/src/services/Three.ts#L187)
 
-Iterates over the roots.
+Iterates node→root records managed by the service.
 
 #### Returns
 
 `IterableIterator`\<\[`Node`, `RootRecord`\]\>
 
-An iterator over the roots.
+Iterator of `[Node, RootRecord]` entries.

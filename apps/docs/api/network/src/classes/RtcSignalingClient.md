@@ -6,7 +6,7 @@
 
 # Class: RtcSignalingClient
 
-Defined in: [packages/network/src/signaling/RtcSignalingClient.ts:12](https://github.com/jlehett/pulse-ts/blob/4869ef2c4af7bf37d31e2edd2d6d1ba148133fb2/packages/network/src/signaling/RtcSignalingClient.ts#L12)
+Defined in: [packages/network/src/signaling/RtcSignalingClient.ts:12](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/network/src/signaling/RtcSignalingClient.ts#L12)
 
 Minimal signaling client riding on TransportService over the broker.
 
@@ -16,7 +16,7 @@ Minimal signaling client riding on TransportService over the broker.
 
 > **new RtcSignalingClient**(`svc`, `selfId`): `RtcSignalingClient`
 
-Defined in: [packages/network/src/signaling/RtcSignalingClient.ts:15](https://github.com/jlehett/pulse-ts/blob/4869ef2c4af7bf37d31e2edd2d6d1ba148133fb2/packages/network/src/signaling/RtcSignalingClient.ts#L15)
+Defined in: [packages/network/src/signaling/RtcSignalingClient.ts:15](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/network/src/signaling/RtcSignalingClient.ts#L15)
 
 #### Parameters
 
@@ -38,7 +38,7 @@ Defined in: [packages/network/src/signaling/RtcSignalingClient.ts:15](https://gi
 
 > **send**(`to`, `type`, `payload`): `void`
 
-Defined in: [packages/network/src/signaling/RtcSignalingClient.ts:38](https://github.com/jlehett/pulse-ts/blob/4869ef2c4af7bf37d31e2edd2d6d1ba148133fb2/packages/network/src/signaling/RtcSignalingClient.ts#L38)
+Defined in: [packages/network/src/signaling/RtcSignalingClient.ts:38](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/network/src/signaling/RtcSignalingClient.ts#L38)
 
 #### Parameters
 
@@ -64,7 +64,7 @@ Defined in: [packages/network/src/signaling/RtcSignalingClient.ts:38](https://gi
 
 > **start**(`onMessage`): `void`
 
-Defined in: [packages/network/src/signaling/RtcSignalingClient.ts:22](https://github.com/jlehett/pulse-ts/blob/4869ef2c4af7bf37d31e2edd2d6d1ba148133fb2/packages/network/src/signaling/RtcSignalingClient.ts#L22)
+Defined in: [packages/network/src/signaling/RtcSignalingClient.ts:22](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/network/src/signaling/RtcSignalingClient.ts#L22)
 
 #### Parameters
 
@@ -82,7 +82,7 @@ Defined in: [packages/network/src/signaling/RtcSignalingClient.ts:22](https://gi
 
 > **stop**(): `void`
 
-Defined in: [packages/network/src/signaling/RtcSignalingClient.ts:33](https://github.com/jlehett/pulse-ts/blob/4869ef2c4af7bf37d31e2edd2d6d1ba148133fb2/packages/network/src/signaling/RtcSignalingClient.ts#L33)
+Defined in: [packages/network/src/signaling/RtcSignalingClient.ts:33](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/network/src/signaling/RtcSignalingClient.ts#L33)
 
 #### Returns
 

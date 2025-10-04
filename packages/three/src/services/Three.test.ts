@@ -138,7 +138,6 @@ describe('ThreeService', () => {
         );
 
         // Background color
-        // @ts-expect-error – background is a mock Color with a .value property
         expect((svc.scene.background as any).value).toBe(0x123456);
 
         // Camera aspect after resizeToCanvas

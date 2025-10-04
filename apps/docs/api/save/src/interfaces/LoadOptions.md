@@ -6,7 +6,7 @@
 
 # Interface: LoadOptions
 
-Defined in: [packages/save/src/types.ts:19](https://github.com/jlehett/pulse-ts/blob/4869ef2c4af7bf37d31e2edd2d6d1ba148133fb2/packages/save/src/types.ts#L19)
+Defined in: [packages/save/src/types.ts:19](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/save/src/types.ts#L19)
 
 Options for loading a world.
 
@@ -16,7 +16,7 @@ Options for loading a world.
 
 > `optional` **applyTime**: `boolean`
 
-Defined in: [packages/save/src/types.ts:27](https://github.com/jlehett/pulse-ts/blob/4869ef2c4af7bf37d31e2edd2d6d1ba148133fb2/packages/save/src/types.ts#L27)
+Defined in: [packages/save/src/types.ts:27](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/save/src/types.ts#L27)
 
 Whether to apply the saved time state.
 
@@ -26,7 +26,7 @@ Whether to apply the saved time state.
 
 > `optional` **resetPrevious**: `boolean`
 
-Defined in: [packages/save/src/types.ts:25](https://github.com/jlehett/pulse-ts/blob/4869ef2c4af7bf37d31e2edd2d6d1ba148133fb2/packages/save/src/types.ts#L25)
+Defined in: [packages/save/src/types.ts:25](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/save/src/types.ts#L25)
 
 Whether to reset the previous values of the Transform component when applying.
 
@@ -36,6 +36,6 @@ Whether to reset the previous values of the Transform component when applying.
 
 > `optional` **strict**: `boolean`
 
-Defined in: [packages/save/src/types.ts:23](https://github.com/jlehett/pulse-ts/blob/4869ef2c4af7bf37d31e2edd2d6d1ba148133fb2/packages/save/src/types.ts#L23)
+Defined in: [packages/save/src/types.ts:23](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/save/src/types.ts#L23)
 
 Whether to fail if a node is missing when loading a save file in-place.

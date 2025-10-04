@@ -6,7 +6,7 @@
 
 # Interface: Codec
 
-Defined in: [packages/network/src/types.ts:89](https://github.com/jlehett/pulse-ts/blob/4869ef2c4af7bf37d31e2edd2d6d1ba148133fb2/packages/network/src/types.ts#L89)
+Defined in: [packages/network/src/types.ts:89](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/network/src/types.ts#L89)
 
 A codec for encoding and decoding packets.
 
@@ -16,7 +16,7 @@ A codec for encoding and decoding packets.
 
 > **decode**(`bytes`): [`Packet`](Packet.md)
 
-Defined in: [packages/network/src/types.ts:101](https://github.com/jlehett/pulse-ts/blob/4869ef2c4af7bf37d31e2edd2d6d1ba148133fb2/packages/network/src/types.ts#L101)
+Defined in: [packages/network/src/types.ts:101](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/network/src/types.ts#L101)
 
 Decode a packet.
 
@@ -40,7 +40,7 @@ The decoded packet.
 
 > **encode**(`packet`): `Uint8Array`
 
-Defined in: [packages/network/src/types.ts:95](https://github.com/jlehett/pulse-ts/blob/4869ef2c4af7bf37d31e2edd2d6d1ba148133fb2/packages/network/src/types.ts#L95)
+Defined in: [packages/network/src/types.ts:95](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/network/src/types.ts#L95)
 
 Encode a packet.
 

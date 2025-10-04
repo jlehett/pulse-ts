@@ -8,7 +8,7 @@
 
 > **useSaveFC**\<`P`\>(`id`, `props?`): `void`
 
-Defined in: [packages/save/src/hooks/fc.ts:12](https://github.com/jlehett/pulse-ts/blob/4869ef2c4af7bf37d31e2edd2d6d1ba148133fb2/packages/save/src/hooks/fc.ts#L12)
+Defined in: [packages/save/src/hooks/fc.ts:12](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/save/src/hooks/fc.ts#L12)
 
 Marks the current FC for persistence with a stable id and serializable props.
 Call at the top of your FC.

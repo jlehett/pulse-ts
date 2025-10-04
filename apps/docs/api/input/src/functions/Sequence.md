@@ -8,7 +8,7 @@
 
 > **Sequence**(`steps`, `opts`): [`SequenceBinding`](../type-aliases/SequenceBinding.md)
 
-Defined in: [packages/input/src/domain/bindings/expr.ts:175](https://github.com/jlehett/pulse-ts/blob/4869ef2c4af7bf37d31e2edd2d6d1ba148133fb2/packages/input/src/domain/bindings/expr.ts#L175)
+Defined in: [packages/input/src/domain/bindings/expr.ts:191](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/input/src/domain/bindings/expr.ts#L191)
 
 Create a sequence binding (ordered key presses within a frame window).
 

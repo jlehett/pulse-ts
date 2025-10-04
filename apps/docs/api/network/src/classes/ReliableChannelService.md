@@ -6,7 +6,7 @@
 
 # Class: ReliableChannelService
 
-Defined in: [packages/network/src/services/ReliableChannel.ts:48](https://github.com/jlehett/pulse-ts/blob/4869ef2c4af7bf37d31e2edd2d6d1ba148133fb2/packages/network/src/services/ReliableChannel.ts#L48)
+Defined in: [packages/network/src/services/ReliableChannel.ts:48](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/network/src/services/ReliableChannel.ts#L48)
 
 ## Extends
 
@@ -18,7 +18,7 @@ Defined in: [packages/network/src/services/ReliableChannel.ts:48](https://github
 
 > **new ReliableChannelService**(`defaults`): `ReliableChannelService`
 
-Defined in: [packages/network/src/services/ReliableChannel.ts:53](https://github.com/jlehett/pulse-ts/blob/4869ef2c4af7bf37d31e2edd2d6d1ba148133fb2/packages/network/src/services/ReliableChannel.ts#L53)
+Defined in: [packages/network/src/services/ReliableChannel.ts:53](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/network/src/services/ReliableChannel.ts#L53)
 
 #### Parameters
 
@@ -90,7 +90,7 @@ Detaches the service from the world.
 
 > **inflight**(): `number`
 
-Defined in: [packages/network/src/services/ReliableChannel.ts:155](https://github.com/jlehett/pulse-ts/blob/4869ef2c4af7bf37d31e2edd2d6d1ba148133fb2/packages/network/src/services/ReliableChannel.ts#L155)
+Defined in: [packages/network/src/services/ReliableChannel.ts:155](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/network/src/services/ReliableChannel.ts#L155)
 
 Returns number of inflight requests.
 
@@ -104,7 +104,7 @@ Returns number of inflight requests.
 
 > **send**\<`TReq`, `TRes`\>(`topic`, `payload`, `opts`): `Promise`\<[`ReliableResult`](../interfaces/ReliableResult.md)\<`TRes`\>\>
 
-Defined in: [packages/network/src/services/ReliableChannel.ts:62](https://github.com/jlehett/pulse-ts/blob/4869ef2c4af7bf37d31e2edd2d6d1ba148133fb2/packages/network/src/services/ReliableChannel.ts#L62)
+Defined in: [packages/network/src/services/ReliableChannel.ts:62](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/network/src/services/ReliableChannel.ts#L62)
 
 Sends a reliable request to a server handler registered for `topic`.
 
@@ -148,7 +148,7 @@ Sends a reliable request to a server handler registered for `topic`.
 
 > **sendTo**\<`TReq`, `TRes`\>(`peerId`, `topic`, `payload`, `opts`): `Promise`\<[`ReliableResult`](../interfaces/ReliableResult.md)\<`TRes`\>\>
 
-Defined in: [packages/network/src/services/ReliableChannel.ts:108](https://github.com/jlehett/pulse-ts/blob/4869ef2c4af7bf37d31e2edd2d6d1ba148133fb2/packages/network/src/services/ReliableChannel.ts#L108)
+Defined in: [packages/network/src/services/ReliableChannel.ts:108](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/network/src/services/ReliableChannel.ts#L108)
 
 Sends a reliable request addressed to a specific peer id (or ids).
 

@@ -8,7 +8,7 @@
 
 > **registerServiceSerializer**\<`T`\>(`ctor`, `serializer`): `void`
 
-Defined in: [packages/save/src/registries/serviceRegistry.ts:19](https://github.com/jlehett/pulse-ts/blob/4869ef2c4af7bf37d31e2edd2d6d1ba148133fb2/packages/save/src/registries/serviceRegistry.ts#L19)
+Defined in: [packages/save/src/registries/serviceRegistry.ts:19](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/save/src/registries/serviceRegistry.ts#L19)
 
 Register a service serializer.
 

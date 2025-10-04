@@ -6,7 +6,7 @@
 
 # Class: MemoryTransport
 
-Defined in: [packages/network/src/transports/memory/transport.ts:9](https://github.com/jlehett/pulse-ts/blob/4869ef2c4af7bf37d31e2edd2d6d1ba148133fb2/packages/network/src/transports/memory/transport.ts#L9)
+Defined in: [packages/network/src/transports/memory/transport.ts:9](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/network/src/transports/memory/transport.ts#L9)
 
 A transport for in-memory communication.
 
@@ -20,7 +20,7 @@ A transport for in-memory communication.
 
 > **new MemoryTransport**(`hub`, `peerId`): `MemoryTransport`
 
-Defined in: [packages/network/src/transports/memory/transport.ts:19](https://github.com/jlehett/pulse-ts/blob/4869ef2c4af7bf37d31e2edd2d6d1ba148133fb2/packages/network/src/transports/memory/transport.ts#L19)
+Defined in: [packages/network/src/transports/memory/transport.ts:19](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/network/src/transports/memory/transport.ts#L19)
 
 #### Parameters
 
@@ -42,7 +42,7 @@ Defined in: [packages/network/src/transports/memory/transport.ts:19](https://git
 
 > `readonly` **kind**: `"memory"` = `'memory'`
 
-Defined in: [packages/network/src/transports/memory/transport.ts:10](https://github.com/jlehett/pulse-ts/blob/4869ef2c4af7bf37d31e2edd2d6d1ba148133fb2/packages/network/src/transports/memory/transport.ts#L10)
+Defined in: [packages/network/src/transports/memory/transport.ts:10](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/network/src/transports/memory/transport.ts#L10)
 
 The kind of transport.
 
@@ -56,7 +56,7 @@ The kind of transport.
 
 > `readonly` **supportsBinary**: `true` = `true`
 
-Defined in: [packages/network/src/transports/memory/transport.ts:11](https://github.com/jlehett/pulse-ts/blob/4869ef2c4af7bf37d31e2edd2d6d1ba148133fb2/packages/network/src/transports/memory/transport.ts#L11)
+Defined in: [packages/network/src/transports/memory/transport.ts:11](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/network/src/transports/memory/transport.ts#L11)
 
 Whether the transport supports binary.
 
@@ -70,7 +70,7 @@ Whether the transport supports binary.
 
 > **connect**(): `Promise`\<`void`\>
 
-Defined in: [packages/network/src/transports/memory/transport.ts:35](https://github.com/jlehett/pulse-ts/blob/4869ef2c4af7bf37d31e2edd2d6d1ba148133fb2/packages/network/src/transports/memory/transport.ts#L35)
+Defined in: [packages/network/src/transports/memory/transport.ts:35](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/network/src/transports/memory/transport.ts#L35)
 
 Connect to the transport.
 
@@ -88,7 +88,7 @@ Connect to the transport.
 
 > **disconnect**(): `Promise`\<`void`\>
 
-Defined in: [packages/network/src/transports/memory/transport.ts:51](https://github.com/jlehett/pulse-ts/blob/4869ef2c4af7bf37d31e2edd2d6d1ba148133fb2/packages/network/src/transports/memory/transport.ts#L51)
+Defined in: [packages/network/src/transports/memory/transport.ts:51](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/network/src/transports/memory/transport.ts#L51)
 
 Disconnect from the transport.
 
@@ -106,7 +106,7 @@ Disconnect from the transport.
 
 > **getStatus**(): [`TransportStatus`](../type-aliases/TransportStatus.md)
 
-Defined in: [packages/network/src/transports/memory/transport.ts:28](https://github.com/jlehett/pulse-ts/blob/4869ef2c4af7bf37d31e2edd2d6d1ba148133fb2/packages/network/src/transports/memory/transport.ts#L28)
+Defined in: [packages/network/src/transports/memory/transport.ts:28](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/network/src/transports/memory/transport.ts#L28)
 
 Get the status of the transport.
 
@@ -126,7 +126,7 @@ The status.
 
 > **onMessage**(`fn`): () => `boolean`
 
-Defined in: [packages/network/src/transports/memory/transport.ts:71](https://github.com/jlehett/pulse-ts/blob/4869ef2c4af7bf37d31e2edd2d6d1ba148133fb2/packages/network/src/transports/memory/transport.ts#L71)
+Defined in: [packages/network/src/transports/memory/transport.ts:71](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/network/src/transports/memory/transport.ts#L71)
 
 On message handler.
 
@@ -158,7 +158,7 @@ The unsubscribe function.
 
 > **onStatus**(`fn`): () => `boolean`
 
-Defined in: [packages/network/src/transports/memory/transport.ts:81](https://github.com/jlehett/pulse-ts/blob/4869ef2c4af7bf37d31e2edd2d6d1ba148133fb2/packages/network/src/transports/memory/transport.ts#L81)
+Defined in: [packages/network/src/transports/memory/transport.ts:81](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/network/src/transports/memory/transport.ts#L81)
 
 On status handler.
 
@@ -190,7 +190,7 @@ The unsubscribe function.
 
 > **send**(`data`): `void`
 
-Defined in: [packages/network/src/transports/memory/transport.ts:61](https://github.com/jlehett/pulse-ts/blob/4869ef2c4af7bf37d31e2edd2d6d1ba148133fb2/packages/network/src/transports/memory/transport.ts#L61)
+Defined in: [packages/network/src/transports/memory/transport.ts:61](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/network/src/transports/memory/transport.ts#L61)
 
 Send a message.
 

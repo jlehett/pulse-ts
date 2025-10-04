@@ -8,7 +8,7 @@
 
 > **useThreeRoot**(): `Object3D`
 
-Defined in: [packages/three/src/fc/hooks.ts:38](https://github.com/jlehett/pulse-ts/blob/4869ef2c4af7bf37d31e2edd2d6d1ba148133fb2/packages/three/src/fc/hooks.ts#L38)
+Defined in: [packages/three/src/public/hooks.ts:56](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/three/src/public/hooks.ts#L56)
 
 Ensures and returns the `Object3D` root associated with the current component's `Node`.
 
@@ -20,3 +20,13 @@ Ensures and returns the `Object3D` root associated with the current component's 
 `Object3D`
 
 The `Object3D` root for the current `Node`.
+
+## Example
+
+```ts
+import { useThreeRoot } from '@pulse-ts/three';
+function WithRoot() {
+  const root = useThreeRoot();
+  root.position.set(0, 1, 0);
+}
+```

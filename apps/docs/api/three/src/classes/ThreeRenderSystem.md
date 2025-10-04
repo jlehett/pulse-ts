@@ -6,9 +6,22 @@
 
 # Class: ThreeRenderSystem
 
-Defined in: [packages/three/src/systems/render.ts:8](https://github.com/jlehett/pulse-ts/blob/4869ef2c4af7bf37d31e2edd2d6d1ba148133fb2/packages/three/src/systems/render.ts#L8)
+Defined in: [packages/three/src/systems/render.ts:20](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/three/src/systems/render.ts#L20)
 
 Renders the Three scene each frame.
+
+- Runs last in `frame.late` by default.
+- Consumes renderer, scene, and camera from `ThreeService`.
+
+## Example
+
+```ts
+import { World } from '@pulse-ts/core';
+import { ThreeRenderSystem, ThreeService } from '@pulse-ts/three';
+const world = new World();
+world.provideService(new ThreeService({ canvas: document.createElement('canvas') }));
+world.addSystem(new ThreeRenderSystem());
+```
 
 ## Extends
 
@@ -34,7 +47,7 @@ Renders the Three scene each frame.
 
 > `static` **order**: `number` = `Number.MAX_SAFE_INTEGER`
 
-Defined in: [packages/three/src/systems/render.ts:11](https://github.com/jlehett/pulse-ts/blob/4869ef2c4af7bf37d31e2edd2d6d1ba148133fb2/packages/three/src/systems/render.ts#L11)
+Defined in: [packages/three/src/systems/render.ts:23](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/three/src/systems/render.ts#L23)
 
 The order of the update that this system is registered for.
 
@@ -48,7 +61,7 @@ The order of the update that this system is registered for.
 
 > `static` **updateKind**: `UpdateKind` = `'frame'`
 
-Defined in: [packages/three/src/systems/render.ts:9](https://github.com/jlehett/pulse-ts/blob/4869ef2c4af7bf37d31e2edd2d6d1ba148133fb2/packages/three/src/systems/render.ts#L9)
+Defined in: [packages/three/src/systems/render.ts:21](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/three/src/systems/render.ts#L21)
 
 The kind of update that this system is registered for.
 Defaults to 'fixed'.
@@ -63,7 +76,7 @@ Defaults to 'fixed'.
 
 > `static` **updatePhase**: `UpdatePhase` = `'late'`
 
-Defined in: [packages/three/src/systems/render.ts:10](https://github.com/jlehett/pulse-ts/blob/4869ef2c4af7bf37d31e2edd2d6d1ba148133fb2/packages/three/src/systems/render.ts#L10)
+Defined in: [packages/three/src/systems/render.ts:22](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/three/src/systems/render.ts#L22)
 
 The phase of the update that this system is registered for.
 Defaults to 'update'.
@@ -122,7 +135,7 @@ Detaches the system from the world.
 
 > **update**(): `void`
 
-Defined in: [packages/three/src/systems/render.ts:13](https://github.com/jlehett/pulse-ts/blob/4869ef2c4af7bf37d31e2edd2d6d1ba148133fb2/packages/three/src/systems/render.ts#L13)
+Defined in: [packages/three/src/systems/render.ts:25](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/three/src/systems/render.ts#L25)
 
 Method that will be called on every tick that this system is registered for.
 

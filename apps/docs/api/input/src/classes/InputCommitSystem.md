@@ -6,7 +6,7 @@
 
 # Class: InputCommitSystem
 
-Defined in: [packages/input/src/domain/systems/commit.ts:16](https://github.com/jlehett/pulse-ts/blob/4869ef2c4af7bf37d31e2edd2d6d1ba148133fb2/packages/input/src/domain/systems/commit.ts#L16)
+Defined in: [packages/input/src/domain/systems/commit.ts:16](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/input/src/domain/systems/commit.ts#L16)
 
 System that commits input at `frame.early` so user code reads a stable snapshot.
 
@@ -58,10 +58,9 @@ The order of the update that this system is registered for.
 
 > `static` **updateKind**: `UpdateKind` = `'frame'`
 
-Defined in: [packages/input/src/domain/systems/commit.ts:17](https://github.com/jlehett/pulse-ts/blob/4869ef2c4af7bf37d31e2edd2d6d1ba148133fb2/packages/input/src/domain/systems/commit.ts#L17)
+Defined in: [packages/input/src/domain/systems/commit.ts:18](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/input/src/domain/systems/commit.ts#L18)
 
-The kind of update that this system is registered for.
-Defaults to 'fixed'.
+Runs once per frame.
 
 #### Overrides
 
@@ -73,10 +72,9 @@ Defaults to 'fixed'.
 
 > `static` **updatePhase**: `UpdatePhase` = `'early'`
 
-Defined in: [packages/input/src/domain/systems/commit.ts:18](https://github.com/jlehett/pulse-ts/blob/4869ef2c4af7bf37d31e2edd2d6d1ba148133fb2/packages/input/src/domain/systems/commit.ts#L18)
+Defined in: [packages/input/src/domain/systems/commit.ts:20](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/input/src/domain/systems/commit.ts#L20)
 
-The phase of the update that this system is registered for.
-Defaults to 'update'.
+Scheduled at the `early` phase, before user updates.
 
 #### Overrides
 
@@ -132,7 +130,7 @@ Detaches the system from the world.
 
 > **update**(): `void`
 
-Defined in: [packages/input/src/domain/systems/commit.ts:20](https://github.com/jlehett/pulse-ts/blob/4869ef2c4af7bf37d31e2edd2d6d1ba148133fb2/packages/input/src/domain/systems/commit.ts#L20)
+Defined in: [packages/input/src/domain/systems/commit.ts:22](https://github.com/jlehett/pulse-ts/blob/a2a18767041a6b69ca4c5f6131d2de266097750e/packages/input/src/domain/systems/commit.ts#L22)
 
 Method that will be called on every tick that this system is registered for.
 
