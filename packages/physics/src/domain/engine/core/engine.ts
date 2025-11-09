@@ -2,13 +2,16 @@ import type { Vec3 } from '@pulse-ts/core';
 import type { Collider } from '../../../public/components/Collider';
 import type { RigidBody } from '../../../public/components/RigidBody';
 import type { RaycastHit } from '../../types';
-import type { RaycastOptions } from './raycast';
-import { integrateTransforms, integrateVelocities } from './integration';
-import { findPairs } from './pairing';
-import { detectCollision, type Contact } from './detect';
-import { resolveContact } from './solver';
-import { raycast } from './raycast';
-import { defaultFilter, type CollisionFilter } from './filter';
+import type { RaycastOptions } from '../raycast/raycast';
+import {
+    integrateTransforms,
+    integrateVelocities,
+} from '../dynamics/integration';
+import { findPairs } from '../broadphase/pairing';
+import { detectCollision, type Contact } from '../detection/detect';
+import { resolveContact } from '../solver/solver';
+import { raycast } from '../raycast/raycast';
+import { defaultFilter, type CollisionFilter } from '../filter/filter';
 
 /**
  * Updates body velocities from forces/impulses and applies movement to transforms.

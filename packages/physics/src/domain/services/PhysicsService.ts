@@ -4,14 +4,14 @@ import { RigidBody } from '../../public/components/RigidBody';
 import type { Vec3Like } from '../../public/components/RigidBody';
 import { Collider } from '../../public/components/Collider';
 import type { PhysicsOptions, RaycastHit } from '../types';
-import { DefaultEngine, type PhysicsEngine } from './physics/engine';
-import { refreshAutomaticInertia as utilRefreshInertia } from './physics/inertia';
-import { detectManifold } from './physics/detect';
+import { DefaultEngine, type PhysicsEngine } from '../engine/core/engine';
+import { refreshAutomaticInertia as utilRefreshInertia } from '../engine/dynamics/inertia';
+import { detectManifold } from '../engine/detection/detect';
 import {
     correctPositions,
     solveContactsIterative,
     type ContactConstraint,
-} from './physics/solver';
+} from '../engine/solver/solver';
 
 function unpackVec3(
     value: Vec3Like | number,

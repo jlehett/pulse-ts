@@ -10,16 +10,15 @@ Scope: packages/physics (public API, tests, docs)
 - Co-locate every test with the module it covers to simplify future changes.
 
 ## Current Snapshot
-- Flat-ish `src/` folder containing `components/`, `fc/`, `services/`, `systems/`, helpers (filters/materials), and shared types.
-- Physics engine internals live under `services/physics/` but public modules import them via relative paths.
-- Tests already exist for most helpers but are mixed between root-level files and the `services/physics` folder.
+- `src/` now has clear `public/` vs `domain/` boundaries, but the physics engine internals still sit in a single folder that feels crowded.
+- Engine modules (broadphase, detection, integrator, solver, raycast) could be grouped further to aid navigation and future extension.
+- Tests exist for most helpers but would benefit from mirroring the refined folder layout.
 - Docs mention APIs but not the evolving folder structure.
 
 ## Issues / Opportunities
-- Lacks the clear boundary separation used elsewhere, making it harder to find public vs. domain code.
-- Installer/hooks/components live alongside low-level engine code.
-- Some helpers (`filters`, `materials`) sit at src root without a namespace, which becomes noisy as the package grows.
-- Contributors need to scan multiple directories to find colocated tests.
+- While the top-level split is in place, engine internals remain too flat; related algorithms should be grouped (e.g., broadphase vs detection).
+- Helpers (`filters`, `materials`) have been namespaced but the engine layer still mixes unrelated responsibilities.
+- Tests should continue to travel with their modules as we add subfolders.
 
 ## Proposal
 
@@ -40,32 +39,49 @@ packages/physics/src/
     materials/
       materials.ts
       materials.test.ts
+    engine/
+      core/
+        engine.ts
+      broadphase/
+        aabb.ts
+        aabb.test.ts
+        pairing.ts
+        pairing.test.ts
+        pairing.naive.test.ts
+      detection/
+        detect.ts
+        detect.test.ts
+        detect.boxbox.test.ts
+      dynamics/
+        integration.ts
+        inertia.ts
+        inertia.test.ts
+      filter/
+        filter.ts
+      raycast/
+        raycast.ts
+        raycast.unit.test.ts
+        raycast.normal.test.ts
+      solver/
+        solver.ts
+        solver.unit.test.ts
     services/
       PhysicsService.ts
-      physics/
-        engine.ts
-        integrator.ts
-        inertia.ts
-        detect.ts
-        pairing.ts
-        raycast.ts
-        solver.ts
-        ... (existing modules + tests)
     systems/
-      PhysicsSystem.ts (from systems/step.ts)
+      PhysicsSystem.ts
   index.ts (public barrel adjusted to new paths)
 ```
 
 Notes:
 - `public/hooks.ts` remains the FC entry point; imports update to pull from `domain` modules.
-- `PhysicsService` moves under `domain/services` and re-exports the existing `CollisionPair` type.
-- `PhysicsSystem` lives under `domain/systems` to mirror other packages' system placement.
-- Helpers (`filters`, `materials`) move under `domain/` with colocated tests.
+- `PhysicsService` lives under `domain/services` and re-exports the existing `CollisionPair` type, depending on the new `domain/engine/*` modules.
+- `PhysicsSystem` stays under `domain/systems` to mirror other packages' system placement.
+- Helpers (`filters`, `materials`) live under `domain/` with colocated tests, and the full engine internals are organized by concern.
 - Additional folders (infra) can be introduced later if/when we add IO/platform adapters.
 
 ### Tests
-- Rename/move test files alongside their modules (already true for `services/physics/*.test.ts`; new structure keeps it consistent for filters/materials/services/systems).
-- Update import paths inside the tests to match the new layout; no behavior changes expected.
+- Keep every test beside the module it validates (including the new `domain/engine/**` subfolders) so changes stay localized.
+- Update import paths inside the tests to match the refined layout; no behavior changes expected.
 
 ## Rollout Plan
 1. Move files into the proposed directories using git-aware commands to retain history.
@@ -82,4 +98,5 @@ Notes:
 ## Implementation Status
 - ✅ Public modules (`install`, hooks, components) live under `src/public/` with unchanged APIs.
 - ✅ Domain modules (`types`, filters, materials, PhysicsService, PhysicsSystem, engine internals) live under `src/domain/` with colocated tests.
+- ✅ Engine internals are grouped under `src/domain/engine/` by responsibility (core, broadphase, detection, dynamics, solver, raycast, filter) and all tests moved with them.
 - ✅ Index barrel updated along with all imports; package lint/tests pass under the new structure.
