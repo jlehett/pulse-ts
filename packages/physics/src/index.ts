@@ -36,18 +36,22 @@
  */
 
 // Installer
-export { installPhysics } from './install';
+export { installPhysics } from './public/install';
 
 // Service + System
-export { PhysicsService } from './services/Physics';
-export { PhysicsSystem } from './systems/step';
-export type { CollisionPair } from './services/Physics';
+export { PhysicsService } from './domain/services/PhysicsService';
+export { PhysicsSystem } from './domain/systems/PhysicsSystem';
+export type { CollisionPair } from './domain/services/PhysicsService';
 
 // Components
-export { RigidBody } from './components/RigidBody';
-export type { Vec3Like } from './components/RigidBody';
-export { Collider, SphereCollider, BoxCollider } from './components/Collider';
-export { PlaneCollider, CapsuleCollider } from './components/Collider';
+export { RigidBody } from './public/components/RigidBody';
+export type { Vec3Like } from './public/components/RigidBody';
+export {
+    Collider,
+    SphereCollider,
+    BoxCollider,
+} from './public/components/Collider';
+export { PlaneCollider, CapsuleCollider } from './public/components/Collider';
 
 // FC Hooks
 export {
@@ -61,10 +65,10 @@ export {
     useOnCollisionEnd,
     useOnCollision,
     usePhysicsRaycast,
-} from './fc/hooks';
+} from './public/hooks';
 
 // Types
-export type { PhysicsOptions, RigidBodyType, RaycastHit } from './types';
+export type { PhysicsOptions, RigidBodyType, RaycastHit } from './domain/types';
 
 // Filter helpers
 export {
@@ -77,7 +81,7 @@ export {
     collideWithAll,
     collideWithNone,
     shouldCollide,
-} from './filters';
+} from './domain/filters/filters';
 
 // Materials helpers
 export {
@@ -87,4 +91,4 @@ export {
     getFriction,
     combineRestitution,
     combineFriction,
-} from './materials';
+} from './domain/materials/materials';
