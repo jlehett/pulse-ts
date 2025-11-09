@@ -1,4 +1,4 @@
-import type { Packet } from '../../domain/types';
+import type { Packet } from '../../../domain/types';
 
 export type RpcEnvelope =
     | { t: 'req'; id: string; m: string; p: any }

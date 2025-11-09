@@ -1,4 +1,4 @@
-import type { Packet } from '../../domain/types';
+import type { Packet } from '../../../domain/types';
 
 export interface RateLimits {
     /** Messages per second allowed per peer (default unlimited). */

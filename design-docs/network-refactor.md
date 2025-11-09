@@ -1,6 +1,6 @@
 # @pulse-ts/network – Refactor Proposal (Ergonomics, Tests, Docs)
 
-Status: Draft for review
+Status: In progress
 Owner: Codex
 Scope: packages/network (public API, tests, docs)
 
@@ -62,3 +62,112 @@ Scope: packages/network (public API, tests, docs)
 - Do we want a top‑level `useWebSocket(createWebSocketTransport(url))` example in docs, or keep `useWebSocket(url)` as the most compact path? (Proposal: keep current hook ergonomics; factories are most helpful for imperative `getNetwork(world).connect()` usage.)
 - Should we add a `P2PTransport` interface extension later (optional) to formalize peer lifecycle? For now, `Transport` has optional hooks and `peers()`, which is sufficient.
 
+---
+
+## Directory Structure Reorg (Discoverability)
+
+Goal: reduce visual flatness and improve code discovery by grouping server and transport internals under meaningful subfolders, while keeping the public surface unchanged. We will prefer deeper, focused directories.
+
+Proposed layout (only showing `packages/network/src`):
+
+```
+public/
+  hooks.ts
+  transform.ts
+  install.ts
+  facade.ts
+  factories.ts
+
+domain/
+  types.ts
+  messaging/
+    channel.ts
+    codec.ts
+    *.test.ts
+  replication/
+    protocol.ts
+    *.test.ts
+  services/
+    TransportService.ts
+    RpcService.ts
+    ReliableChannel.ts
+    ReplicationService.ts
+    ClockSyncService.ts
+    InterpolationService.ts
+    *.test.ts
+  systems/
+    NetworkTick.ts
+    SnapshotSystem.ts
+    InterpolationSystem.ts
+
+infra/
+  transports/
+    memory/
+      hub.ts
+      transport.ts
+      index.ts
+      memory.test.ts
+    websocket/
+      transport.ts
+      index.ts
+      transport.test.ts
+    webrtc/
+      transport.ts
+      index.ts
+  signaling/
+    RtcSignalingClient.ts
+    RtcSignalingClient.test.ts
+  server/
+    core/
+      NetworkServer.ts    (from broker.ts)
+      attachWsServer.ts   (from ws.ts)
+    routing/
+      channels.ts
+      routing.ts
+      validate.ts
+    io/
+      packets.ts
+    peers/
+      peers.ts
+    features/
+      rooms.ts
+      rpc.ts
+      reliable.ts
+      rateLimit.ts
+    *.test.ts (updated imports)
+
+transports/ (deep-import barrels stay)
+  websocket/index.ts
+  webrtc/index.ts
+  memory/index.ts
+
+index.ts (root exports)
+```
+
+Public API: unchanged symbols. `index.ts` continues to export the same named symbols; only internal paths change. We can keep small re-export stubs in old locations for a transitional period if desired.
+
+Implementation plan:
+- Move files per the map above.
+- Update all internal imports and test imports.
+- Update `index.ts` server exports to new paths.
+- Optionally leave thin re-exports (deprecated) in `infra/server/*.ts` pointing to the new locations to ease review.
+- Run package tests and lint.
+
+Pros:
+- Clear topical grouping (core vs routing vs features) for server code.
+- Transports are self-contained; tests colocated.
+- Domain layer remains focused with services/messaging/replication/systems.
+
+Risks / Mitigations:
+- Large diff from file moves; mitigated by re-export stubs and thorough tests.
+
+Request for approval:
+- Confirm the proposed folder names and the `NetworkServer.ts`/`attachWsServer.ts` renames.
+- If approved, I’ll implement the moves, update imports, and keep re-export stubs for a smooth transition.
+
+## Implementation Status (current)
+
+- ✅ Factories + docs landed (`createWebSocketTransport`, etc.).
+- ✅ Targeted tests cover WebSocket transport, ClockSyncService RTT sampling, and the RTC signaling client.
+- ✅ Server directory reorg implemented with `core/`, `features/`, `routing/`, `io/`, and `peers/` folders; legacy entry points have been removed in favor of the new structure, and tests now live beside their respective modules.
+- ⏭ Next: regenerate API docs / typedoc artifacts once review wraps, then prep release notes.

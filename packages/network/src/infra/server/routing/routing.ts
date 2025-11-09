@@ -1,4 +1,4 @@
-import type { Packet } from '../../domain/types';
+import type { Packet } from '../../../domain/types';
 import type { ChannelRegistry } from './channels';
 
 /**

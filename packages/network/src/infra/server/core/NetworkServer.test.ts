@@ -1,5 +1,5 @@
-import { attachWsServer } from './ws';
-import { encodePacket } from './packets';
+import { attachWsServer } from './attachWsServer';
+import { encodePacket } from '../io/packets';
 
 type MessageHandler = (data: any, isBinary?: boolean) => void;
 

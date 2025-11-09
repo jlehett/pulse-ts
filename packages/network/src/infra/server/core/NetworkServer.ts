@@ -1,14 +1,18 @@
-import type { Packet } from '../../domain/types';
-import { ReservedChannels } from '../../domain/messaging/reserved';
-import type { RateLimits } from './rateLimit';
-import { RateLimiter } from './rateLimit';
-import { handleRpcMessage, type RpcHandler, type RpcEnvelope } from './rpc';
-import { handleRoomMessage } from './rooms';
-import { decodePacket, encodePacket } from './packets';
-import { handleReliableRequest } from './reliable';
-import { ChannelRegistry, type ChannelOptions } from './channels';
-import { PeerManager } from './peers';
-import { handleRegisteredChannel } from './routing';
+import type { Packet } from '../../../domain/types';
+import { ReservedChannels } from '../../../domain/messaging/reserved';
+import type { RateLimits } from '../features/rateLimit';
+import { RateLimiter } from '../features/rateLimit';
+import {
+    handleRpcMessage,
+    type RpcHandler,
+    type RpcEnvelope,
+} from '../features/rpc';
+import { handleRoomMessage } from '../features/rooms';
+import { decodePacket, encodePacket } from '../io/packets';
+import { handleReliableRequest } from '../features/reliable';
+import { ChannelRegistry, type ChannelOptions } from '../routing/channels';
+import { PeerManager } from '../peers/peers';
+import { handleRegisteredChannel } from '../routing/routing';
 
 type WsConn = {
     on(event: 'message', cb: (data: any, isBinary?: boolean) => void): void;

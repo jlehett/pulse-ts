@@ -1,4 +1,4 @@
-import { NetworkServer } from './broker';
+import { NetworkServer } from './NetworkServer';
 
 export type WsConn = {
     on(event: 'message', cb: (data: any, isBinary?: boolean) => void): void;

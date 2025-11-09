@@ -1,5 +1,5 @@
-import type { Packet } from '../../domain/types';
-import { ReservedChannels } from '../../domain/messaging/reserved';
+import type { Packet } from '../../../domain/types';
+import { ReservedChannels } from '../../../domain/messaging/reserved';
 
 export type RelReqEnv = { t: 'req'; id: string; topic: string; payload: any };
 export type RelAckEnv = {

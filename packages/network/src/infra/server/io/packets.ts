@@ -1,4 +1,4 @@
-import type { Packet } from '../../domain/types';
+import type { Packet } from '../../../domain/types';
 
 /** Best-effort decode of an incoming ws message into a Packet. */
 export function decodePacket(data: any): Packet | null {

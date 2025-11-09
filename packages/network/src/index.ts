@@ -52,14 +52,17 @@ export {
 } from './public/install';
 
 // Server utilities (Node)
-export { NetworkServer } from './infra/server/broker';
-export { attachWsServer } from './infra/server/ws';
+export { NetworkServer } from './infra/server/core/NetworkServer';
+export { attachWsServer } from './infra/server/core/attachWsServer';
 // Server helpers
-export { type RateLimits } from './infra/server/rateLimit';
+export { type RateLimits } from './infra/server/features/rateLimit';
 export {
     type RoomAction,
     type RoomControl,
     type RoomAck,
     type RoomErrorReason,
-} from './infra/server/rooms';
-export { validateWithZod, type ZodLikeSchema } from './infra/server/validate';
+} from './infra/server/features/rooms';
+export {
+    validateWithZod,
+    type ZodLikeSchema,
+} from './infra/server/routing/validate';

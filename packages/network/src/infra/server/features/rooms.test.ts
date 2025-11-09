@@ -1,5 +1,5 @@
 import { handleRoomMessage, type RoomAck } from './rooms';
-import { ReservedChannels } from '../../domain/messaging/reserved';
+import { ReservedChannels } from '../../../domain/messaging/reserved';
 
 function mkMgr() {
     const rooms = new Map<string, Set<string>>();
