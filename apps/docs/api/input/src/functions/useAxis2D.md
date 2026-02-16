@@ -8,9 +8,9 @@
 
 > **useAxis2D**(`name`): () => [`Vec`](../type-aliases/Vec.md)
 
-Defined in: [input/src/fc/hooks.ts:44](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/input/src/fc/hooks.ts#L44)
+Defined in: [packages/input/src/public/hooks.ts:77](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/input/src/public/hooks.ts#L77)
 
-Get the axis 2D state for a given axis name.
+Create an accessor for a 2D axis vector.
 
 ## Parameters
 
@@ -18,14 +18,22 @@ Get the axis 2D state for a given axis name.
 
 `string`
 
-The name of the axis 2D.
+Axis2D name (e.g., `move`).
 
 ## Returns
 
-The axis 2D state.
+A function that returns a `{[key:string]:number}` vector.
 
 > (): [`Vec`](../type-aliases/Vec.md)
 
 ### Returns
 
 [`Vec`](../type-aliases/Vec.md)
+
+## Example
+
+```ts
+import { useAxis2D } from '@pulse-ts/input';
+const move = useAxis2D('move');
+const { x, y } = move();
+```

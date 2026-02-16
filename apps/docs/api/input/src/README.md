@@ -10,6 +10,7 @@
 
 - [InputCommitSystem](classes/InputCommitSystem.md)
 - [InputService](classes/InputService.md)
+- [VirtualInput](classes/VirtualInput.md)
 
 ## Interfaces
 
@@ -17,6 +18,7 @@
 
 ## Type Aliases
 
+- [ActionEvent](type-aliases/ActionEvent.md)
 - [ActionState](type-aliases/ActionState.md)
 - [Axis1DBinding](type-aliases/Axis1DBinding.md)
 - [Axis2DBinding](type-aliases/Axis2DBinding.md)
@@ -24,9 +26,12 @@
 - [ChordBinding](type-aliases/ChordBinding.md)
 - [ExprBindings](type-aliases/ExprBindings.md)
 - [InputOptions](type-aliases/InputOptions.md)
+- [InstallInputOptions](type-aliases/InstallInputOptions.md)
 - [KeyBinding](type-aliases/KeyBinding.md)
+- [PointerButtonBinding](type-aliases/PointerButtonBinding.md)
 - [PointerMovementBinding](type-aliases/PointerMovementBinding.md)
 - [PointerSnapshot](type-aliases/PointerSnapshot.md)
+- [PointerVec2Modifiers](type-aliases/PointerVec2Modifiers.md)
 - [PointerWheelBinding](type-aliases/PointerWheelBinding.md)
 - [SequenceBinding](type-aliases/SequenceBinding.md)
 - [Vec](type-aliases/Vec.md)
@@ -38,6 +43,7 @@
 - [Chord](functions/Chord.md)
 - [installInput](functions/installInput.md)
 - [Key](functions/Key.md)
+- [PointerButton](functions/PointerButton.md)
 - [PointerMovement](functions/PointerMovement.md)
 - [PointerWheelScroll](functions/PointerWheelScroll.md)
 - [Sequence](functions/Sequence.md)

@@ -6,9 +6,22 @@
 
 # Class: StatsOverlaySystem
 
-Defined in: [three/src/systems/statsOverlay.ts:18](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/three/src/systems/statsOverlay.ts#L18)
+Defined in: [packages/three/src/domain/systems/statsOverlay.ts:40](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/three/src/domain/systems/statsOverlay.ts#L40)
 
-Displays stats overlay on the screen (FPS, fixed sps) using Three's DOM element.
+Displays a stats overlay (FPS, fixed SPS) inside Three's container element.
+
+- Appends a positioned `<div>` overlay next to the Three canvas.
+- Reads values from `StatsService` every `updateMs`.
+
+## Example
+
+```ts
+import { World } from '@pulse-ts/core';
+import { StatsOverlaySystem, ThreeService } from '@pulse-ts/three';
+const world = new World();
+world.provideService(new ThreeService({ canvas: document.createElement('canvas') }));
+world.addSystem(new StatsOverlaySystem({ position: 'top-right' }));
+```
 
 ## Extends
 
@@ -20,7 +33,7 @@ Displays stats overlay on the screen (FPS, fixed sps) using Three's DOM element.
 
 > **new StatsOverlaySystem**(`opts?`): `StatsOverlaySystem`
 
-Defined in: [three/src/systems/statsOverlay.ts:27](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/three/src/systems/statsOverlay.ts#L27)
+Defined in: [packages/three/src/domain/systems/statsOverlay.ts:49](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/three/src/domain/systems/statsOverlay.ts#L49)
 
 #### Parameters
 
@@ -42,7 +55,7 @@ Defined in: [three/src/systems/statsOverlay.ts:27](https://github.com/jlehett/pu
 
 > `static` **order**: `number`
 
-Defined in: [three/src/systems/statsOverlay.ts:21](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/three/src/systems/statsOverlay.ts#L21)
+Defined in: [packages/three/src/domain/systems/statsOverlay.ts:43](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/three/src/domain/systems/statsOverlay.ts#L43)
 
 The order of the update that this system is registered for.
 
@@ -56,7 +69,7 @@ The order of the update that this system is registered for.
 
 > `static` **updateKind**: `UpdateKind` = `'frame'`
 
-Defined in: [three/src/systems/statsOverlay.ts:19](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/three/src/systems/statsOverlay.ts#L19)
+Defined in: [packages/three/src/domain/systems/statsOverlay.ts:41](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/three/src/domain/systems/statsOverlay.ts#L41)
 
 The kind of update that this system is registered for.
 Defaults to 'fixed'.
@@ -71,7 +84,7 @@ Defaults to 'fixed'.
 
 > `static` **updatePhase**: `UpdatePhase` = `'late'`
 
-Defined in: [three/src/systems/statsOverlay.ts:20](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/three/src/systems/statsOverlay.ts#L20)
+Defined in: [packages/three/src/domain/systems/statsOverlay.ts:42](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/three/src/domain/systems/statsOverlay.ts#L42)
 
 The phase of the update that this system is registered for.
 Defaults to 'update'.
@@ -86,7 +99,7 @@ Defaults to 'update'.
 
 > **attach**(`world`): `void`
 
-Defined in: [three/src/systems/statsOverlay.ts:31](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/three/src/systems/statsOverlay.ts#L31)
+Defined in: [packages/three/src/domain/systems/statsOverlay.ts:53](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/three/src/domain/systems/statsOverlay.ts#L53)
 
 Attaches the system to the world.
 
@@ -112,7 +125,7 @@ The world to attach the system to.
 
 > **detach**(): `void`
 
-Defined in: [three/src/systems/statsOverlay.ts:72](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/three/src/systems/statsOverlay.ts#L72)
+Defined in: [packages/three/src/domain/systems/statsOverlay.ts:94](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/three/src/domain/systems/statsOverlay.ts#L94)
 
 Detaches the system from the world.
 
@@ -130,7 +143,7 @@ Detaches the system from the world.
 
 > **update**(`dt`): `void`
 
-Defined in: [three/src/systems/statsOverlay.ts:78](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/three/src/systems/statsOverlay.ts#L78)
+Defined in: [packages/three/src/domain/systems/statsOverlay.ts:100](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/three/src/domain/systems/statsOverlay.ts#L100)
 
 Method that will be called on every tick that this system is registered for.
 

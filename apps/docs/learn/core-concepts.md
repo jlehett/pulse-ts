@@ -5,6 +5,15 @@ Pulse is an ECS (Entity Component System) runtime. Learn the core building block
 ## World
 The container that owns time, the scene graph, systems, and services. Create one world per app.
 
+- Manage lifecycle with `start()`, `stop()`, and `tick(dtMs)`.
+- Clean the scene with `clearScene()` (preserves internal system nodes).
+- Query stats via `getPerf()`. Optionally install defaults to use `StatsService`:
+  ```ts
+  import { World, installDefaults } from '@pulse-ts/core'
+  const world = new World()
+  installDefaults(world)
+  ```
+
 ## Nodes
 Entities in the scene graph. Nodes form parent/child hierarchies and hold components.
 
@@ -19,3 +28,18 @@ Singleton utilities (e.g., input, audio, networking). Accessed via hooks or the 
 
 ## Functional Nodes
 Functions that create nodes and use hooks for lifecycle and updates. See [Functional Nodes](/learn/functional-nodes).
+
+## Queries
+Iterate nodes that have components (and optionally exclude others) with type-safe helpers.
+
+```ts
+import { World, defineQuery, Transform, Bounds } from '@pulse-ts/core';
+
+const world = new World();
+// ... populate world with nodes/components ...
+
+const HasTRSB = defineQuery([Transform, Bounds]);
+for (const [node, t, b] of HasTRSB.run(world)) {
+  // node has Transform (t) and Bounds (b)
+}
+```

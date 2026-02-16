@@ -6,7 +6,7 @@
 
 # Class: WebSocketTransport
 
-Defined in: [network/src/transports/websocket/transport.ts:27](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/network/src/transports/websocket/transport.ts#L27)
+Defined in: [packages/network/src/transports/websocket/transport.ts:27](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/network/src/transports/websocket/transport.ts#L27)
 
 WebSocket-based transport for browser/Node (pass a ctor for Node).
 
@@ -24,7 +24,7 @@ Usage:
 
 > **new WebSocketTransport**(`url`, `opts`): `WebSocketTransport`
 
-Defined in: [network/src/transports/websocket/transport.ts:39](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/network/src/transports/websocket/transport.ts#L39)
+Defined in: [packages/network/src/transports/websocket/transport.ts:39](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/network/src/transports/websocket/transport.ts#L39)
 
 #### Parameters
 
@@ -78,7 +78,7 @@ Provide a WebSocket constructor for Node environments.
 
 > `readonly` **kind**: `"ws"` = `'ws'`
 
-Defined in: [network/src/transports/websocket/transport.ts:28](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/network/src/transports/websocket/transport.ts#L28)
+Defined in: [packages/network/src/transports/websocket/transport.ts:28](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/network/src/transports/websocket/transport.ts#L28)
 
 The kind of transport.
 
@@ -92,7 +92,7 @@ The kind of transport.
 
 > `readonly` **supportsBinary**: `true` = `true`
 
-Defined in: [network/src/transports/websocket/transport.ts:29](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/network/src/transports/websocket/transport.ts#L29)
+Defined in: [packages/network/src/transports/websocket/transport.ts:29](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/network/src/transports/websocket/transport.ts#L29)
 
 Whether the transport supports binary.
 
@@ -106,7 +106,7 @@ Whether the transport supports binary.
 
 > **connect**(): `Promise`\<`void`\>
 
-Defined in: [network/src/transports/websocket/transport.ts:58](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/network/src/transports/websocket/transport.ts#L58)
+Defined in: [packages/network/src/transports/websocket/transport.ts:58](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/network/src/transports/websocket/transport.ts#L58)
 
 Establishes the WebSocket connection.
 
@@ -124,7 +124,7 @@ Establishes the WebSocket connection.
 
 > **disconnect**(`code?`, `reason?`): `Promise`\<`void`\>
 
-Defined in: [network/src/transports/websocket/transport.ts:88](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/network/src/transports/websocket/transport.ts#L88)
+Defined in: [packages/network/src/transports/websocket/transport.ts:88](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/network/src/transports/websocket/transport.ts#L88)
 
 Closes the connection and cancels reconnect attempts.
 
@@ -152,7 +152,7 @@ Closes the connection and cancels reconnect attempts.
 
 > **getStatus**(): [`TransportStatus`](../type-aliases/TransportStatus.md)
 
-Defined in: [network/src/transports/websocket/transport.ts:53](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/network/src/transports/websocket/transport.ts#L53)
+Defined in: [packages/network/src/transports/websocket/transport.ts:53](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/network/src/transports/websocket/transport.ts#L53)
 
 Current connection status.
 
@@ -170,7 +170,7 @@ Current connection status.
 
 > **onMessage**(`fn`): () => `boolean`
 
-Defined in: [network/src/transports/websocket/transport.ts:117](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/network/src/transports/websocket/transport.ts#L117)
+Defined in: [packages/network/src/transports/websocket/transport.ts:117](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/network/src/transports/websocket/transport.ts#L117)
 
 Subscribes to raw incoming frames.
 
@@ -198,7 +198,7 @@ Subscribes to raw incoming frames.
 
 > **onStatus**(`fn`): () => `boolean`
 
-Defined in: [network/src/transports/websocket/transport.ts:123](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/network/src/transports/websocket/transport.ts#L123)
+Defined in: [packages/network/src/transports/websocket/transport.ts:123](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/network/src/transports/websocket/transport.ts#L123)
 
 Subscribes to status changes.
 
@@ -226,7 +226,7 @@ Subscribes to status changes.
 
 > **send**(`data`): `void`
 
-Defined in: [network/src/transports/websocket/transport.ts:99](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/network/src/transports/websocket/transport.ts#L99)
+Defined in: [packages/network/src/transports/websocket/transport.ts:99](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/network/src/transports/websocket/transport.ts#L99)
 
 Sends a binary frame over the WebSocket.
 

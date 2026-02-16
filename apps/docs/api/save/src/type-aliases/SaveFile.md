@@ -8,9 +8,17 @@
 
 > **SaveFile** = `object`
 
-Defined in: [save/src/types.ts:70](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/save/src/types.ts#L70)
+Defined in: packages/save/src/public/types.ts:89
 
 A save file.
+
+## Example
+
+```ts
+import { saveWorld } from '@pulse-ts/save';
+const save = saveWorld(world);
+localStorage.setItem('save', JSON.stringify(save));
+```
 
 ## Properties
 
@@ -18,7 +26,7 @@ A save file.
 
 > **nodes**: [`SaveNodeRecord`](SaveNodeRecord.md)[]
 
-Defined in: [save/src/types.ts:78](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/save/src/types.ts#L78)
+Defined in: packages/save/src/public/types.ts:97
 
 The nodes of the world.
 
@@ -28,7 +36,7 @@ The nodes of the world.
 
 > **services**: `object`[]
 
-Defined in: [save/src/types.ts:76](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/save/src/types.ts#L76)
+Defined in: packages/save/src/public/types.ts:95
 
 Serialized services.
 
@@ -46,7 +54,7 @@ Serialized services.
 
 > `optional` **time**: `object`
 
-Defined in: [save/src/types.ts:74](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/save/src/types.ts#L74)
+Defined in: packages/save/src/public/types.ts:93
 
 The time state of the world.
 
@@ -64,6 +72,6 @@ The time state of the world.
 
 > **version**: `number`
 
-Defined in: [save/src/types.ts:72](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/save/src/types.ts#L72)
+Defined in: packages/save/src/public/types.ts:91
 
 The version of the save file.

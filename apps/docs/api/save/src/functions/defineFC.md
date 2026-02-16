@@ -8,16 +8,13 @@
 
 > **defineFC**\<`P`\>(`id`, `fc`, `opts`): `FC`\<`P`\>
 
-Defined in: [save/src/hooks/fc.ts:33](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/save/src/hooks/fc.ts#L33)
+Defined in: packages/save/src/public/fc.ts:42
 
 Wraps an FC so it auto-registers for rebuild and auto-attaches save metadata on mount.
 
 - Avoids manual `registerFC(id, FC)` and `useSaveFC(id, props)` calls.
 - The returned FC is what you should export and mount.
 - Optionally map props before persisting to keep the save file minimal.
-
-Usage:
-  export const MyThing = defineFC('game:my-thing', (props) => { ... });
 
 ## Type Parameters
 
@@ -41,7 +38,7 @@ The function component to wrap.
 
 ### opts
 
-Optional behavior tweaks.
+Optional config (autoRegister, mapProps).
 
 #### autoRegister?
 
@@ -54,3 +51,17 @@ Optional behavior tweaks.
 ## Returns
 
 `FC`\<`P`\>
+
+## Examples
+
+```ts
+import { defineFC } from '@pulse-ts/save';
+export const MyThing = defineFC('game:my-thing', (props) => { void props; });
+```
+
+```ts
+// Persist only specific props to keep save files lean
+const Player = defineFC('game:player', (p: { x: number; y: number; z: number }) => void p, {
+  mapProps: ({ x, z }) => ({ x, z }),
+});
+```

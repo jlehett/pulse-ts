@@ -8,9 +8,9 @@
 
 > **Axis1DBinding** = `object`
 
-Defined in: [input/src/bindings/types.ts:121](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/input/src/bindings/types.ts#L121)
+Defined in: [packages/input/src/domain/bindings/types.ts:136](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/input/src/domain/bindings/types.ts#L136)
 
-An axis 1D binding.
+An axis 1D binding expression.
 
 ## Properties
 
@@ -18,7 +18,7 @@ An axis 1D binding.
 
 > **neg**: [`KeyBinding`](KeyBinding.md)[]
 
-Defined in: [input/src/bindings/types.ts:130](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/input/src/bindings/types.ts#L130)
+Defined in: [packages/input/src/domain/bindings/types.ts:145](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/input/src/domain/bindings/types.ts#L145)
 
 The negative key binding.
 
@@ -28,7 +28,7 @@ The negative key binding.
 
 > **pos**: [`KeyBinding`](KeyBinding.md)[]
 
-Defined in: [input/src/bindings/types.ts:126](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/input/src/bindings/types.ts#L126)
+Defined in: [packages/input/src/domain/bindings/types.ts:141](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/input/src/domain/bindings/types.ts#L141)
 
 The positive key binding.
 
@@ -38,7 +38,7 @@ The positive key binding.
 
 > `optional` **scale**: `number`
 
-Defined in: [input/src/bindings/types.ts:134](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/input/src/bindings/types.ts#L134)
+Defined in: [packages/input/src/domain/bindings/types.ts:149](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/input/src/domain/bindings/types.ts#L149)
 
 The scale of the axis.
 
@@ -48,4 +48,4 @@ The scale of the axis.
 
 > **type**: `"axis1d"`
 
-Defined in: [input/src/bindings/types.ts:122](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/input/src/bindings/types.ts#L122)
+Defined in: [packages/input/src/domain/bindings/types.ts:137](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/input/src/domain/bindings/types.ts#L137)

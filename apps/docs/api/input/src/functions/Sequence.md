@@ -8,9 +8,9 @@
 
 > **Sequence**(`steps`, `opts`): [`SequenceBinding`](../type-aliases/SequenceBinding.md)
 
-Defined in: [input/src/bindings/expr.ts:134](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/input/src/bindings/expr.ts#L134)
+Defined in: [packages/input/src/domain/bindings/expr.ts:191](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/input/src/domain/bindings/expr.ts#L191)
 
-Create a Sequence binding (ordered key presses within a frame window).
+Create a sequence binding (ordered key presses within a frame window).
 
 ## Parameters
 
@@ -18,7 +18,11 @@ Create a Sequence binding (ordered key presses within a frame window).
 
 (`string` \| [`KeyBinding`](../type-aliases/KeyBinding.md))[]
 
+Keys in order. Use `Key(...)` or shorthand strings (normalized).
+
 ### opts
+
+Optional `{ maxGapFrames, resetOnWrong }`.
 
 #### maxGapFrames?
 
@@ -31,3 +35,12 @@ Create a Sequence binding (ordered key presses within a frame window).
 ## Returns
 
 [`SequenceBinding`](../type-aliases/SequenceBinding.md)
+
+The sequence binding expression.
+
+## Example
+
+```ts
+import { Sequence, Key } from '@pulse-ts/input';
+const dash = Sequence([Key('KeyD'), Key('KeyS')], { maxGapFrames: 10 });
+```

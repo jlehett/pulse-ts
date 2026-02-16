@@ -6,7 +6,7 @@
 
 # Interface: WorldOptions
 
-Defined in: [core/src/world.ts:29](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/core/src/world.ts#L29)
+Defined in: [packages/core/src/domain/world/world.ts:34](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/core/src/domain/world/world.ts#L34)
 
 Options for the World class.
 
@@ -16,7 +16,7 @@ Options for the World class.
 
 > `optional` **fixedStepMs**: `number`
 
-Defined in: [core/src/world.ts:33](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/core/src/world.ts#L33)
+Defined in: [packages/core/src/domain/world/world.ts:38](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/core/src/domain/world/world.ts#L38)
 
 The fixed step time in milliseconds.
 
@@ -26,7 +26,7 @@ The fixed step time in milliseconds.
 
 > `optional` **maxFixedStepsPerFrame**: `number`
 
-Defined in: [core/src/world.ts:41](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/core/src/world.ts#L41)
+Defined in: [packages/core/src/domain/world/world.ts:46](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/core/src/domain/world/world.ts#L46)
 
 The maximum number of fixed steps per frame.
 
@@ -36,7 +36,7 @@ The maximum number of fixed steps per frame.
 
 > `optional` **maxFrameDtMs**: `number`
 
-Defined in: [core/src/world.ts:45](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/core/src/world.ts#L45)
+Defined in: [packages/core/src/domain/world/world.ts:50](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/core/src/domain/world/world.ts#L50)
 
 The maximum frame delta time in milliseconds.
 
@@ -44,8 +44,8 @@ The maximum frame delta time in milliseconds.
 
 ### scheduler?
 
-> `optional` **scheduler**: `Scheduler`
+> `optional` **scheduler**: [`Scheduler`](Scheduler.md)
 
-Defined in: [core/src/world.ts:37](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/core/src/world.ts#L37)
+Defined in: [packages/core/src/domain/world/world.ts:42](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/core/src/domain/world/world.ts#L42)
 
 The scheduler to use.

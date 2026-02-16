@@ -8,7 +8,7 @@
 
 > **setComponent**\<`T`\>(`owner`, `value`): `void`
 
-Defined in: [core/src/componentRegistry.ts:30](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/core/src/componentRegistry.ts#L30)
+Defined in: [packages/core/src/domain/ecs/registry/componentRegistry.ts:31](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/core/src/domain/ecs/registry/componentRegistry.ts#L31)
 
 Sets a component.
 

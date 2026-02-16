@@ -6,7 +6,7 @@
 
 # Class: ReliableChannelService
 
-Defined in: [network/src/services/ReliableChannel.ts:47](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/network/src/services/ReliableChannel.ts#L47)
+Defined in: [packages/network/src/services/ReliableChannel.ts:48](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/network/src/services/ReliableChannel.ts#L48)
 
 ## Extends
 
@@ -18,7 +18,7 @@ Defined in: [network/src/services/ReliableChannel.ts:47](https://github.com/jleh
 
 > **new ReliableChannelService**(`defaults`): `ReliableChannelService`
 
-Defined in: [network/src/services/ReliableChannel.ts:52](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/network/src/services/ReliableChannel.ts#L52)
+Defined in: [packages/network/src/services/ReliableChannel.ts:53](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/network/src/services/ReliableChannel.ts#L53)
 
 #### Parameters
 
@@ -46,7 +46,7 @@ Defined in: [network/src/services/ReliableChannel.ts:52](https://github.com/jleh
 
 > **attach**(`world`): `void`
 
-Defined in: core/dist/index.d.ts:284
+Defined in: packages/core/dist/index.d.ts:250
 
 Attaches the service to the world.
 
@@ -72,7 +72,7 @@ The world to attach the service to.
 
 > **detach**(): `void`
 
-Defined in: core/dist/index.d.ts:288
+Defined in: packages/core/dist/index.d.ts:254
 
 Detaches the service from the world.
 
@@ -90,7 +90,7 @@ Detaches the service from the world.
 
 > **inflight**(): `number`
 
-Defined in: [network/src/services/ReliableChannel.ts:107](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/network/src/services/ReliableChannel.ts#L107)
+Defined in: [packages/network/src/services/ReliableChannel.ts:155](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/network/src/services/ReliableChannel.ts#L155)
 
 Returns number of inflight requests.
 
@@ -104,7 +104,7 @@ Returns number of inflight requests.
 
 > **send**\<`TReq`, `TRes`\>(`topic`, `payload`, `opts`): `Promise`\<[`ReliableResult`](../interfaces/ReliableResult.md)\<`TRes`\>\>
 
-Defined in: [network/src/services/ReliableChannel.ts:61](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/network/src/services/ReliableChannel.ts#L61)
+Defined in: [packages/network/src/services/ReliableChannel.ts:62](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/network/src/services/ReliableChannel.ts#L62)
 
 Sends a reliable request to a server handler registered for `topic`.
 
@@ -119,6 +119,54 @@ Sends a reliable request to a server handler registered for `topic`.
 `TRes` = `unknown`
 
 #### Parameters
+
+##### topic
+
+`string`
+
+##### payload
+
+`TReq`
+
+##### opts
+
+###### retries?
+
+`number`
+
+###### timeoutMs?
+
+`number`
+
+#### Returns
+
+`Promise`\<[`ReliableResult`](../interfaces/ReliableResult.md)\<`TRes`\>\>
+
+***
+
+### sendTo()
+
+> **sendTo**\<`TReq`, `TRes`\>(`peerId`, `topic`, `payload`, `opts`): `Promise`\<[`ReliableResult`](../interfaces/ReliableResult.md)\<`TRes`\>\>
+
+Defined in: [packages/network/src/services/ReliableChannel.ts:108](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/network/src/services/ReliableChannel.ts#L108)
+
+Sends a reliable request addressed to a specific peer id (or ids).
+
+#### Type Parameters
+
+##### TReq
+
+`TReq` = `unknown`
+
+##### TRes
+
+`TRes` = `unknown`
+
+#### Parameters
+
+##### peerId
+
+`string` | `string`[]
 
 ##### topic
 

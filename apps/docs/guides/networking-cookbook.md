@@ -12,6 +12,14 @@ function Connect() {
 }
 ```
 
+Imperative connect using the factory:
+
+```ts
+import { getNetwork, createWebSocketTransport } from '@pulse-ts/network'
+const net = getNetwork(world)
+await net.connect(() => createWebSocketTransport('ws://localhost:8080'))
+```
+
 ## Client: Connect P2P via WebRTC (WS signaling)
 
 ```ts
@@ -22,6 +30,14 @@ function ConnectP2P({ selfId }: { selfId: string }) {
   const ws = () => new WebSocketTransport('ws://localhost:8080')
   useWebRTC(selfId, { signaling: ws, iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] })
 }
+```
+
+Imperative connect using the factory:
+
+```ts
+import { getNetwork, createWebRtcMeshTransport } from '@pulse-ts/network'
+const net = getNetwork(world)
+await net.connect(() => createWebRtcMeshTransport(selfId, { signaling: ws }))
 ```
 
 ## Server: Minimal WebSocket broker

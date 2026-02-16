@@ -1,5 +1,6 @@
 export default {
-    testEnvironment: 'jsdom',
+    // Node environment is sufficient for core; avoids jsdom + punycode warnings
+    testEnvironment: 'node',
     moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json', 'node'],
     transform: {
         '^.+\\.(ts|tsx|js|jsx)$': ['babel-jest'],

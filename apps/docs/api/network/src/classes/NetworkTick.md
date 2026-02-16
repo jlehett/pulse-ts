@@ -6,7 +6,7 @@
 
 # Class: NetworkTick
 
-Defined in: [network/src/systems/NetworkTick.ts:7](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/network/src/systems/NetworkTick.ts#L7)
+Defined in: [packages/network/src/systems/NetworkTick.ts:8](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/network/src/systems/NetworkTick.ts#L8)
 
 A system that flushes the outgoing and dispatches the incoming messages.
 
@@ -34,7 +34,7 @@ A system that flushes the outgoing and dispatches the incoming messages.
 
 > `static` **order**: `number` = `-1000`
 
-Defined in: [network/src/systems/NetworkTick.ts:10](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/network/src/systems/NetworkTick.ts#L10)
+Defined in: [packages/network/src/systems/NetworkTick.ts:11](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/network/src/systems/NetworkTick.ts#L11)
 
 The order of the update that this system is registered for.
 
@@ -46,9 +46,9 @@ The order of the update that this system is registered for.
 
 ### updateKind
 
-> `static` **updateKind**: `"fixed"` \| `"frame"` = `'frame'`
+> `static` **updateKind**: `UpdateKind` = `'frame'`
 
-Defined in: [network/src/systems/NetworkTick.ts:8](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/network/src/systems/NetworkTick.ts#L8)
+Defined in: [packages/network/src/systems/NetworkTick.ts:9](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/network/src/systems/NetworkTick.ts#L9)
 
 The kind of update that this system is registered for.
 Defaults to 'fixed'.
@@ -61,9 +61,9 @@ Defaults to 'fixed'.
 
 ### updatePhase
 
-> `static` **updatePhase**: `"early"` \| `"update"` \| `"late"` = `'early'`
+> `static` **updatePhase**: `UpdatePhase` = `'early'`
 
-Defined in: [network/src/systems/NetworkTick.ts:9](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/network/src/systems/NetworkTick.ts#L9)
+Defined in: [packages/network/src/systems/NetworkTick.ts:10](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/network/src/systems/NetworkTick.ts#L10)
 
 The phase of the update that this system is registered for.
 Defaults to 'update'.
@@ -78,7 +78,7 @@ Defaults to 'update'.
 
 > **attach**(`world`): `void`
 
-Defined in: core/dist/index.d.ts:261
+Defined in: packages/core/dist/index.d.ts:227
 
 Attaches the system to the world.
 
@@ -104,7 +104,7 @@ The world to attach the system to.
 
 > **detach**(): `void`
 
-Defined in: core/dist/index.d.ts:265
+Defined in: packages/core/dist/index.d.ts:231
 
 Detaches the system from the world.
 
@@ -122,7 +122,7 @@ Detaches the system from the world.
 
 > **update**(`_dt`): `void`
 
-Defined in: [network/src/systems/NetworkTick.ts:12](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/network/src/systems/NetworkTick.ts#L12)
+Defined in: [packages/network/src/systems/NetworkTick.ts:13](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/network/src/systems/NetworkTick.ts#L13)
 
 Method that will be called on every tick that this system is registered for.
 

@@ -8,7 +8,7 @@
 
 > **descendants**(`root`): `Iterable`\<[`Node`](../classes/Node.md)\>
 
-Defined in: [core/src/world/traversal.ts:17](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/core/src/world/traversal.ts#L17)
+Defined in: [packages/core/src/domain/world/traversal.ts:17](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/core/src/domain/world/traversal.ts#L17)
 
 Iterates over the descendants of a node.
 

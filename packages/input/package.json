@@ -20,7 +20,7 @@
     },
     "scripts": {
         "build": "tsup src/index.ts --dts --format esm,cjs --out-dir dist --clean",
-        "test": "jest",
+        "test": "jest --runInBand",
         "lint": "eslint .",
         "lint:fix": "eslint . --fix",
         "format": "prettier --write \"**/*.{js,jsx,ts,tsx,json,md}\"",

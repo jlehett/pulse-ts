@@ -6,9 +6,18 @@
 
 # Class: TypedEvent\<T\>
 
-Defined in: [core/src/event.ts:10](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/core/src/event.ts#L10)
+Defined in: [packages/core/src/utils/event.ts:18](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/core/src/utils/event.ts#L18)
 
 A single-channel, strongly-typed event.
+
+## Example
+
+```ts
+const e = new TypedEvent<number>();
+const off = e.on((n) => console.log(n));
+e.emit(1);
+off();
+```
 
 ## Type Parameters
 
@@ -34,7 +43,7 @@ A single-channel, strongly-typed event.
 
 > **get** **size**(): `number`
 
-Defined in: [core/src/event.ts:60](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/core/src/event.ts#L60)
+Defined in: [packages/core/src/utils/event.ts:68](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/core/src/utils/event.ts#L68)
 
 Current listener count (debug).
 
@@ -48,7 +57,7 @@ Current listener count (debug).
 
 > **clear**(): `void`
 
-Defined in: [core/src/event.ts:53](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/core/src/event.ts#L53)
+Defined in: [packages/core/src/utils/event.ts:61](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/core/src/utils/event.ts#L61)
 
 Remove all listeners.
 
@@ -62,7 +71,7 @@ Remove all listeners.
 
 > **emit**(`e`): `void`
 
-Defined in: [core/src/event.ts:40](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/core/src/event.ts#L40)
+Defined in: [packages/core/src/utils/event.ts:48](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/core/src/utils/event.ts#L48)
 
 Emit an event to all listeners.
 
@@ -84,7 +93,7 @@ The event.
 
 > **on**(`fn`): () => `void`
 
-Defined in: [core/src/event.ts:18](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/core/src/event.ts#L18)
+Defined in: [packages/core/src/utils/event.ts:26](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/core/src/utils/event.ts#L26)
 
 Subscribe; returns a disposer.
 
@@ -112,7 +121,7 @@ A disposer.
 
 > **once**(`fn`): () => `void`
 
-Defined in: [core/src/event.ts:28](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/core/src/event.ts#L28)
+Defined in: [packages/core/src/utils/event.ts:36](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/core/src/utils/event.ts#L36)
 
 Subscribe once; auto-unsubscribes after first emission.
 

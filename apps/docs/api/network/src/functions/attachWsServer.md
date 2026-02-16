@@ -8,7 +8,7 @@
 
 > **attachWsServer**(`wss`, `opts?`): [`NetworkServer`](../classes/NetworkServer.md)
 
-Defined in: [network/src/server/broker.ts:552](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/network/src/server/broker.ts#L552)
+Defined in: [packages/network/src/server/ws.ts:23](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/network/src/server/ws.ts#L23)
 
 Attaches a Node 'ws' WebSocketServer to a NetworkServer.
 
@@ -45,7 +45,7 @@ Default room to add new peers to (optional).
 
 #### limits?
 
-`RateLimits`
+[`RateLimits`](../interfaces/RateLimits.md)
 
 Rate limits config.
 

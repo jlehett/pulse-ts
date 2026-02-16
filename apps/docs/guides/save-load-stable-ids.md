@@ -42,7 +42,7 @@ for (const n of world.nodes) {
 }
 
 // Load back into the existing nodes using Stable IDs
-await loadWorld(world, save, { applyTime: true, resetPrevious: true });
+loadWorld(world, save, { applyTime: true, resetPrevious: true });
 ```
 
 Notes:
@@ -80,7 +80,7 @@ import { saveWorld, loadWorldRebuild } from '@pulse-ts/save';
 const save = saveWorld(world, { includeTime: true });
 
 // 2) Rebuild world from save (recreates nodes and hierarchy, reapplies components)
-await loadWorldRebuild(world, save, { applyTime: true, resetPrevious: true });
+loadWorldRebuild(world, save, { applyTime: true, resetPrevious: true });
 ```
 
 ## 3) End-to-end example
@@ -128,13 +128,20 @@ To persist your own component data, register serializers:
 
 ```ts
 import { registerComponentSerializer } from '@pulse-ts/save';
-import { Component } from '@pulse-ts/core';
+import { Component, attachComponent } from '@pulse-ts/core';
 
-class Health extends Component { constructor(public hp = 100) { super(); } }
+class Health extends Component {
+  constructor(public hp = 100) { super(); }
+}
 
 registerComponentSerializer(Health, {
-  type: 'game:health',
-  toJSON: (h) => ({ hp: h.hp }),
-  fromJSON: (n, data) => { n.getComponent(Health).hp = data.hp; }
+  id: 'game:health',
+  serialize(_owner, h) {
+    return { hp: h.hp };
+  },
+  deserialize(owner, data: any) {
+    const h = attachComponent(owner, Health);
+    h.hp = Number(data?.hp ?? 0);
+  }
 });
 ```

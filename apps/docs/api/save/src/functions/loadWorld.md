@@ -8,12 +8,10 @@
 
 > **loadWorld**(`world`, `save`, `opts`): `void`
 
-Defined in: [save/src/world.ts:95](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/save/src/world.ts#L95)
+Defined in: packages/save/src/public/world.ts:33
 
-Loads the world from a save file in-place.
-- Updates the world's nodes and hierarchy
-- Applies components via registered serializers
-- Optionally applies time state
+Loads a save object into an existing world in-place.
+Matches nodes by StableId when present, else by numeric id.
 
 ## Parameters
 
@@ -21,20 +19,28 @@ Loads the world from a save file in-place.
 
 `World`
 
-The world to load the save file into.
+The target world to mutate.
 
 ### save
 
 [`SaveFile`](../type-aliases/SaveFile.md)
 
-The save file to load.
+The save file previously produced by [saveWorld](saveWorld.md).
 
 ### opts
 
 [`LoadOptions`](../interfaces/LoadOptions.md) = `{}`
 
-The options for loading the world.
+Load options (strict, resetPrevious, applyTime).
 
 ## Returns
 
 `void`
+
+## Example
+
+```ts
+import { loadWorld } from '@pulse-ts/save';
+// ... obtain `save` via saveWorld or from storage
+loadWorld(world, save, { applyTime: true, resetPrevious: true });
+```

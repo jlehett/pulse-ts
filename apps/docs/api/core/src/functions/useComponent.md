@@ -8,7 +8,7 @@
 
 > **useComponent**\<`T`\>(`Component`): `T`
 
-Defined in: [core/src/fc/hooks.ts:66](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/core/src/fc/hooks.ts#L66)
+Defined in: [packages/core/src/domain/fc/hooks.ts:102](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/core/src/domain/fc/hooks.ts#L102)
 
 Ensures the current `Node` has a `Transform` attached and returns it.
 

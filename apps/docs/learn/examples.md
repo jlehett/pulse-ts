@@ -36,4 +36,14 @@ function ScoreDisplay() {
   const gs = useService(GameState);
   useFrameUpdate(() => console.log(gs.get()));
 }
+
+## Typed event bus
+
+```ts
+type PlayerEvents = { spawn: { id: number }; hit: { dmg: number } };
+const bus = new EventBus<PlayerEvents>();
+bus.on('spawn', (e) => console.log('spawn', e.id));
+bus.once('hit', (e) => console.log('first hit', e.dmg));
+bus.emit('spawn', { id: 1 });
+```
 ```

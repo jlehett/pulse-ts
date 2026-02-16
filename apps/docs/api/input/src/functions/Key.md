@@ -8,9 +8,9 @@
 
 > **Key**(`code`): [`KeyBinding`](../type-aliases/KeyBinding.md)
 
-Defined in: [input/src/bindings/expr.ts:33](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/input/src/bindings/expr.ts#L33)
+Defined in: [packages/input/src/domain/bindings/expr.ts:42](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/input/src/domain/bindings/expr.ts#L42)
 
-Create a key binding.
+Create a key binding expression.
 
 ## Parameters
 
@@ -18,10 +18,17 @@ Create a key binding.
 
 `string`
 
-The key code to bind.
+Keyboard code or shorthand; letters or digits are normalized (e.g., `w` → `KeyW`).
 
 ## Returns
 
 [`KeyBinding`](../type-aliases/KeyBinding.md)
 
-The key binding.
+The key binding expression.
+
+## Example
+
+```ts
+import { Key } from '@pulse-ts/input';
+const jump = Key('Space');
+```

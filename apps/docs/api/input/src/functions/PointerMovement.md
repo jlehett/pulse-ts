@@ -8,42 +8,41 @@
 
 > **PointerMovement**(`opts`): [`PointerMovementBinding`](../type-aliases/PointerMovementBinding.md)
 
-Defined in: [input/src/bindings/expr.ts:98](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/input/src/bindings/expr.ts#L98)
+Defined in: [packages/input/src/domain/bindings/expr.ts:118](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/input/src/domain/bindings/expr.ts#L118)
 
-Create a PointerMovement binding.
+Create a pointer movement binding (maps mouse/touch delta to a 2D axis).
 
 ## Parameters
 
 ### opts
 
-The options for the pointer movement.
+Pointer options (invert/scale per-axis).
 
 #### invertX?
 
 `boolean`
 
-Whether to invert the x axis.
-
 #### invertY?
 
 `boolean`
-
-Whether to invert the y axis.
 
 #### scaleX?
 
 `number`
 
-The scale of the x axis.
-
 #### scaleY?
 
 `number`
-
-The scale of the y axis.
 
 ## Returns
 
 [`PointerMovementBinding`](../type-aliases/PointerMovementBinding.md)
 
-The PointerMovement binding.
+The pointer movement binding expression.
+
+## Example
+
+```ts
+import { PointerMovement } from '@pulse-ts/input';
+const look = PointerMovement({ scaleX: 0.1, scaleY: 0.1 });
+```

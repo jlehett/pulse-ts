@@ -1,23 +1,9 @@
-// Public exports for @pulse-ts/network (M1 scope)
+// Public exports for @pulse-ts/network — client APIs favor hooks/facade.
 
-export * from './types';
+// Types used by public API options (kept for ergonomics)
+export * from './domain/types';
 
-// Services
-export { TransportService } from './services/TransportService';
-export { ReplicationService } from './services/ReplicationService';
-export { InterpolationService } from './services/InterpolationService';
-export {
-    ReliableChannelService,
-    type ReliableResult,
-} from './services/ReliableChannel';
-export { ClockSyncService } from './services/ClockSyncService';
-
-// Systems
-export { NetworkTick } from './systems/NetworkTick';
-export { SnapshotSystem } from './systems/SnapshotSystem';
-export { InterpolationSystem } from './systems/InterpolationSystem';
-
-// FC Hooks
+// Public hooks (preferred for client code)
 export {
     useConnection,
     useWebSocket,
@@ -35,51 +21,48 @@ export {
     useReliable,
     useReliableTo,
     useClockSync,
-} from './fc/hooks';
-export { useReplicateTransform } from './fc/transform';
-
-// Transports (Memory)
+} from './public/hooks';
+export { useReplicateTransform } from './public/transform';
+// Factory helpers (function-first public API)
 export {
-    MemoryTransport,
-    createMemoryHub,
-    type MemoryHub,
-} from './transports/memory';
+    createWebSocketTransport,
+    createMemoryTransport,
+    createWebRtcMeshTransport,
+} from './public/factories';
 
-// Transports (WebSocket)
-export { WebSocketTransport } from './transports/websocket';
-// Transports (WebRTC)
+// Lightweight channel helper
+export { defineChannel, channel } from './domain/messaging/channel';
+
+// Select pure helpers that are part of public docs
 export {
-    WebRtcMeshTransport,
-    type WebRtcMeshOptions,
-} from './transports/webrtc';
+    shallowDelta,
+    type SnapshotEnvelope,
+} from './domain/replication/protocol';
 
-// Utilities
-export { defineChannel, channel } from './messaging/channel';
-export { shallowDelta, type SnapshotEnvelope } from './replication/protocol';
-// Services
-export { RpcService } from './services/RpcService';
-export { getNetwork } from './facade';
-export {
-    RtcSignalingClient,
-    type SignalEnvelope,
-} from './signaling/RtcSignalingClient';
+// Memory hub helper for local testing (hooked via useMemory)
+export { createMemoryHub, type MemoryHub } from './infra/transports/memory';
 
-// Installer
+// Facade and installer
+export { getNetwork } from './public/facade';
+
 export {
     installNetwork,
     type NetworkInstallOptions,
     type InstalledNetwork,
-} from './install';
+} from './public/install';
 
 // Server utilities (Node)
-export { NetworkServer } from './server/broker';
-export { attachWsServer } from './server/ws';
+export { NetworkServer } from './infra/server/core/NetworkServer';
+export { attachWsServer } from './infra/server/core/attachWsServer';
 // Server helpers
-export { type RateLimits } from './server/rateLimit';
+export { type RateLimits } from './infra/server/features/rateLimit';
 export {
     type RoomAction,
     type RoomControl,
     type RoomAck,
     type RoomErrorReason,
-} from './server/rooms';
-export { validateWithZod, type ZodLikeSchema } from './server/validate';
+} from './infra/server/features/rooms';
+export {
+    validateWithZod,
+    type ZodLikeSchema,
+} from './infra/server/routing/validate';

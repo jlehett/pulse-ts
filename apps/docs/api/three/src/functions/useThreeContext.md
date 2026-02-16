@@ -8,7 +8,7 @@
 
 > **useThreeContext**(): `object`
 
-Defined in: [three/src/fc/hooks.ts:13](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/three/src/fc/hooks.ts#L13)
+Defined in: [packages/three/src/public/hooks.ts:22](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/three/src/public/hooks.ts#L22)
 
 Returns Three.js context bound to the current `World`.
 
@@ -19,7 +19,7 @@ Returns Three.js context bound to the current `World`.
 
 `object`
 
-The plugin and core Three objects.
+The service and core Three objects { service, renderer, scene, camera }.
 
 ### camera
 
@@ -36,3 +36,13 @@ The plugin and core Three objects.
 ### service
 
 > **service**: [`ThreeService`](../classes/ThreeService.md)
+
+## Example
+
+```ts
+import { useThreeContext } from '@pulse-ts/three';
+function ReadCamera() {
+  const { camera } = useThreeContext();
+  // read camera each frame
+}
+```

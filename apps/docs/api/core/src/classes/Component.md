@@ -6,7 +6,7 @@
 
 # Abstract Class: Component
 
-Defined in: [core/src/Component.ts:7](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/core/src/Component.ts#L7)
+Defined in: [packages/core/src/domain/ecs/base/Component.ts:7](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/core/src/domain/ecs/base/Component.ts#L7)
 
 A base class for all components.
 
@@ -36,7 +36,7 @@ A base class for all components.
 
 > **get** **owner**(): [`Node`](Node.md)
 
-Defined in: [core/src/Component.ts:17](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/core/src/Component.ts#L17)
+Defined in: [packages/core/src/domain/ecs/base/Component.ts:17](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/core/src/domain/ecs/base/Component.ts#L17)
 
 The owner of the component.
 
@@ -50,7 +50,7 @@ The owner of the component.
 
 > **\[kSetComponentOwner\]**(`owner`): `void`
 
-Defined in: [core/src/Component.ts:10](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/core/src/Component.ts#L10)
+Defined in: [packages/core/src/domain/ecs/base/Component.ts:10](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/core/src/domain/ecs/base/Component.ts#L10)
 
 #### Parameters
 
@@ -68,7 +68,7 @@ Defined in: [core/src/Component.ts:10](https://github.com/jlehett/pulse-ts/blob/
 
 > `static` **attach**\<`T`\>(`this`, `owner`): `T`
 
-Defined in: [core/src/Component.ts:27](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/core/src/Component.ts#L27)
+Defined in: [packages/core/src/domain/ecs/base/Component.ts:27](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/core/src/domain/ecs/base/Component.ts#L27)
 
 Attaches the component to an owner. Override this method to implement
 custom attachment logic.

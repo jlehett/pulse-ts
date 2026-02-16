@@ -1,1 +1,4 @@
-export { WebRtcMeshTransport, type WebRtcMeshOptions } from './transport';
+export {
+    WebRtcMeshTransport,
+    type WebRtcMeshOptions,
+} from '../../infra/transports/webrtc';

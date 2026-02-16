@@ -4,6 +4,9 @@
         "outDir": "dist",
         "rootDir": "src",
         "baseUrl": "./",
+        "noEmit": true,
+        "declaration": false
     },
-    "include": ["src", "src/System.ts"]
+    "include": ["src"],
+    "exclude": ["dist"]
 }

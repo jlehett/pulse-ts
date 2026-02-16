@@ -8,7 +8,7 @@
 
 > **useNode**(): [`Node`](../classes/Node.md)
 
-Defined in: [core/src/fc/hooks.ts:30](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/core/src/fc/hooks.ts#L30)
+Defined in: [packages/core/src/domain/fc/hooks.ts:54](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/core/src/domain/fc/hooks.ts#L54)
 
 Returns the `Node` associated with the active function component.
 

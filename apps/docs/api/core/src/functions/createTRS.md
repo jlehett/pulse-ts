@@ -8,7 +8,7 @@
 
 > **createTRS**(): [`TRS`](../interfaces/TRS.md)
 
-Defined in: [core/src/components/Transform.ts:20](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/core/src/components/Transform.ts#L20)
+Defined in: [packages/core/src/domain/components/spatial/Transform.ts:21](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/core/src/domain/components/spatial/Transform.ts#L21)
 
 Creates a new TRS.
 

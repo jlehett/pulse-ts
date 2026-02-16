@@ -8,9 +8,9 @@
 
 > **registerFC**\<`P`\>(`id`, `fc`): `void`
 
-Defined in: [save/src/registries/fcRegistry.ts:13](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/save/src/registries/fcRegistry.ts#L13)
+Defined in: packages/save/src/domain/registries/fcRegistry.ts:13
 
-Register a function component for save/load.
+Register a Function Component so rebuild loads can remount by id.
 
 ## Type Parameters
 
@@ -24,14 +24,21 @@ Register a function component for save/load.
 
 `string`
 
-Stable id used in save files (e.g., 'game:rts-camera')
+Stable id used in save files (e.g., 'game:player').
 
 ### fc
 
 `FC`\<`P`\>
 
-The function component constructor
+The function component reference.
 
 ## Returns
 
 `void`
+
+## Example
+
+```ts
+import { registerFC } from '@pulse-ts/save';
+registerFC('game:thing', (props) => void props);
+```

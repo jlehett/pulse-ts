@@ -6,7 +6,7 @@
 
 # Interface: AABB
 
-Defined in: [core/src/components/Bounds.ts:8](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/core/src/components/Bounds.ts#L8)
+Defined in: [packages/core/src/domain/components/spatial/Bounds.ts:9](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/core/src/domain/components/spatial/Bounds.ts#L9)
 
 ## Properties
 
@@ -14,7 +14,7 @@ Defined in: [core/src/components/Bounds.ts:8](https://github.com/jlehett/pulse-t
 
 > **max**: [`Vec3`](../classes/Vec3.md)
 
-Defined in: [core/src/components/Bounds.ts:10](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/core/src/components/Bounds.ts#L10)
+Defined in: [packages/core/src/domain/components/spatial/Bounds.ts:11](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/core/src/domain/components/spatial/Bounds.ts#L11)
 
 ***
 
@@ -22,4 +22,4 @@ Defined in: [core/src/components/Bounds.ts:10](https://github.com/jlehett/pulse-
 
 > **min**: [`Vec3`](../classes/Vec3.md)
 
-Defined in: [core/src/components/Bounds.ts:9](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/core/src/components/Bounds.ts#L9)
+Defined in: [packages/core/src/domain/components/spatial/Bounds.ts:10](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/core/src/domain/components/spatial/Bounds.ts#L10)

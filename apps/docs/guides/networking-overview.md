@@ -50,7 +50,18 @@ Packets support an optional `to: string | string[]`. When present, only the addr
 - `svc.channel(name).publishTo(to, data)`
 - Hooks: `useChannelTo`, `useRPCTo`, `useReliableTo`
 
-Set your local peer id via `TransportService.setSelfId(id)` so addressed filtering applies.
+Set your local peer id via `TransportService.setSelfId(id)` so addressed filtering applies (this is handled automatically by `useWebRTC`). Receivers without a `selfId` drop addressed packets by design.
+
+## Testing/Imperative: Pumping the Transport
+
+In tests or imperative setups (without a running update loop), call `pump()` to flush outgoing then dispatch incoming packets in one step:
+
+```ts
+// a publishes; b receives after both sides pump
+a.publish('chat', 'hello')
+a.pump();
+b.pump();
+```
 
 ## Hooks Snapshot
 

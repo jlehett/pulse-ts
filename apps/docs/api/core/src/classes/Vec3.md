@@ -6,7 +6,7 @@
 
 # Class: Vec3
 
-Defined in: [core/src/math/vec3.ts:4](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/core/src/math/vec3.ts#L4)
+Defined in: [packages/core/src/utils/math/vec3.ts:4](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/core/src/utils/math/vec3.ts#L4)
 
 A 3-dimensional vector.
 
@@ -16,7 +16,7 @@ A 3-dimensional vector.
 
 > **new Vec3**(`x`, `y`, `z`): `Vec3`
 
-Defined in: [core/src/math/vec3.ts:5](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/core/src/math/vec3.ts#L5)
+Defined in: [packages/core/src/utils/math/vec3.ts:5](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/core/src/utils/math/vec3.ts#L5)
 
 #### Parameters
 
@@ -42,7 +42,7 @@ Defined in: [core/src/math/vec3.ts:5](https://github.com/jlehett/pulse-ts/blob/9
 
 > **x**: `number` = `0`
 
-Defined in: [core/src/math/vec3.ts:6](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/core/src/math/vec3.ts#L6)
+Defined in: [packages/core/src/utils/math/vec3.ts:6](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/core/src/utils/math/vec3.ts#L6)
 
 ***
 
@@ -50,7 +50,7 @@ Defined in: [core/src/math/vec3.ts:6](https://github.com/jlehett/pulse-ts/blob/9
 
 > **y**: `number` = `0`
 
-Defined in: [core/src/math/vec3.ts:7](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/core/src/math/vec3.ts#L7)
+Defined in: [packages/core/src/utils/math/vec3.ts:7](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/core/src/utils/math/vec3.ts#L7)
 
 ***
 
@@ -58,7 +58,7 @@ Defined in: [core/src/math/vec3.ts:7](https://github.com/jlehett/pulse-ts/blob/9
 
 > **z**: `number` = `0`
 
-Defined in: [core/src/math/vec3.ts:8](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/core/src/math/vec3.ts#L8)
+Defined in: [packages/core/src/utils/math/vec3.ts:8](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/core/src/utils/math/vec3.ts#L8)
 
 ## Methods
 
@@ -66,7 +66,7 @@ Defined in: [core/src/math/vec3.ts:8](https://github.com/jlehett/pulse-ts/blob/9
 
 > **addScaled**(`v`, `s`): `this`
 
-Defined in: [core/src/math/vec3.ts:52](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/core/src/math/vec3.ts#L52)
+Defined in: [packages/core/src/utils/math/vec3.ts:52](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/core/src/utils/math/vec3.ts#L52)
 
 Adds a scaled vector to the vector.
 
@@ -90,7 +90,7 @@ Adds a scaled vector to the vector.
 
 > **clone**(): `Vec3`
 
-Defined in: [core/src/math/vec3.ts:14](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/core/src/math/vec3.ts#L14)
+Defined in: [packages/core/src/utils/math/vec3.ts:14](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/core/src/utils/math/vec3.ts#L14)
 
 Returns a clone of the vector.
 
@@ -104,7 +104,7 @@ Returns a clone of the vector.
 
 > **copy**(`v`): `this`
 
-Defined in: [core/src/math/vec3.ts:42](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/core/src/math/vec3.ts#L42)
+Defined in: [packages/core/src/utils/math/vec3.ts:42](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/core/src/utils/math/vec3.ts#L42)
 
 Copies the values of the given vector.
 
@@ -124,7 +124,7 @@ Copies the values of the given vector.
 
 > **multiply**(`v`): `this`
 
-Defined in: [core/src/math/vec3.ts:62](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/core/src/math/vec3.ts#L62)
+Defined in: [packages/core/src/utils/math/vec3.ts:62](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/core/src/utils/math/vec3.ts#L62)
 
 Multiplies the vector by the given vector.
 
@@ -144,7 +144,7 @@ Multiplies the vector by the given vector.
 
 > **normalize**(): `this`
 
-Defined in: [core/src/math/vec3.ts:31](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/core/src/math/vec3.ts#L31)
+Defined in: [packages/core/src/utils/math/vec3.ts:31](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/core/src/utils/math/vec3.ts#L31)
 
 Normalizes the vector.
 
@@ -158,7 +158,7 @@ Normalizes the vector.
 
 > **set**(`x`, `y`, `z`): `this`
 
-Defined in: [core/src/math/vec3.ts:21](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/core/src/math/vec3.ts#L21)
+Defined in: [packages/core/src/utils/math/vec3.ts:21](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/core/src/utils/math/vec3.ts#L21)
 
 Sets the vector to the given values.
 
@@ -186,7 +186,7 @@ Sets the vector to the given values.
 
 > `static` **lerp**(`a`, `b`, `t`): `Vec3`
 
-Defined in: [core/src/math/vec3.ts:72](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/core/src/math/vec3.ts#L72)
+Defined in: [packages/core/src/utils/math/vec3.ts:72](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/core/src/utils/math/vec3.ts#L72)
 
 Linearly interpolates between two vectors.
 
@@ -214,7 +214,7 @@ Linearly interpolates between two vectors.
 
 > `static` **lerpInto**(`a`, `b`, `t`, `out`): `Vec3`
 
-Defined in: [core/src/math/vec3.ts:83](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/core/src/math/vec3.ts#L83)
+Defined in: [packages/core/src/utils/math/vec3.ts:83](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/core/src/utils/math/vec3.ts#L83)
 
 Linearly interpolates between two vectors and stores the result in the given output vector.
 

@@ -8,9 +8,22 @@
 
 > **ComponentSerializer**\<`T`\> = `object`
 
-Defined in: [save/src/types.ts:33](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/save/src/types.ts#L33)
+Defined in: packages/save/src/public/types.ts:48
 
 A serializer for a component.
+
+## Example
+
+```ts
+import { registerComponentSerializer } from '@pulse-ts/save';
+import { Component, attachComponent } from '@pulse-ts/core';
+class Health extends Component { constructor(public hp = 100) { super(); } }
+registerComponentSerializer(Health, {
+  id: 'game:health',
+  serialize(_owner, h) { return { hp: h.hp }; },
+  deserialize(owner, data: any) { attachComponent(owner, Health).hp = Number(data?.hp ?? 0); },
+});
+```
 
 ## Type Parameters
 
@@ -24,7 +37,7 @@ A serializer for a component.
 
 > **id**: `string`
 
-Defined in: [save/src/types.ts:35](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/save/src/types.ts#L35)
+Defined in: packages/save/src/public/types.ts:50
 
 Stable identifier for this component type in save files.
 
@@ -34,7 +47,7 @@ Stable identifier for this component type in save files.
 
 > **deserialize**(`owner`, `data`): `void`
 
-Defined in: [save/src/types.ts:42](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/save/src/types.ts#L42)
+Defined in: packages/save/src/public/types.ts:57
 
 Apply the serialized data back onto the component.
 
@@ -58,7 +71,7 @@ Apply the serialized data back onto the component.
 
 > **serialize**(`owner`, `comp`): `unknown`
 
-Defined in: [save/src/types.ts:40](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/save/src/types.ts#L40)
+Defined in: packages/save/src/public/types.ts:55
 
 Serialize the component into JSON-safe data.
 Return undefined to skip writing this component.

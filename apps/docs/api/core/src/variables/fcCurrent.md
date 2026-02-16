@@ -8,7 +8,7 @@
 
 > `const` **\_\_fcCurrent**: () => `HookBucket` = `current`
 
-Defined in: [core/src/fc/runtime.ts:96](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/core/src/fc/runtime.ts#L96)
+Defined in: [packages/core/src/domain/fc/runtime.ts:96](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/core/src/domain/fc/runtime.ts#L96)
 
 ## Returns
 

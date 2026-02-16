@@ -6,9 +6,22 @@
 
 # Class: ThreeCameraPVSystem
 
-Defined in: [three/src/systems/cameraPV.ts:9](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/three/src/systems/cameraPV.ts#L9)
+Defined in: [packages/three/src/domain/systems/cameraPV.ts:21](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/three/src/domain/systems/cameraPV.ts#L21)
 
-Pushes Three camera projection-view into the CullingCamera service.
+Pushes Three camera projection-view into the `CullingCamera` service.
+
+- Runs first in `frame.early` by default.
+- Enables core culling to use the Three camera.
+
+## Example
+
+```ts
+import { World } from '@pulse-ts/core';
+import { ThreeCameraPVSystem, ThreeService } from '@pulse-ts/three';
+const world = new World();
+world.provideService(new ThreeService({ canvas: document.createElement('canvas') }));
+world.addSystem(new ThreeCameraPVSystem());
+```
 
 ## Extends
 
@@ -34,7 +47,7 @@ Pushes Three camera projection-view into the CullingCamera service.
 
 > `static` **order**: `number` = `Number.MIN_SAFE_INTEGER`
 
-Defined in: [three/src/systems/cameraPV.ts:12](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/three/src/systems/cameraPV.ts#L12)
+Defined in: [packages/three/src/domain/systems/cameraPV.ts:24](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/three/src/domain/systems/cameraPV.ts#L24)
 
 The order of the update that this system is registered for.
 
@@ -48,7 +61,7 @@ The order of the update that this system is registered for.
 
 > `static` **updateKind**: `UpdateKind` = `'frame'`
 
-Defined in: [three/src/systems/cameraPV.ts:10](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/three/src/systems/cameraPV.ts#L10)
+Defined in: [packages/three/src/domain/systems/cameraPV.ts:22](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/three/src/domain/systems/cameraPV.ts#L22)
 
 The kind of update that this system is registered for.
 Defaults to 'fixed'.
@@ -63,7 +76,7 @@ Defaults to 'fixed'.
 
 > `static` **updatePhase**: `UpdatePhase` = `'early'`
 
-Defined in: [three/src/systems/cameraPV.ts:11](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/three/src/systems/cameraPV.ts#L11)
+Defined in: [packages/three/src/domain/systems/cameraPV.ts:23](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/three/src/domain/systems/cameraPV.ts#L23)
 
 The phase of the update that this system is registered for.
 Defaults to 'update'.
@@ -78,7 +91,7 @@ Defaults to 'update'.
 
 > **attach**(`world`): `void`
 
-Defined in: core/dist/index.d.ts:261
+Defined in: packages/core/dist/index.d.ts:227
 
 Attaches the system to the world.
 
@@ -104,7 +117,7 @@ The world to attach the system to.
 
 > **detach**(): `void`
 
-Defined in: core/dist/index.d.ts:265
+Defined in: packages/core/dist/index.d.ts:231
 
 Detaches the system from the world.
 
@@ -122,7 +135,7 @@ Detaches the system from the world.
 
 > **update**(): `void`
 
-Defined in: [three/src/systems/cameraPV.ts:17](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/three/src/systems/cameraPV.ts#L17)
+Defined in: [packages/three/src/domain/systems/cameraPV.ts:29](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/three/src/domain/systems/cameraPV.ts#L29)
 
 Method that will be called on every tick that this system is registered for.
 

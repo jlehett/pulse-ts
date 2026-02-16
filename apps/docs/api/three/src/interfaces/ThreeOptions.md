@@ -6,7 +6,9 @@
 
 # Interface: ThreeOptions
 
-Defined in: [three/src/services/Three.ts:11](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/three/src/services/Three.ts#L11)
+Defined in: [packages/three/src/domain/services/Three.ts:14](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/three/src/domain/services/Three.ts#L14)
+
+Options for configuring the Three.js integration.
 
 ## Properties
 
@@ -14,7 +16,9 @@ Defined in: [three/src/services/Three.ts:11](https://github.com/jlehett/pulse-ts
 
 > `optional` **autoCommitTransforms**: `boolean`
 
-Defined in: [three/src/services/Three.ts:14](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/three/src/services/Three.ts#L14)
+Defined in: [packages/three/src/domain/services/Three.ts:26](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/three/src/domain/services/Three.ts#L26)
+
+Auto-install `ThreeTRSSyncSystem` to push transforms before render. Default: `true`.
 
 ***
 
@@ -22,7 +26,9 @@ Defined in: [three/src/services/Three.ts:14](https://github.com/jlehett/pulse-ts
 
 > **canvas**: `HTMLCanvasElement`
 
-Defined in: [three/src/services/Three.ts:12](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/three/src/services/Three.ts#L12)
+Defined in: [packages/three/src/domain/services/Three.ts:18](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/three/src/domain/services/Three.ts#L18)
+
+The target canvas to render into.
 
 ***
 
@@ -30,7 +36,9 @@ Defined in: [three/src/services/Three.ts:12](https://github.com/jlehett/pulse-ts
 
 > `optional` **clearColor**: `number`
 
-Defined in: [three/src/services/Three.ts:13](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/three/src/services/Three.ts#L13)
+Defined in: [packages/three/src/domain/services/Three.ts:22](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/three/src/domain/services/Three.ts#L22)
+
+Scene clear color (hex RGB). Default: `0x000000`.
 
 ***
 
@@ -38,7 +46,9 @@ Defined in: [three/src/services/Three.ts:13](https://github.com/jlehett/pulse-ts
 
 > `optional` **enableCulling**: `boolean`
 
-Defined in: [three/src/services/Three.ts:16](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/three/src/services/Three.ts#L16)
+Defined in: [packages/three/src/domain/services/Three.ts:34](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/three/src/domain/services/Three.ts#L34)
+
+Respect core `Visibility` to hide Three roots. Default: `true`.
 
 ***
 
@@ -46,4 +56,6 @@ Defined in: [three/src/services/Three.ts:16](https://github.com/jlehett/pulse-ts
 
 > `optional` **useMatrices**: `boolean`
 
-Defined in: [three/src/services/Three.ts:15](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/three/src/services/Three.ts#L15)
+Defined in: [packages/three/src/domain/services/Three.ts:30](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/three/src/domain/services/Three.ts#L30)
+
+Use explicit matrix composition on roots (sets `matrixAutoUpdate=false`). Default: `false`.

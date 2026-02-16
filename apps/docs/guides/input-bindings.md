@@ -5,7 +5,7 @@ Configure keyboard, mouse, and custom bindings with `@pulse-ts/input`, and consu
 ## Install service and providers
 
 ```ts
-import { installInput, Axis1D, Axis2D, PointerMovement, PointerWheelScroll, Key, Chord, Sequence } from '@pulse-ts/input';
+import { installInput, Axis1D, Axis2D, PointerMovement, PointerWheelScroll, PointerButton, Key, Chord, Sequence } from '@pulse-ts/input';
 
 installInput(world, {
   preventDefault: true,
@@ -22,7 +22,10 @@ installInput(world, {
 
     // Pointer
     look: PointerMovement({ scaleX: 0.1, scaleY: 0.1 }),
-    zoom: PointerWheelScroll({ scale: 1.0 })
+    zoom: PointerWheelScroll({ scale: 1.0 }),
+
+    // Pointer button (mouse)
+    fire: PointerButton(0)
   }
 });
 ```
@@ -37,6 +40,7 @@ function PlayerController() {
   const move = useAxis2D('move');
   const jump = useAction('jump');
   const dash = useAction('dash');
+  const fire = useAction('fire');
   const zoom = useAxis1D('zoom');
   const pointer = usePointer();
 
@@ -45,7 +49,7 @@ function PlayerController() {
     const j = jump();         // { pressed, released, held }
     const d = dash();
     const z = zoom();         // wheel delta (scaled)
-    const { dx, dy } = pointer(); // mouse delta (scaled)
+  const { deltaX, deltaY } = pointer(); // mouse delta (scaled)
 
     // ...apply to movement/camera...
   });
@@ -55,11 +59,30 @@ function PlayerController() {
 ## Virtual input (tests/bots)
 
 ```ts
-import { VirtualInput } from '@pulse-ts/input/providers/virtual';
+import { VirtualInput } from '@pulse-ts/input';
 
 const vi = new VirtualInput(useInput());
 vi.press('jump');
 vi.axis2D('move', { x: 1, y: 0 });
+```
+
+## Subscribing to action events
+
+Prefer polling via hooks in gameplay code. For event-driven flows (UI, analytics), you can subscribe to action state changes that occur during `commit()`:
+
+```ts
+import { installInput, Key } from '@pulse-ts/input';
+
+const input = installInput(world, { bindings: { jump: Key('Space') } });
+const off = input.actionEvent.on(({ name, state }) => {
+  if (name === 'jump') {
+    if (state.pressed) console.log('Jump pressed!');
+    if (state.released) console.log('Jump released!');
+  }
+});
+
+// later, to unsubscribe
+off();
 ```
 
 ## Tips
@@ -68,3 +91,40 @@ vi.axis2D('move', { x: 1, y: 0 });
 - Enable `pointerLock` to capture mouse for FPS-style look.
 - Use `Axis2D` for combined WASD vectors and `Axis1D` for single axes.
 - Use `Chord` for simultaneous keys and `Sequence` for combos.
+
+Note: `preventDefault` and `pointerLock` default to `false` unless specified in `installInput` options.
+
+## Resetting input state
+
+For testing or level reloads, reset input state without replacing the service:
+
+```ts
+import { useInput } from '@pulse-ts/input';
+
+const input = useInput();
+input.reset(); // clears pressed/down flags, pointer deltas, injected values
+```
+
+## Commit pipeline (reference)
+
+On each frame at `frame.early`, the input service:
+- Updates providers (poll)
+- Evaluates chords and sequence pulses (one-frame presses)
+- Computes digital actions and 1D axes from keys
+- Accumulates/flushes pointer movement and wheel deltas
+- Applies injected 1D axes and composes Axis2D from 1D
+
+This ensures user code reads a stable snapshot for the rest of the frame.
+
+## Multiple pointer movement bindings
+
+You can bind more than one action to pointer movement, each with its own sensitivity/inversion. This is useful for separate "look" and "aim" vectors.
+
+```ts
+installInput(world, {
+  bindings: {
+    look: PointerMovement({ scaleX: 0.1, scaleY: 0.1 }),
+    aim:  PointerMovement({ scaleX: 0.05, scaleY: 0.05, invertY: true }),
+  }
+});
+```

@@ -1,1 +1,1 @@
-export { WebSocketTransport } from './transport';
+export { WebSocketTransport } from '../../infra/transports/websocket';

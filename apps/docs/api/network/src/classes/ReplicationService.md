@@ -6,7 +6,7 @@
 
 # Class: ReplicationService
 
-Defined in: [network/src/services/ReplicationService.ts:25](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/network/src/services/ReplicationService.ts#L25)
+Defined in: [packages/network/src/services/ReplicationService.ts:26](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/network/src/services/ReplicationService.ts#L26)
 
 Service for entity replication via periodic snapshots/deltas.
 
@@ -25,7 +25,7 @@ Service for entity replication via periodic snapshots/deltas.
 
 > **new ReplicationService**(`opts`): `ReplicationService`
 
-Defined in: [network/src/services/ReplicationService.ts:37](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/network/src/services/ReplicationService.ts#L37)
+Defined in: [packages/network/src/services/ReplicationService.ts:38](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/network/src/services/ReplicationService.ts#L38)
 
 #### Parameters
 
@@ -53,7 +53,7 @@ Defined in: [network/src/services/ReplicationService.ts:37](https://github.com/j
 
 > **attach**(`world`): `void`
 
-Defined in: core/dist/index.d.ts:284
+Defined in: packages/core/dist/index.d.ts:250
 
 Attaches the service to the world.
 
@@ -79,7 +79,7 @@ The world to attach the service to.
 
 > **configure**(`opts`): `void`
 
-Defined in: [network/src/services/ReplicationService.ts:46](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/network/src/services/ReplicationService.ts#L46)
+Defined in: [packages/network/src/services/ReplicationService.ts:47](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/network/src/services/ReplicationService.ts#L47)
 
 Updates replication options (channel and/or send rate).
 
@@ -99,7 +99,7 @@ Updates replication options (channel and/or send rate).
 
 > **detach**(): `void`
 
-Defined in: core/dist/index.d.ts:288
+Defined in: packages/core/dist/index.d.ts:254
 
 Detaches the service from the world.
 
@@ -117,7 +117,7 @@ Detaches the service from the world.
 
 > **getStats**(): `object`
 
-Defined in: [network/src/services/ReplicationService.ts:169](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/network/src/services/ReplicationService.ts#L169)
+Defined in: [packages/network/src/services/ReplicationService.ts:170](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/network/src/services/ReplicationService.ts#L170)
 
 Returns basic replication stats.
 
@@ -151,7 +151,7 @@ Returns basic replication stats.
 
 > **markDirty**(`entityId`, `key?`): `void`
 
-Defined in: [network/src/services/ReplicationService.ts:78](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/network/src/services/ReplicationService.ts#L78)
+Defined in: [packages/network/src/services/ReplicationService.ts:79](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/network/src/services/ReplicationService.ts#L79)
 
 Marks a replica dirty (forces inclusion in next snapshot).
 
@@ -175,7 +175,7 @@ Marks a replica dirty (forces inclusion in next snapshot).
 
 > **register**(`entityId`, `key`, `rec`): () => `void`
 
-Defined in: [network/src/services/ReplicationService.ts:53](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/network/src/services/ReplicationService.ts#L53)
+Defined in: [packages/network/src/services/ReplicationService.ts:54](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/network/src/services/ReplicationService.ts#L54)
 
 Registers a replica under an entity id. Returns a disposer.
 
@@ -213,7 +213,7 @@ Registers a replica under an entity id. Returns a disposer.
 
 > **sendSnapshot**(): `void`
 
-Defined in: [network/src/services/ReplicationService.ts:100](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/network/src/services/ReplicationService.ts#L100)
+Defined in: [packages/network/src/services/ReplicationService.ts:101](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/network/src/services/ReplicationService.ts#L101)
 
 Sends a delta snapshot to all peers via TransportService.
 
@@ -227,7 +227,7 @@ Sends a delta snapshot to all peers via TransportService.
 
 > **tick**(`dt`): `void`
 
-Defined in: [network/src/services/ReplicationService.ts:90](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/network/src/services/ReplicationService.ts#L90)
+Defined in: [packages/network/src/services/ReplicationService.ts:91](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/network/src/services/ReplicationService.ts#L91)
 
 Ticks snapshot scheduling; call from a System.
 

@@ -40,6 +40,15 @@ server.registerRpc('getTime', () => Date.now())
 server.registerReliable('shop:buy', async (req) => ({ ok: true }))
 ```
 
+Alternatively, use the function‑first factory when connecting imperatively with the facade:
+
+```
+import { getNetwork, createWebSocketTransport } from '@pulse-ts/network'
+
+const net = getNetwork(world)
+await net.connect(() => createWebSocketTransport('ws://localhost:8080'))
+```
+
 Rooms are controlled via the reserved `__room` channel; the `useRoom(room)` hook sends join/leave.
 
 ## WebRTC (P2P Mesh)
@@ -60,6 +69,14 @@ function ConnectP2P() {
 }
 ```
 
+Factory form for an imperative connect:
+
+```ts
+import { createWebRtcMeshTransport, getNetwork } from '@pulse-ts/network'
+const net = getNetwork(world)
+await net.connect(() => createWebRtcMeshTransport('peer-123', { signaling: ws }))
+```
+
 **Important:** `TransportService.getStatus()` becomes `open` when signaling is wired, not when a DataChannel to a specific peer is ready. Use the peer lifecycle to gate your P2P sends:
 
 - `usePeers()` to know when a peer id appears (fires on DataChannel open).
@@ -68,7 +85,7 @@ function ConnectP2P() {
 Notes:
 
 - The broker forwards `__signal` envelopes by `to` peer id; no persistence required.
-- The included `WebRtcMeshTransport` negotiates DataChannels (offer/answer/ICE) and broadcasts messages to connected peers. It emits `meta.from` for per‑peer origin.
+- The included `WebRtcMeshTransport` negotiates DataChannels (offer/answer/ICE) and broadcasts messages to connected peers (advanced: deep import from `@pulse-ts/network/transports/webrtc`). It emits `meta.from` for per‑peer origin.
 - The transport is functional but minimal; you can bring your own TURN or add “perfect negotiation” if needed.
 
 ## Status and Peers

@@ -8,7 +8,7 @@
 
 > **PointerWheelBinding** = `object`
 
-Defined in: [input/src/bindings/types.ts:178](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/input/src/bindings/types.ts#L178)
+Defined in: [packages/input/src/domain/bindings/types.ts:193](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/input/src/domain/bindings/types.ts#L193)
 
 A pointer wheel binding. Y-axis wheel delta only.
 
@@ -18,7 +18,7 @@ A pointer wheel binding. Y-axis wheel delta only.
 
 > `optional` **scale**: `number`
 
-Defined in: [input/src/bindings/types.ts:183](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/input/src/bindings/types.ts#L183)
+Defined in: [packages/input/src/domain/bindings/types.ts:198](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/input/src/domain/bindings/types.ts#L198)
 
 The scale of the wheel.
 
@@ -28,4 +28,4 @@ The scale of the wheel.
 
 > **type**: `"wheel"`
 
-Defined in: [input/src/bindings/types.ts:179](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/input/src/bindings/types.ts#L179)
+Defined in: [packages/input/src/domain/bindings/types.ts:194](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/input/src/domain/bindings/types.ts#L194)

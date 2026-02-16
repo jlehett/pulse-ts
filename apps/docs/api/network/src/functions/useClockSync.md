@@ -8,7 +8,7 @@
 
 > **useClockSync**(`opts?`): `object`
 
-Defined in: [network/src/fc/hooks.ts:257](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/network/src/fc/hooks.ts#L257)
+Defined in: [packages/network/src/fc/hooks.ts:507](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/network/src/fc/hooks.ts#L507)
 
 Starts client clock sync and provides accessors for server time.
 

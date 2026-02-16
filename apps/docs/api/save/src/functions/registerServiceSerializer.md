@@ -8,7 +8,7 @@
 
 > **registerServiceSerializer**\<`T`\>(`ctor`, `serializer`): `void`
 
-Defined in: [save/src/registries/serviceRegistry.ts:19](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/save/src/registries/serviceRegistry.ts#L19)
+Defined in: packages/save/src/domain/registries/serviceRegistry.ts:15
 
 Register a service serializer.
 
@@ -24,14 +24,21 @@ Register a service serializer.
 
 `Ctor`\<`T`\>
 
-The constructor of the service to register.
+The service constructor to associate with the serializer.
 
 ### serializer
 
 `ServiceSerializer`\<`T`\>
 
-The serializer for the service.
+The serializer implementation.
 
 ## Returns
 
 `void`
+
+## Example
+
+```ts
+import { registerServiceSerializer } from '@pulse-ts/save';
+// see ServiceSerializer example in public/types
+```

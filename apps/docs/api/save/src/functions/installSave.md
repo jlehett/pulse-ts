@@ -8,9 +8,10 @@
 
 > **installSave**(`_world?`, `opts?`): `void`
 
-Defined in: [save/src/install.ts:13](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/save/src/install.ts#L13)
+Defined in: packages/save/src/public/install.ts:21
 
 Convenience installer for @pulse-ts/save.
+Registers core serializers and optional plugin serializers.
 
 ## Parameters
 
@@ -18,10 +19,23 @@ Convenience installer for @pulse-ts/save.
 
 `World`
 
+Reserved for future world-specific setup.
+
 ### opts?
 
 [`InstallSaveOptions`](../interfaces/InstallSaveOptions.md) = `{}`
 
+Optional plugin list (e.g., ['@pulse-ts/three']).
+
 ## Returns
 
 `void`
+
+## Example
+
+```ts
+import { World } from '@pulse-ts/core';
+import { installSave } from '@pulse-ts/save';
+const world = new World();
+installSave(world, { plugins: ['@pulse-ts/three'] });
+```

@@ -6,12 +6,9 @@
 
 # Class: State
 
-Defined in: [core/src/components/State.ts:9](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/core/src/components/State.ts#L9)
+Defined in: [packages/core/src/domain/components/meta/State.ts:6](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/core/src/domain/components/meta/State.ts#L6)
 
 Generic key/value state store component for a Node.
-
-- JSON-serializable values are recommended for persistence with @pulse-ts/save.
-- Intended to back FC state hooks (e.g., useState) without a re-render model.
 
 ## Extends
 
@@ -39,7 +36,7 @@ Generic key/value state store component for a Node.
 
 > **get** **owner**(): [`Node`](Node.md)
 
-Defined in: [core/src/Component.ts:17](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/core/src/Component.ts#L17)
+Defined in: [packages/core/src/domain/ecs/base/Component.ts:17](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/core/src/domain/ecs/base/Component.ts#L17)
 
 The owner of the component.
 
@@ -57,7 +54,7 @@ The owner of the component.
 
 > **\[kSetComponentOwner\]**(`owner`): `void`
 
-Defined in: [core/src/Component.ts:10](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/core/src/Component.ts#L10)
+Defined in: [packages/core/src/domain/ecs/base/Component.ts:10](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/core/src/domain/ecs/base/Component.ts#L10)
 
 #### Parameters
 
@@ -79,15 +76,11 @@ Defined in: [core/src/Component.ts:10](https://github.com/jlehett/pulse-ts/blob/
 
 > **entries**(): \[`string`, `unknown`\][]
 
-Defined in: [core/src/components/State.ts:43](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/core/src/components/State.ts#L43)
-
-Returns a plain array of [key, value] for serialization.
+Defined in: [packages/core/src/domain/components/meta/State.ts:21](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/core/src/domain/components/meta/State.ts#L21)
 
 #### Returns
 
 \[`string`, `unknown`\][]
-
-A plain array of [key, value] for serialization.
 
 ***
 
@@ -95,9 +88,7 @@ A plain array of [key, value] for serialization.
 
 > **get**\<`T`\>(`key`): `undefined` \| `T`
 
-Defined in: [core/src/components/State.ts:26](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/core/src/components/State.ts#L26)
-
-Gets a value for a given key.
+Defined in: [packages/core/src/domain/components/meta/State.ts:13](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/core/src/domain/components/meta/State.ts#L13)
 
 #### Type Parameters
 
@@ -111,13 +102,9 @@ Gets a value for a given key.
 
 `string`
 
-The key to get the value for.
-
 #### Returns
 
 `undefined` \| `T`
-
-The value for the given key, or undefined if no value exists.
 
 ***
 
@@ -125,9 +112,7 @@ The value for the given key, or undefined if no value exists.
 
 > **has**(`key`): `boolean`
 
-Defined in: [core/src/components/State.ts:17](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/core/src/components/State.ts#L17)
-
-Checks if a value exists for a given key.
+Defined in: [packages/core/src/domain/components/meta/State.ts:9](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/core/src/domain/components/meta/State.ts#L9)
 
 #### Parameters
 
@@ -135,13 +120,9 @@ Checks if a value exists for a given key.
 
 `string`
 
-The key to check.
-
 #### Returns
 
 `boolean`
-
-True if a value exists for the given key, false otherwise.
 
 ***
 
@@ -149,17 +130,13 @@ True if a value exists for the given key, false otherwise.
 
 > **loadEntries**(`entries`): `void`
 
-Defined in: [core/src/components/State.ts:51](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/core/src/components/State.ts#L51)
-
-Loads entries from a plain array of [key, value].
+Defined in: [packages/core/src/domain/components/meta/State.ts:25](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/core/src/domain/components/meta/State.ts#L25)
 
 #### Parameters
 
 ##### entries
 
 \[`string`, `unknown`\][]
-
-The entries to load.
 
 #### Returns
 
@@ -171,9 +148,7 @@ The entries to load.
 
 > **set**\<`T`\>(`key`, `value`): `void`
 
-Defined in: [core/src/components/State.ts:35](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/core/src/components/State.ts#L35)
-
-Sets a value for a given key.
+Defined in: [packages/core/src/domain/components/meta/State.ts:17](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/core/src/domain/components/meta/State.ts#L17)
 
 #### Type Parameters
 
@@ -187,13 +162,9 @@ Sets a value for a given key.
 
 `string`
 
-The key to set the value for.
-
 ##### value
 
 `T`
-
-The value to set.
 
 #### Returns
 
@@ -205,7 +176,7 @@ The value to set.
 
 > `static` **attach**\<`T`\>(`this`, `owner`): `T`
 
-Defined in: [core/src/Component.ts:27](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/core/src/Component.ts#L27)
+Defined in: [packages/core/src/domain/ecs/base/Component.ts:27](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/core/src/domain/ecs/base/Component.ts#L27)
 
 Attaches the component to an owner. Override this method to implement
 custom attachment logic.

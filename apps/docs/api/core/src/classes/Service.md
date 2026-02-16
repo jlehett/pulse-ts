@@ -6,7 +6,7 @@
 
 # Abstract Class: Service
 
-Defined in: [core/src/Service.ts:6](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/core/src/Service.ts#L6)
+Defined in: [packages/core/src/domain/ecs/base/Service.ts:6](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/core/src/domain/ecs/base/Service.ts#L6)
 
 A service is a class that provides a functionality to the world.
 
@@ -31,7 +31,7 @@ A service is a class that provides a functionality to the world.
 
 > **attach**(`world`): `void`
 
-Defined in: [core/src/Service.ts:16](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/core/src/Service.ts#L16)
+Defined in: [packages/core/src/domain/ecs/base/Service.ts:16](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/core/src/domain/ecs/base/Service.ts#L16)
 
 Attaches the service to the world.
 
@@ -53,7 +53,7 @@ The world to attach the service to.
 
 > **detach**(): `void`
 
-Defined in: [core/src/Service.ts:23](https://github.com/jlehett/pulse-ts/blob/95f7e0ab0aafbcd2aad691251c554317b3dfe19c/packages/core/src/Service.ts#L23)
+Defined in: [packages/core/src/domain/ecs/base/Service.ts:23](https://github.com/jlehett/pulse-ts/blob/b287bc18de1bbb78a8cc43f602a646e458610bc3/packages/core/src/domain/ecs/base/Service.ts#L23)
 
 Detaches the service from the world.
 
