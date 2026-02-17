@@ -1,0 +1,23 @@
+{
+    "name": "@pulse-ts/demo-platformer",
+    "private": true,
+    "version": "0.0.0",
+    "type": "module",
+    "scripts": {
+        "dev": "vite",
+        "build": "tsc && vite build",
+        "preview": "vite preview"
+    },
+    "dependencies": {
+        "@pulse-ts/core": "*",
+        "@pulse-ts/input": "*",
+        "@pulse-ts/physics": "*",
+        "@pulse-ts/three": "*",
+        "three": "^0.179.1"
+    },
+    "devDependencies": {
+        "@types/three": "^0.178.1",
+        "typescript": "^5.9.2",
+        "vite": "^6.3.5"
+    }
+}
