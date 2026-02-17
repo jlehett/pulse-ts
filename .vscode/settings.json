@@ -2,11 +2,6 @@
     "editor.codeActionsOnSave": {
         "source.fixAll.eslint": "always"
     },
-    "eslint.validate": [
-        "javascript",
-        "typescript"
-    ],
-    "cSpell.words": [
-        "lerp"
-    ]
+    "eslint.validate": ["javascript", "typescript"],
+    "cSpell.words": ["lerp"]
 }
