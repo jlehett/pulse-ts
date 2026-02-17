@@ -8,7 +8,7 @@ import prettierPlugin from 'eslint-plugin-prettier';
 export default [
     // Global settings for all files
     {
-        ignores: ['**/node_modules/**', '**/dist/**'],
+        ignores: ['**/node_modules/**', '**/dist/**', '.claude/**'],
     },
 
     // Prettier configuration (apply to all files)

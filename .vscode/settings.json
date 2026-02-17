@@ -6,7 +6,6 @@
         "javascript",
         "typescript"
     ],
-    "nxConsole.generateAiAgentRules": true,
     "cSpell.words": [
         "lerp"
     ]
