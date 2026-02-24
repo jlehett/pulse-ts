@@ -9,6 +9,7 @@
   "scripts": {
     "build": "nx run-many --target=build --all --exclude=pulse-ts",
     "test": "nx run-many --target=test --all --exclude=pulse-ts",
+    "bench": "nx run-many --target=bench --all --exclude=pulse-ts",
     "lint": "nx run-many --target=lint --all --exclude=pulse-ts",
     "release": "nx run-many --target=release --all --exclude=pulse-ts",
     "format": "nx format:write --exclude=pulse-ts",
@@ -21,7 +22,6 @@
   "devDependencies": {
     "@babel/preset-env": "^7.26.0",
     "@babel/preset-typescript": "^7.26.0",
-    "babel-jest": "^29.7.0",
     "@changesets/cli": "^2.29.5",
     "@eslint/js": "^9.33.0",
     "@nx/eslint": "21.3.11",
@@ -29,6 +29,7 @@
     "@types/jest": "^29.5.12",
     "@typescript-eslint/eslint-plugin": "^8.39.0",
     "@typescript-eslint/parser": "^8.39.0",
+    "babel-jest": "^29.7.0",
     "eslint": "^9.33.0",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-prettier": "^5.5.4",
@@ -40,10 +41,11 @@
     "prettier": "^3.6.2",
     "ts-jest": "^29.2.5",
     "tsup": "^8.5.0",
+    "typedoc": "^0.28.12",
+    "typedoc-plugin-markdown": "^4.8.1",
     "typescript": "^5.9.2",
     "vitepress": "^1.6.4",
-    "typedoc": "^0.28.12",
-    "typedoc-plugin-markdown": "^4.8.1"
+    "vitest": "^4.0.18"
   },
   "overrides": {
     "unrs-resolver": "1.11.1"
