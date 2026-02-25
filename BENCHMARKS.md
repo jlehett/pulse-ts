@@ -107,16 +107,15 @@ _Use these to track end-to-end regression across all optimization tickets in EPI
 File: `benchmarks/gameLoop.bench.test.ts`
 
 > Times are in **ms** (milliseconds).
-> Note: 250 and 500 body scenes have high rme (±11%) because bodies settle over iterations,
-> causing the per-step cost profile to shift. This is expected; use these for order-of-magnitude
-> tracking rather than precise sub-percent comparisons.
+> Scenes are pre-settled via a warm-up pass before benchmarking begins, so numbers
+> reflect steady-state cost with all bodies at rest rather than mid-freefall cost.
 
 | Benchmark | hz | mean (ms) | p75 (ms) | p99 (ms) | rme |
 |---|---|---|---|---|---|
-| 50 bodies | 336 | 2.977 | 3.147 | 4.196 | ±1.65% |
-| 100 bodies | 129 | 7.765 | 9.111 | 10.011 | ±5.76% |
-| 250 bodies | 129 | 7.750 | 10.749 | 14.953 | ±11.51% |
-| 500 bodies | 159 | 6.308 | 8.596 | 13.283 | ±11.23% |
+| 50 bodies | 300 | 3.337 | 3.552 | 3.984 | ±1.44% |
+| 100 bodies | 88 | 11.327 | 11.774 | 13.370 | ±1.80% |
+| 250 bodies | 27 | 36.433 | 37.285 | 38.745 | ±2.20% |
+| 500 bodies | 11 | 91.643 | 95.514 | 97.933 | ±3.83% |
 
 ---
 
