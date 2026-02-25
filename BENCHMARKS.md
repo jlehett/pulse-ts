@@ -98,6 +98,28 @@ File: `packages/physics/src/domain/services/physicsStep.bench.test.ts`
 
 ---
 
+## @pulse-ts/benchmarks (cross-package integration)
+
+### Game loop — ECS query + physics step + world TRS read
+
+_Added by TICKET-009. Simulates a full engine frame: ECS query → physics step → world matrix reads._
+_Use these to track end-to-end regression across all optimization tickets in EPIC-001._
+File: `benchmarks/gameLoop.bench.test.ts`
+
+> Times are in **ms** (milliseconds).
+> Note: 250 and 500 body scenes have high rme (±11%) because bodies settle over iterations,
+> causing the per-step cost profile to shift. This is expected; use these for order-of-magnitude
+> tracking rather than precise sub-percent comparisons.
+
+| Benchmark | hz | mean (ms) | p75 (ms) | p99 (ms) | rme |
+|---|---|---|---|---|---|
+| 50 bodies | 336 | 2.977 | 3.147 | 4.196 | ±1.65% |
+| 100 bodies | 129 | 7.765 | 9.111 | 10.011 | ±5.76% |
+| 250 bodies | 129 | 7.750 | 10.749 | 14.953 | ±11.51% |
+| 500 bodies | 159 | 6.308 | 8.596 | 13.283 | ±11.23% |
+
+---
+
 ## How to Compare
 
 After making changes, run `npm run bench` and compare hz and mean columns to the tables above.
