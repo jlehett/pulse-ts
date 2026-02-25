@@ -2,8 +2,9 @@
 id: TICKET-009
 epic: EPIC-001
 title: Create benchmarks/ package with cross-package integration benchmarks
-status: todo
+status: done
 priority: medium
+branch: ticket-009-create-cross-package-benchmarks-package
 created: 2026-02-25
 updated: 2026-02-25
 ---

@@ -1,0 +1,13 @@
+{
+    "name": "@pulse-ts/benchmarks",
+    "version": "0.0.1",
+    "private": true,
+    "type": "module",
+    "scripts": {
+        "bench": "vitest bench --run"
+    },
+    "devDependencies": {
+        "@pulse-ts/core": "*",
+        "@pulse-ts/physics": "*"
+    }
+}
