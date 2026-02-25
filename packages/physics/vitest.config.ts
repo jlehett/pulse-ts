@@ -13,7 +13,10 @@ export default defineConfig({
         },
     },
     test: {
-        include: ['src/**/*.bench.ts'],
+        include: ['src/**/*.bench.test.ts'],
         environment: 'node',
+        benchmark: {
+            include: ['src/**/*.bench.test.ts'],
+        },
     },
 });

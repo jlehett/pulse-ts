@@ -16,7 +16,7 @@ Run command: `npm run bench`
 ### Transform — property mutation (Proxy overhead)
 
 _Target of TICKET-003 (Remove Transform Proxy)._
-File: `packages/core/src/domain/components/spatial/transform.bench.ts`
+File: `packages/core/src/domain/components/spatial/transform.bench.test.ts`
 
 | Benchmark | hz | mean (µs) | p75 (µs) | p99 (µs) | rme |
 |---|---|---|---|---|---|
@@ -24,6 +24,18 @@ File: `packages/core/src/domain/components/spatial/transform.bench.ts`
 | `localPosition.set(x, y, z)` | 5,030,004 | 0.0002 | 0.0002 | 0.0003 | ±0.07% |
 | `localRotation.w = value` | 10,524,193 | 0.0001 | 0.0001 | 0.0001 | ±0.13% |
 | `setLocal({ position })` | 1,641,160 | 0.0006 | 0.0006 | 0.0007 | ±0.07% |
+
+### Transform — property mutation, batch (Proxy overhead at scale)
+
+_Batch variants added by TICKET-008. Loop over N entities per iteration to surface aggregate frame cost._
+_Use these for before/after comparison on TICKET-003._
+
+| Benchmark | hz | mean (µs) | p75 (µs) | p99 (µs) | rme |
+|---|---|---|---|---|---|
+| `localPosition.x = value` — 100 entities | 230,244 | 0.0043 | 0.0043 | 0.0047 | ±1.13% |
+| `localPosition.x = value` — 1,000 entities | 17,736 | 0.0564 | 0.0573 | 0.0609 | ±0.71% |
+| `setLocal({ position })` — 100 entities | 19,523 | 0.0512 | 0.0514 | 0.0543 | ±0.28% |
+| `setLocal({ position })` — 1,000 entities | 1,906 | 0.5247 | 0.5270 | 0.6108 | ±0.30% |
 
 ### Transform — getWorldTRS, flat node
 
@@ -39,9 +51,19 @@ File: `packages/core/src/domain/components/spatial/transform.bench.ts`
 | dirty recompute (root mutation propagates to leaf) | 1,758,345 | 0.0006 | 0.0006 | 0.0007 | ±0.40% |
 | cache hit (no mutation) | 2,842,672 | 0.0004 | 0.0003 | 0.0004 | ±0.96% |
 
+### Transform — dirty recompute, batch (flat nodes)
+
+_Batch variants added by TICKET-008. Simulates a render system reading world positions for N entities mutated this frame._
+_Use these for before/after comparison on TICKET-003._
+
+| Benchmark | hz | mean (µs) | p75 (µs) | p99 (µs) | rme |
+|---|---|---|---|---|---|
+| mutate + recompute — 100 entities | 19,076 | 0.0524 | 0.0518 | 0.0575 | ±1.05% |
+| mutate + recompute — 1,000 entities | 1,950 | 0.5127 | 0.5011 | 0.9211 | ±1.00% |
+
 ### ECS Query — single component (Transform)
 
-File: `packages/core/src/domain/ecs/query/query.bench.ts`
+File: `packages/core/src/domain/ecs/query/query.bench.test.ts`
 
 | Benchmark | hz | mean (µs) | p75 (µs) | p99 (µs) | rme |
 |---|---|---|---|---|---|
@@ -64,7 +86,7 @@ File: `packages/core/src/domain/ecs/query/query.bench.ts`
 ### Physics step — dynamic sphere bodies + ground plane
 
 _Target of TICKET-004, TICKET-005, TICKET-006._
-File: `packages/physics/src/domain/services/physicsStep.bench.ts`
+File: `packages/physics/src/domain/services/physicsStep.bench.test.ts`
 
 > Times are in **ms** (milliseconds). Scene: N dynamic sphere bodies above a static ground plane.
 
