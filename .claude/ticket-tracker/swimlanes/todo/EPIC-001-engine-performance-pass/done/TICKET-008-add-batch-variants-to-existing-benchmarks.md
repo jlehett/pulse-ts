@@ -2,7 +2,7 @@
 id: TICKET-008
 epic: EPIC-001
 title: Add batch variants to existing benchmarks and rename to *.bench.test.ts
-status: in-progress
+status: done
 priority: medium
 branch: ticket-008-add-batch-variants-to-existing-benchmarks
 created: 2026-02-25
