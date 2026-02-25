@@ -6,6 +6,7 @@ status: done
 priority: high
 created: 2026-02-24
 updated: 2026-02-25
+branch: ticket-002-set-up-automated-benchmark-tracking
 ---
 
 ## Description
