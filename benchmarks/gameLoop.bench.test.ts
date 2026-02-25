@@ -16,14 +16,19 @@
  * - `physicsStep.bench.test.ts` measures physics in isolation (no TRS reads)
  * Here we measure the compounded cost that actually runs in a game frame.
  *
- * Scene setup: N dynamic sphere bodies arranged in a 10-column grid above a
- * static ground plane. Bodies accumulate velocity/position across iterations,
- * giving a realistic mix of airborne and settled-body costs.
+ * ## Scene warm-up
  *
- * **Note on 250 and 500 body scenes:** these are intentionally demanding.
- * Expect hz in the single or low-double digits. They exist to surface O(n²)
- * scaling in the broad-phase or constraint solver — if those scale linearly
- * after optimization, these counts will confirm it.
+ * Bodies are placed in a 10-column grid with the topmost row at
+ * `y = 2 + Math.floor((bodyCount - 1) / 10) * 2`. Without a warm-up, the
+ * tallest stacks spend most bench iterations in free-fall with no collision
+ * pairs — the 500-body scene's top row starts at y = 100 and takes ~270 steps
+ * just to reach the ground. That would make high-body-count benches appear
+ * *faster* than low counts, which is misleading.
+ *
+ * `makeScene` therefore runs enough warm-up steps after construction to let
+ * all bodies fall and settle before any bench iteration is recorded. The number
+ * of steps is derived from the freefall time of the topmost body, plus a 2×
+ * settling buffer for bounce damping.
  *
  * Run with: npm run bench -w benchmarks
  * Run all:  npm run bench
@@ -39,6 +44,7 @@ import {
 import { installPhysics, RigidBody, Collider } from '@pulse-ts/physics';
 
 const DT = 1 / 60;
+const GRAVITY = 9.81;
 
 /**
  * Query shared across all scenes. Because the component index is global,
@@ -47,7 +53,7 @@ const DT = 1 / 60;
  */
 const BODY_QUERY = defineQuery([Transform, RigidBody]);
 
-/** A fully-wired scene returned by {@link makeScene}. */
+/** A fully-wired, pre-settled scene returned by {@link makeScene}. */
 interface Scene {
     world: World;
     physics: ReturnType<typeof installPhysics>;
@@ -57,15 +63,19 @@ interface Scene {
 
 /**
  * Builds a scene with `bodyCount` dynamic sphere bodies above a static ground
- * plane. Returns the world, the PhysicsService, and a pre-built array of body
- * Transforms so the render-read step doesn't need to re-query each iteration.
+ * plane, then runs enough warm-up physics steps to let all bodies fall and
+ * settle before returning.
+ *
+ * Without warm-up, high-body-count scenes spend their bench iterations in
+ * free-fall (no collision pairs), making them appear artificially fast. The
+ * warm-up ensures every scene measures its true steady-state cost.
  *
  * @param bodyCount - Number of dynamic sphere bodies to create.
  */
 function makeScene(bodyCount: number): Scene {
     const world = new World();
     const physics = installPhysics(world, {
-        gravity: { x: 0, y: -9.81, z: 0 },
+        gravity: { x: 0, y: -GRAVITY, z: 0 },
     });
 
     // Static ground plane at y = 0.
@@ -98,11 +108,22 @@ function makeScene(bodyCount: number): Scene {
         bodyTransforms.push(t);
     }
 
+    // Warm-up: run enough steps to let the tallest body fall to the ground,
+    // then double that count to allow time for bounce damping to settle.
+    // Formula: steps = ceil(sqrt(2 * maxHeight / gravity) / DT) * 2
+    const maxHeight = 2 + Math.floor((bodyCount - 1) / 10) * 2;
+    const fallSteps = Math.ceil(Math.sqrt((2 * maxHeight) / GRAVITY) / DT);
+    const warmupSteps = fallSteps * 2;
+    for (let i = 0; i < warmupSteps; i++) {
+        physics.step(DT);
+    }
+
     return { world, physics, bodyTransforms };
 }
 
-// Scenes are built once at module load. Bench iterations run on the same
-// scene state across calls, giving a realistic steady-state cost profile.
+// Scenes are built and fully settled at module load. Each bench iteration
+// measures the steady-state cost of a frame with all bodies at rest on or
+// near the ground plane — the realistic baseline for a live game scene.
 const scene50 = makeScene(50);
 const scene100 = makeScene(100);
 const scene250 = makeScene(250);
