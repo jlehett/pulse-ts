@@ -17,7 +17,7 @@
  */
 import { describe, bench } from 'vitest';
 import { World } from '../../world/world';
-import { Node } from '../base/node';
+import { Node } from '../../ecs/base/node';
 import { attachComponent } from '../../ecs/registry/componentRegistry';
 import { Transform } from './Transform';
 
