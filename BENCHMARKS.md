@@ -13,10 +13,20 @@ Run command: `npm run bench`
 
 ## @pulse-ts/core
 
-### Transform — property mutation (Proxy overhead)
+### Transform — property mutation
 
-_Target of TICKET-003 (Remove Transform Proxy)._
+_TICKET-003 replaced Proxy dirty-tracking with `Object.defineProperty` accessor descriptors._
+_Baselines below are **post-TICKET-003** (captured 2026-02-25)._
 File: `packages/core/src/domain/components/spatial/transform.bench.test.ts`
+
+| Benchmark | hz | mean (µs) | p75 (µs) | p99 (µs) | rme |
+|---|---|---|---|---|---|
+| `localPosition.x = value` | 6,646,710 | 0.0002 | 0.0002 | 0.0002 | ±0.25% |
+| `localPosition.set(x, y, z)` | 3,098,517 | 0.0003 | 0.0003 | 0.0004 | ±0.19% |
+| `localRotation.w = value` | 6,661,409 | 0.0002 | 0.0002 | 0.0002 | ±0.20% |
+| `setLocal({ position })` | 6,280,870 | 0.0002 | 0.0002 | 0.0002 | ±0.06% |
+
+**Pre-TICKET-003 baselines (Proxy implementation, captured 2026-02-25):**
 
 | Benchmark | hz | mean (µs) | p75 (µs) | p99 (µs) | rme |
 |---|---|---|---|---|---|
@@ -25,10 +35,23 @@ File: `packages/core/src/domain/components/spatial/transform.bench.test.ts`
 | `localRotation.w = value` | 10,524,193 | 0.0001 | 0.0001 | 0.0001 | ±0.13% |
 | `setLocal({ position })` | 1,641,160 | 0.0006 | 0.0006 | 0.0007 | ±0.07% |
 
-### Transform — property mutation, batch (Proxy overhead at scale)
+> **Note:** Direct `x=` writes are ~33% slower post-TICKET-003 due to per-instance hidden-class
+> variance from `Object.defineProperty`. `setLocal({ position })` is **~3.8× faster** because
+> `Object.assign` on a Proxy target hit V8's slow path; plain accessor descriptors use the fast path.
+
+### Transform — property mutation, batch
 
 _Batch variants added by TICKET-008. Loop over N entities per iteration to surface aggregate frame cost._
-_Use these for before/after comparison on TICKET-003._
+_Baselines below are **post-TICKET-003** (captured 2026-02-25)._
+
+| Benchmark | hz | mean (µs) | p75 (µs) | p99 (µs) | rme |
+|---|---|---|---|---|---|
+| `localPosition.x = value` — 100 entities | 113,498 | 0.0088 | 0.0088 | 0.0095 | ±0.21% |
+| `localPosition.x = value` — 1,000 entities | 9,719 | 0.1029 | 0.1025 | 0.1192 | ±1.08% |
+| `setLocal({ position })` — 100 entities | 70,658 | 0.0142 | 0.0141 | 0.0152 | ±0.41% |
+| `setLocal({ position })` — 1,000 entities | 6,713 | 0.1489 | 0.1500 | 0.1688 | ±0.44% |
+
+**Pre-TICKET-003 baselines (Proxy implementation, captured 2026-02-25):**
 
 | Benchmark | hz | mean (µs) | p75 (µs) | p99 (µs) | rme |
 |---|---|---|---|---|---|
@@ -54,7 +77,14 @@ _Use these for before/after comparison on TICKET-003._
 ### Transform — dirty recompute, batch (flat nodes)
 
 _Batch variants added by TICKET-008. Simulates a render system reading world positions for N entities mutated this frame._
-_Use these for before/after comparison on TICKET-003._
+_Baselines below are **post-TICKET-003** (captured 2026-02-25); ~25% faster than Proxy baseline._
+
+| Benchmark | hz | mean (µs) | p75 (µs) | p99 (µs) | rme |
+|---|---|---|---|---|---|
+| mutate + recompute — 100 entities | 24,658 | 0.0406 | 0.0397 | 0.0463 | ±0.72% |
+| mutate + recompute — 1,000 entities | 2,372 | 0.4215 | 0.4137 | 0.7417 | ±0.98% |
+
+**Pre-TICKET-003 baselines (Proxy implementation, captured 2026-02-25):**
 
 | Benchmark | hz | mean (µs) | p75 (µs) | p99 (µs) | rme |
 |---|---|---|---|---|---|
