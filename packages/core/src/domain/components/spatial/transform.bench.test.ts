@@ -4,10 +4,10 @@
  * Measures two categories of cost:
  *
  * 1. **Property mutation** — direct writes to `localPosition` / `localRotation`
- *    fields, which currently go through a JS `Proxy` setter (see `makeDirtyVec3` /
- *    `makeDirtyQuat` in Transform.ts). This is the primary suspect for poor
- *    performance in the platformer demo. TICKET-003 aims to remove the Proxy; use
- *    this bench as a before/after comparison.
+ *    fields, which go through `Object.defineProperty` accessor descriptors (see
+ *    `makeDirtyVec3` / `makeDirtyQuat` in Transform.ts). These replaced an earlier
+ *    `Proxy`-based implementation (TICKET-003); the batch variants below serve as
+ *    the before/after comparison baseline.
  *
  * 2. **World TRS recomputation** — cost of `getWorldTRS()` in both the dirty
  *    (cache-miss) and clean (cache-hit) cases, for flat nodes and a 4-level
@@ -75,12 +75,13 @@ for (let i = 0; i < 1_000; i++) {
 }
 
 // ---------------------------------------------------------------------------
-// Property mutation — Proxy setter cost, single op (TICKET-003 target)
+// Property mutation — dirty-accessor cost, single op
 //
-// Each bench writes to a Proxy-wrapped Vec3 or Quat property. V8 de-optimises
-// Proxy traps from hot loops; this cost scales with the number of moving entities.
+// Each bench writes to a Vec3 or Quat property that has an Object.defineProperty
+// setter installed by makeDirtyVec3/makeDirtyQuat. Cost scales with the number
+// of moving entities per frame.
 // ---------------------------------------------------------------------------
-describe('Transform — property mutation (Proxy overhead)', () => {
+describe('Transform — property mutation', () => {
     bench('localPosition.x = value', () => {
         flatT.localPosition.x = 1.0;
     });
@@ -101,11 +102,11 @@ describe('Transform — property mutation (Proxy overhead)', () => {
 // ---------------------------------------------------------------------------
 // Property mutation — batch (simulates a system updating N entities per frame)
 //
-// Single-op benches run sub-microsecond and hide the aggregate Proxy cost.
-// These variants loop over N entities as a physics or animation system would,
-// making the frame-budget impact visible and giving TICKET-003 a clear signal.
+// Single-op benches run sub-microsecond and hide the aggregate cost. These
+// variants loop over N entities as a physics or animation system would, making
+// the frame-budget impact visible.
 // ---------------------------------------------------------------------------
-describe('Transform — property mutation, batch (Proxy overhead at scale)', () => {
+describe('Transform — property mutation, batch', () => {
     bench('localPosition.x = value — 100 entities', () => {
         for (const t of batch100Transforms) {
             t.localPosition.x = 1.0;

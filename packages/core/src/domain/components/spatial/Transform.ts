@@ -26,26 +26,53 @@ export function createTRS(): TRS {
     };
 }
 
+/**
+ * Installs accessor descriptors on a Vec3 instance's x/y/z properties so that
+ * any direct property write (e.g. `transform.localPosition.x = v`) marks the
+ * owning Transform dirty and bumps its local version counter.
+ *
+ * Object.defineProperty accessors are optimised by V8's hidden-class system and
+ * avoid the de-optimisation that Proxy traps cause in hot loops.
+ */
 function makeDirtyVec3(owner: Transform, v: Vec3): Vec3 {
-    return new Proxy(v, {
-        set(target, prop, value) {
-            (target as any)[prop as keyof Vec3] = value;
-            (owner as any)[kTransformDirty] = true;
-            owner._localVersion++;
-            return true;
-        },
-    });
+    const mark = () => {
+        (owner as any)[kTransformDirty] = true;
+        owner._localVersion++;
+    };
+    for (const key of ['x', 'y', 'z'] as const) {
+        let val = v[key];
+        Object.defineProperty(v, key, {
+            get() { return val; },
+            set(newVal: number) { val = newVal; mark(); },
+            enumerable: true,
+            configurable: true,
+        });
+    }
+    return v;
 }
 
+/**
+ * Installs accessor descriptors on a Quat instance's x/y/z/w properties so
+ * that any direct property write marks the owning Transform dirty and bumps
+ * its local version counter.
+ *
+ * @see makeDirtyVec3
+ */
 function makeDirtyQuat(owner: Transform, q: Quat): Quat {
-    return new Proxy(q, {
-        set(target, prop, value) {
-            (target as any)[prop as keyof Quat] = value;
-            (owner as any)[kTransformDirty] = true;
-            owner._localVersion++;
-            return true;
-        },
-    });
+    const mark = () => {
+        (owner as any)[kTransformDirty] = true;
+        owner._localVersion++;
+    };
+    for (const key of ['x', 'y', 'z', 'w'] as const) {
+        let val = q[key];
+        Object.defineProperty(q, key, {
+            get() { return val; },
+            set(newVal: number) { val = newVal; mark(); },
+            enumerable: true,
+            configurable: true,
+        });
+    }
+    return q;
 }
 
 /**
