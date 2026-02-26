@@ -1,10 +1,7 @@
 import * as THREE from 'three';
 import {
     useComponent,
-    useFixedEarly,
     useFixedUpdate,
-    useFrameUpdate,
-    useWorld,
     Transform,
 } from '@pulse-ts/core';
 import { useRigidBody, useBoxCollider } from '@pulse-ts/physics';
@@ -22,8 +19,8 @@ export interface MovingPlatformNodeProps {
 
 /**
  * A kinematic platform that translates back and forth between two world-space
- * points. The Three.js mesh is physics-interpolated so movement is smooth at
- * any frame rate.
+ * points. The Three.js mesh position is synced by ThreeTRSSyncSystem, which
+ * interpolates Transform.previousLocalPosition → localPosition each frame.
  */
 export function MovingPlatformNode(props: Readonly<MovingPlatformNodeProps>) {
     const [sx, sy, sz] = props.size;
@@ -36,23 +33,13 @@ export function MovingPlatformNode(props: Readonly<MovingPlatformNodeProps>) {
     const body = useRigidBody({ type: 'kinematic' });
     useBoxCollider(sx / 2, sy / 2, sz / 2, { friction: 0.6, restitution: 0 });
 
-    const world = useWorld();
-
     const [ax, ay, az] = props.position;
     const [bx, by, bz] = props.target;
 
     // Direction: true = travelling toward target, false = returning to origin.
     let towardTarget = true;
 
-    // Pre-step position for frame interpolation (same pattern as PlayerNode).
-    let prevX = ax, prevY = ay, prevZ = az;
-
-    useFixedEarly(() => {
-        prevX = transform.localPosition.x;
-        prevY = transform.localPosition.y;
-        prevZ = transform.localPosition.z;
-    });
-
+    // Run at order -1 so velocity is set before PhysicsSystem (order 0) integrates.
     useFixedUpdate((dt) => {
         const pos = transform.localPosition;
         const tx = towardTarget ? bx : ax;
@@ -73,26 +60,16 @@ export function MovingPlatformNode(props: Readonly<MovingPlatformNodeProps>) {
             const inv = 1 / dist;
             body.setLinearVelocity(dx * inv * speed, dy * inv * speed, dz * inv * speed);
         }
-    });
+    }, { order: -1 });
 
-    // Three.js visual
-    const root = useThreeRoot();
+    // Three.js visual — position is synced automatically by ThreeTRSSyncSystem
+    // (frame.late) using Transform interpolation, same as PlatformNode.
     const mesh = new THREE.Mesh(
         new THREE.BoxGeometry(sx, sy, sz),
         new THREE.MeshStandardMaterial({ color, roughness: 0.7, metalness: 0.2 }),
     );
     mesh.castShadow = true;
     mesh.receiveShadow = true;
+    useThreeRoot();
     useObject3D(mesh);
-
-    // Interpolate mesh position between fixed steps for smooth visuals.
-    useFrameUpdate(() => {
-        const alpha = world.getAmbientAlpha();
-        const cur = transform.localPosition;
-        root.position.set(
-            prevX + (cur.x - prevX) * alpha,
-            prevY + (cur.y - prevY) * alpha,
-            prevZ + (cur.z - prevZ) * alpha,
-        );
-    });
 }
