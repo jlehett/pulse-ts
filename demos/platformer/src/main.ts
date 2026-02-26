@@ -1,7 +1,7 @@
 import { World, installDefaults } from '@pulse-ts/core';
 import { installInput } from '@pulse-ts/input';
 import { installPhysics } from '@pulse-ts/physics';
-import { installThree } from '@pulse-ts/three';
+import { installThree, StatsOverlaySystem } from '@pulse-ts/three';
 import { bindings } from './config/bindings';
 import { LevelNode } from './nodes/LevelNode';
 
@@ -21,6 +21,8 @@ const three = installThree(world, {
 // Enable shadows on the renderer
 three.renderer.shadowMap.enabled = true;
 three.renderer.shadowMap.type = 2; // THREE.PCFSoftShadowMap
+
+world.addSystem(new StatsOverlaySystem({ position: 'top-left' }));
 
 world.mount(LevelNode);
 world.start();
