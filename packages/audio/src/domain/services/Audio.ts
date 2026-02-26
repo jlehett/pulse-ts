@@ -92,4 +92,37 @@ export class AudioService extends Service {
             this._masterGain.gain.value = value;
         }
     }
+
+    /**
+     * Sets the 3D position of the audio listener (typically synced to the
+     * camera or player position each frame).
+     *
+     * Has no effect if the `AudioContext` has not been created yet (i.e.
+     * before the first sound is played or {@link ensureContext} is called).
+     * The listener defaults to the origin `(0, 0, 0)`.
+     *
+     * @param x - X position.
+     * @param y - Y position.
+     * @param z - Z position.
+     *
+     * @example
+     * ```ts
+     * import { useFrameUpdate } from '@pulse-ts/core';
+     * import { useAudio } from '@pulse-ts/audio';
+     *
+     * function CameraListenerNode() {
+     *     const audio = useAudio();
+     *     useFrameUpdate(() => {
+     *         audio.setListenerPosition(cam.position.x, cam.position.y, cam.position.z);
+     *     });
+     * }
+     * ```
+     */
+    setListenerPosition(x: number, y: number, z: number): void {
+        if (!this._ctx) return;
+        const l = this._ctx.listener;
+        l.positionX.value = x;
+        l.positionY.value = y;
+        l.positionZ.value = z;
+    }
 }
