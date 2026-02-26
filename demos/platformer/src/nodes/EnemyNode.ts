@@ -86,7 +86,7 @@ export function EnemyNode(props: Readonly<EnemyNodeProps>) {
         size: [sx, sy, sz],
         color,
         emissive: EMISSIVE_COLOR,
-        emissiveIntensity: PULSE_MIN,
+        emissiveIntensity: 0.3,
         roughness: 0.6,
         metalness: 0.2,
         castShadow: true,
