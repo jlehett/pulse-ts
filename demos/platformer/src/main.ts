@@ -18,9 +18,11 @@ const three = installThree(world, {
     clearColor: 0x0a0a1a,
 });
 
-// Enable shadows on the renderer
+// Enable shadows on the renderer.
+// PCFShadowMap (type 1) uses a single Poisson tap vs PCFSoftShadowMap's
+// multi-tap kernel — visually similar at 1024 resolution, measurably cheaper.
 three.renderer.shadowMap.enabled = true;
-three.renderer.shadowMap.type = 2; // THREE.PCFSoftShadowMap
+three.renderer.shadowMap.type = 1; // THREE.PCFShadowMap
 
 world.addSystem(new StatsOverlaySystem({ position: 'top-left' }));
 
