@@ -4,8 +4,9 @@ epic: EPIC-002
 title: Screen shake on hard landing
 status: todo
 priority: low
+branch: ticket-022-screen-shake-on-hard-landing
 created: 2026-02-25
-updated: 2026-02-25
+updated: 2026-02-26
 ---
 
 ## Description
