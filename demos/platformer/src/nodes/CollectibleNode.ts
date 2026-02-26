@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import {
     useComponent,
     useNode,
+    useWorld,
     useFrameUpdate,
     getComponent,
     Transform,
@@ -9,6 +10,7 @@ import {
 import { useRigidBody, useSphereCollider, useOnCollisionStart } from '@pulse-ts/physics';
 import { PlayerTag } from '../components/PlayerTag';
 import { useThreeRoot, useObject3D } from '@pulse-ts/three';
+import { ParticleBurstNode } from './ParticleBurstNode';
 
 const COLLECTIBLE_RADIUS = 0.25;
 const SPIN_SPEED = 2;
@@ -27,6 +29,7 @@ export interface CollectibleNodeProps {
 
 export function CollectibleNode(props: Readonly<CollectibleNodeProps>) {
     const node = useNode();
+    const world = useWorld();
 
     const transform = useComponent(Transform);
     transform.localPosition.set(...props.position);
@@ -66,6 +69,13 @@ export function CollectibleNode(props: Readonly<CollectibleNodeProps>) {
     useOnCollisionStart(({ other }) => {
         if (!getComponent(other, PlayerTag)) return;
         props.collectibleState.collected++;
+        world.mount(ParticleBurstNode, {
+            position: [
+                transform.localPosition.x,
+                transform.localPosition.y,
+                transform.localPosition.z,
+            ],
+        });
         node.destroy();
     });
 }
