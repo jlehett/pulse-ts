@@ -36,6 +36,16 @@ export interface HazardDef {
     color?: number;
 }
 
+export interface EnemyDef {
+    position: [number, number, number];
+    /** World-space destination; enemy patrols between position and target. */
+    target: [number, number, number];
+    size: [number, number, number];
+    color?: number;
+    /** Patrol speed in world units/second. Default: 2. */
+    speed?: number;
+}
+
 export interface LevelDef {
     playerSpawn: [number, number, number];
     deathPlaneY: number;
@@ -45,6 +55,7 @@ export interface LevelDef {
     collectibles: CollectibleDef[];
     checkpoints: CheckpointDef[];
     hazards: HazardDef[];
+    enemies: EnemyDef[];
     goalPosition: [number, number, number];
 }
 
@@ -118,6 +129,23 @@ export const level: LevelDef = {
         { position: [10, 0.2, 0], size: [2, 0.15, 3], color: 0xcc3300 },
         // Hazard on the higher path approach
         { position: [25.5, 3.8, 0], size: [1.5, 0.15, 3], color: 0xcc3300 },
+    ],
+
+    enemies: [
+        // Patrols Z-axis on the stepping-stone platform
+        {
+            position: [7, 1.4, -1],
+            target: [7, 1.4, 1],
+            size: [0.6, 0.8, 0.6],
+            speed: 1.5,
+        },
+        // Patrols Z-axis on the higher path platform
+        {
+            position: [23, 4.4, -1],
+            target: [23, 4.4, 1],
+            size: [0.6, 0.8, 0.6],
+            speed: 2,
+        },
     ],
 
     goalPosition: [34, 6.8, 0],
