@@ -4,6 +4,7 @@ epic: EPIC-003
 title: useContext / useProvideContext for shared state
 status: todo
 priority: high
+branch: ticket-026-use-context-shared-state
 created: 2026-02-26
 updated: 2026-02-26
 ---
