@@ -2,7 +2,7 @@
 id: TICKET-020
 epic: EPIC-002
 title: Patrolling enemy
-status: in-progress
+status: done
 branch: ticket-020-patrolling-enemy
 priority: medium
 created: 2026-02-25
@@ -21,13 +21,14 @@ Add a simple patrolling enemy that walks back and forth between two points. Touc
 
 ## Acceptance Criteria
 
-- [ ] Enemy patrols back and forth between two configured waypoints
-- [ ] Player touching the enemy respawns at last checkpoint
-- [ ] Enemy reverses at waypoints (and optionally at ledge edges)
-- [ ] Enemy is visually distinct from platforms and the player
-- [ ] Placeable via `level.ts`
+- [x] Enemy patrols back and forth between two configured waypoints
+- [x] Player touching the enemy respawns at last checkpoint
+- [x] Enemy reverses at waypoints (and optionally at ledge edges)
+- [x] Enemy is visually distinct from platforms and the player
+- [x] Placeable via `level.ts`
 
 ## Notes
 
 - **2026-02-25**: Ticket created. Depends on TICKET-010 (kinematic bodies) for correct movement behavior.
 - **2026-02-26**: Starting implementation.
+- **2026-02-26**: Done. Added EnemyNode with kinematic body + trigger collider, waypoint patrol (MovingPlatformNode pattern), pulsing dark red emissive (HazardNode pattern), and kill-on-contact. Two enemies placed in level.ts. All tests pass.
