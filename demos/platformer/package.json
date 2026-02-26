@@ -6,7 +6,20 @@
     "scripts": {
         "dev": "vite",
         "build": "tsc && vite build",
-        "preview": "vite preview"
+        "preview": "vite preview",
+        "test": "jest"
+    },
+    "babel": {
+        "presets": [
+            [
+                "@babel/preset-env",
+                {
+                    "targets": { "node": "current" },
+                    "modules": "auto"
+                }
+            ],
+            "@babel/preset-typescript"
+        ]
     },
     "dependencies": {
         "@pulse-ts/core": "*",

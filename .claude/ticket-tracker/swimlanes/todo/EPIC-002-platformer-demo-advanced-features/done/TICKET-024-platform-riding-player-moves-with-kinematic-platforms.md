@@ -2,10 +2,11 @@
 id: TICKET-024
 epic: EPIC-002
 title: "Platform riding: player moves with kinematic platforms"
-status: todo
+status: done
 priority: high
 created: 2026-02-25
-updated: 2026-02-25
+updated: 2026-02-26
+closed: 2026-02-26
 ---
 
 ## Description
@@ -28,12 +29,14 @@ No changes to the physics solver are needed. All logic is in `PlayerNode`.
 
 ## Acceptance Criteria
 
-- [ ] Player translates with a moving platform when standing on it (no sliding off)
-- [ ] Player rotates with a rotating platform when standing on it (carried around the center)
-- [ ] Player can still jump normally while on a moving/rotating platform
-- [ ] Player separates cleanly from the platform when they jump or walk off
-- [ ] Existing player movement and jump tests (if any) still pass
+- [x] Player translates with a moving platform when standing on it (no sliding off)
+- [x] Player rotates with a rotating platform when standing on it (carried around the center)
+- [x] Player can still jump normally while on a moving/rotating platform
+- [x] Player separates cleanly from the platform when they jump or walk off
+- [x] Existing player movement and jump tests (if any) still pass
 
 ## Notes
 
 - **2026-02-25**: Ticket created. Spawned from TICKET-011 (moving/rotating platforms). Solver friction at resting contact produces near-zero impulse (jn ≈ 0), so explicit velocity inheritance in PlayerNode is required.
+- **2026-02-26**: Starting implementation.
+- **2026-02-26**: Implementation complete. Added `getKinematicSurfaceVelocityXZ` pure helper to `PlayerNode.ts` that computes XZ surface velocity from linear + angular (Y-axis ω×r) contributions. Modified `useFixedUpdate` to read the platform's RigidBody via `getComponent(hit.node, RigidBody)` and add platform velocity to player movement. Created `PlayerNode.test.ts` with 5 passing tests covering translation, rotation, combined, and zero-angular cases.
