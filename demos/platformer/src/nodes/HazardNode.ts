@@ -8,14 +8,12 @@ import {
 import { useRigidBody, useBoxCollider, useOnCollisionStart, RigidBody } from '@pulse-ts/physics';
 import { useMesh } from '@pulse-ts/three';
 import { useSound } from '@pulse-ts/audio';
+import { useAnimate } from '@pulse-ts/effects';
 import { PlayerTag } from '../components/PlayerTag';
 import { RespawnCtx, PlayerNodeCtx } from '../contexts';
 
 const DEFAULT_COLOR = 0xcc3300;
 const EMISSIVE_COLOR = 0xff4400;
-const PULSE_SPEED = 3.0;
-const PULSE_MIN = 0.4;
-const PULSE_MAX = 0.9;
 
 export interface HazardNodeProps {
     position: [number, number, number];
@@ -76,11 +74,9 @@ export function HazardNode(props: Readonly<HazardNodeProps>) {
     });
 
     // Subtle pulsing emissive
-    let elapsed = 0;
-    useFrameUpdate((dt) => {
-        elapsed += dt;
-        const t = (Math.sin(elapsed * PULSE_SPEED) + 1) / 2; // 0–1
-        material.emissiveIntensity = PULSE_MIN + t * (PULSE_MAX - PULSE_MIN);
+    const pulse = useAnimate({ wave: 'sine', min: 0.4, max: 0.9, frequency: 3 });
+    useFrameUpdate(() => {
+        material.emissiveIntensity = pulse.value;
     });
 
     // Respawn player on contact

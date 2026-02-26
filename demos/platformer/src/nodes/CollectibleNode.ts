@@ -10,12 +10,10 @@ import { useRigidBody, useSphereCollider, useOnCollisionStart } from '@pulse-ts/
 import { PlayerTag } from '../components/PlayerTag';
 import { useMesh } from '@pulse-ts/three';
 import { useSound } from '@pulse-ts/audio';
+import { useAnimate } from '@pulse-ts/effects';
 import { CollectibleCtx, ParticleEffectsCtx } from '../contexts';
 
 const COLLECTIBLE_RADIUS = 0.25;
-const SPIN_SPEED = 2;
-const BOB_SPEED = 2;
-const BOB_AMPLITUDE = 0.2;
 
 /** Shared mutable counter incremented each time a collectible is picked up. */
 export interface CollectibleState {
@@ -58,15 +56,15 @@ export function CollectibleNode(props: Readonly<CollectibleNodeProps>) {
     });
 
     const baseY = props.position[1];
-    let elapsed = 0;
+    const spin = useAnimate({ rate: 2 });
+    const bob = useAnimate({ wave: 'sine', amplitude: 0.2, frequency: 2 });
 
     // Spin and bob animation
-    useFrameUpdate((dt) => {
-        elapsed += dt;
-        mesh.rotation.y += SPIN_SPEED * dt;
+    useFrameUpdate(() => {
+        mesh.rotation.y = spin.value;
         root.position.set(
             transform.localPosition.x,
-            baseY + Math.sin(elapsed * BOB_SPEED) * BOB_AMPLITUDE,
+            baseY + bob.value,
             transform.localPosition.z,
         );
     });

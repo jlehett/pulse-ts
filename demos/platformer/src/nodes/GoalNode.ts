@@ -8,11 +8,9 @@ import {
 import { useRigidBody, useSphereCollider, useOnCollisionStart } from '@pulse-ts/physics';
 import { PlayerTag } from '../components/PlayerTag';
 import { useMesh, useThreeContext } from '@pulse-ts/three';
+import { useAnimate } from '@pulse-ts/effects';
 
 const GOAL_RADIUS = 0.6;
-const SPIN_SPEED = 1.2;
-const BOB_SPEED = 1.5;
-const BOB_AMPLITUDE = 0.3;
 const TRIGGER_RADIUS = 1.0;
 
 export interface GoalNodeProps {
@@ -57,15 +55,15 @@ export function GoalNode(props: Readonly<GoalNodeProps>) {
     });
 
     const baseY = props.position[1];
-    let elapsed = 0;
+    const spin = useAnimate({ rate: 1.2 });
+    const bob = useAnimate({ wave: 'sine', amplitude: 0.3, frequency: 1.5 });
 
     // Spin and bob animation
-    useFrameUpdate((dt) => {
-        elapsed += dt;
-        mesh.rotation.y += SPIN_SPEED * dt;
+    useFrameUpdate(() => {
+        mesh.rotation.y = spin.value;
         root.position.set(
             transform.localPosition.x,
-            baseY + Math.sin(elapsed * BOB_SPEED) * BOB_AMPLITUDE,
+            baseY + bob.value,
             transform.localPosition.z,
         );
     });
