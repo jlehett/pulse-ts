@@ -24,6 +24,7 @@
     "dependencies": {
         "@pulse-ts/audio": "*",
         "@pulse-ts/core": "*",
+        "@pulse-ts/effects": "*",
         "@pulse-ts/input": "*",
         "@pulse-ts/physics": "*",
         "@pulse-ts/three": "*",

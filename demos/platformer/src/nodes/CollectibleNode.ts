@@ -1,7 +1,6 @@
 import {
     useComponent,
     useNode,
-    useWorld,
     useFrameUpdate,
     getComponent,
     Transform,
@@ -11,8 +10,7 @@ import { useRigidBody, useSphereCollider, useOnCollisionStart } from '@pulse-ts/
 import { PlayerTag } from '../components/PlayerTag';
 import { useMesh } from '@pulse-ts/three';
 import { useSound } from '@pulse-ts/audio';
-import { ParticleBurstNode } from './ParticleBurstNode';
-import { CollectibleCtx } from '../contexts';
+import { CollectibleCtx, ParticleEffectsCtx } from '../contexts';
 
 const COLLECTIBLE_RADIUS = 0.25;
 const SPIN_SPEED = 2;
@@ -30,8 +28,8 @@ export interface CollectibleNodeProps {
 
 export function CollectibleNode(props: Readonly<CollectibleNodeProps>) {
     const node = useNode();
-    const world = useWorld();
     const collectibleState = useContext(CollectibleCtx);
+    const fx = useContext(ParticleEffectsCtx);
 
     const transform = useComponent(Transform);
     transform.localPosition.set(...props.position);
@@ -78,13 +76,11 @@ export function CollectibleNode(props: Readonly<CollectibleNodeProps>) {
         if (!getComponent(other, PlayerTag)) return;
         collectSfx.play();
         collectibleState.collected++;
-        world.mount(ParticleBurstNode, {
-            position: [
-                transform.localPosition.x,
-                transform.localPosition.y,
-                transform.localPosition.z,
-            ],
-        });
+        fx.burst(24, [
+            transform.localPosition.x,
+            transform.localPosition.y,
+            transform.localPosition.z,
+        ]);
         node.destroy();
     });
 }

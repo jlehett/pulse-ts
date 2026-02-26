@@ -10,6 +10,7 @@ import { CheckpointNode } from './CheckpointNode';
 import { HazardNode } from './HazardNode';
 import { EnemyNode } from './EnemyNode';
 import { GoalNode } from './GoalNode';
+import { ParticleEffectsNode } from './ParticleEffectsNode';
 import { CameraRigNode } from './CameraRigNode';
 import { level } from '../config/level';
 import { RespawnCtx, ShakeCtx, CollectibleCtx, PlayerNodeCtx } from '../contexts';
@@ -49,6 +50,9 @@ export function LevelNode() {
     useProvideContext(RespawnCtx, respawnState);
     useProvideContext(ShakeCtx, shakeState);
     useProvideContext(CollectibleCtx, collectibleState);
+
+    // Particle effects (scene-level emitter for burst effects)
+    useChild(ParticleEffectsNode);
 
     // Player
     const playerNode = useChild(PlayerNode, {
