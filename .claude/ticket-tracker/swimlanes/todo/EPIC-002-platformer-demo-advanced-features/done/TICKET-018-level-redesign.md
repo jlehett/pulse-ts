@@ -2,10 +2,11 @@
 id: TICKET-018
 epic: EPIC-002
 title: Level redesign with 2–3 distinct stages
-status: todo
+status: done
 priority: medium
+branch: ticket-018-level-redesign-3-distinct-stages
 created: 2026-02-25
-updated: 2026-02-25
+updated: 2026-02-26
 ---
 
 ## Description
@@ -21,12 +22,14 @@ Update `level.ts` to hold all platform/hazard/enemy/collectible/goal definitions
 
 ## Acceptance Criteria
 
-- [ ] Level has at least 2 distinct stages with increasing difficulty
-- [ ] All new node types (moving platform, rotating platform, hazard, enemy, goal) appear at least once
-- [ ] Collectibles are distributed across stages (total ≥ 7)
-- [ ] Goal object is reachable but requires using all major mechanics
-- [ ] Shadow frustum and fog remain correctly fitted to the new layout
+- [x] Level has at least 2 distinct stages with increasing difficulty
+- [x] All new node types (moving platform, rotating platform, hazard, enemy, goal) appear at least once
+- [x] Collectibles are distributed across stages (total ≥ 7)
+- [x] Goal object is reachable but requires using all major mechanics
+- [x] Shadow frustum and fog remain correctly fitted to the new layout
 
 ## Notes
 
 - **2026-02-25**: Ticket created. Blocked by TICKET-011 (moving/rotating platforms). Best done after most other feature tickets are complete.
+- **2026-02-26**: Starting implementation — 3-stage level redesign.
+- **2026-02-26**: Done. 3-stage layout with 15 static platforms, 4 moving, 1 rotating, 4 hazards, 3 enemies, 8 collectibles, 2 checkpoints, 1 goal. Shadow/fog/light updated for X: 0–67. All 21 tests pass.
