@@ -3,6 +3,8 @@ import { useChild } from '@pulse-ts/core';
 import { useThreeContext, useObject3D } from '@pulse-ts/three';
 import { PlayerNode } from './PlayerNode';
 import { PlatformNode } from './PlatformNode';
+import { MovingPlatformNode } from './MovingPlatformNode';
+import { RotatingPlatformNode } from './RotatingPlatformNode';
 import { CollectibleNode } from './CollectibleNode';
 import { CameraRigNode } from './CameraRigNode';
 import { level } from '../config/level';
@@ -46,6 +48,27 @@ export function LevelNode() {
             position: plat.position,
             size: plat.size,
             color: plat.color,
+        });
+    }
+
+    // Moving platforms
+    for (const mp of level.movingPlatforms) {
+        useChild(MovingPlatformNode, {
+            position: mp.position,
+            target: mp.target,
+            size: mp.size,
+            color: mp.color,
+            speed: mp.speed,
+        });
+    }
+
+    // Rotating platforms
+    for (const rp of level.rotatingPlatforms) {
+        useChild(RotatingPlatformNode, {
+            position: rp.position,
+            size: rp.size,
+            color: rp.color,
+            angularSpeed: rp.angularSpeed,
         });
     }
 
