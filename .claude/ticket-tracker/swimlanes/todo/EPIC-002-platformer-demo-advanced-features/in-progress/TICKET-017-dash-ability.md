@@ -2,10 +2,11 @@
 id: TICKET-017
 epic: EPIC-002
 title: Dash ability
-status: todo
+status: in-progress
+branch: ticket-017-dash-ability
 priority: medium
 created: 2026-02-25
-updated: 2026-02-25
+updated: 2026-02-26
 ---
 
 ## Description
@@ -29,3 +30,4 @@ Add a horizontal dash ability (e.g., bound to Shift) that launches the player in
 ## Notes
 
 - **2026-02-25**: Ticket created. No blockers.
+- **2026-02-26**: Starting implementation. Added dash binding (ShiftLeft) and full dash logic in PlayerNode — activation, velocity override, cooldown, and respawn reset.
