@@ -4,10 +4,10 @@ import {
     useFrameUpdate,
     Transform,
     getComponent,
-    type Node,
+    useContext,
 } from '@pulse-ts/core';
 import { useThreeContext } from '@pulse-ts/three';
-import type { ShakeState } from './PlayerNode';
+import { PlayerNodeCtx, ShakeCtx } from '../contexts';
 
 const CAMERA_OFFSET_X = 0;
 const CAMERA_OFFSET_Y = 5;
@@ -20,12 +20,9 @@ export const SHAKE_DECAY = 12;
 /** Maximum camera offset (world units) from shake, preventing extreme jolts. */
 export const SHAKE_MAX = 0.8;
 
-export interface CameraRigNodeProps {
-    target: Node;
-    shakeState: ShakeState;
-}
-
-export function CameraRigNode(props: Readonly<CameraRigNodeProps>) {
+export function CameraRigNode() {
+    const playerNode = useContext(PlayerNodeCtx);
+    const shakeState = useContext(ShakeCtx);
     const world = useWorld();
     const { camera } = useThreeContext();
 
@@ -45,7 +42,7 @@ export function CameraRigNode(props: Readonly<CameraRigNodeProps>) {
     // fixed.update — so prevTarget holds the pre-step position and the frame
     // update can interpolate correctly between the two physics states.
     useFixedEarly(() => {
-        const t = getComponent(props.target, Transform);
+        const t = getComponent(playerNode, Transform);
         if (!t) return;
         prevTargetX = t.localPosition.x;
         prevTargetY = t.localPosition.y;
@@ -53,7 +50,7 @@ export function CameraRigNode(props: Readonly<CameraRigNodeProps>) {
     });
 
     useFrameUpdate((dt) => {
-        const targetTransform = getComponent(props.target, Transform);
+        const targetTransform = getComponent(playerNode, Transform);
         if (!targetTransform) return;
 
         const cur = targetTransform.localPosition;
@@ -78,7 +75,7 @@ export function CameraRigNode(props: Readonly<CameraRigNodeProps>) {
         // Camera shake — apply decaying random offsets on X/Y (not Z to avoid
         // depth jumps). Intensity is written by PlayerNode on hard landings and
         // decayed here each frame via exponential falloff.
-        const shake = props.shakeState;
+        const shake = shakeState;
         if (shake.intensity > 0.001) {
             const offset = Math.min(shake.intensity, SHAKE_MAX);
             camera.position.x += (Math.random() - 0.5) * 2 * offset;

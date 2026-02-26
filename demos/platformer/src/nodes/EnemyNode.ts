@@ -7,14 +7,14 @@ import {
     useWorld,
     getComponent,
     Transform,
-    type Node,
+    useContext,
 } from '@pulse-ts/core';
 import { useRigidBody, useBoxCollider, useOnCollisionStart, RigidBody } from '@pulse-ts/physics';
 import { useThreeRoot, useObject3D } from '@pulse-ts/three';
 import { PlayerTag } from '../components/PlayerTag';
-import { type RespawnState } from './PlayerNode';
 import { ParticleBurstNode } from './ParticleBurstNode';
 import { playDeath } from '../utils/audio';
+import { RespawnCtx, PlayerNodeCtx } from '../contexts';
 
 const DEFAULT_COLOR = 0x8b1a1a;
 const EMISSIVE_COLOR = 0xcc2200;
@@ -42,8 +42,6 @@ export interface EnemyNodeProps {
     color?: number;
     /** Patrol speed in world units/second. Default: 2. */
     speed?: number;
-    respawnState: RespawnState;
-    player: Node;
 }
 
 /**
@@ -54,7 +52,7 @@ export interface EnemyNodeProps {
  * Renders a dark red box with a pulsing emissive glow to distinguish it from
  * hazard platforms and static geometry.
  *
- * @param props - Enemy position, target, size, color override, speed, shared respawn state, and player node ref.
+ * @param props - Enemy position, target, size, color override, and speed.
  *
  * @example
  * ```ts
@@ -66,12 +64,12 @@ export interface EnemyNodeProps {
  *     target: [7, 1.4, 1],
  *     size: [0.6, 0.8, 0.6],
  *     speed: 1.5,
- *     respawnState,
- *     player: playerNode,
  * });
  * ```
  */
 export function EnemyNode(props: Readonly<EnemyNodeProps>) {
+    const respawnState = useContext(RespawnCtx);
+    const playerNode = useContext(PlayerNodeCtx);
     const [sx, sy, sz] = props.size;
     const color = props.color ?? DEFAULT_COLOR;
     const speed = props.speed ?? 2;
@@ -142,8 +140,8 @@ export function EnemyNode(props: Readonly<EnemyNodeProps>) {
     useOnCollisionStart(({ other }) => {
         if (!getComponent(other, PlayerTag)) return;
 
-        const playerTransform = getComponent(props.player, Transform);
-        const playerBody = getComponent(props.player, RigidBody);
+        const playerTransform = getComponent(playerNode, Transform);
+        const playerBody = getComponent(playerNode, RigidBody);
         if (!playerTransform || !playerBody) return;
 
         const playerVelY = playerBody.linearVelocity.y;
@@ -177,7 +175,7 @@ export function EnemyNode(props: Readonly<EnemyNodeProps>) {
         } else {
             // Side/bottom contact — respawn the player
             playDeath();
-            playerTransform.localPosition.set(...props.respawnState.position);
+            playerTransform.localPosition.set(...respawnState.position);
             playerBody.setLinearVelocity(0, 0, 0);
         }
     });

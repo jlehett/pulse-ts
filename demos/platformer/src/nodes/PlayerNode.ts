@@ -9,8 +9,10 @@ import {
     getComponent,
     Transform,
     Vec3,
+    useContext,
 } from '@pulse-ts/core';
 import { useAction, useAxis2D } from '@pulse-ts/input';
+import { RespawnCtx, ShakeCtx } from '../contexts';
 import {
     useRigidBody,
     useCapsuleCollider,
@@ -114,12 +116,12 @@ export const SHAKE_INTENSITY_SCALE = 0.15;
 export interface PlayerNodeProps {
     spawn: [number, number, number];
     deathPlaneY: number;
-    respawnState: RespawnState;
-    shakeState: ShakeState;
 }
 
 export function PlayerNode(props: Readonly<PlayerNodeProps>) {
     const node = useNode();
+    const respawnState = useContext(RespawnCtx);
+    const shakeState = useContext(ShakeCtx);
     useComponent(PlayerTag);
     const transform = useComponent(Transform);
     transform.localPosition.set(...props.spawn);
@@ -206,7 +208,7 @@ export function PlayerNode(props: Readonly<PlayerNodeProps>) {
             playLand();
             const absVy = Math.abs(body.linearVelocity.y);
             if (absVy > LANDING_VEL_THRESHOLD) {
-                props.shakeState.intensity =
+                shakeState.intensity =
                     (absVy - LANDING_VEL_THRESHOLD) * SHAKE_INTENSITY_SCALE;
             }
         }
@@ -298,7 +300,7 @@ export function PlayerNode(props: Readonly<PlayerNodeProps>) {
         // Death plane respawn
         if (pos.y < props.deathPlaneY) {
             playDeath();
-            transform.localPosition.set(...props.respawnState.position);
+            transform.localPosition.set(...respawnState.position);
             body.setLinearVelocity(0, 0, 0);
             jumpLock = false;
             coyoteTimer = 0;

@@ -6,12 +6,14 @@ import {
     useFrameUpdate,
     getComponent,
     Transform,
+    useContext,
 } from '@pulse-ts/core';
 import { useRigidBody, useSphereCollider, useOnCollisionStart } from '@pulse-ts/physics';
 import { PlayerTag } from '../components/PlayerTag';
 import { useThreeRoot, useObject3D } from '@pulse-ts/three';
 import { ParticleBurstNode } from './ParticleBurstNode';
 import { playCollect } from '../utils/audio';
+import { CollectibleCtx } from '../contexts';
 
 const COLLECTIBLE_RADIUS = 0.25;
 const SPIN_SPEED = 2;
@@ -25,12 +27,12 @@ export interface CollectibleState {
 
 export interface CollectibleNodeProps {
     position: [number, number, number];
-    collectibleState: CollectibleState;
 }
 
 export function CollectibleNode(props: Readonly<CollectibleNodeProps>) {
     const node = useNode();
     const world = useWorld();
+    const collectibleState = useContext(CollectibleCtx);
 
     const transform = useComponent(Transform);
     transform.localPosition.set(...props.position);
@@ -70,7 +72,7 @@ export function CollectibleNode(props: Readonly<CollectibleNodeProps>) {
     useOnCollisionStart(({ other }) => {
         if (!getComponent(other, PlayerTag)) return;
         playCollect();
-        props.collectibleState.collected++;
+        collectibleState.collected++;
         world.mount(ParticleBurstNode, {
             position: [
                 transform.localPosition.x,

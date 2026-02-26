@@ -2,16 +2,15 @@ import * as THREE from 'three';
 import {
     useComponent,
     useFrameUpdate,
-    useWorld,
     getComponent,
     Transform,
-    type Node,
+    useContext,
 } from '@pulse-ts/core';
 import { useRigidBody, useBoxCollider, useOnCollisionStart, RigidBody } from '@pulse-ts/physics';
 import { useThreeRoot, useObject3D } from '@pulse-ts/three';
 import { PlayerTag } from '../components/PlayerTag';
-import { type RespawnState } from './PlayerNode';
 import { playDeath } from '../utils/audio';
+import { RespawnCtx, PlayerNodeCtx } from '../contexts';
 
 const DEFAULT_COLOR = 0xcc3300;
 const EMISSIVE_COLOR = 0xff4400;
@@ -23,8 +22,6 @@ export interface HazardNodeProps {
     position: [number, number, number];
     size: [number, number, number];
     color?: number;
-    respawnState: RespawnState;
-    player: Node;
 }
 
 /**
@@ -34,7 +31,7 @@ export interface HazardNodeProps {
  * Renders a box with a pulsing red/orange emissive glow. On player collision,
  * teleports the player to `respawnState.position` and zeros their velocity.
  *
- * @param props - Hazard position, size, color override, shared respawn state, and player node ref.
+ * @param props - Hazard position, size, and optional color override.
  *
  * @example
  * ```ts
@@ -44,12 +41,12 @@ export interface HazardNodeProps {
  * useChild(HazardNode, {
  *     position: [10, 0.2, 0],
  *     size: [2, 0.15, 3],
- *     respawnState,
- *     player: playerNode,
  * });
  * ```
  */
 export function HazardNode(props: Readonly<HazardNodeProps>) {
+    const respawnState = useContext(RespawnCtx);
+    const playerNode = useContext(PlayerNodeCtx);
     const transform = useComponent(Transform);
     transform.localPosition.set(...props.position);
 
@@ -88,11 +85,11 @@ export function HazardNode(props: Readonly<HazardNodeProps>) {
         if (!getComponent(other, PlayerTag)) return;
         playDeath();
 
-        const playerTransform = getComponent(props.player, Transform);
-        const playerBody = getComponent(props.player, RigidBody);
+        const playerTransform = getComponent(playerNode, Transform);
+        const playerBody = getComponent(playerNode, RigidBody);
         if (!playerTransform || !playerBody) return;
 
-        playerTransform.localPosition.set(...props.respawnState.position);
+        playerTransform.localPosition.set(...respawnState.position);
         playerBody.setLinearVelocity(0, 0, 0);
     });
 }
