@@ -2,7 +2,7 @@
 id: TICKET-017
 epic: EPIC-002
 title: Dash ability
-status: in-progress
+status: done
 branch: ticket-017-dash-ability
 priority: medium
 created: 2026-02-25
@@ -21,13 +21,14 @@ Add a horizontal dash ability (e.g., bound to Shift) that launches the player in
 
 ## Acceptance Criteria
 
-- [ ] Dash fires in the player's current movement direction on key press
-- [ ] Dash has a noticeable speed burst and short duration
-- [ ] Cooldown prevents rapid re-dashing
-- [ ] Dash key binding is defined in `bindings.ts`
-- [ ] Works both grounded and airborne
+- [x] Dash fires in the player's current movement direction on key press
+- [x] Dash has a noticeable speed burst and short duration
+- [x] Cooldown prevents rapid re-dashing
+- [x] Dash key binding is defined in `bindings.ts`
+- [x] Works both grounded and airborne
 
 ## Notes
 
 - **2026-02-25**: Ticket created. No blockers.
 - **2026-02-26**: Starting implementation. Added dash binding (ShiftLeft) and full dash logic in PlayerNode — activation, velocity override, cooldown, and respawn reset.
+- **2026-02-26**: Complete. Merged via PR #25.
