@@ -30,7 +30,7 @@ export function MovingPlatformNode(props: Readonly<MovingPlatformNodeProps>) {
     const transform = useComponent(Transform);
     transform.localPosition.set(...props.position);
 
-    const body = useRigidBody({ type: 'kinematic' });
+    useRigidBody({ type: 'kinematic' });
     useBoxCollider(sx / 2, sy / 2, sz / 2, { friction: 0.6, restitution: 0 });
 
     const [ax, ay, az] = props.position;
@@ -39,7 +39,9 @@ export function MovingPlatformNode(props: Readonly<MovingPlatformNodeProps>) {
     // Direction: true = travelling toward target, false = returning to origin.
     let towardTarget = true;
 
-    // Run at order -1 so velocity is set before PhysicsSystem (order 0) integrates.
+    // Directly update position each fixed step. Using direct position writes rather than
+    // velocity-based integration so the platform's movement is not dependent on
+    // PhysicsSystem's integrateTransforms step ordering.
     useFixedUpdate((dt) => {
         const pos = transform.localPosition;
         const tx = towardTarget ? bx : ax;
@@ -50,17 +52,21 @@ export function MovingPlatformNode(props: Readonly<MovingPlatformNodeProps>) {
         const dy = ty - pos.y;
         const dz = tz - pos.z;
         const dist = Math.sqrt(dx * dx + dy * dy + dz * dz);
+        const step = speed * dt;
 
-        if (dist <= speed * dt) {
+        if (dist <= step) {
             // Arrived — snap and reverse
             transform.localPosition.set(tx, ty, tz);
-            body.setLinearVelocity(0, 0, 0);
             towardTarget = !towardTarget;
         } else {
             const inv = 1 / dist;
-            body.setLinearVelocity(dx * inv * speed, dy * inv * speed, dz * inv * speed);
+            transform.localPosition.set(
+                pos.x + dx * inv * step,
+                pos.y + dy * inv * step,
+                pos.z + dz * inv * step,
+            );
         }
-    }, { order: -1 });
+    });
 
     // Three.js visual — position is synced automatically by ThreeTRSSyncSystem
     // (frame.late) using Transform interpolation, same as PlatformNode.

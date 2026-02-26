@@ -3,6 +3,7 @@ import {
     useComponent,
     useFixedUpdate,
     Transform,
+    Quat,
 } from '@pulse-ts/core';
 import { useRigidBody, useBoxCollider } from '@pulse-ts/physics';
 import { useThreeRoot, useObject3D } from '@pulse-ts/three';
@@ -28,13 +29,22 @@ export function RotatingPlatformNode(props: Readonly<RotatingPlatformNodeProps>)
     const transform = useComponent(Transform);
     transform.localPosition.set(...props.position);
 
-    const body = useRigidBody({ type: 'kinematic' });
+    useRigidBody({ type: 'kinematic' });
     useBoxCollider(sx / 2, sy / 2, sz / 2, { friction: 0.6, restitution: 0 });
 
-    // Run at order -1 so angular velocity is set before PhysicsSystem (order 0) integrates.
-    useFixedUpdate(() => {
-        body.setAngularVelocity(0, angularSpeed, 0);
-    }, { order: -1 });
+    // Directly rotate the transform each fixed step. Using direct quaternion writes
+    // rather than angular-velocity-based integration for the same reason as MovingPlatformNode.
+    const tmpQuat = new Quat();
+    const tmpQuat2 = new Quat();
+    useFixedUpdate((dt) => {
+        const angle = angularSpeed * dt;
+        const half = angle * 0.5;
+        // Delta quaternion: rotation of `angle` radians around Y axis
+        tmpQuat.set(0, Math.sin(half), 0, Math.cos(half));
+        const cur = transform.localRotation;
+        const updated = Quat.multiply(tmpQuat, cur, tmpQuat2);
+        transform.localRotation.set(updated.x, updated.y, updated.z, updated.w);
+    });
 
     // Three.js visual — rotation is slerp-interpolated automatically by ThreeTRSSyncSystem
     // (frame.late) using Transform interpolation, same as MovingPlatformNode.
