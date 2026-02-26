@@ -2,7 +2,7 @@
 id: TICKET-029
 epic: EPIC-004
 title: useFollowCamera third-person camera rig
-status: todo
+status: done
 priority: medium
 created: 2026-02-26
 updated: 2026-02-26
@@ -40,3 +40,4 @@ Internally handles:
 ## Notes
 
 - **2026-02-26**: Ticket created. CameraRigNode is 70+ lines of manual follow/lerp/interpolation logic.
+- **2026-02-26**: Status changed to done. Implemented useFollowCamera with interpolation, exponential-decay smoothing, and lookAt. CameraRigNode reduced from 91 to 42 lines — only shake logic remains.
