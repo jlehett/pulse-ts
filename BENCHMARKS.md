@@ -119,9 +119,13 @@ _Target of TICKET-005, TICKET-006._
 File: `packages/physics/src/domain/services/physicsStep.bench.test.ts`
 
 > Times are in **ms** (milliseconds). Scene: N dynamic sphere bodies above a static ground plane.
-> Baselines are unchanged post-TICKET-004. This benchmark uses sphere-sphere and sphere-plane
-> paths which were already scalar-heavy; TICKET-004 eliminates allocations primarily in
-> box/capsule paths and reduces GC pressure over sustained play (not visible in short-run hz).
+> Baselines are unchanged post-TICKET-006. The sphere-plane scene is not sensitive to the
+> broad-phase fallback fix (TICKET-006) because planes always pair against every body regardless.
+> The fallback fix has the largest impact in settled scenes with spread-apart bodies: a 100-body
+> settled scene previously triggered the O(n²) fallback generating 4950 spurious narrow-phase
+> calls per step; post-fix it generates 0 (only bodies whose AABBs actually overlap are tested).
+> TICKET-005 and TICKET-006 savings are primarily GC pressure and worst-case frame spikes; the
+> short-run hz on this particular benchmark is largely unchanged.
 
 | Benchmark | hz | mean (ms) | p75 (ms) | p99 (ms) | rme |
 |---|---|---|---|---|---|

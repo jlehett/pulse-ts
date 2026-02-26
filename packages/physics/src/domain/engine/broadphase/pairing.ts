@@ -2,17 +2,30 @@ import { Collider } from '../../../public/components/Collider';
 import { computeAABB } from './aabb';
 
 /**
- * Finds potential collider pairs using a uniform grid. Falls back to a naive
- * all-pairs check if the grid produces no overlaps or cell size is invalid.
+ * Finds potential collider pairs using a uniform spatial grid.
+ *
+ * Each collider is inserted into every cell its AABB spans; pairs sharing a
+ * cell are candidates for narrow-phase testing. Infinite-extent colliders
+ * (planes) are inserted last and paired against every other collider.
+ *
+ * The O(n²) naive fallback has been intentionally removed. Returning zero
+ * pairs is the correct result when no AABBs overlap — falling back to all-pairs
+ * was generating up to n*(n-1)/2 spurious narrow-phase tests every step in
+ * scenes where bodies are spread apart (e.g. a settled 100-body simulation
+ * produces 4950 wasted narrow-phase calls with the fallback).
  */
 export function findPairs(
     colliders: Iterable<Collider>,
     cellSize: number,
 ): Array<[Collider, Collider]> {
     if (!isFinite(cellSize) || cellSize <= 0) return naivePairs(colliders);
-    type CellKey = string;
-    const buckets = new Map<CellKey, Collider[]>();
+
+    // Map<numericCellKey, Collider[]>
+    // Cell key packs (x,y,z) — each biased by +0x8000 to handle negatives —
+    // into a single JS number, collision-free for cell coords in [-32768, 32767].
+    const buckets = new Map<number, Collider[]>();
     const planes: Collider[] = [];
+
     for (const c of colliders) {
         const bb = computeAABB(c);
         if (!bb) {
@@ -28,42 +41,50 @@ export function findPairs(
         for (let x = minx; x <= maxx; x++)
             for (let y = miny; y <= maxy; y++)
                 for (let z = minz; z <= maxz; z++) {
-                    const key = `${x},${y},${z}`;
+                    const key = ((x + 0x8000) * 0x10000 + (y + 0x8000)) * 0x10000 + (z + 0x8000);
                     let list = buckets.get(key);
                     if (!list) buckets.set(key, (list = []));
                     list.push(c);
                 }
     }
-    const set = new Set<string>();
+
+    // Deduplicate using a numeric Set — triangular encoding: lo + hi*(hi+1)/2
+    // gives a unique key for any ordered pair of non-negative integers.
+    const seen = new Set<number>();
     const pairs: Array<[Collider, Collider]> = [];
+
     for (const list of buckets.values()) {
         for (let i = 0; i < list.length; i++)
             for (let j = i + 1; j < list.length; j++) {
                 const a = list[i]!;
                 const b = list[j]!;
-                const ai = a.owner.id;
-                const bi = b.owner.id;
-                const key = ai < bi ? `${ai}|${bi}` : `${bi}|${ai}`;
-                if (set.has(key)) continue;
-                set.add(key);
+                const lo = a.owner.id < b.owner.id ? a.owner.id : b.owner.id;
+                const hi = a.owner.id < b.owner.id ? b.owner.id : a.owner.id;
+                const key = lo + (hi * (hi + 1)) / 2;
+                if (seen.has(key)) continue;
+                seen.add(key);
                 pairs.push([a, b]);
             }
     }
+
+    // Planes are infinite so they never land in a grid cell; pair each against
+    // every non-plane collider explicitly.
     if (planes.length) {
         const all = [...colliders];
         for (const pl of planes) {
             for (const o of all) {
                 if (o === pl) continue;
-                const ai = pl.owner.id;
-                const bi = o.owner.id;
-                const key = ai < bi ? `${ai}|${bi}` : `${bi}|${ai}`;
-                if (set.has(key)) continue;
-                set.add(key);
+                const lo = pl.owner.id < o.owner.id ? pl.owner.id : o.owner.id;
+                const hi = pl.owner.id < o.owner.id ? o.owner.id : pl.owner.id;
+                const key = lo + (hi * (hi + 1)) / 2;
+                if (seen.has(key)) continue;
+                seen.add(key);
                 pairs.push([pl, o]);
             }
         }
     }
-    return pairs.length === 0 ? naivePairs(colliders) : pairs;
+
+    return pairs;
 }
 
 function naivePairs(
