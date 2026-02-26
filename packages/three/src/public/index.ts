@@ -24,6 +24,11 @@ export {
     type UseMeshResult,
 } from './useMesh';
 export {
+    useFollowCamera,
+    type FollowCameraOptions,
+    type FollowCameraResult,
+} from './useFollowCamera';
+export {
     StatsOverlaySystem,
     type StatsOverlayOptions,
 } from '../domain/systems/statsOverlay';
