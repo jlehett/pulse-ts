@@ -4,6 +4,24 @@ export interface PlatformDef {
     color?: number;
 }
 
+export interface MovingPlatformDef {
+    position: [number, number, number];
+    /** World-space destination; platform oscillates between position and target. */
+    target: [number, number, number];
+    size: [number, number, number];
+    color?: number;
+    /** Travel speed in world units/second. Default: 3. */
+    speed?: number;
+}
+
+export interface RotatingPlatformDef {
+    position: [number, number, number];
+    size: [number, number, number];
+    color?: number;
+    /** Angular speed in radians/second around the Y axis. Default: 1.0. */
+    angularSpeed?: number;
+}
+
 export interface CollectibleDef {
     position: [number, number, number];
 }
@@ -12,6 +30,8 @@ export interface LevelDef {
     playerSpawn: [number, number, number];
     deathPlaneY: number;
     platforms: PlatformDef[];
+    movingPlatforms: MovingPlatformDef[];
+    rotatingPlatforms: RotatingPlatformDef[];
     collectibles: CollectibleDef[];
 }
 
@@ -35,6 +55,35 @@ export const level: LevelDef = {
 
         // Final destination — large landing
         { position: [34, 5.2, 0], size: [4, 0.4, 4], color: 0x4a6670 },
+    ],
+
+    movingPlatforms: [
+        // Horizontal ferry between the stepping-stone section and higher path
+        {
+            position: [20, 2.4, -3],
+            target: [20, 2.4, 3],
+            size: [2.5, 0.4, 2.5],
+            color: 0x2e8b7a,
+            speed: 3,
+        },
+        // Vertical lift near the final destination
+        {
+            position: [31, 3.0, 0],
+            target: [31, 6.0, 0],
+            size: [2, 0.4, 2],
+            color: 0x2e8b7a,
+            speed: 2,
+        },
+    ],
+
+    rotatingPlatforms: [
+        // Spinning platform mid-level as an optional shortcut
+        {
+            position: [23, 3.6, 3],
+            size: [3, 0.4, 1.5],
+            color: 0x7a4e8b,
+            angularSpeed: 1.2,
+        },
     ],
 
     collectibles: [

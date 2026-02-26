@@ -22,6 +22,10 @@ const gravity = new Vec3(0, -10, 0);
 const dt = 1 / 60;
 
 describe('kinematic body — integrateTransforms', () => {
+    // Kinematic bodies set their own velocity externally; integrateTransforms
+    // drives position/rotation from that velocity the same as for dynamic bodies.
+    // The contact solver reads the velocity but never modifies it (invMass = 0).
+
     it('moves by linearVelocity each step', () => {
         const { t, rb } = makeBody('kinematic');
         rb.linearVelocity.set(2, 0, 0);

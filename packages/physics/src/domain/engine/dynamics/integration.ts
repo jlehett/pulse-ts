@@ -100,28 +100,25 @@ export function integrateTransforms(
     for (const rb of bodies) {
         const t = getComponent(rb.owner, Transform);
         if (!t) continue;
-        // Both dynamic and kinematic bodies integrate velocity → position/rotation.
-        // Kinematic velocity is set externally each step (no gravity or forces applied);
-        // dynamic velocity is managed by integrateVelocities.
-        if (rb.type === 'dynamic' || rb.type === 'kinematic') {
-            t.localPosition.addScaled(rb.linearVelocity, dt);
-            const wx = rb.angularVelocity.x,
-                wy = rb.angularVelocity.y,
-                wz = rb.angularVelocity.z;
-            if (wx !== 0 || wy !== 0 || wz !== 0) {
-                const mag = Math.hypot(wx, wy, wz);
-                const angle = mag * dt;
-                const half = angle * 0.5;
-                const sinHalf = Math.sin(half);
-                const cosHalf = Math.cos(half);
-                const scale = mag > 1e-6 ? sinHalf / mag : 0.5 * dt;
-                const delta = tmpQuat
-                    .set(wx * scale, wy * scale, wz * scale, cosHalf)
-                    .normalize();
-                const updated = Quat.multiply(delta, t.localRotation, tmpQuat2);
-                t.localRotation.set(updated.x, updated.y, updated.z, updated.w);
-            }
+
+        t.localPosition.addScaled(rb.linearVelocity, dt);
+        const wx = rb.angularVelocity.x,
+            wy = rb.angularVelocity.y,
+            wz = rb.angularVelocity.z;
+        if (wx !== 0 || wy !== 0 || wz !== 0) {
+            const mag = Math.hypot(wx, wy, wz);
+            const angle = mag * dt;
+            const half = angle * 0.5;
+            const sinHalf = Math.sin(half);
+            const cosHalf = Math.cos(half);
+            const scale = mag > 1e-6 ? sinHalf / mag : 0.5 * dt;
+            const delta = tmpQuat
+                .set(wx * scale, wy * scale, wz * scale, cosHalf)
+                .normalize();
+            const updated = Quat.multiply(delta, t.localRotation, tmpQuat2);
+            t.localRotation.set(updated.x, updated.y, updated.z, updated.w);
         }
+
         if (planeY != null) {
             const col = getComponent(rb.owner, Collider);
             let radius = 0;
@@ -130,11 +127,9 @@ export function integrateTransforms(
             if (bottom < planeY) {
                 const pen = planeY - bottom;
                 t.localPosition.y += pen;
-                if (rb.type === 'dynamic') {
-                    const e = Math.max(rb.restitution, col?.restitution ?? 0);
-                    if (rb.linearVelocity.y < 0)
-                        rb.linearVelocity.y = -rb.linearVelocity.y * e;
-                }
+                const e = Math.max(rb.restitution, col?.restitution ?? 0);
+                if (rb.linearVelocity.y < 0)
+                    rb.linearVelocity.y = -rb.linearVelocity.y * e;
             }
         }
     }
