@@ -3,9 +3,11 @@ import {
     useComponent,
     useNode,
     useFrameUpdate,
+    getComponent,
     Transform,
 } from '@pulse-ts/core';
 import { useRigidBody, useSphereCollider, useOnCollisionStart } from '@pulse-ts/physics';
+import { PlayerTag } from '../components/PlayerTag';
 import { useThreeRoot, useObject3D } from '@pulse-ts/three';
 
 const COLLECTIBLE_RADIUS = 0.25;
@@ -13,8 +15,14 @@ const SPIN_SPEED = 2;
 const BOB_SPEED = 2;
 const BOB_AMPLITUDE = 0.2;
 
+/** Shared mutable counter incremented each time a collectible is picked up. */
+export interface CollectibleState {
+    collected: number;
+}
+
 export interface CollectibleNodeProps {
     position: [number, number, number];
+    collectibleState: CollectibleState;
 }
 
 export function CollectibleNode(props: Readonly<CollectibleNodeProps>) {
@@ -54,8 +62,10 @@ export function CollectibleNode(props: Readonly<CollectibleNodeProps>) {
         );
     });
 
-    // Destroy on contact with any other node (player)
-    useOnCollisionStart(() => {
+    // Increment counter and destroy on player contact only
+    useOnCollisionStart(({ other }) => {
+        if (!getComponent(other, PlayerTag)) return;
+        props.collectibleState.collected++;
         node.destroy();
     });
 }

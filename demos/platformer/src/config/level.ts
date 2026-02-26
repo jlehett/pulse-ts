@@ -104,7 +104,6 @@ export const level: LevelDef = {
         { position: [13, 3, 1] },
         { position: [18, 4, -1] },
         { position: [23, 5.2, 0] },
-        { position: [34, 6.8, 0] },
     ],
 
     checkpoints: [

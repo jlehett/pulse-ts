@@ -5,7 +5,8 @@ import { PlayerNode, type RespawnState } from './PlayerNode';
 import { PlatformNode } from './PlatformNode';
 import { MovingPlatformNode } from './MovingPlatformNode';
 import { RotatingPlatformNode } from './RotatingPlatformNode';
-import { CollectibleNode } from './CollectibleNode';
+import { CollectibleNode, type CollectibleState } from './CollectibleNode';
+import { CollectibleHudNode } from './CollectibleHudNode';
 import { CheckpointNode } from './CheckpointNode';
 import { HazardNode } from './HazardNode';
 import { GoalNode } from './GoalNode';
@@ -81,12 +82,21 @@ export function LevelNode() {
         });
     }
 
-    // Collectibles
+    // Collectibles — shared mutable counter for HUD
+    const collectibleState: CollectibleState = { collected: 0 };
+
     for (const col of level.collectibles) {
         useChild(CollectibleNode, {
             position: col.position,
+            collectibleState,
         });
     }
+
+    // Collectible HUD
+    useChild(CollectibleHudNode, {
+        total: level.collectibles.length,
+        collectibleState,
+    });
 
     // Checkpoints
     for (const cp of level.checkpoints) {
