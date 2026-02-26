@@ -10,6 +10,8 @@ import {
     Transform,
     Vec3,
     useContext,
+    useTimer,
+    useCooldown,
 } from '@pulse-ts/core';
 import { useAction, useAxis2D } from '@pulse-ts/input';
 import { RespawnCtx, ShakeCtx } from '../contexts';
@@ -151,10 +153,10 @@ export function PlayerNode(props: Readonly<PlayerNodeProps>) {
     // Without this, rapid presses fire a second impulse on the next fixed step
     // before physics has had a chance to move the player upward.
     let jumpLock = false;
-    let coyoteTimer = 0;
-    let jumpHoldTimer = 0;
-    let dashTimer = 0;
-    let dashCooldown = 0;
+    const coyote = useTimer(COYOTE_TIME);
+    const jumpHold = useTimer(JUMP_HOLD_MAX);
+    const dash = useTimer(DASH_DURATION);
+    const dashCD = useCooldown(DASH_COOLDOWN);
     let dashDirX = 0;
     let dashDirZ = 0;
     let prevGrounded = false;
@@ -193,7 +195,7 @@ export function PlayerNode(props: Readonly<PlayerNodeProps>) {
     useFixedUpdate((dt) => {
         const move = getMove();
         const jump = getJump();
-        const dash = getDash();
+        const dashAction = getDash();
 
         // Ground check via downward raycast from player center
         const pos = transform.localPosition;
@@ -216,16 +218,14 @@ export function PlayerNode(props: Readonly<PlayerNodeProps>) {
         // Release the jump lock once the player has actually left the ground.
         if (!grounded) jumpLock = false;
 
-        // Coyote time: while grounded, keep the timer full; while airborne,
-        // count it down so the player has a brief grace window to jump.
+        // Coyote time: while grounded, keep the timer refreshed; while airborne,
+        // let it count down so the player has a brief grace window to jump.
         // Guard with !jumpLock so that after a real jump the timer stays
         // consumed — otherwise the raycast still reads "grounded" for a few
         // steps while the player rises, refilling the timer and enabling a
         // double-jump.
         if (grounded && !jumpLock) {
-            coyoteTimer = COYOTE_TIME;
-        } else if (!grounded) {
-            coyoteTimer = Math.max(0, coyoteTimer - dt);
+            coyote.reset();
         }
 
         // Inherit XZ velocity from kinematic platform (if grounded on one)
@@ -247,7 +247,7 @@ export function PlayerNode(props: Readonly<PlayerNodeProps>) {
         }
 
         // Dash activation — lock direction on press, ignore during cooldown
-        if (dash.pressed && dashCooldown <= 0 && dashTimer <= 0) {
+        if (dashAction.pressed && dashCD.ready && !dash.active) {
             const len = Math.sqrt(move.x * move.x + move.y * move.y);
             if (len > 0) {
                 dashDirX = move.x / len;
@@ -256,8 +256,8 @@ export function PlayerNode(props: Readonly<PlayerNodeProps>) {
                 dashDirX = 0;
                 dashDirZ = -1;
             }
-            dashTimer = DASH_DURATION;
-            dashCooldown = DASH_COOLDOWN;
+            dash.reset();
+            dashCD.trigger();
             playDash();
         }
 
@@ -267,32 +267,28 @@ export function PlayerNode(props: Readonly<PlayerNodeProps>) {
         const vy = body.linearVelocity.y;
 
         // During a dash, override horizontal velocity with the locked dash direction
-        if (dashTimer > 0) {
+        if (dash.active) {
             body.setLinearVelocity(dashDirX * DASH_SPEED, vy, dashDirZ * DASH_SPEED);
-            dashTimer = Math.max(0, dashTimer - dt);
         } else {
             body.setLinearVelocity(vx, vy, vz);
         }
 
-        dashCooldown = Math.max(0, dashCooldown - dt);
-
-        // Jump — use coyoteTimer instead of grounded so the player can jump
+        // Jump — use coyote timer instead of grounded so the player can jump
         // briefly after walking off a ledge. jumpLock still prevents double-jumps.
-        if (jump.pressed && coyoteTimer > 0 && !jumpLock) {
+        if (jump.pressed && coyote.active && !jumpLock) {
             body.applyImpulse(0, JUMP_IMPULSE, 0);
             playJump();
             jumpLock = true;
-            coyoteTimer = 0; // consume the grace window
-            jumpHoldTimer = JUMP_HOLD_MAX; // start the hold window
+            coyote.cancel(); // consume the grace window
+            jumpHold.reset(); // start the hold window
         }
 
         // Variable jump height — apply additional upward force while the jump
         // button is held and the hold window hasn't expired.
-        if (jump.down && jumpHoldTimer > 0) {
+        if (jump.down && jumpHold.active) {
             body.applyForce(0, JUMP_HOLD_FORCE, 0);
-            jumpHoldTimer = Math.max(0, jumpHoldTimer - dt);
         } else {
-            jumpHoldTimer = 0; // button released early — kill the window
+            jumpHold.cancel(); // button released early — kill the window
         }
 
         prevGrounded = grounded;
@@ -303,10 +299,10 @@ export function PlayerNode(props: Readonly<PlayerNodeProps>) {
             transform.localPosition.set(...respawnState.position);
             body.setLinearVelocity(0, 0, 0);
             jumpLock = false;
-            coyoteTimer = 0;
-            jumpHoldTimer = 0;
-            dashTimer = 0;
-            dashCooldown = 0;
+            coyote.cancel();
+            jumpHold.cancel();
+            dash.cancel();
+            dashCD.reset();
             prevGrounded = false;
         }
     });

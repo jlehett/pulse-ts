@@ -1,7 +1,7 @@
 ---
 id: EPIC-003
 title: Core DX Pass
-status: todo
+status: done
 created: 2026-02-26
 updated: 2026-02-26
 ---
@@ -17,3 +17,4 @@ Eliminate prop drilling for shared state via `useContext()` / `useProvideContext
 ## Notes
 
 - **2026-02-26**: Epic created. Identified from platformer demo analysis — shared mutable state objects (RespawnState, ShakeState, CollectibleState) are threaded through props manually, and 5+ timers are managed with raw `Math.max(0, timer - dt)` patterns.
+- **2026-02-26**: Epic complete. Both tickets (TICKET-026 useContext, TICKET-027 useTimer/useCooldown) merged.

@@ -24,3 +24,5 @@ export {
     useOptionalContext,
 } from '../domain/fc/context';
 export type { Context } from '../domain/fc/context';
+export { useTimer, useCooldown } from '../domain/fc/timers';
+export type { TimerHandle, CooldownHandle } from '../domain/fc/timers';
