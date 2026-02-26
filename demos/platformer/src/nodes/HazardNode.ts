@@ -7,8 +7,8 @@ import {
 } from '@pulse-ts/core';
 import { useRigidBody, useBoxCollider, useOnCollisionStart, RigidBody } from '@pulse-ts/physics';
 import { useMesh } from '@pulse-ts/three';
+import { useSound } from '@pulse-ts/audio';
 import { PlayerTag } from '../components/PlayerTag';
-import { playDeath } from '../utils/audio';
 import { RespawnCtx, PlayerNodeCtx } from '../contexts';
 
 const DEFAULT_COLOR = 0xcc3300;
@@ -68,6 +68,13 @@ export function HazardNode(props: Readonly<HazardNodeProps>) {
 
     root.position.set(...props.position);
 
+    const deathSfx = useSound('tone', {
+        wave: 'sawtooth',
+        frequency: [600, 150],
+        duration: 0.2,
+        gain: 0.12,
+    });
+
     // Subtle pulsing emissive
     let elapsed = 0;
     useFrameUpdate((dt) => {
@@ -79,7 +86,7 @@ export function HazardNode(props: Readonly<HazardNodeProps>) {
     // Respawn player on contact
     useOnCollisionStart(({ other }) => {
         if (!getComponent(other, PlayerTag)) return;
-        playDeath();
+        deathSfx.play();
 
         const playerTransform = getComponent(playerNode, Transform);
         const playerBody = getComponent(playerNode, RigidBody);

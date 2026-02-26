@@ -2,7 +2,7 @@
 id: TICKET-032
 epic: EPIC-005
 title: useSound declarative procedural sound hook
-status: todo
+status: done
 priority: high
 created: 2026-02-26
 updated: 2026-02-26
@@ -43,15 +43,17 @@ Sound types: `'tone'` (oscillator with optional frequency ramp), `'noise'` (whit
 
 ## Acceptance Criteria
 
-- [ ] `useSound('tone', options)` creates oscillator-based sounds with frequency ramp
-- [ ] `useSound('noise', options)` creates filtered white noise
-- [ ] `useSound('arpeggio', options)` creates multi-note sequences
-- [ ] `.play()` is fire-and-forget (no manual cleanup needed)
-- [ ] Supports `wave`, `frequency`, `duration`, `gain`, `envelope` options
-- [ ] Full JSDoc with `@param`, `@returns`, `@example`
-- [ ] Colocated tests
-- [ ] Update platformer demo to use `useSound` instead of raw audio.ts
+- [x] `useSound('tone', options)` creates oscillator-based sounds with frequency ramp
+- [x] `useSound('noise', options)` creates filtered white noise
+- [x] `useSound('arpeggio', options)` creates multi-note sequences
+- [x] `.play()` is fire-and-forget (no manual cleanup needed)
+- [x] Supports `wave`, `frequency`, `duration`, `gain`, `envelope` options
+- [x] Full JSDoc with `@param`, `@returns`, `@example`
+- [x] Colocated tests
+- [x] Update platformer demo to use `useSound` instead of raw audio.ts
 
 ## Notes
 
 - **2026-02-26**: Ticket created. Replaces the demo's manual Web Audio graph construction with declarative config.
+- **2026-02-26**: Status changed to in-progress
+- **2026-02-26**: Status changed to done
