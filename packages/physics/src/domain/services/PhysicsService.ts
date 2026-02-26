@@ -72,7 +72,12 @@ export class PhysicsService extends Service {
 
     //#endregion
 
-    private lastPairs = new Map<string, CollisionPair>();
+    // Persistent collision-pair Maps — reused every step via .clear() + pointer
+    // swap to avoid the two `new Map()` allocations that would otherwise occur
+    // at 60 Hz. _currentPairs is populated this step; _lastPairs holds the
+    // previous step's result for start/end event diffing.
+    private _lastPairs = new Map<number, CollisionPair>();
+    private _currentPairs = new Map<number, CollisionPair>();
     private engine: PhysicsEngine = DefaultEngine;
 
     /**
@@ -174,8 +179,7 @@ export class PhysicsService extends Service {
      * physics.step(1 / 60);
      */
     step(dt: number): void {
-        const startPairs = new Map<string, CollisionPair>();
-        const currentPairs = new Map<string, CollisionPair>();
+        this._currentPairs.clear();
 
         // 1) Integrate linear/angular impulses and forces
         this.engine.integrator.updateVelocities(
@@ -212,8 +216,7 @@ export class PhysicsService extends Service {
                 normal: new Vec3(nx, ny, nz),
                 depth,
             };
-            currentPairs.set(key, pair);
-            if (!this.lastPairs.has(key)) startPairs.set(key, pair);
+            this._currentPairs.set(key, pair);
 
             const rbA = getComponent(a.owner, RigidBody);
             const rbB = getComponent(b.owner, RigidBody);
@@ -244,17 +247,25 @@ export class PhysicsService extends Service {
         solveContactsIterative(constraints, iters, dt, slop, beta);
 
         // 5) Start/End events
-        for (const [k, p] of currentPairs)
-            if (!this.lastPairs.has(k)) this.collisionStart.emit(p);
-        for (const [k, p] of this.lastPairs)
-            if (!currentPairs.has(k)) this.collisionEnd.emit(p);
-        this.lastPairs = currentPairs;
+        for (const [k, p] of this._currentPairs)
+            if (!this._lastPairs.has(k)) this.collisionStart.emit(p);
+        for (const [k, p] of this._lastPairs)
+            if (!this._currentPairs.has(k)) this.collisionEnd.emit(p);
+        // Swap maps: _currentPairs becomes _lastPairs for the next step;
+        // _lastPairs is cleared at the top of the next step.
+        const _tmp = this._lastPairs;
+        this._lastPairs = this._currentPairs;
+        this._currentPairs = _tmp;
     }
 
-    private pairKey(a: Node, b: Node): string {
-        const ai = a.id;
-        const bi = b.id;
-        return ai < bi ? `${ai}|${bi}` : `${bi}|${ai}`;
+    private pairKey(a: Node, b: Node): number {
+        // Pack two IDs into a single number — order-independent so (a,b) === (b,a).
+        // Uses triangular encoding: lo + hi*(hi+1)/2, which is unique for any
+        // non-negative integer pair and stays within JS safe-integer range for
+        // the node counts typical in a game scene.
+        const lo = a.id < b.id ? a.id : b.id;
+        const hi = a.id < b.id ? b.id : a.id;
+        return lo + (hi * (hi + 1)) / 2;
     }
 
     //#region Raycast
