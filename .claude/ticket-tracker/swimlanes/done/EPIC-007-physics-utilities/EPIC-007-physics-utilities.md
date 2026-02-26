@@ -1,7 +1,7 @@
 ---
 id: EPIC-007
 title: Physics Utilities
-status: in-progress
+status: done
 created: 2026-02-26
 updated: 2026-02-26
 ---

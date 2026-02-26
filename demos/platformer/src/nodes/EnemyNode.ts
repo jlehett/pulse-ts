@@ -1,6 +1,5 @@
 import {
     useComponent,
-    useFixedUpdate,
     useFrameUpdate,
     useNode,
     useWorld,
@@ -8,7 +7,7 @@ import {
     Transform,
     useContext,
 } from '@pulse-ts/core';
-import { useRigidBody, useBoxCollider, useOnCollisionStart, RigidBody } from '@pulse-ts/physics';
+import { useRigidBody, useBoxCollider, useOnCollisionStart, useWaypointPatrol, RigidBody } from '@pulse-ts/physics';
 import { useMesh } from '@pulse-ts/three';
 import { useSound } from '@pulse-ts/audio';
 import { PlayerTag } from '../components/PlayerTag';
@@ -79,34 +78,9 @@ export function EnemyNode(props: Readonly<EnemyNodeProps>) {
     const body = useRigidBody({ type: 'kinematic' });
     useBoxCollider(sx / 2, sy / 2, sz / 2, { isTrigger: true });
 
-    const [ax, ay, az] = props.position;
-    const [bx, by, bz] = props.target;
-
-    // Direction: true = travelling toward target, false = returning to origin.
-    let towardTarget = true;
-
-    // Patrol logic — same pattern as MovingPlatformNode
-    useFixedUpdate((dt) => {
-        const pos = transform.localPosition;
-        const tx = towardTarget ? bx : ax;
-        const ty = towardTarget ? by : ay;
-        const tz = towardTarget ? bz : az;
-        const dx = tx - pos.x, dy = ty - pos.y, dz = tz - pos.z;
-        const dist = Math.sqrt(dx * dx + dy * dy + dz * dz);
-
-        // Reverse when close enough to the waypoint.
-        if (dist <= speed * dt) towardTarget = !towardTarget;
-
-        // Set velocity toward the current waypoint (recomputed after any flip).
-        const wx = towardTarget ? bx : ax;
-        const wy = towardTarget ? by : ay;
-        const wz = towardTarget ? bz : az;
-        const wdx = wx - pos.x, wdy = wy - pos.y, wdz = wz - pos.z;
-        const wdist = Math.sqrt(wdx * wdx + wdy * wdy + wdz * wdz);
-        if (wdist > 1e-6) {
-            const inv = 1 / wdist;
-            body.setLinearVelocity(wdx * inv * speed, wdy * inv * speed, wdz * inv * speed);
-        }
+    useWaypointPatrol(body, {
+        waypoints: [props.position, props.target],
+        speed,
     });
 
     // Visual — dark red box with pulsing emissive

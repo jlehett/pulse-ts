@@ -67,6 +67,17 @@ export {
     usePhysicsRaycast,
 } from './public/hooks';
 
+// Waypoint patrol
+export { useWaypointPatrol } from './public/useWaypointPatrol';
+export type {
+    Point3,
+    EasingPreset,
+    EasingOption,
+    InterpolateFn,
+    WaypointPatrolOptions,
+    PatrolHandle,
+} from './public/useWaypointPatrol';
+
 // Types
 export type { PhysicsOptions, RigidBodyType, RaycastHit } from './domain/types';
 
