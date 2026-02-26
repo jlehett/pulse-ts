@@ -2,7 +2,7 @@
 id: TICKET-026
 epic: EPIC-003
 title: useContext / useProvideContext for shared state
-status: todo
+status: in-progress
 priority: high
 branch: ticket-026-use-context-shared-state
 created: 2026-02-26
@@ -33,3 +33,4 @@ This eliminates the pattern of threading shared mutable objects (RespawnState, S
 ## Notes
 
 - **2026-02-26**: Ticket created. This is the highest-impact DX improvement — affects every node that currently receives shared state via props.
+- **2026-02-26**: Starting implementation. Also adding `useOptionalContext()` variant that returns `undefined` instead of throwing.
