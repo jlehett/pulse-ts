@@ -1,0 +1,52 @@
+{
+    "name": "@pulse-ts/audio",
+    "version": "0.0.1",
+    "type": "module",
+    "publishConfig": {
+        "access": "public"
+    },
+    "main": "dist/index.cjs",
+    "module": "dist/index.js",
+    "types": "dist/index.d.ts",
+    "files": [
+        "dist"
+    ],
+    "exports": {
+        ".": {
+            "types": "./dist/index.d.ts",
+            "import": "./dist/index.js",
+            "require": "./dist/index.cjs"
+        }
+    },
+    "scripts": {
+        "build": "tsup src/index.ts --dts --format esm,cjs --out-dir dist --clean",
+        "test": "jest",
+        "lint": "eslint .",
+        "lint:fix": "eslint . --fix",
+        "format": "prettier --write \"**/*.{js,jsx,ts,tsx,json,md}\"",
+        "release": "npm run build && npm publish"
+    },
+    "babel": {
+        "presets": [
+            [
+                "@babel/preset-env",
+                {
+                    "targets": {
+                        "node": "current"
+                    },
+                    "modules": "auto"
+                }
+            ],
+            "@babel/preset-typescript"
+        ]
+    },
+    "devDependencies": {
+        "@pulse-ts/core": "file:../core"
+    },
+    "peerDependencies": {
+        "@pulse-ts/core": "^0.0.4"
+    },
+    "peerDependenciesMeta": {
+        "@pulse-ts/core": { "optional": false }
+    }
+}
