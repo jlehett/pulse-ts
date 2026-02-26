@@ -5,6 +5,20 @@ export type {
     BlendingMode,
 } from './useParticles';
 
+// Animated values
+export { useAnimate } from './useAnimate';
+export type {
+    WaveType,
+    EasingPreset,
+    EasingOption,
+    OscillateAmplitudeOptions,
+    OscillateRangeOptions,
+    RateOptions,
+    TweenOptions,
+    AnimateOptions,
+    AnimatedValue,
+} from './useAnimate';
+
 // Re-export domain types consumers need for init/update callbacks
 export type {
     Particle,

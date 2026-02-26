@@ -1,7 +1,7 @@
 ---
 id: EPIC-006
 title: Effects Package
-status: in-progress
+status: done
 created: 2026-02-26
 updated: 2026-02-26
 ---
@@ -18,3 +18,4 @@ Provide `useParticles()` with callback-driven per-particle init/update for maxim
 
 - **2026-02-26**: Epic created. Particle system uses Option A (callback-driven) for maximum extensibility. Animation system returns values rather than setting properties directly, keeping it renderer-agnostic.
 - **2026-02-26**: Status changed to in-progress
+- **2026-02-26**: Epic closed

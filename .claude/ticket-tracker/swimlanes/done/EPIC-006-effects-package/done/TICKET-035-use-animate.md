@@ -2,7 +2,7 @@
 id: TICKET-035
 epic: EPIC-006
 title: useAnimate general-purpose animated values
-status: todo
+status: done
 priority: medium
 created: 2026-02-26
 updated: 2026-02-26
@@ -36,16 +36,18 @@ fadeIn.reset();
 
 ## Acceptance Criteria
 
-- [ ] Oscillation mode: `wave` (sine, triangle, square, sawtooth) + `amplitude`/`frequency` or `min`/`max`/`frequency`
-- [ ] Rate mode: `rate` for linearly increasing values
-- [ ] Tween mode: `from`/`to`/`duration`/`easing` with `play()`, `reset()`, `finished`
-- [ ] Built-in easing presets: linear, ease-in, ease-out, ease-in-out
-- [ ] Custom easing function support: `easing: (t) => t * t`
-- [ ] `.value` auto-updates each frame
-- [ ] Full JSDoc with `@param`, `@returns`, `@example`
-- [ ] Colocated tests
-- [ ] Update platformer demo spin/bob/pulse animations to use `useAnimate`
+- [x] Oscillation mode: `wave` (sine, triangle, square, sawtooth) + `amplitude`/`frequency` or `min`/`max`/`frequency`
+- [x] Rate mode: `rate` for linearly increasing values
+- [x] Tween mode: `from`/`to`/`duration`/`easing` with `play()`, `reset()`, `finished`
+- [x] Built-in easing presets: linear, ease-in, ease-out, ease-in-out
+- [x] Custom easing function support: `easing: (t) => t * t`
+- [x] `.value` auto-updates each frame
+- [x] Full JSDoc with `@param`, `@returns`, `@example`
+- [x] Colocated tests
+- [x] Update platformer demo spin/bob/pulse animations to use `useAnimate`
 
 ## Notes
 
 - **2026-02-26**: Ticket created. Eliminates manual `elapsed` counters and sine-wave boilerplate across CollectibleNode, GoalNode, HazardNode, and EnemyNode.
+- **2026-02-26**: Status changed to in-progress
+- **2026-02-26**: Status changed to done
