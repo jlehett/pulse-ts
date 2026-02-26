@@ -7,14 +7,22 @@ import {
     type Node,
 } from '@pulse-ts/core';
 import { useThreeContext } from '@pulse-ts/three';
+import type { ShakeState } from './PlayerNode';
 
 const CAMERA_OFFSET_X = 0;
 const CAMERA_OFFSET_Y = 5;
 const CAMERA_OFFSET_Z = 12;
 const LERP_SPEED = 4;
 
+/** Exponential decay rate for shake intensity (per second). */
+export const SHAKE_DECAY = 12;
+
+/** Maximum camera offset (world units) from shake, preventing extreme jolts. */
+export const SHAKE_MAX = 0.8;
+
 export interface CameraRigNodeProps {
     target: Node;
+    shakeState: ShakeState;
 }
 
 export function CameraRigNode(props: Readonly<CameraRigNodeProps>) {
@@ -66,6 +74,19 @@ export function CameraRigNode(props: Readonly<CameraRigNodeProps>) {
         camera.position.x += (desiredX - camera.position.x) * t;
         camera.position.y += (desiredY - camera.position.y) * t;
         camera.position.z += (desiredZ - camera.position.z) * t;
+
+        // Camera shake — apply decaying random offsets on X/Y (not Z to avoid
+        // depth jumps). Intensity is written by PlayerNode on hard landings and
+        // decayed here each frame via exponential falloff.
+        const shake = props.shakeState;
+        if (shake.intensity > 0.001) {
+            const offset = Math.min(shake.intensity, SHAKE_MAX);
+            camera.position.x += (Math.random() - 0.5) * 2 * offset;
+            camera.position.y += (Math.random() - 0.5) * 2 * offset;
+            shake.intensity *= Math.exp(-SHAKE_DECAY * dt);
+        } else {
+            shake.intensity = 0;
+        }
 
         // Look at interpolated player position
         camera.lookAt(tx, ty + 1, tz);

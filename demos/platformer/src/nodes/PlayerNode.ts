@@ -93,10 +93,28 @@ export interface RespawnState {
     position: [number, number, number];
 }
 
+/**
+ * Shared mutable object for camera shake. PlayerNode writes `intensity` on
+ * hard landings; CameraRigNode reads and decays it each frame.
+ */
+export interface ShakeState {
+    intensity: number;
+}
+
+/** Minimum absolute vertical velocity (m/s) to trigger a camera shake on landing. */
+export const LANDING_VEL_THRESHOLD = 6;
+
+/**
+ * Multiplier that converts excess landing velocity (above threshold) into
+ * shake intensity. Higher values produce stronger shakes.
+ */
+export const SHAKE_INTENSITY_SCALE = 0.15;
+
 export interface PlayerNodeProps {
     spawn: [number, number, number];
     deathPlaneY: number;
     respawnState: RespawnState;
+    shakeState: ShakeState;
 }
 
 export function PlayerNode(props: Readonly<PlayerNodeProps>) {
@@ -136,6 +154,7 @@ export function PlayerNode(props: Readonly<PlayerNodeProps>) {
     let dashCooldown = 0;
     let dashDirX = 0;
     let dashDirZ = 0;
+    let prevGrounded = false;
 
     // Previous physics position — captured in fixed.early (before PhysicsSystem
     // integrates transforms in fixed.update) so that during frame rendering we
@@ -178,6 +197,17 @@ export function PlayerNode(props: Readonly<PlayerNodeProps>) {
         rayOrigin.set(pos.x, pos.y, pos.z);
         const hit = raycast(rayOrigin, rayDir, GROUND_RAY_DIST, (c) => c.owner !== node);
         const grounded = hit !== null;
+
+        // Detect landing: transition from airborne to grounded. Capture the
+        // vertical speed before it is zeroed by the ground contact so we can
+        // scale shake intensity by impact velocity.
+        if (!prevGrounded && grounded) {
+            const absVy = Math.abs(body.linearVelocity.y);
+            if (absVy > LANDING_VEL_THRESHOLD) {
+                props.shakeState.intensity =
+                    (absVy - LANDING_VEL_THRESHOLD) * SHAKE_INTENSITY_SCALE;
+            }
+        }
 
         // Release the jump lock once the player has actually left the ground.
         if (!grounded) jumpLock = false;
@@ -259,6 +289,8 @@ export function PlayerNode(props: Readonly<PlayerNodeProps>) {
             jumpHoldTimer = 0; // button released early — kill the window
         }
 
+        prevGrounded = grounded;
+
         // Death plane respawn
         if (pos.y < props.deathPlaneY) {
             transform.localPosition.set(...props.respawnState.position);
@@ -268,6 +300,7 @@ export function PlayerNode(props: Readonly<PlayerNodeProps>) {
             jumpHoldTimer = 0;
             dashTimer = 0;
             dashCooldown = 0;
+            prevGrounded = false;
         }
     });
 

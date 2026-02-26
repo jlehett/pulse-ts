@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { useChild } from '@pulse-ts/core';
 import { useThreeContext, useObject3D } from '@pulse-ts/three';
-import { PlayerNode, type RespawnState } from './PlayerNode';
+import { PlayerNode, type RespawnState, type ShakeState } from './PlayerNode';
 import { PlatformNode } from './PlatformNode';
 import { MovingPlatformNode } from './MovingPlatformNode';
 import { RotatingPlatformNode } from './RotatingPlatformNode';
@@ -43,11 +43,15 @@ export function LevelNode() {
         position: [...level.playerSpawn],
     };
 
+    // Shared shake state — PlayerNode writes on hard landing, CameraRigNode reads/decays
+    const shakeState: ShakeState = { intensity: 0 };
+
     // Player
     const playerNode = useChild(PlayerNode, {
         spawn: level.playerSpawn,
         deathPlaneY: level.deathPlaneY,
         respawnState,
+        shakeState,
     });
 
     // Platforms
@@ -132,5 +136,5 @@ export function LevelNode() {
     useChild(GoalNode, { position: level.goalPosition });
 
     // Camera rig
-    useChild(CameraRigNode, { target: playerNode });
+    useChild(CameraRigNode, { target: playerNode, shakeState });
 }
