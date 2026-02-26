@@ -28,6 +28,9 @@ const GROUND_RAY_DIST = 1.15;
 const PLAYER_RADIUS = 0.3;
 const PLAYER_HALF_HEIGHT = 0.4;
 const COYOTE_TIME = 0.12; // 120ms grace window after leaving ground
+const DASH_SPEED = 25; // velocity during dash
+const DASH_DURATION = 0.15; // seconds the dash lasts
+const DASH_COOLDOWN = 1.0; // seconds before next dash
 
 /**
  * Computes the XZ velocity needed for a point on a kinematic platform to follow
@@ -119,6 +122,7 @@ export function PlayerNode(props: Readonly<PlayerNodeProps>) {
     const world = useWorld();
     const getMove = useAxis2D('move');
     const getJump = useAction('jump');
+    const getDash = useAction('dash');
     const raycast = usePhysicsRaycast();
 
     // Prevents double-jumping: set true when a jump impulse is applied, cleared
@@ -128,6 +132,10 @@ export function PlayerNode(props: Readonly<PlayerNodeProps>) {
     let jumpLock = false;
     let coyoteTimer = 0;
     let jumpHoldTimer = 0;
+    let dashTimer = 0;
+    let dashCooldown = 0;
+    let dashDirX = 0;
+    let dashDirZ = 0;
 
     // Previous physics position — captured in fixed.early (before PhysicsSystem
     // integrates transforms in fixed.update) so that during frame rendering we
@@ -163,6 +171,7 @@ export function PlayerNode(props: Readonly<PlayerNodeProps>) {
     useFixedUpdate((dt) => {
         const move = getMove();
         const jump = getJump();
+        const dash = getDash();
 
         // Ground check via downward raycast from player center
         const pos = transform.localPosition;
@@ -203,11 +212,34 @@ export function PlayerNode(props: Readonly<PlayerNodeProps>) {
             }
         }
 
+        // Dash activation — lock direction on press, ignore during cooldown
+        if (dash.pressed && dashCooldown <= 0 && dashTimer <= 0) {
+            const len = Math.sqrt(move.x * move.x + move.y * move.y);
+            if (len > 0) {
+                dashDirX = move.x / len;
+                dashDirZ = -move.y / len; // W = forward = -Z
+            } else {
+                dashDirX = 0;
+                dashDirZ = -1;
+            }
+            dashTimer = DASH_DURATION;
+            dashCooldown = DASH_COOLDOWN;
+        }
+
         // Horizontal movement — set velocity directly for tight control
         const vx = move.x * MOVE_SPEED + platformVx;
         const vz = -move.y * MOVE_SPEED + platformVz; // W = forward = -Z
         const vy = body.linearVelocity.y;
-        body.setLinearVelocity(vx, vy, vz);
+
+        // During a dash, override horizontal velocity with the locked dash direction
+        if (dashTimer > 0) {
+            body.setLinearVelocity(dashDirX * DASH_SPEED, vy, dashDirZ * DASH_SPEED);
+            dashTimer = Math.max(0, dashTimer - dt);
+        } else {
+            body.setLinearVelocity(vx, vy, vz);
+        }
+
+        dashCooldown = Math.max(0, dashCooldown - dt);
 
         // Jump — use coyoteTimer instead of grounded so the player can jump
         // briefly after walking off a ledge. jumpLock still prevents double-jumps.
@@ -234,6 +266,8 @@ export function PlayerNode(props: Readonly<PlayerNodeProps>) {
             jumpLock = false;
             coyoteTimer = 0;
             jumpHoldTimer = 0;
+            dashTimer = 0;
+            dashCooldown = 0;
         }
     });
 

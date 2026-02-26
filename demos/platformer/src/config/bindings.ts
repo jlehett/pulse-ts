@@ -6,4 +6,5 @@ export const bindings = {
         y: Axis1D({ pos: Key('KeyW'), neg: Key('KeyS') }),
     }),
     jump: Key('Space'),
+    dash: Key('ShiftLeft'),
 };
