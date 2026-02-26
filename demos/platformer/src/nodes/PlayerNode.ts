@@ -119,6 +119,7 @@ export function PlayerNode(props: Readonly<PlayerNodeProps>) {
         if (pos.y < props.deathPlaneY) {
             transform.localPosition.set(...props.spawn);
             body.setLinearVelocity(0, 0, 0);
+            jumpLock = false;
         }
     });
 
