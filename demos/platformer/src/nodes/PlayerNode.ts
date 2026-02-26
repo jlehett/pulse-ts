@@ -172,9 +172,13 @@ export function PlayerNode(props: Readonly<PlayerNodeProps>) {
 
         // Coyote time: while grounded, keep the timer full; while airborne,
         // count it down so the player has a brief grace window to jump.
-        if (grounded) {
+        // Guard with !jumpLock so that after a real jump the timer stays
+        // consumed — otherwise the raycast still reads "grounded" for a few
+        // steps while the player rises, refilling the timer and enabling a
+        // double-jump.
+        if (grounded && !jumpLock) {
             coyoteTimer = COYOTE_TIME;
-        } else {
+        } else if (!grounded) {
             coyoteTimer = Math.max(0, coyoteTimer - dt);
         }
 
