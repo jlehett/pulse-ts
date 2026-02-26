@@ -29,11 +29,13 @@ export function RotatingPlatformNode(props: Readonly<RotatingPlatformNodeProps>)
     const transform = useComponent(Transform);
     transform.localPosition.set(...props.position);
 
-    useRigidBody({ type: 'kinematic' });
+    const body = useRigidBody({ type: 'kinematic' });
     useBoxCollider(sx / 2, sy / 2, sz / 2, { friction: 0.6, restitution: 0 });
 
-    // Directly rotate the transform each fixed step. Using direct quaternion writes
-    // rather than angular-velocity-based integration for the same reason as MovingPlatformNode.
+    // Kinematic bodies control their own rotation directly. Expose angularVelocity
+    // so the contact solver can compute correct rotational collision response.
+    body.setAngularVelocity(0, angularSpeed, 0);
+
     const tmpQuat = new Quat();
     const tmpQuat2 = new Quat();
     useFixedUpdate((dt) => {

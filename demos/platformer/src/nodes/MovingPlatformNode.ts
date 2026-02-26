@@ -30,7 +30,7 @@ export function MovingPlatformNode(props: Readonly<MovingPlatformNodeProps>) {
     const transform = useComponent(Transform);
     transform.localPosition.set(...props.position);
 
-    useRigidBody({ type: 'kinematic' });
+    const body = useRigidBody({ type: 'kinematic' });
     useBoxCollider(sx / 2, sy / 2, sz / 2, { friction: 0.6, restitution: 0 });
 
     const [ax, ay, az] = props.position;
@@ -39,11 +39,13 @@ export function MovingPlatformNode(props: Readonly<MovingPlatformNodeProps>) {
     // Direction: true = travelling toward target, false = returning to origin.
     let towardTarget = true;
 
-    // Directly update position each fixed step. Using direct position writes rather than
-    // velocity-based integration so the platform's movement is not dependent on
-    // PhysicsSystem's integrateTransforms step ordering.
+    // Kinematic bodies control their own position directly. After updating localPosition,
+    // we expose the displacement as linearVelocity so the contact solver can compute
+    // correct collision impulses (e.g. carrying the player along with the platform).
     useFixedUpdate((dt) => {
         const pos = transform.localPosition;
+        const prevX = pos.x, prevY = pos.y, prevZ = pos.z;
+
         const tx = towardTarget ? bx : ax;
         const ty = towardTarget ? by : ay;
         const tz = towardTarget ? bz : az;
@@ -66,6 +68,14 @@ export function MovingPlatformNode(props: Readonly<MovingPlatformNodeProps>) {
                 pos.z + dz * inv * step,
             );
         }
+
+        // Expose velocity for the contact solver (displacement / dt).
+        const invDt = 1 / dt;
+        body.setLinearVelocity(
+            (transform.localPosition.x - prevX) * invDt,
+            (transform.localPosition.y - prevY) * invDt,
+            (transform.localPosition.z - prevZ) * invDt,
+        );
     });
 
     // Three.js visual — position is synced automatically by ThreeTRSSyncSystem

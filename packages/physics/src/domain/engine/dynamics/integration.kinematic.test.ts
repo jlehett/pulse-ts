@@ -22,22 +22,26 @@ const gravity = new Vec3(0, -10, 0);
 const dt = 1 / 60;
 
 describe('kinematic body — integrateTransforms', () => {
-    it('moves by linearVelocity each step', () => {
+    // Kinematic bodies manage their own Transform externally (direct writes in
+    // useFixedUpdate). integrateTransforms skips them entirely so it never
+    // overrides externally-set positions or rotations.
+
+    it('does NOT move by linearVelocity (kinematic bodies are skipped)', () => {
         const { t, rb } = makeBody('kinematic');
         rb.linearVelocity.set(2, 0, 0);
         integrateTransforms([rb], dt);
-        expect(t.localPosition.x).toBeCloseTo(2 * dt, 6);
+        expect(t.localPosition.x).toBeCloseTo(0, 6);
         expect(t.localPosition.y).toBeCloseTo(0, 6);
     });
 
-    it('rotates by angularVelocity each step', () => {
+    it('does NOT rotate by angularVelocity (kinematic bodies are skipped)', () => {
         const { t, rb } = makeBody('kinematic');
         rb.angularVelocity.set(0, Math.PI, 0); // 180 deg/s around Y
         integrateTransforms([rb], dt);
-        // Some rotation must have been applied
+        // Rotation must remain identity — kinematic bodies are not touched
         const rot = t.localRotation;
-        expect(rot.w).toBeLessThan(1);
-        expect(rot.y).not.toBeCloseTo(0, 3);
+        expect(rot.w).toBeCloseTo(1, 6);
+        expect(rot.y).toBeCloseTo(0, 6);
     });
 
     it('does not move when linearVelocity is zero', () => {
