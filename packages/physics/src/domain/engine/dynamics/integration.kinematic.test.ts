@@ -22,26 +22,26 @@ const gravity = new Vec3(0, -10, 0);
 const dt = 1 / 60;
 
 describe('kinematic body — integrateTransforms', () => {
-    // Kinematic bodies manage their own Transform externally (direct writes in
-    // useFixedUpdate). integrateTransforms skips them entirely so it never
-    // overrides externally-set positions or rotations.
+    // Kinematic bodies set their own velocity externally; integrateTransforms
+    // drives position/rotation from that velocity the same as for dynamic bodies.
+    // The contact solver reads the velocity but never modifies it (invMass = 0).
 
-    it('does NOT move by linearVelocity (kinematic bodies are skipped)', () => {
+    it('moves by linearVelocity each step', () => {
         const { t, rb } = makeBody('kinematic');
         rb.linearVelocity.set(2, 0, 0);
         integrateTransforms([rb], dt);
-        expect(t.localPosition.x).toBeCloseTo(0, 6);
+        expect(t.localPosition.x).toBeCloseTo(2 * dt, 6);
         expect(t.localPosition.y).toBeCloseTo(0, 6);
     });
 
-    it('does NOT rotate by angularVelocity (kinematic bodies are skipped)', () => {
+    it('rotates by angularVelocity each step', () => {
         const { t, rb } = makeBody('kinematic');
         rb.angularVelocity.set(0, Math.PI, 0); // 180 deg/s around Y
         integrateTransforms([rb], dt);
-        // Rotation must remain identity — kinematic bodies are not touched
+        // Some rotation must have been applied
         const rot = t.localRotation;
-        expect(rot.w).toBeCloseTo(1, 6);
-        expect(rot.y).toBeCloseTo(0, 6);
+        expect(rot.w).toBeLessThan(1);
+        expect(rot.y).not.toBeCloseTo(0, 3);
     });
 
     it('does not move when linearVelocity is zero', () => {

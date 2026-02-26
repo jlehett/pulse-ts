@@ -98,12 +98,6 @@ export function integrateTransforms(
     const tmpQuat = new Quat();
     const tmpQuat2 = new Quat();
     for (const rb of bodies) {
-        // Kinematic bodies manage their own Transform position/rotation externally
-        // (via direct writes in useFixedUpdate). Their linearVelocity/angularVelocity
-        // fields are still used by the contact solver for collision response, but
-        // integrateTransforms does not modify their position.
-        if (rb.type !== 'dynamic') continue;
-
         const t = getComponent(rb.owner, Transform);
         if (!t) continue;
 

@@ -19,8 +19,8 @@ export interface MovingPlatformNodeProps {
 
 /**
  * A kinematic platform that translates back and forth between two world-space
- * points. The Three.js mesh position is synced by ThreeTRSSyncSystem, which
- * interpolates Transform.previousLocalPosition → localPosition each frame.
+ * points. Linear velocity is set each step toward the current waypoint;
+ * integrateTransforms handles position integration.
  */
 export function MovingPlatformNode(props: Readonly<MovingPlatformNodeProps>) {
     const [sx, sy, sz] = props.size;
@@ -39,47 +39,29 @@ export function MovingPlatformNode(props: Readonly<MovingPlatformNodeProps>) {
     // Direction: true = travelling toward target, false = returning to origin.
     let towardTarget = true;
 
-    // Kinematic bodies control their own position directly. After updating localPosition,
-    // we expose the displacement as linearVelocity so the contact solver can compute
-    // correct collision impulses (e.g. carrying the player along with the platform).
     useFixedUpdate((dt) => {
         const pos = transform.localPosition;
-        const prevX = pos.x, prevY = pos.y, prevZ = pos.z;
-
         const tx = towardTarget ? bx : ax;
         const ty = towardTarget ? by : ay;
         const tz = towardTarget ? bz : az;
-
-        const dx = tx - pos.x;
-        const dy = ty - pos.y;
-        const dz = tz - pos.z;
+        const dx = tx - pos.x, dy = ty - pos.y, dz = tz - pos.z;
         const dist = Math.sqrt(dx * dx + dy * dy + dz * dz);
-        const step = speed * dt;
 
-        if (dist <= step) {
-            // Arrived — snap and reverse
-            transform.localPosition.set(tx, ty, tz);
-            towardTarget = !towardTarget;
-        } else {
-            const inv = 1 / dist;
-            transform.localPosition.set(
-                pos.x + dx * inv * step,
-                pos.y + dy * inv * step,
-                pos.z + dz * inv * step,
-            );
+        // Reverse when close enough to the waypoint.
+        if (dist <= speed * dt) towardTarget = !towardTarget;
+
+        // Set velocity toward the current waypoint (recomputed after any flip).
+        const wx = towardTarget ? bx : ax;
+        const wy = towardTarget ? by : ay;
+        const wz = towardTarget ? bz : az;
+        const wdx = wx - pos.x, wdy = wy - pos.y, wdz = wz - pos.z;
+        const wdist = Math.sqrt(wdx * wdx + wdy * wdy + wdz * wdz);
+        if (wdist > 1e-6) {
+            const inv = 1 / wdist;
+            body.setLinearVelocity(wdx * inv * speed, wdy * inv * speed, wdz * inv * speed);
         }
-
-        // Expose velocity for the contact solver (displacement / dt).
-        const invDt = 1 / dt;
-        body.setLinearVelocity(
-            (transform.localPosition.x - prevX) * invDt,
-            (transform.localPosition.y - prevY) * invDt,
-            (transform.localPosition.z - prevZ) * invDt,
-        );
     });
 
-    // Three.js visual — position is synced automatically by ThreeTRSSyncSystem
-    // (frame.late) using Transform interpolation, same as PlatformNode.
     const mesh = new THREE.Mesh(
         new THREE.BoxGeometry(sx, sy, sz),
         new THREE.MeshStandardMaterial({ color, roughness: 0.7, metalness: 0.2 }),
