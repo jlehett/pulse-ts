@@ -1,0 +1,57 @@
+{
+    "name": "@pulse-ts/effects",
+    "version": "0.0.1",
+    "type": "module",
+    "publishConfig": {
+        "access": "public"
+    },
+    "main": "dist/index.cjs",
+    "module": "dist/index.js",
+    "types": "dist/index.d.ts",
+    "files": [
+        "dist"
+    ],
+    "exports": {
+        ".": {
+            "types": "./dist/index.d.ts",
+            "import": "./dist/index.js",
+            "require": "./dist/index.cjs"
+        }
+    },
+    "scripts": {
+        "build": "tsup src/index.ts --dts --format esm,cjs --out-dir dist --clean",
+        "test": "jest",
+        "lint": "eslint .",
+        "lint:fix": "eslint . --fix",
+        "format": "prettier --write \"**/*.{js,jsx,ts,tsx,json,md}\"",
+        "release": "npm run build && npm publish"
+    },
+    "babel": {
+        "presets": [
+            [
+                "@babel/preset-env",
+                {
+                    "targets": {
+                        "node": "current"
+                    },
+                    "modules": "auto"
+                }
+            ],
+            "@babel/preset-typescript"
+        ]
+    },
+    "devDependencies": {
+        "@pulse-ts/core": "file:../core",
+        "@pulse-ts/three": "file:../three"
+    },
+    "peerDependencies": {
+        "@pulse-ts/core": "^0.0.4",
+        "@pulse-ts/three": "^0.0.1",
+        "three": ">=0.150.0"
+    },
+    "peerDependenciesMeta": {
+        "@pulse-ts/core": { "optional": false },
+        "@pulse-ts/three": { "optional": false },
+        "three": { "optional": false }
+    }
+}

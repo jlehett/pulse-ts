@@ -2,7 +2,6 @@ import {
     useComponent,
     useFrameUpdate,
     useNode,
-    useWorld,
     getComponent,
     Transform,
     useContext,
@@ -11,8 +10,8 @@ import { useRigidBody, useBoxCollider, useOnCollisionStart, useWaypointPatrol, R
 import { useMesh } from '@pulse-ts/three';
 import { useSound } from '@pulse-ts/audio';
 import { PlayerTag } from '../components/PlayerTag';
-import { ParticleBurstNode } from './ParticleBurstNode';
-import { RespawnCtx, PlayerNodeCtx } from '../contexts';
+import { burstInit } from './ParticleEffectsNode';
+import { RespawnCtx, PlayerNodeCtx, ParticleEffectsCtx } from '../contexts';
 
 const DEFAULT_COLOR = 0x8b1a1a;
 const EMISSIVE_COLOR = 0xcc2200;
@@ -68,6 +67,7 @@ export interface EnemyNodeProps {
 export function EnemyNode(props: Readonly<EnemyNodeProps>) {
     const respawnState = useContext(RespawnCtx);
     const playerNode = useContext(PlayerNodeCtx);
+    const fx = useContext(ParticleEffectsCtx);
     const [sx, sy, sz] = props.size;
     const color = props.color ?? DEFAULT_COLOR;
     const speed = props.speed ?? 2;
@@ -104,7 +104,6 @@ export function EnemyNode(props: Readonly<EnemyNodeProps>) {
     });
 
     const node = useNode();
-    const world = useWorld();
 
     const deathSfx = useSound('tone', {
         wave: 'sawtooth',
@@ -131,15 +130,12 @@ export function EnemyNode(props: Readonly<EnemyNodeProps>) {
 
         if (isStomp) {
             deathSfx.play();
-            // Spawn red particle burst at enemy position
-            world.mount(ParticleBurstNode, {
-                position: [
-                    transform.localPosition.x,
-                    transform.localPosition.y,
-                    transform.localPosition.z,
-                ],
-                color: STOMP_PARTICLE_COLOR,
-            });
+            // Red particle burst at enemy position
+            fx.burst(24, [
+                transform.localPosition.x,
+                transform.localPosition.y,
+                transform.localPosition.z,
+            ], burstInit(STOMP_PARTICLE_COLOR));
 
             // Bounce the player upward
             playerBody.setLinearVelocity(
