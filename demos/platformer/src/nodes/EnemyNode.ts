@@ -10,9 +10,9 @@ import {
 } from '@pulse-ts/core';
 import { useRigidBody, useBoxCollider, useOnCollisionStart, RigidBody } from '@pulse-ts/physics';
 import { useMesh } from '@pulse-ts/three';
+import { useSound } from '@pulse-ts/audio';
 import { PlayerTag } from '../components/PlayerTag';
 import { ParticleBurstNode } from './ParticleBurstNode';
-import { playDeath } from '../utils/audio';
 import { RespawnCtx, PlayerNodeCtx } from '../contexts';
 
 const DEFAULT_COLOR = 0x8b1a1a;
@@ -132,6 +132,13 @@ export function EnemyNode(props: Readonly<EnemyNodeProps>) {
     const node = useNode();
     const world = useWorld();
 
+    const deathSfx = useSound('tone', {
+        wave: 'sawtooth',
+        frequency: [600, 150],
+        duration: 0.2,
+        gain: 0.12,
+    });
+
     // Stomp from above kills enemy; side/bottom contact kills player
     useOnCollisionStart(({ other }) => {
         if (!getComponent(other, PlayerTag)) return;
@@ -149,7 +156,7 @@ export function EnemyNode(props: Readonly<EnemyNodeProps>) {
             playerY > enemyY + sy * STOMP_Y_OFFSET;
 
         if (isStomp) {
-            playDeath();
+            deathSfx.play();
             // Spawn red particle burst at enemy position
             world.mount(ParticleBurstNode, {
                 position: [
@@ -170,7 +177,7 @@ export function EnemyNode(props: Readonly<EnemyNodeProps>) {
             node.destroy();
         } else {
             // Side/bottom contact — respawn the player
-            playDeath();
+            deathSfx.play();
             playerTransform.localPosition.set(...respawnState.position);
             playerBody.setLinearVelocity(0, 0, 0);
         }

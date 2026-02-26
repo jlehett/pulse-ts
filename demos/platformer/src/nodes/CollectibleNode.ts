@@ -10,8 +10,8 @@ import {
 import { useRigidBody, useSphereCollider, useOnCollisionStart } from '@pulse-ts/physics';
 import { PlayerTag } from '../components/PlayerTag';
 import { useMesh } from '@pulse-ts/three';
+import { useSound } from '@pulse-ts/audio';
 import { ParticleBurstNode } from './ParticleBurstNode';
-import { playCollect } from '../utils/audio';
 import { CollectibleCtx } from '../contexts';
 
 const COLLECTIBLE_RADIUS = 0.25;
@@ -51,6 +51,14 @@ export function CollectibleNode(props: Readonly<CollectibleNodeProps>) {
         castShadow: true,
     });
 
+    const collectSfx = useSound('arpeggio', {
+        wave: 'sine',
+        notes: [523.25, 659.25, 783.99],
+        interval: 0.06,
+        duration: 0.2,
+        gain: 0.1,
+    });
+
     const baseY = props.position[1];
     let elapsed = 0;
 
@@ -68,7 +76,7 @@ export function CollectibleNode(props: Readonly<CollectibleNodeProps>) {
     // Increment counter and destroy on player contact only
     useOnCollisionStart(({ other }) => {
         if (!getComponent(other, PlayerTag)) return;
-        playCollect();
+        collectSfx.play();
         collectibleState.collected++;
         world.mount(ParticleBurstNode, {
             position: [
