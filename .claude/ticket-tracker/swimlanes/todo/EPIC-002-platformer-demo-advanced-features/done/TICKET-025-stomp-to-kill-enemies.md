@@ -2,7 +2,7 @@
 id: TICKET-025
 epic: EPIC-002
 title: Stomp to kill enemies
-status: in-progress
+status: done
 priority: medium
 branch: ticket-025-stomp-to-kill-enemies
 created: 2026-02-26
@@ -19,14 +19,15 @@ Reuses `ParticleBurstNode` from TICKET-021 for the destruction effect (with enem
 
 ## Acceptance Criteria
 
-- [ ] Player stomping on enemy from above destroys the enemy
-- [ ] Particle burst spawns at the enemy's position on stomp
-- [ ] Player bounces upward after a successful stomp
-- [ ] Side and bottom collisions with enemies still respawn the player
-- [ ] Tests cover stomp detection logic
-- [ ] ParticleBurstNode supports configurable color (for red enemy burst vs gold collectible burst)
+- [x] Player stomping on enemy from above destroys the enemy
+- [x] Particle burst spawns at the enemy's position on stomp
+- [x] Player bounces upward after a successful stomp
+- [x] Side and bottom collisions with enemies still respawn the player
+- [x] Tests cover stomp detection logic
+- [x] ParticleBurstNode supports configurable color (for red enemy burst vs gold collectible burst)
 
 ## Notes
 
 - **2026-02-26**: Ticket created. Requires modifying EnemyNode collision handler and possibly extending ParticleBurstNode props.
 - **2026-02-26**: Starting implementation.
+- **2026-02-26**: Implementation complete. Added stomp detection to EnemyNode, configurable color to ParticleBurstNode, and tests for both.
