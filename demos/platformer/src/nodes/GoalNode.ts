@@ -6,7 +6,8 @@ import {
     getComponent,
     Transform,
 } from '@pulse-ts/core';
-import { useRigidBody, useSphereCollider, useOnCollisionStart, RigidBody } from '@pulse-ts/physics';
+import { useRigidBody, useSphereCollider, useOnCollisionStart } from '@pulse-ts/physics';
+import { PlayerTag } from '../components/PlayerTag';
 import { useThreeRoot, useObject3D, useThreeContext } from '@pulse-ts/three';
 
 const GOAL_RADIUS = 0.6;
@@ -72,11 +73,10 @@ export function GoalNode(props: Readonly<GoalNodeProps>) {
         );
     });
 
-    // Win trigger — only fire for the player (dynamic body), not other statics
+    // Win trigger — only fire for the player, not other statics like collectibles
     const { renderer } = useThreeContext();
     useOnCollisionStart(({ other }) => {
-        const rb = getComponent(other, RigidBody);
-        if (!rb || rb.type !== 'dynamic') return;
+        if (!getComponent(other, PlayerTag)) return;
 
         world.pause();
         const container = renderer.domElement.parentElement ?? document.body;
