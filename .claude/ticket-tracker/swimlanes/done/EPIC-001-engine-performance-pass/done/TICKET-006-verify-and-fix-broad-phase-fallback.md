@@ -2,10 +2,10 @@
 id: TICKET-006
 epic: EPIC-001
 title: Verify and fix broad-phase fallback
-status: todo
+status: done
 priority: medium
 created: 2026-02-24
-updated: 2026-02-24
+updated: 2026-02-25
 ---
 
 ## Description
