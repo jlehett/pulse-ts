@@ -1,32 +1,15 @@
-import { Vec3 } from '@pulse-ts/core';
-import { RigidBody } from '@pulse-ts/physics';
-import {
-    getKinematicSurfaceVelocityXZ,
-    LANDING_VEL_THRESHOLD,
-    SHAKE_INTENSITY_SCALE,
-} from './PlayerNode';
+import { getKinematicSurfaceVelocity } from '@pulse-ts/physics';
+import { LANDING_VEL_THRESHOLD, SHAKE_INTENSITY_SCALE } from './PlayerNode';
 
 /** Default fixed timestep matching the engine default (60 Hz). */
 const DT = 1 / 60;
 
-/**
- * Creates a minimal RigidBody-like object for testing the pure helper.
- * Only the velocity fields read by getKinematicSurfaceVelocityXZ are needed.
- */
-function fakeBody(
-    linear: [number, number, number],
-    angular: [number, number, number] = [0, 0, 0],
-): RigidBody {
-    return {
-        linearVelocity: new Vec3(...linear),
-        angularVelocity: new Vec3(...angular),
-    } as unknown as RigidBody;
-}
+const ZERO = { x: 0, y: 0, z: 0 };
 
 /**
  * Helper: computes the expected rotational velocity contribution for a given
  * offset and angular velocity, matching the negated-angle convention used by
- * the helper (positive ωy rotates +X toward -Z in a Y-up right-hand system).
+ * the old helper (positive ωy rotates +X toward -Z in a Y-up right-hand system).
  */
 function expectedRotationalVelocity(
     wy: number,
@@ -41,26 +24,31 @@ function expectedRotationalVelocity(
     return [(newRx - rx) / DT, (newRz - rz) / DT];
 }
 
-describe('getKinematicSurfaceVelocityXZ', () => {
+describe('getKinematicSurfaceVelocity', () => {
     it('returns linear XZ velocity for a translating platform', () => {
-        const body = fakeBody([3, 0, -2]);
-        const pos = { x: 0, y: 0, z: 0 };
-        const contact = { x: 1, y: 0, z: 1 };
-
-        const [vx, vz] = getKinematicSurfaceVelocityXZ(body, pos, contact, DT);
+        const [vx, , vz] = getKinematicSurfaceVelocity(
+            { x: 3, y: 0, z: -2 },
+            ZERO,
+            ZERO,
+            { x: 1, y: 0, z: 1 },
+            DT,
+        );
 
         expect(vx).toBe(3);
         expect(vz).toBe(-2);
     });
 
     it('positive ωy moves a +X offset point toward -Z (right-hand rule)', () => {
-        // In a Y-up right-hand system, positive ωy rotates +X toward -Z.
-        // Contact at (1, 0, 0) relative to center should gain negative vz.
-        const body = fakeBody([0, 0, 0], [0, 2, 0]);
         const pos = { x: 5, y: 0, z: 5 };
         const contact = { x: 6, y: 0, z: 5 }; // rx=1, rz=0
 
-        const [vx, vz] = getKinematicSurfaceVelocityXZ(body, pos, contact, DT);
+        const [vx, , vz] = getKinematicSurfaceVelocity(
+            ZERO,
+            { x: 0, y: 2, z: 0 },
+            pos,
+            contact,
+            DT,
+        );
 
         const [eVx, eVz] = expectedRotationalVelocity(2, 1, 0);
         expect(vx).toBeCloseTo(eVx, 5);
@@ -70,12 +58,16 @@ describe('getKinematicSurfaceVelocityXZ', () => {
     });
 
     it('returns correct velocity for offset in Z', () => {
-        // Contact 1 unit in +Z from center: rx=0, rz=1
-        const body = fakeBody([0, 0, 0], [0, 2, 0]);
         const pos = { x: 5, y: 0, z: 5 };
         const contact = { x: 5, y: 0, z: 6 };
 
-        const [vx, vz] = getKinematicSurfaceVelocityXZ(body, pos, contact, DT);
+        const [vx, , vz] = getKinematicSurfaceVelocity(
+            ZERO,
+            { x: 0, y: 2, z: 0 },
+            pos,
+            contact,
+            DT,
+        );
 
         const [eVx, eVz] = expectedRotationalVelocity(2, 0, 1);
         expect(vx).toBeCloseTo(eVx, 5);
@@ -83,12 +75,13 @@ describe('getKinematicSurfaceVelocityXZ', () => {
     });
 
     it('sums linear and angular contributions', () => {
-        // linear = (3, 0, -1), ωy = 2, contact offset = (1, 0, 1)
-        const body = fakeBody([3, 0, -1], [0, 2, 0]);
-        const pos = { x: 0, y: 0, z: 0 };
-        const contact = { x: 1, y: 0, z: 1 };
-
-        const [vx, vz] = getKinematicSurfaceVelocityXZ(body, pos, contact, DT);
+        const [vx, , vz] = getKinematicSurfaceVelocity(
+            { x: 3, y: 0, z: -1 },
+            { x: 0, y: 2, z: 0 },
+            ZERO,
+            { x: 1, y: 0, z: 1 },
+            DT,
+        );
 
         const [rVx, rVz] = expectedRotationalVelocity(2, 1, 1);
         expect(vx).toBeCloseTo(3 + rVx, 5);
@@ -96,41 +89,42 @@ describe('getKinematicSurfaceVelocityXZ', () => {
     });
 
     it('skips angular contribution when angular velocity is zero', () => {
-        const body = fakeBody([1, 5, 2], [0, 0, 0]);
-        const pos = { x: 10, y: 0, z: 10 };
-        const contact = { x: 15, y: 0, z: 15 }; // large offset, but ωy=0
-
-        const [vx, vz] = getKinematicSurfaceVelocityXZ(body, pos, contact, DT);
+        const [vx, , vz] = getKinematicSurfaceVelocity(
+            { x: 1, y: 5, z: 2 },
+            ZERO,
+            { x: 10, y: 0, z: 10 },
+            { x: 15, y: 0, z: 15 },
+            DT,
+        );
 
         expect(vx).toBe(1);
         expect(vz).toBe(2);
     });
 
     it('returns zero angular contribution when contact is at platform center', () => {
-        const body = fakeBody([0, 0, 0], [0, 5, 0]);
-        const pos = { x: 3, y: 0, z: 3 };
-        const contact = { x: 3, y: 0, z: 3 }; // exactly at center
-
-        const [vx, vz] = getKinematicSurfaceVelocityXZ(body, pos, contact, DT);
+        const [vx, , vz] = getKinematicSurfaceVelocity(
+            ZERO,
+            { x: 0, y: 5, z: 0 },
+            { x: 3, y: 0, z: 3 },
+            { x: 3, y: 0, z: 3 },
+            DT,
+        );
 
         expect(vx).toBeCloseTo(0, 10);
         expect(vz).toBeCloseTo(0, 10);
     });
 
     it('does not drift outward over many steps on a spinning platform', () => {
-        // Simulate 600 steps (10 seconds at 60 Hz) on a platform spinning at
-        // 1 rad/s. If the velocity correctly includes centripetal correction,
-        // the radius should stay constant.
         const wy = 1;
         let rx = 5;
         let rz = 0;
         const platformPos = { x: 0, y: 0, z: 0 };
 
         for (let i = 0; i < 600; i++) {
-            const body = fakeBody([0, 0, 0], [0, wy, 0]);
             const contact = { x: rx, y: 0, z: rz };
-            const [vx, vz] = getKinematicSurfaceVelocityXZ(
-                body,
+            const [vx, , vz] = getKinematicSurfaceVelocity(
+                ZERO,
+                { x: 0, y: wy, z: 0 },
                 platformPos,
                 contact,
                 DT,
@@ -140,7 +134,7 @@ describe('getKinematicSurfaceVelocityXZ', () => {
         }
 
         const finalRadius = Math.sqrt(rx * rx + rz * rz);
-        expect(finalRadius).toBeCloseTo(5, 3); // should stay at radius 5
+        expect(finalRadius).toBeCloseTo(5, 3);
     });
 });
 

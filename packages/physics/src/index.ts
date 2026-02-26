@@ -83,6 +83,9 @@ export {
     shouldCollide,
 } from './domain/filters/filters';
 
+// Kinematics helpers
+export { getKinematicSurfaceVelocity } from './domain/kinematics/surfaceVelocity';
+
 // Materials helpers
 export {
     DEFAULT_RESTITUTION,
