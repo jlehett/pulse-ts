@@ -33,6 +33,7 @@ export interface LevelDef {
     movingPlatforms: MovingPlatformDef[];
     rotatingPlatforms: RotatingPlatformDef[];
     collectibles: CollectibleDef[];
+    goalPosition: [number, number, number];
 }
 
 export const level: LevelDef = {
@@ -93,4 +94,6 @@ export const level: LevelDef = {
         { position: [23, 5.2, 0] },
         { position: [34, 6.8, 0] },
     ],
+
+    goalPosition: [34, 6.8, 0],
 };

@@ -18,6 +18,7 @@ import {
     RigidBody,
 } from '@pulse-ts/physics';
 import { useThreeRoot, useObject3D } from '@pulse-ts/three';
+import { PlayerTag } from '../components/PlayerTag';
 
 const MOVE_SPEED = 8;
 const JUMP_IMPULSE = 8;
@@ -85,6 +86,7 @@ export interface PlayerNodeProps {
 
 export function PlayerNode(props: Readonly<PlayerNodeProps>) {
     const node = useNode();
+    useComponent(PlayerTag);
     const transform = useComponent(Transform);
     transform.localPosition.set(...props.spawn);
 

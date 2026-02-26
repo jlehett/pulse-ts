@@ -6,6 +6,7 @@ import { PlatformNode } from './PlatformNode';
 import { MovingPlatformNode } from './MovingPlatformNode';
 import { RotatingPlatformNode } from './RotatingPlatformNode';
 import { CollectibleNode } from './CollectibleNode';
+import { GoalNode } from './GoalNode';
 import { CameraRigNode } from './CameraRigNode';
 import { level } from '../config/level';
 
@@ -78,6 +79,9 @@ export function LevelNode() {
             position: col.position,
         });
     }
+
+    // Goal
+    useChild(GoalNode, { position: level.goalPosition });
 
     // Camera rig
     useChild(CameraRigNode, { target: playerNode });
