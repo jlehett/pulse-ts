@@ -19,6 +19,7 @@ import {
 } from '@pulse-ts/physics';
 import { useThreeRoot, useObject3D } from '@pulse-ts/three';
 import { PlayerTag } from '../components/PlayerTag';
+import { playJump, playLand, playDash, playDeath } from '../utils/audio';
 
 const MOVE_SPEED = 8;
 const JUMP_IMPULSE = 5.5;
@@ -202,6 +203,7 @@ export function PlayerNode(props: Readonly<PlayerNodeProps>) {
         // vertical speed before it is zeroed by the ground contact so we can
         // scale shake intensity by impact velocity.
         if (!prevGrounded && grounded) {
+            playLand();
             const absVy = Math.abs(body.linearVelocity.y);
             if (absVy > LANDING_VEL_THRESHOLD) {
                 props.shakeState.intensity =
@@ -254,6 +256,7 @@ export function PlayerNode(props: Readonly<PlayerNodeProps>) {
             }
             dashTimer = DASH_DURATION;
             dashCooldown = DASH_COOLDOWN;
+            playDash();
         }
 
         // Horizontal movement — set velocity directly for tight control
@@ -275,6 +278,7 @@ export function PlayerNode(props: Readonly<PlayerNodeProps>) {
         // briefly after walking off a ledge. jumpLock still prevents double-jumps.
         if (jump.pressed && coyoteTimer > 0 && !jumpLock) {
             body.applyImpulse(0, JUMP_IMPULSE, 0);
+            playJump();
             jumpLock = true;
             coyoteTimer = 0; // consume the grace window
             jumpHoldTimer = JUMP_HOLD_MAX; // start the hold window
@@ -293,6 +297,7 @@ export function PlayerNode(props: Readonly<PlayerNodeProps>) {
 
         // Death plane respawn
         if (pos.y < props.deathPlaneY) {
+            playDeath();
             transform.localPosition.set(...props.respawnState.position);
             body.setLinearVelocity(0, 0, 0);
             jumpLock = false;

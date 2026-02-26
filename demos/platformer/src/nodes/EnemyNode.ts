@@ -14,6 +14,7 @@ import { useThreeRoot, useObject3D } from '@pulse-ts/three';
 import { PlayerTag } from '../components/PlayerTag';
 import { type RespawnState } from './PlayerNode';
 import { ParticleBurstNode } from './ParticleBurstNode';
+import { playDeath } from '../utils/audio';
 
 const DEFAULT_COLOR = 0x8b1a1a;
 const EMISSIVE_COLOR = 0xcc2200;
@@ -154,6 +155,7 @@ export function EnemyNode(props: Readonly<EnemyNodeProps>) {
             playerY > enemyY + sy * STOMP_Y_OFFSET;
 
         if (isStomp) {
+            playDeath();
             // Spawn red particle burst at enemy position
             world.mount(ParticleBurstNode, {
                 position: [
@@ -174,6 +176,7 @@ export function EnemyNode(props: Readonly<EnemyNodeProps>) {
             node.destroy();
         } else {
             // Side/bottom contact — respawn the player
+            playDeath();
             playerTransform.localPosition.set(...props.respawnState.position);
             playerBody.setLinearVelocity(0, 0, 0);
         }
