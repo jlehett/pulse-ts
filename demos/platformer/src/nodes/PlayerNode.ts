@@ -2,8 +2,10 @@ import * as THREE from 'three';
 import {
     useComponent,
     useNode,
+    useFixedEarly,
     useFixedUpdate,
     useFrameUpdate,
+    useWorld,
     Transform,
     Vec3,
 } from '@pulse-ts/core';
@@ -45,9 +47,24 @@ export function PlayerNode(props: Readonly<PlayerNodeProps>) {
         restitution: 0,
     });
 
+    const world = useWorld();
     const getMove = useAxis2D('move');
     const getJump = useAction('jump');
     const raycast = usePhysicsRaycast();
+
+    // Previous physics position — captured in fixed.early (before PhysicsSystem
+    // integrates transforms in fixed.update) so that during frame rendering we
+    // can interpolate between the previous and current physics positions using
+    // the loop alpha (fraction of the fixed step elapsed this frame).
+    let prevX = props.spawn[0];
+    let prevY = props.spawn[1];
+    let prevZ = props.spawn[2];
+
+    useFixedEarly(() => {
+        prevX = transform.localPosition.x;
+        prevY = transform.localPosition.y;
+        prevZ = transform.localPosition.z;
+    });
 
     // Three.js visual — capsule geometry
     const root = useThreeRoot();
@@ -94,13 +111,17 @@ export function PlayerNode(props: Readonly<PlayerNodeProps>) {
         }
     });
 
-    // Sync Three.js root position each frame (TRSSyncSystem handles this,
-    // but we set the root position explicitly here for interpolation feel)
+    // Interpolate the Three.js mesh between the previous and current physics
+    // positions using the loop alpha (fraction of fixed step elapsed this frame).
+    // This eliminates the per-step jitter visible when physics runs at 60 Hz
+    // but the renderer runs at a different rate (e.g. 120 Hz or unlocked).
     useFrameUpdate(() => {
+        const alpha = world.getAmbientAlpha();
+        const cur = transform.localPosition;
         root.position.set(
-            transform.localPosition.x,
-            transform.localPosition.y,
-            transform.localPosition.z,
+            prevX + (cur.x - prevX) * alpha,
+            prevY + (cur.y - prevY) * alpha,
+            prevZ + (cur.z - prevZ) * alpha,
         );
     });
 }
