@@ -18,7 +18,7 @@ import {
 import { useThreeRoot, useObject3D } from '@pulse-ts/three';
 
 const MOVE_SPEED = 8;
-const JUMP_IMPULSE = 5;
+const JUMP_IMPULSE = 8;
 const GROUND_RAY_DIST = 1.15;
 const PLAYER_RADIUS = 0.3;
 const PLAYER_HALF_HEIGHT = 0.4;
@@ -51,6 +51,12 @@ export function PlayerNode(props: Readonly<PlayerNodeProps>) {
     const getMove = useAxis2D('move');
     const getJump = useAction('jump');
     const raycast = usePhysicsRaycast();
+
+    // Prevents double-jumping: set true when a jump impulse is applied, cleared
+    // only once the raycast returns null (player has physically left the ground).
+    // Without this, rapid presses fire a second impulse on the next fixed step
+    // before physics has had a chance to move the player upward.
+    let jumpLock = false;
 
     // Previous physics position — captured in fixed.early (before PhysicsSystem
     // integrates transforms in fixed.update) so that during frame rendering we
@@ -93,21 +99,27 @@ export function PlayerNode(props: Readonly<PlayerNodeProps>) {
         const hit = raycast(rayOrigin, rayDir, GROUND_RAY_DIST, (c) => c.owner !== node);
         const grounded = hit !== null;
 
+        // Release the jump lock once the player has actually left the ground.
+        if (!grounded) jumpLock = false;
+
         // Horizontal movement — set velocity directly for tight control
         const vx = move.x * MOVE_SPEED;
         const vz = -move.y * MOVE_SPEED; // W = forward = -Z
         const vy = body.linearVelocity.y;
         body.setLinearVelocity(vx, vy, vz);
 
-        // Jump
-        if (jump.pressed && grounded) {
+        // Jump — guard with jumpLock so rapid presses can't trigger a second
+        // impulse while the player is still within raycast range of the ground.
+        if (jump.pressed && grounded && !jumpLock) {
             body.applyImpulse(0, JUMP_IMPULSE, 0);
+            jumpLock = true;
         }
 
         // Death plane respawn
         if (pos.y < props.deathPlaneY) {
             transform.localPosition.set(...props.spawn);
             body.setLinearVelocity(0, 0, 0);
+            jumpLock = false;
         }
     });
 
