@@ -25,6 +25,7 @@ const JUMP_IMPULSE = 8;
 const GROUND_RAY_DIST = 1.15;
 const PLAYER_RADIUS = 0.3;
 const PLAYER_HALF_HEIGHT = 0.4;
+const COYOTE_TIME = 0.12; // 120ms grace window after leaving ground
 
 /**
  * Computes the XZ velocity needed for a point on a kinematic platform to follow
@@ -123,6 +124,7 @@ export function PlayerNode(props: Readonly<PlayerNodeProps>) {
     // Without this, rapid presses fire a second impulse on the next fixed step
     // before physics has had a chance to move the player upward.
     let jumpLock = false;
+    let coyoteTimer = 0;
 
     // Previous physics position — captured in fixed.early (before PhysicsSystem
     // integrates transforms in fixed.update) so that during frame rendering we
@@ -168,6 +170,18 @@ export function PlayerNode(props: Readonly<PlayerNodeProps>) {
         // Release the jump lock once the player has actually left the ground.
         if (!grounded) jumpLock = false;
 
+        // Coyote time: while grounded, keep the timer full; while airborne,
+        // count it down so the player has a brief grace window to jump.
+        // Guard with !jumpLock so that after a real jump the timer stays
+        // consumed — otherwise the raycast still reads "grounded" for a few
+        // steps while the player rises, refilling the timer and enabling a
+        // double-jump.
+        if (grounded && !jumpLock) {
+            coyoteTimer = COYOTE_TIME;
+        } else if (!grounded) {
+            coyoteTimer = Math.max(0, coyoteTimer - dt);
+        }
+
         // Inherit XZ velocity from kinematic platform (if grounded on one)
         let platformVx = 0;
         let platformVz = 0;
@@ -192,11 +206,12 @@ export function PlayerNode(props: Readonly<PlayerNodeProps>) {
         const vy = body.linearVelocity.y;
         body.setLinearVelocity(vx, vy, vz);
 
-        // Jump — guard with jumpLock so rapid presses can't trigger a second
-        // impulse while the player is still within raycast range of the ground.
-        if (jump.pressed && grounded && !jumpLock) {
+        // Jump — use coyoteTimer instead of grounded so the player can jump
+        // briefly after walking off a ledge. jumpLock still prevents double-jumps.
+        if (jump.pressed && coyoteTimer > 0 && !jumpLock) {
             body.applyImpulse(0, JUMP_IMPULSE, 0);
             jumpLock = true;
+            coyoteTimer = 0; // consume the grace window
         }
 
         // Death plane respawn
@@ -204,6 +219,7 @@ export function PlayerNode(props: Readonly<PlayerNodeProps>) {
             transform.localPosition.set(...props.respawnState.position);
             body.setLinearVelocity(0, 0, 0);
             jumpLock = false;
+            coyoteTimer = 0;
         }
     });
 

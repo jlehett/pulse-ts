@@ -2,10 +2,11 @@
 id: TICKET-015
 epic: EPIC-002
 title: Coyote time
-status: todo
+status: done
 priority: medium
 created: 2026-02-25
-updated: 2026-02-25
+updated: 2026-02-26
+branch: ticket-015-coyote-time
 ---
 
 ## Description
@@ -20,11 +21,12 @@ Implementation:
 
 ## Acceptance Criteria
 
-- [ ] Player can jump for ~120 ms after walking off a ledge
-- [ ] Coyote time does NOT apply after a jump (can't double-jump via coyote)
-- [ ] Coyote time resets correctly on landing
-- [ ] Feels natural — not noticeably "cheaty" at the default window
+- [x] Player can jump for ~120 ms after walking off a ledge
+- [x] Coyote time does NOT apply after a jump (can't double-jump via coyote)
+- [x] Coyote time resets correctly on landing
+- [x] Feels natural — not noticeably "cheaty" at the default window
 
 ## Notes
 
 - **2026-02-25**: Ticket created. No blockers.
+- **2026-02-26**: Implemented in `demos/platformer/src/nodes/PlayerNode.ts`. Added `COYOTE_TIME` constant (120ms), `coyoteTimer` variable, timer management in fixed update, and updated jump guard to use coyote timer. All tests pass.
