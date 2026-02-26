@@ -1,10 +1,9 @@
-import { useFrameUpdate, useDestroy } from '@pulse-ts/core';
+import { useFrameUpdate, useDestroy, useContext } from '@pulse-ts/core';
 import { useThreeContext } from '@pulse-ts/three';
-import type { CollectibleState } from './CollectibleNode';
+import { CollectibleCtx } from '../contexts';
 
 export interface CollectibleHudNodeProps {
     total: number;
-    collectibleState: CollectibleState;
 }
 
 /**
@@ -15,6 +14,7 @@ export interface CollectibleHudNodeProps {
  * @param props - Total gem count and shared mutable counter.
  */
 export function CollectibleHudNode(props: Readonly<CollectibleHudNodeProps>) {
+    const collectibleState = useContext(CollectibleCtx);
     const { renderer } = useThreeContext();
     const container = renderer.domElement.parentElement ?? document.body;
 
@@ -34,7 +34,7 @@ export function CollectibleHudNode(props: Readonly<CollectibleHudNodeProps>) {
     container.appendChild(el);
 
     useFrameUpdate(() => {
-        el.textContent = `Gems: ${props.collectibleState.collected} / ${props.total}`;
+        el.textContent = `Gems: ${collectibleState.collected} / ${props.total}`;
     });
 
     useDestroy(() => {

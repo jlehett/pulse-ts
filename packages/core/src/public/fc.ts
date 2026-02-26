@@ -17,3 +17,10 @@ export {
     useStableId,
     useService,
 } from '../domain/fc/hooks';
+export {
+    createContext,
+    useProvideContext,
+    useContext,
+    useOptionalContext,
+} from '../domain/fc/context';
+export type { Context } from '../domain/fc/context';

@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { useChild } from '@pulse-ts/core';
+import { useChild, useProvideContext } from '@pulse-ts/core';
 import { useThreeContext, useObject3D } from '@pulse-ts/three';
 import { PlayerNode, type RespawnState, type ShakeState } from './PlayerNode';
 import { PlatformNode } from './PlatformNode';
@@ -13,6 +13,7 @@ import { EnemyNode } from './EnemyNode';
 import { GoalNode } from './GoalNode';
 import { CameraRigNode } from './CameraRigNode';
 import { level } from '../config/level';
+import { RespawnCtx, ShakeCtx, CollectibleCtx, PlayerNodeCtx } from '../contexts';
 
 export function LevelNode() {
     const { scene } = useThreeContext();
@@ -38,21 +39,24 @@ export function LevelNode() {
     // Fog for depth — pushed back to accommodate the wider level
     scene.fog = new THREE.Fog(0x0a0a1a, 40, 100);
 
-    // Shared respawn state — checkpoints and hazards update this
+    // Shared state — provided via context so descendants can read without prop drilling
     const respawnState: RespawnState = {
         position: [...level.playerSpawn],
     };
-
-    // Shared shake state — PlayerNode writes on hard landing, CameraRigNode reads/decays
     const shakeState: ShakeState = { intensity: 0 };
+    const collectibleState: CollectibleState = { collected: 0 };
+
+    useProvideContext(RespawnCtx, respawnState);
+    useProvideContext(ShakeCtx, shakeState);
+    useProvideContext(CollectibleCtx, collectibleState);
 
     // Player
     const playerNode = useChild(PlayerNode, {
         spawn: level.playerSpawn,
         deathPlaneY: level.deathPlaneY,
-        respawnState,
-        shakeState,
     });
+
+    useProvideContext(PlayerNodeCtx, playerNode);
 
     // Platforms
     for (const plat of level.platforms) {
@@ -84,27 +88,22 @@ export function LevelNode() {
         });
     }
 
-    // Collectibles — shared mutable counter for HUD
-    const collectibleState: CollectibleState = { collected: 0 };
-
+    // Collectibles
     for (const col of level.collectibles) {
         useChild(CollectibleNode, {
             position: col.position,
-            collectibleState,
         });
     }
 
     // Collectible HUD
     useChild(CollectibleHudNode, {
         total: level.collectibles.length,
-        collectibleState,
     });
 
     // Checkpoints
     for (const cp of level.checkpoints) {
         useChild(CheckpointNode, {
             position: cp.position,
-            respawnState,
         });
     }
 
@@ -114,8 +113,6 @@ export function LevelNode() {
             position: hazard.position,
             size: hazard.size,
             color: hazard.color,
-            respawnState,
-            player: playerNode,
         });
     }
 
@@ -127,8 +124,6 @@ export function LevelNode() {
             size: enemy.size,
             color: enemy.color,
             speed: enemy.speed,
-            respawnState,
-            player: playerNode,
         });
     }
 
@@ -136,5 +131,5 @@ export function LevelNode() {
     useChild(GoalNode, { position: level.goalPosition });
 
     // Camera rig
-    useChild(CameraRigNode, { target: playerNode, shakeState });
+    useChild(CameraRigNode);
 }

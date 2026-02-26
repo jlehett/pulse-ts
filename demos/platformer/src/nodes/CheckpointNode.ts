@@ -1,9 +1,9 @@
 import * as THREE from 'three';
-import { useComponent, Transform, getComponent } from '@pulse-ts/core';
+import { useComponent, Transform, getComponent, useContext } from '@pulse-ts/core';
 import { useRigidBody, useSphereCollider, useOnCollisionStart } from '@pulse-ts/physics';
 import { useThreeRoot, useObject3D } from '@pulse-ts/three';
 import { PlayerTag } from '../components/PlayerTag';
-import { type RespawnState } from './PlayerNode';
+import { RespawnCtx } from '../contexts';
 
 const PILLAR_RADIUS = 0.15;
 const PILLAR_HEIGHT = 2.0;
@@ -29,7 +29,6 @@ export function resetActiveCheckpoint(): void {
 
 export interface CheckpointNodeProps {
     position: [number, number, number];
-    respawnState: RespawnState;
 }
 
 /**
@@ -38,18 +37,18 @@ export interface CheckpointNodeProps {
  * Renders a tall thin cylinder that changes from dim blue-gray to bright green
  * when activated. Only the most recently activated checkpoint glows.
  *
- * @param props - Checkpoint world position and shared respawn state.
+ * @param props - Checkpoint world position.
  *
  * @example
  * ```ts
  * import { useChild } from '@pulse-ts/core';
  * import { CheckpointNode } from './CheckpointNode';
  *
- * const respawnState = { position: [0, 2, 0] as [number, number, number] };
- * useChild(CheckpointNode, { position: [18, 3, -1], respawnState });
+ * useChild(CheckpointNode, { position: [18, 3, -1] });
  * ```
  */
 export function CheckpointNode(props: Readonly<CheckpointNodeProps>) {
+    const respawnState = useContext(RespawnCtx);
     const transform = useComponent(Transform);
     transform.localPosition.set(...props.position);
 
@@ -102,7 +101,7 @@ export function CheckpointNode(props: Readonly<CheckpointNodeProps>) {
         activeCheckpointMaterial = material;
 
         // Update respawn position (slightly above so player doesn't clip into ground)
-        props.respawnState.position = [
+        respawnState.position = [
             props.position[0],
             props.position[1] + 1.0,
             props.position[2],
