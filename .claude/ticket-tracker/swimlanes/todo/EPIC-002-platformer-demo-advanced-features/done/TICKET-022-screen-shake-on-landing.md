@@ -2,7 +2,7 @@
 id: TICKET-022
 epic: EPIC-002
 title: Screen shake on hard landing
-status: in-progress
+status: done
 priority: low
 branch: ticket-022-screen-shake-on-hard-landing
 created: 2026-02-25
@@ -23,12 +23,13 @@ Also consider: brief FOV kick on dash (from TICKET-017) — can be added here as
 
 ## Acceptance Criteria
 
-- [ ] Small falls produce no shake; large falls produce a visible, brief shake
-- [ ] Shake decays smoothly (not a sudden stop)
-- [ ] Shake does not interfere with normal camera follow behaviour
+- [x] Small falls produce no shake; large falls produce a visible, brief shake
+- [x] Shake decays smoothly (not a sudden stop)
+- [x] Shake does not interfere with normal camera follow behaviour
 - [ ] (Optional) Dash triggers a subtle FOV pulse
 
 ## Notes
 
 - **2026-02-25**: Ticket created. Polish pass.
 - **2026-02-26**: Starting implementation. Branch: `ticket-022-screen-shake-on-hard-landing`.
+- **2026-02-26**: Implementation complete. SharedShakeState pattern, landing detection in PlayerNode, exponential decay shake in CameraRigNode, tests passing.
