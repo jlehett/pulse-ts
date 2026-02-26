@@ -1,7 +1,7 @@
 ---
 id: EPIC-004
 title: Three.js DX Pass
-status: in-progress
+status: done
 created: 2026-02-26
 updated: 2026-02-26
 ---
@@ -17,3 +17,4 @@ Provide `useMesh()`, `useFollowCamera()`, and lighting helpers (`useAmbientLight
 ## Notes
 
 - **2026-02-26**: Epic created. Identified from platformer demo — every visual node (PlatformNode, CollectibleNode, EnemyNode, HazardNode, CheckpointNode, GoalNode) repeats identical mesh setup boilerplate. CameraRigNode is 70+ lines of manual follow/lerp/shake logic.
+- **2026-02-26**: Epic closed. All 3 tickets complete: useMesh (TICKET-028), useFollowCamera (TICKET-029), lighting/fog helpers (TICKET-030).

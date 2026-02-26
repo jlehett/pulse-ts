@@ -29,6 +29,15 @@ export {
     type FollowCameraResult,
 } from './useFollowCamera';
 export {
+    useAmbientLight,
+    useDirectionalLight,
+    useFog,
+    type AmbientLightOptions,
+    type DirectionalLightOptions,
+    type ShadowBounds,
+    type FogOptions,
+} from './useLighting';
+export {
     StatsOverlaySystem,
     type StatsOverlayOptions,
 } from '../domain/systems/statsOverlay';

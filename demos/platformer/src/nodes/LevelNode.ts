@@ -1,6 +1,5 @@
-import * as THREE from 'three';
 import { useChild, useProvideContext } from '@pulse-ts/core';
-import { useThreeContext, useObject3D } from '@pulse-ts/three';
+import { useAmbientLight, useDirectionalLight, useFog } from '@pulse-ts/three';
 import { PlayerNode, type RespawnState, type ShakeState } from './PlayerNode';
 import { PlatformNode } from './PlatformNode';
 import { MovingPlatformNode } from './MovingPlatformNode';
@@ -16,28 +15,29 @@ import { level } from '../config/level';
 import { RespawnCtx, ShakeCtx, CollectibleCtx, PlayerNodeCtx } from '../contexts';
 
 export function LevelNode() {
-    const { scene } = useThreeContext();
-
     // Lighting
-    const ambient = new THREE.AmbientLight(0xb0c4de, 0.5);
-    scene.add(ambient);
+    useAmbientLight({ color: 0xb0c4de, intensity: 0.5 });
 
-    const directional = new THREE.DirectionalLight(0xffffff, 1.0);
-    directional.position.set(32, 25, 15);
-    directional.castShadow = true;
     // 2048×2048 shadow map for the wider 3-stage level (X: 0–67).
     // The frustum is fitted to cover the full level bounds with margin.
-    directional.shadow.mapSize.set(2048, 2048);
-    directional.shadow.camera.near = 0.5;
-    directional.shadow.camera.far = 100;
-    directional.shadow.camera.left = -10;
-    directional.shadow.camera.right = 72;
-    directional.shadow.camera.top = 15;
-    directional.shadow.camera.bottom = -12;
-    scene.add(directional);
+    useDirectionalLight({
+        color: 0xffffff,
+        intensity: 1.0,
+        position: [32, 25, 15],
+        castShadow: true,
+        shadowMapSize: 2048,
+        shadowBounds: {
+            near: 0.5,
+            far: 100,
+            left: -10,
+            right: 72,
+            top: 15,
+            bottom: -12,
+        },
+    });
 
     // Fog for depth — pushed back to accommodate the wider level
-    scene.fog = new THREE.Fog(0x0a0a1a, 40, 100);
+    useFog({ color: 0x0a0a1a, near: 40, far: 100 });
 
     // Shared state — provided via context so descendants can read without prop drilling
     const respawnState: RespawnState = {
