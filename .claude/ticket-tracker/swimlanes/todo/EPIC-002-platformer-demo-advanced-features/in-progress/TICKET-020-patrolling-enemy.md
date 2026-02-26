@@ -2,7 +2,7 @@
 id: TICKET-020
 epic: EPIC-002
 title: Patrolling enemy
-status: todo
+status: in-progress
 branch: ticket-020-patrolling-enemy
 priority: medium
 created: 2026-02-25
@@ -30,3 +30,4 @@ Add a simple patrolling enemy that walks back and forth between two points. Touc
 ## Notes
 
 - **2026-02-25**: Ticket created. Depends on TICKET-010 (kinematic bodies) for correct movement behavior.
+- **2026-02-26**: Starting implementation.
