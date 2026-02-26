@@ -108,7 +108,7 @@ export const LANDING_VEL_THRESHOLD = 6;
  * Multiplier that converts excess landing velocity (above threshold) into
  * shake intensity. Higher values produce stronger shakes.
  */
-export const SHAKE_INTENSITY_SCALE = 0.04;
+export const SHAKE_INTENSITY_SCALE = 0.15;
 
 export interface PlayerNodeProps {
     spawn: [number, number, number];

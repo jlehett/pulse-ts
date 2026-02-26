@@ -18,7 +18,7 @@ const LERP_SPEED = 4;
 export const SHAKE_DECAY = 12;
 
 /** Maximum camera offset (world units) from shake, preventing extreme jolts. */
-export const SHAKE_MAX = 0.3;
+export const SHAKE_MAX = 0.8;
 
 export interface CameraRigNodeProps {
     target: Node;
