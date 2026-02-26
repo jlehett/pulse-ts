@@ -4,8 +4,9 @@ epic: EPIC-002
 title: Sound effects (jump, collect, land, dash)
 status: todo
 priority: low
+branch: ticket-023-sound-effects
 created: 2026-02-25
-updated: 2026-02-25
+updated: 2026-02-26
 ---
 
 ## Description
