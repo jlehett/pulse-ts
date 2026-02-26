@@ -2,7 +2,7 @@
 id: TICKET-003
 epic: EPIC-001
 title: Remove Transform Proxy
-status: in-progress
+status: done
 priority: critical
 created: 2026-02-24
 updated: 2026-02-25
@@ -29,3 +29,4 @@ Replace the Proxy-based dirty tracking in `Transform.ts` with explicit setter me
 
 - **2026-02-24**: Ticket created. Blocked by TICKET-002 (need baseline before measuring improvement). Highest-impact change in the epic.
 - **2026-02-25**: Status changed to in-progress
+- **2026-02-25**: Status changed to done. Proxy replaced with Object.defineProperty accessors. setLocal 3.8x faster, mutate+recompute batch +25%. PR #10 merged.
