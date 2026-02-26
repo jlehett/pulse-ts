@@ -57,7 +57,7 @@ export function HazardNode(props: Readonly<HazardNodeProps>) {
         size: props.size,
         color,
         emissive: EMISSIVE_COLOR,
-        emissiveIntensity: PULSE_MIN,
+        emissiveIntensity: 0.4,
         roughness: 0.6,
         metalness: 0.2,
         castShadow: true,
