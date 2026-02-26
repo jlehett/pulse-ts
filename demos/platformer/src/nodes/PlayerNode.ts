@@ -21,7 +21,9 @@ import { useThreeRoot, useObject3D } from '@pulse-ts/three';
 import { PlayerTag } from '../components/PlayerTag';
 
 const MOVE_SPEED = 8;
-const JUMP_IMPULSE = 8;
+const JUMP_IMPULSE = 5.5;
+const JUMP_HOLD_FORCE = 38; // upward force per second while holding jump
+const JUMP_HOLD_MAX = 0.18; // max hold duration in seconds
 const GROUND_RAY_DIST = 1.15;
 const PLAYER_RADIUS = 0.3;
 const PLAYER_HALF_HEIGHT = 0.4;
@@ -125,6 +127,7 @@ export function PlayerNode(props: Readonly<PlayerNodeProps>) {
     // before physics has had a chance to move the player upward.
     let jumpLock = false;
     let coyoteTimer = 0;
+    let jumpHoldTimer = 0;
 
     // Previous physics position — captured in fixed.early (before PhysicsSystem
     // integrates transforms in fixed.update) so that during frame rendering we
@@ -212,6 +215,16 @@ export function PlayerNode(props: Readonly<PlayerNodeProps>) {
             body.applyImpulse(0, JUMP_IMPULSE, 0);
             jumpLock = true;
             coyoteTimer = 0; // consume the grace window
+            jumpHoldTimer = JUMP_HOLD_MAX; // start the hold window
+        }
+
+        // Variable jump height — apply additional upward force while the jump
+        // button is held and the hold window hasn't expired.
+        if (jump.down && jumpHoldTimer > 0) {
+            body.applyForce(0, JUMP_HOLD_FORCE, 0);
+            jumpHoldTimer = Math.max(0, jumpHoldTimer - dt);
+        } else {
+            jumpHoldTimer = 0; // button released early — kill the window
         }
 
         // Death plane respawn
@@ -220,6 +233,7 @@ export function PlayerNode(props: Readonly<PlayerNodeProps>) {
             body.setLinearVelocity(0, 0, 0);
             jumpLock = false;
             coyoteTimer = 0;
+            jumpHoldTimer = 0;
         }
     });
 
