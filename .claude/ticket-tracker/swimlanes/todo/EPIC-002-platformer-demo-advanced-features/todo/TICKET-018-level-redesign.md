@@ -4,8 +4,9 @@ epic: EPIC-002
 title: Level redesign with 2–3 distinct stages
 status: todo
 priority: medium
+branch: ticket-018-level-redesign-3-distinct-stages
 created: 2026-02-25
-updated: 2026-02-25
+updated: 2026-02-26
 ---
 
 ## Description
