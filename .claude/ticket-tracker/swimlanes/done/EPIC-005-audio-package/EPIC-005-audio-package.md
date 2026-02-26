@@ -1,7 +1,7 @@
 ---
 id: EPIC-005
 title: Audio Package
-status: todo
+status: done
 created: 2026-02-26
 updated: 2026-02-26
 ---
@@ -17,3 +17,4 @@ Enable any pulse-ts game to define and play sounds with a declarative `useSound(
 ## Notes
 
 - **2026-02-26**: Epic created. The platformer demo's `audio.ts` proves the pattern works. A proper package would provide `installAudio()` bootstrapping, `useSound()` for procedural synthesis, and optionally `useSpatialSound()` for 3D positional audio.
+- **2026-02-26**: Epic closed — all tickets complete

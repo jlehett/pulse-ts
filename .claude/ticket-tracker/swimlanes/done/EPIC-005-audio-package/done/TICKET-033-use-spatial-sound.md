@@ -2,7 +2,7 @@
 id: TICKET-033
 epic: EPIC-005
 title: useSpatialSound for 3D positional audio
-status: todo
+status: done
 priority: low
 created: 2026-02-26
 updated: 2026-02-26
@@ -28,13 +28,16 @@ const engineSfx = useSpatialSound('tone', {
 
 ## Acceptance Criteria
 
-- [ ] `useSpatialSound(type, options)` creates a spatialized sound source
-- [ ] Integrates with Three.js camera position for listener
-- [ ] Configurable rolloff model and max distance
-- [ ] Supports looping sounds
-- [ ] Full JSDoc with `@param`, `@returns`, `@example`
-- [ ] Colocated tests
+- [x] `useSpatialSound(type, options)` creates a spatialized sound source
+- [x] Integrates with Three.js camera position for listener
+- [x] Configurable rolloff model and max distance
+- [x] Supports looping sounds
+- [x] Full JSDoc with `@param`, `@returns`, `@example`
+- [x] Colocated tests
 
 ## Notes
 
 - **2026-02-26**: Ticket created. Stretch goal for the audio package.
+- **2026-02-26**: Status changed to in-progress
+- **2026-02-26**: Implemented useSpatialSound with PannerNode-based 3D audio, setListenerPosition on AudioService, looping and one-shot modes, configurable rolloff/distance. 20 new tests (18 useSpatialSound + 2 AudioService).
+- **2026-02-26**: Status changed to done

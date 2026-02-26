@@ -10,9 +10,16 @@ class StubGainNode {
     connect = jest.fn();
 }
 
+class StubAudioListener {
+    positionX = { value: 0 };
+    positionY = { value: 0 };
+    positionZ = { value: 0 };
+}
+
 class StubAudioContext {
     state = 'running';
     destination = {};
+    listener = new StubAudioListener();
     resume = jest.fn();
     createGain(): StubGainNode {
         return new StubGainNode();
@@ -91,6 +98,23 @@ describe('AudioService', () => {
         svc.ensureContext();
         const dest = svc.destination as unknown as StubGainNode;
         expect(dest.connect).toHaveBeenCalled();
+    });
+
+    test('setListenerPosition updates listener position', () => {
+        const svc = new AudioService();
+        svc.ensureContext();
+        svc.setListenerPosition(5, 10, 15);
+
+        const ctx = svc.ensureContext() as unknown as StubAudioContext;
+        expect(ctx.listener.positionX.value).toBe(5);
+        expect(ctx.listener.positionY.value).toBe(10);
+        expect(ctx.listener.positionZ.value).toBe(15);
+    });
+
+    test('setListenerPosition is no-op before context creation', () => {
+        const svc = new AudioService();
+        // Should not throw when context doesn't exist yet
+        svc.setListenerPosition(1, 2, 3);
     });
 });
 
