@@ -2,10 +2,10 @@
 id: TICKET-010
 epic: EPIC-002
 title: Kinematic rigid bodies
-status: in-progress
+status: done
 priority: high
 created: 2026-02-25
-updated: 2026-02-25
+updated: 2026-02-26
 branch: ticket-010-kinematic-rigid-bodies
 ---
 
