@@ -115,10 +115,13 @@ File: `packages/core/src/domain/ecs/query/query.bench.test.ts`
 
 ### Physics step — dynamic sphere bodies + ground plane
 
-_Target of TICKET-004, TICKET-005, TICKET-006._
+_Target of TICKET-005, TICKET-006._
 File: `packages/physics/src/domain/services/physicsStep.bench.test.ts`
 
 > Times are in **ms** (milliseconds). Scene: N dynamic sphere bodies above a static ground plane.
+> Baselines are unchanged post-TICKET-004. This benchmark uses sphere-sphere and sphere-plane
+> paths which were already scalar-heavy; TICKET-004 eliminates allocations primarily in
+> box/capsule paths and reduces GC pressure over sustained play (not visible in short-run hz).
 
 | Benchmark | hz | mean (ms) | p75 (ms) | p99 (ms) | rme |
 |---|---|---|---|---|---|
