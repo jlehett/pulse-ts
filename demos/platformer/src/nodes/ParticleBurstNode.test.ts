@@ -1,4 +1,4 @@
-import { PARTICLE_COUNT, BURST_LIFETIME } from './ParticleBurstNode';
+import { PARTICLE_COUNT, BURST_LIFETIME, DEFAULT_PARTICLE_COLOR } from './ParticleBurstNode';
 
 describe('ParticleBurstNode', () => {
     it('exports expected particle count', () => {
@@ -16,5 +16,9 @@ describe('ParticleBurstNode', () => {
 
     it('burst lifetime is a positive number', () => {
         expect(BURST_LIFETIME).toBeGreaterThan(0);
+    });
+
+    it('default particle color is gold', () => {
+        expect(DEFAULT_PARTICLE_COLOR).toBe(0xf4d03f);
     });
 });

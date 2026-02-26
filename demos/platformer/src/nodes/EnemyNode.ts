@@ -3,6 +3,8 @@ import {
     useComponent,
     useFixedUpdate,
     useFrameUpdate,
+    useNode,
+    useWorld,
     getComponent,
     Transform,
     type Node,
@@ -11,12 +13,25 @@ import { useRigidBody, useBoxCollider, useOnCollisionStart, RigidBody } from '@p
 import { useThreeRoot, useObject3D } from '@pulse-ts/three';
 import { PlayerTag } from '../components/PlayerTag';
 import { type RespawnState } from './PlayerNode';
+import { ParticleBurstNode } from './ParticleBurstNode';
 
 const DEFAULT_COLOR = 0x8b1a1a;
 const EMISSIVE_COLOR = 0xcc2200;
 const PULSE_SPEED = 4.0;
 const PULSE_MIN = 0.3;
 const PULSE_MAX = 0.8;
+
+/** Player must be falling at least this fast (negative Y velocity) for a stomp. */
+export const STOMP_VELOCITY_THRESHOLD = -1.5;
+
+/** Player Y must be above enemy Y + (enemy height * this fraction) to count as a stomp. */
+export const STOMP_Y_OFFSET = 0.3;
+
+/** Upward speed applied to the player after a successful stomp. */
+export const STOMP_BOUNCE_SPEED = 8;
+
+/** Color of the particle burst when an enemy is stomped. */
+export const STOMP_PARTICLE_COLOR = 0xcc2200;
 
 export interface EnemyNodeProps {
     position: [number, number, number];
@@ -119,7 +134,10 @@ export function EnemyNode(props: Readonly<EnemyNodeProps>) {
         material.emissiveIntensity = PULSE_MIN + t * (PULSE_MAX - PULSE_MIN);
     });
 
-    // Kill player on contact
+    const node = useNode();
+    const world = useWorld();
+
+    // Stomp from above kills enemy; side/bottom contact kills player
     useOnCollisionStart(({ other }) => {
         if (!getComponent(other, PlayerTag)) return;
 
@@ -127,7 +145,37 @@ export function EnemyNode(props: Readonly<EnemyNodeProps>) {
         const playerBody = getComponent(props.player, RigidBody);
         if (!playerTransform || !playerBody) return;
 
-        playerTransform.localPosition.set(...props.respawnState.position);
-        playerBody.setLinearVelocity(0, 0, 0);
+        const playerVelY = playerBody.linearVelocity.y;
+        const playerY = playerTransform.localPosition.y;
+        const enemyY = transform.localPosition.y;
+
+        const isStomp =
+            playerVelY < STOMP_VELOCITY_THRESHOLD &&
+            playerY > enemyY + sy * STOMP_Y_OFFSET;
+
+        if (isStomp) {
+            // Spawn red particle burst at enemy position
+            world.mount(ParticleBurstNode, {
+                position: [
+                    transform.localPosition.x,
+                    transform.localPosition.y,
+                    transform.localPosition.z,
+                ],
+                color: STOMP_PARTICLE_COLOR,
+            });
+
+            // Bounce the player upward
+            playerBody.setLinearVelocity(
+                playerBody.linearVelocity.x,
+                STOMP_BOUNCE_SPEED,
+                playerBody.linearVelocity.z,
+            );
+
+            node.destroy();
+        } else {
+            // Side/bottom contact — respawn the player
+            playerTransform.localPosition.set(...props.respawnState.position);
+            playerBody.setLinearVelocity(0, 0, 0);
+        }
     });
 }
