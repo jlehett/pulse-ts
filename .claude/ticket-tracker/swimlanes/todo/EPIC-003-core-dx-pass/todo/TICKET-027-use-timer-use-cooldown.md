@@ -6,6 +6,7 @@ status: todo
 priority: medium
 created: 2026-02-26
 updated: 2026-02-26
+branch: ticket-027-use-timer-use-cooldown
 ---
 
 ## Description
