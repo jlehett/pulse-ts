@@ -2,7 +2,7 @@
 id: TICKET-022
 epic: EPIC-002
 title: Screen shake on hard landing
-status: todo
+status: in-progress
 priority: low
 branch: ticket-022-screen-shake-on-hard-landing
 created: 2026-02-25
@@ -31,3 +31,4 @@ Also consider: brief FOV kick on dash (from TICKET-017) — can be added here as
 ## Notes
 
 - **2026-02-25**: Ticket created. Polish pass.
+- **2026-02-26**: Starting implementation. Branch: `ticket-022-screen-shake-on-hard-landing`.
