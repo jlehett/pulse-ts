@@ -78,7 +78,7 @@ export const level: LevelDef = {
         { position: [27, 1.2, 0], size: [3, 0.4, 3], color: 0x5a7a84 },
         { position: [33, 1.8, 0], size: [3, 0.4, 3], color: 0x6a8a94 },
         { position: [37, 2.4, 0], size: [3, 0.4, 3], color: 0x5a7a84 },
-        { position: [42, 5.0, 0], size: [4, 0.4, 4], color: 0x4a6670 },
+        { position: [42, 9.0, 0], size: [4, 0.4, 4], color: 0x4a6670 },
 
         // ── Stage 3 — Advanced (X: 46–65) ─────────────────────────
         // Dash-required gap, multiple enemies, all mechanics combined
@@ -103,7 +103,7 @@ export const level: LevelDef = {
         // Stage 2: vertical lift to the cliff top — big drop into Stage 3
         {
             position: [40, 1.2, 0],
-            target: [40, 5.0, 0],
+            target: [40, 9.0, 0],
             size: [2, 0.4, 2],
             color: 0x2e8b7a,
             speed: 2,
@@ -144,7 +144,7 @@ export const level: LevelDef = {
         // Stage 2 — 3 collectibles
         { position: [27, 2.8, 0] },
         { position: [33, 3.4, 0] },
-        { position: [40, 6.6, 0] },
+        { position: [40, 10.6, 0] },
         // Stage 3 — 2 collectibles
         { position: [50, 3.2, 0] },
         { position: [61, 3.2, 0] },
@@ -154,7 +154,7 @@ export const level: LevelDef = {
         // End of Stage 1
         { position: [18, 1.1, 0] },
         // End of Stage 2 — on the cliff top
-        { position: [42, 5.6, 0] },
+        { position: [42, 9.6, 0] },
     ],
 
     hazards: [
