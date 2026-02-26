@@ -1,6 +1,10 @@
 import { Vec3 } from '@pulse-ts/core';
 import { RigidBody } from '@pulse-ts/physics';
-import { getKinematicSurfaceVelocityXZ } from './PlayerNode';
+import {
+    getKinematicSurfaceVelocityXZ,
+    LANDING_VEL_THRESHOLD,
+    SHAKE_INTENSITY_SCALE,
+} from './PlayerNode';
 
 /** Default fixed timestep matching the engine default (60 Hz). */
 const DT = 1 / 60;
@@ -102,6 +106,17 @@ describe('getKinematicSurfaceVelocityXZ', () => {
         expect(vz).toBe(2);
     });
 
+    it('returns zero angular contribution when contact is at platform center', () => {
+        const body = fakeBody([0, 0, 0], [0, 5, 0]);
+        const pos = { x: 3, y: 0, z: 3 };
+        const contact = { x: 3, y: 0, z: 3 }; // exactly at center
+
+        const [vx, vz] = getKinematicSurfaceVelocityXZ(body, pos, contact, DT);
+
+        expect(vx).toBeCloseTo(0, 10);
+        expect(vz).toBeCloseTo(0, 10);
+    });
+
     it('does not drift outward over many steps on a spinning platform', () => {
         // Simulate 600 steps (10 seconds at 60 Hz) on a platform spinning at
         // 1 rad/s. If the velocity correctly includes centripetal correction,
@@ -126,5 +141,16 @@ describe('getKinematicSurfaceVelocityXZ', () => {
 
         const finalRadius = Math.sqrt(rx * rx + rz * rz);
         expect(finalRadius).toBeCloseTo(5, 3); // should stay at radius 5
+    });
+});
+
+describe('Landing shake constants', () => {
+    it('LANDING_VEL_THRESHOLD is positive', () => {
+        expect(LANDING_VEL_THRESHOLD).toBeGreaterThan(0);
+    });
+
+    it('SHAKE_INTENSITY_SCALE is positive and small', () => {
+        expect(SHAKE_INTENSITY_SCALE).toBeGreaterThan(0);
+        expect(SHAKE_INTENSITY_SCALE).toBeLessThan(1);
     });
 });
