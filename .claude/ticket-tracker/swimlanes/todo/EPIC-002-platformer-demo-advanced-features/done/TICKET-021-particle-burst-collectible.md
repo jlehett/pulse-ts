@@ -2,7 +2,7 @@
 id: TICKET-021
 epic: EPIC-002
 title: Particle burst on collectible pickup
-status: todo
+status: done
 priority: low
 created: 2026-02-25
 updated: 2026-02-26
@@ -23,11 +23,12 @@ This ticket will inform whether a `@pulse-ts/particles` package makes sense in a
 
 ## Acceptance Criteria
 
-- [ ] Burst appears at the collectible's world position on pickup
-- [ ] Particles fan outward and fade over ~0.5 s
-- [ ] No particles persist after the burst completes
-- [ ] No noticeable frame time impact (few particles, short-lived)
+- [x] Burst appears at the collectible's world position on pickup
+- [x] Particles fan outward and fade over ~0.5 s
+- [x] No particles persist after the burst completes
+- [x] No noticeable frame time impact (few particles, short-lived)
 
 ## Notes
 
 - **2026-02-25**: Ticket created. Polish pass — best done after core gameplay is stable.
+- **2026-02-26**: Implemented ParticleBurstNode (24 particles, 0.5s lifetime, gold color with additive blending). CollectibleNode spawns burst via world.mount() before self-destructing. All tests pass.
