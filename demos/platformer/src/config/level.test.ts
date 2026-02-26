@@ -32,4 +32,26 @@ describe('level config', () => {
             h.size.forEach((v) => expect(v).toBeGreaterThan(0));
         }
     });
+
+    it('has enemies array', () => {
+        expect(Array.isArray(level.enemies)).toBe(true);
+        expect(level.enemies.length).toBeGreaterThan(0);
+    });
+
+    it('each enemy has position, target, and size tuples', () => {
+        for (const e of level.enemies) {
+            expect(e.position).toHaveLength(3);
+            expect(e.target).toHaveLength(3);
+            expect(e.size).toHaveLength(3);
+            e.position.forEach((v) => expect(typeof v).toBe('number'));
+            e.target.forEach((v) => expect(typeof v).toBe('number'));
+            e.size.forEach((v) => expect(typeof v).toBe('number'));
+        }
+    });
+
+    it('enemy sizes are all positive', () => {
+        for (const e of level.enemies) {
+            e.size.forEach((v) => expect(v).toBeGreaterThan(0));
+        }
+    });
 });

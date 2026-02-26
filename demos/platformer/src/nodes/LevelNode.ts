@@ -9,6 +9,7 @@ import { CollectibleNode, type CollectibleState } from './CollectibleNode';
 import { CollectibleHudNode } from './CollectibleHudNode';
 import { CheckpointNode } from './CheckpointNode';
 import { HazardNode } from './HazardNode';
+import { EnemyNode } from './EnemyNode';
 import { GoalNode } from './GoalNode';
 import { CameraRigNode } from './CameraRigNode';
 import { level } from '../config/level';
@@ -112,6 +113,19 @@ export function LevelNode() {
             position: hazard.position,
             size: hazard.size,
             color: hazard.color,
+            respawnState,
+            player: playerNode,
+        });
+    }
+
+    // Enemies
+    for (const enemy of level.enemies) {
+        useChild(EnemyNode, {
+            position: enemy.position,
+            target: enemy.target,
+            size: enemy.size,
+            color: enemy.color,
+            speed: enemy.speed,
             respawnState,
             player: playerNode,
         });
