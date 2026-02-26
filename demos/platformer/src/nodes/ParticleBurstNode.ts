@@ -8,6 +8,9 @@ export const PARTICLE_COUNT = 24;
 /** Total lifetime of the burst effect in seconds. */
 export const BURST_LIFETIME = 0.5;
 
+/** Default particle color (gold). */
+export const DEFAULT_PARTICLE_COLOR = 0xf4d03f;
+
 /** Gravity pull applied to particles each frame (units/s²). */
 const GRAVITY = 9.8;
 
@@ -17,6 +20,8 @@ const MAX_SPEED = 4.0;
 
 export interface ParticleBurstNodeProps {
     position: [number, number, number];
+    /** Particle color. Defaults to gold (`0xf4d03f`). */
+    color?: number;
 }
 
 /**
@@ -25,7 +30,7 @@ export interface ParticleBurstNodeProps {
  * Spawns a fixed number of particles that fan outward with random velocities,
  * fade linearly to transparent, and self-destruct after the lifetime expires.
  *
- * @param props - World-space position where the burst originates.
+ * @param props - World-space position and optional color for the burst.
  *
  * @example
  * ```ts
@@ -33,7 +38,10 @@ export interface ParticleBurstNodeProps {
  * import { ParticleBurstNode } from './ParticleBurstNode';
  *
  * const world = useWorld();
+ * // Gold burst (default)
  * world.mount(ParticleBurstNode, { position: [1, 2, 0] });
+ * // Red burst
+ * world.mount(ParticleBurstNode, { position: [1, 2, 0], color: 0xcc2200 });
  * ```
  */
 export function ParticleBurstNode(props: Readonly<ParticleBurstNodeProps>) {
@@ -47,7 +55,7 @@ export function ParticleBurstNode(props: Readonly<ParticleBurstNodeProps>) {
     geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
 
     const material = new THREE.PointsMaterial({
-        color: 0xf4d03f,
+        color: props.color ?? DEFAULT_PARTICLE_COLOR,
         size: 0.08,
         transparent: true,
         opacity: 1,
