@@ -11,7 +11,7 @@ import { CheckpointNode } from './CheckpointNode';
 import { HazardNode } from './HazardNode';
 import { EnemyNode } from './EnemyNode';
 import { GoalNode } from './GoalNode';
-import { burstInit, BURST_GRAVITY } from './ParticleEffectsNode';
+import { burstInit, BURST_GRAVITY } from '../config/particles';
 import { CameraRigNode } from './CameraRigNode';
 import { level } from '../config/level';
 import { RespawnCtx, ShakeCtx, CollectibleCtx, PlayerNodeCtx, ParticleEffectsCtx } from '../contexts';

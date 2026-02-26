@@ -11,7 +11,7 @@ import { useMesh } from '@pulse-ts/three';
 import { useSound } from '@pulse-ts/audio';
 import { useAnimate } from '@pulse-ts/effects';
 import { PlayerTag } from '../components/PlayerTag';
-import { burstInit } from './ParticleEffectsNode';
+import { burstInit } from '../config/particles';
 import { RespawnCtx, PlayerNodeCtx, ParticleEffectsCtx } from '../contexts';
 
 const DEFAULT_COLOR = 0x8b1a1a;
