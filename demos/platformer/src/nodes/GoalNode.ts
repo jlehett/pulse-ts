@@ -3,9 +3,10 @@ import {
     useComponent,
     useFrameUpdate,
     useWorld,
+    getComponent,
     Transform,
 } from '@pulse-ts/core';
-import { useRigidBody, useSphereCollider, useOnCollisionStart } from '@pulse-ts/physics';
+import { useRigidBody, useSphereCollider, useOnCollisionStart, RigidBody } from '@pulse-ts/physics';
 import { useThreeRoot, useObject3D, useThreeContext } from '@pulse-ts/three';
 
 const GOAL_RADIUS = 0.6;
@@ -71,9 +72,12 @@ export function GoalNode(props: Readonly<GoalNodeProps>) {
         );
     });
 
-    // Win trigger — pause world and show overlay
+    // Win trigger — only fire for the player (dynamic body), not other statics
     const { renderer } = useThreeContext();
-    useOnCollisionStart(() => {
+    useOnCollisionStart(({ other }) => {
+        const rb = getComponent(other, RigidBody);
+        if (!rb || rb.type !== 'dynamic') return;
+
         world.pause();
         const container = renderer.domElement.parentElement ?? document.body;
         showWinScreen(container);
