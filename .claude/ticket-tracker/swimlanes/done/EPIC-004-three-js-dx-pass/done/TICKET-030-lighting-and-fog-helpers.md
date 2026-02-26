@@ -2,7 +2,7 @@
 id: TICKET-030
 epic: EPIC-004
 title: Lighting and fog helper hooks
-status: todo
+status: done
 priority: low
 created: 2026-02-26
 updated: 2026-02-26
@@ -43,3 +43,4 @@ All hooks auto-add to scene and auto-remove on node destroy.
 ## Notes
 
 - **2026-02-26**: Ticket created. LevelNode has ~15 lines of direct Three.js light/shadow setup.
+- **2026-02-26**: Status changed to done. Implemented useAmbientLight, useDirectionalLight, useFog with auto-cleanup. Updated LevelNode and guide.
