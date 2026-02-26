@@ -11,6 +11,7 @@ import { useRigidBody, useSphereCollider, useOnCollisionStart } from '@pulse-ts/
 import { PlayerTag } from '../components/PlayerTag';
 import { useThreeRoot, useObject3D } from '@pulse-ts/three';
 import { ParticleBurstNode } from './ParticleBurstNode';
+import { playCollect } from '../utils/audio';
 
 const COLLECTIBLE_RADIUS = 0.25;
 const SPIN_SPEED = 2;
@@ -68,6 +69,7 @@ export function CollectibleNode(props: Readonly<CollectibleNodeProps>) {
     // Increment counter and destroy on player contact only
     useOnCollisionStart(({ other }) => {
         if (!getComponent(other, PlayerTag)) return;
+        playCollect();
         props.collectibleState.collected++;
         world.mount(ParticleBurstNode, {
             position: [

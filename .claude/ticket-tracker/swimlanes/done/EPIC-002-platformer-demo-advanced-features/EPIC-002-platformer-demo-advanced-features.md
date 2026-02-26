@@ -1,10 +1,10 @@
 ---
 id: EPIC-002
 title: Platformer Demo — Advanced Features
-status: todo
+status: done
 priority: medium
 created: 2026-02-25
-updated: 2026-02-25
+updated: 2026-02-26
 ---
 
 ## Description
@@ -31,3 +31,4 @@ Expand the platformer demo into a more complete, polished game. One ticket (TICK
 ## Notes
 
 - **2026-02-25**: Epic created. TICKET-010 is the only engine-level ticket; the rest are demo-local. Post-completion the demo will be used to identify what should be extracted to engine packages.
+- **2026-02-26**: All 14 tickets complete. Epic auto-closed.

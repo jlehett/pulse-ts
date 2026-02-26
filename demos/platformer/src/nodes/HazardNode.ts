@@ -11,6 +11,7 @@ import { useRigidBody, useBoxCollider, useOnCollisionStart, RigidBody } from '@p
 import { useThreeRoot, useObject3D } from '@pulse-ts/three';
 import { PlayerTag } from '../components/PlayerTag';
 import { type RespawnState } from './PlayerNode';
+import { playDeath } from '../utils/audio';
 
 const DEFAULT_COLOR = 0xcc3300;
 const EMISSIVE_COLOR = 0xff4400;
@@ -85,6 +86,7 @@ export function HazardNode(props: Readonly<HazardNodeProps>) {
     // Respawn player on contact
     useOnCollisionStart(({ other }) => {
         if (!getComponent(other, PlayerTag)) return;
+        playDeath();
 
         const playerTransform = getComponent(props.player, Transform);
         const playerBody = getComponent(props.player, RigidBody);
