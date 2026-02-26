@@ -1,4 +1,3 @@
-import * as THREE from 'three';
 import {
     useComponent,
     useNode,
@@ -21,7 +20,7 @@ import {
     usePhysicsRaycast,
     RigidBody,
 } from '@pulse-ts/physics';
-import { useThreeRoot, useObject3D } from '@pulse-ts/three';
+import { useMesh } from '@pulse-ts/three';
 import { PlayerTag } from '../components/PlayerTag';
 import { playJump, playLand, playDash, playDeath } from '../utils/audio';
 
@@ -176,17 +175,14 @@ export function PlayerNode(props: Readonly<PlayerNodeProps>) {
     });
 
     // Three.js visual — capsule geometry
-    const root = useThreeRoot();
-    const geometry = new THREE.CapsuleGeometry(
-        PLAYER_RADIUS,
-        PLAYER_HALF_HEIGHT * 2,
-        8,
-        16,
-    );
-    const material = new THREE.MeshStandardMaterial({ color: 0x48c9b0 });
-    const mesh = new THREE.Mesh(geometry, material);
-    mesh.castShadow = true;
-    useObject3D(mesh);
+    const { root } = useMesh('capsule', {
+        radius: PLAYER_RADIUS,
+        length: PLAYER_HALF_HEIGHT * 2,
+        capSegments: 8,
+        radialSegments: 16,
+        color: 0x48c9b0,
+        castShadow: true,
+    });
 
     // Raycast origin scratch vector
     const rayOrigin = new Vec3();

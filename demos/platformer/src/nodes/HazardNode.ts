@@ -1,4 +1,3 @@
-import * as THREE from 'three';
 import {
     useComponent,
     useFrameUpdate,
@@ -7,7 +6,7 @@ import {
     useContext,
 } from '@pulse-ts/core';
 import { useRigidBody, useBoxCollider, useOnCollisionStart, RigidBody } from '@pulse-ts/physics';
-import { useThreeRoot, useObject3D } from '@pulse-ts/three';
+import { useMesh } from '@pulse-ts/three';
 import { PlayerTag } from '../components/PlayerTag';
 import { playDeath } from '../utils/audio';
 import { RespawnCtx, PlayerNodeCtx } from '../contexts';
@@ -55,20 +54,17 @@ export function HazardNode(props: Readonly<HazardNodeProps>) {
     useBoxCollider(hx, hy, hz, { isTrigger: true });
 
     // Visual — box with pulsing emissive
-    const root = useThreeRoot();
     const color = props.color ?? DEFAULT_COLOR;
-    const geometry = new THREE.BoxGeometry(...props.size);
-    const material = new THREE.MeshStandardMaterial({
+    const { root, material } = useMesh('box', {
+        size: props.size,
         color,
         emissive: EMISSIVE_COLOR,
         emissiveIntensity: PULSE_MIN,
         roughness: 0.6,
         metalness: 0.2,
+        castShadow: true,
+        receiveShadow: true,
     });
-    const mesh = new THREE.Mesh(geometry, material);
-    mesh.castShadow = true;
-    mesh.receiveShadow = true;
-    useObject3D(mesh);
 
     root.position.set(...props.position);
 

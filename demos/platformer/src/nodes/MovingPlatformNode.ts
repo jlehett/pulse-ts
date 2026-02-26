@@ -1,11 +1,10 @@
-import * as THREE from 'three';
 import {
     useComponent,
     useFixedUpdate,
     Transform,
 } from '@pulse-ts/core';
 import { useRigidBody, useBoxCollider } from '@pulse-ts/physics';
-import { useThreeRoot, useObject3D } from '@pulse-ts/three';
+import { useMesh } from '@pulse-ts/three';
 
 export interface MovingPlatformNodeProps {
     position: [number, number, number];
@@ -62,12 +61,12 @@ export function MovingPlatformNode(props: Readonly<MovingPlatformNodeProps>) {
         }
     });
 
-    const mesh = new THREE.Mesh(
-        new THREE.BoxGeometry(sx, sy, sz),
-        new THREE.MeshStandardMaterial({ color, roughness: 0.7, metalness: 0.2 }),
-    );
-    mesh.castShadow = true;
-    mesh.receiveShadow = true;
-    useThreeRoot();
-    useObject3D(mesh);
+    useMesh('box', {
+        size: [sx, sy, sz],
+        color,
+        roughness: 0.7,
+        metalness: 0.2,
+        castShadow: true,
+        receiveShadow: true,
+    });
 }

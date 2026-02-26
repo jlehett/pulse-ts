@@ -1,4 +1,3 @@
-import * as THREE from 'three';
 import {
     useComponent,
     useFrameUpdate,
@@ -8,7 +7,7 @@ import {
 } from '@pulse-ts/core';
 import { useRigidBody, useSphereCollider, useOnCollisionStart } from '@pulse-ts/physics';
 import { PlayerTag } from '../components/PlayerTag';
-import { useThreeRoot, useObject3D, useThreeContext } from '@pulse-ts/three';
+import { useMesh, useThreeContext } from '@pulse-ts/three';
 
 const GOAL_RADIUS = 0.6;
 const SPIN_SPEED = 1.2;
@@ -46,18 +45,16 @@ export function GoalNode(props: Readonly<GoalNodeProps>) {
     useSphereCollider(TRIGGER_RADIUS, { isTrigger: true });
 
     // Three.js visual — octahedron for a gem/trophy look
-    const root = useThreeRoot();
-    const geometry = new THREE.OctahedronGeometry(GOAL_RADIUS, 0);
-    const material = new THREE.MeshStandardMaterial({
+    const { root, mesh } = useMesh('octahedron', {
+        radius: GOAL_RADIUS,
+        detail: 0,
         color: 0xffd700,
         roughness: 0.2,
         metalness: 0.8,
         emissive: 0xffa500,
         emissiveIntensity: 0.6,
+        castShadow: true,
     });
-    const mesh = new THREE.Mesh(geometry, material);
-    mesh.castShadow = true;
-    useObject3D(mesh);
 
     const baseY = props.position[1];
     let elapsed = 0;
