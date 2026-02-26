@@ -1,4 +1,3 @@
-import * as THREE from 'three';
 import {
     useComponent,
     useNode,
@@ -10,7 +9,7 @@ import {
 } from '@pulse-ts/core';
 import { useRigidBody, useSphereCollider, useOnCollisionStart } from '@pulse-ts/physics';
 import { PlayerTag } from '../components/PlayerTag';
-import { useThreeRoot, useObject3D } from '@pulse-ts/three';
+import { useMesh } from '@pulse-ts/three';
 import { ParticleBurstNode } from './ParticleBurstNode';
 import { playCollect } from '../utils/audio';
 import { CollectibleCtx } from '../contexts';
@@ -41,18 +40,16 @@ export function CollectibleNode(props: Readonly<CollectibleNodeProps>) {
     useSphereCollider(COLLECTIBLE_RADIUS, { isTrigger: true });
 
     // Three.js visual — icosahedron for a gem-like look
-    const root = useThreeRoot();
-    const geometry = new THREE.IcosahedronGeometry(COLLECTIBLE_RADIUS, 0);
-    const material = new THREE.MeshStandardMaterial({
+    const { root, mesh } = useMesh('icosahedron', {
+        radius: COLLECTIBLE_RADIUS,
+        detail: 0,
         color: 0xf4d03f,
         roughness: 0.3,
         metalness: 0.6,
         emissive: 0xf4d03f,
         emissiveIntensity: 0.3,
+        castShadow: true,
     });
-    const mesh = new THREE.Mesh(geometry, material);
-    mesh.castShadow = true;
-    useObject3D(mesh);
 
     const baseY = props.position[1];
     let elapsed = 0;

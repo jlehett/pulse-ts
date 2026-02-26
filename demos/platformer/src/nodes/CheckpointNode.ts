@@ -1,7 +1,7 @@
-import * as THREE from 'three';
 import { useComponent, Transform, getComponent, useContext } from '@pulse-ts/core';
 import { useRigidBody, useSphereCollider, useOnCollisionStart } from '@pulse-ts/physics';
-import { useThreeRoot, useObject3D } from '@pulse-ts/three';
+import { useMesh } from '@pulse-ts/three';
+import type * as THREE from 'three';
 import { PlayerTag } from '../components/PlayerTag';
 import { RespawnCtx } from '../contexts';
 
@@ -56,25 +56,19 @@ export function CheckpointNode(props: Readonly<CheckpointNodeProps>) {
     useSphereCollider(TRIGGER_RADIUS, { isTrigger: true });
 
     // Visual — tall thin cylinder
-    const root = useThreeRoot();
-    const geometry = new THREE.CylinderGeometry(
-        PILLAR_RADIUS,
-        PILLAR_RADIUS,
-        PILLAR_HEIGHT,
-        8,
-    );
-    const material = new THREE.MeshStandardMaterial({
+    const { root, mesh, material } = useMesh('cylinder', {
+        radius: PILLAR_RADIUS,
+        height: PILLAR_HEIGHT,
+        radialSegments: 8,
         color: INACTIVE_COLOR,
         emissive: INACTIVE_EMISSIVE,
         emissiveIntensity: INACTIVE_EMISSIVE_INTENSITY,
         roughness: 0.4,
         metalness: 0.3,
+        castShadow: true,
     });
-    const mesh = new THREE.Mesh(geometry, material);
     // Shift mesh up so the base sits at the node origin
     mesh.position.y = PILLAR_HEIGHT / 2;
-    mesh.castShadow = true;
-    useObject3D(mesh);
 
     // Position root at transform
     root.position.set(...props.position);

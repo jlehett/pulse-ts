@@ -1,10 +1,9 @@
-import * as THREE from 'three';
 import {
     useComponent,
     Transform,
 } from '@pulse-ts/core';
 import { useRigidBody, useBoxCollider } from '@pulse-ts/physics';
-import { useThreeRoot, useObject3D } from '@pulse-ts/three';
+import { useMesh } from '@pulse-ts/three';
 
 export interface RotatingPlatformNodeProps {
     position: [number, number, number];
@@ -34,12 +33,12 @@ export function RotatingPlatformNode(props: Readonly<RotatingPlatformNodeProps>)
     // The contact solver reads this velocity to compute rotational collision response.
     body.setAngularVelocity(0, angularSpeed, 0);
 
-    const mesh = new THREE.Mesh(
-        new THREE.BoxGeometry(sx, sy, sz),
-        new THREE.MeshStandardMaterial({ color, roughness: 0.7, metalness: 0.3 }),
-    );
-    mesh.castShadow = true;
-    mesh.receiveShadow = true;
-    useThreeRoot();
-    useObject3D(mesh);
+    useMesh('box', {
+        size: [sx, sy, sz],
+        color,
+        roughness: 0.7,
+        metalness: 0.3,
+        castShadow: true,
+        receiveShadow: true,
+    });
 }

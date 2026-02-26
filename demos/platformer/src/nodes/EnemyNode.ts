@@ -1,4 +1,3 @@
-import * as THREE from 'three';
 import {
     useComponent,
     useFixedUpdate,
@@ -10,7 +9,7 @@ import {
     useContext,
 } from '@pulse-ts/core';
 import { useRigidBody, useBoxCollider, useOnCollisionStart, RigidBody } from '@pulse-ts/physics';
-import { useThreeRoot, useObject3D } from '@pulse-ts/three';
+import { useMesh } from '@pulse-ts/three';
 import { PlayerTag } from '../components/PlayerTag';
 import { ParticleBurstNode } from './ParticleBurstNode';
 import { playDeath } from '../utils/audio';
@@ -111,19 +110,16 @@ export function EnemyNode(props: Readonly<EnemyNodeProps>) {
     });
 
     // Visual — dark red box with pulsing emissive
-    const geometry = new THREE.BoxGeometry(sx, sy, sz);
-    const material = new THREE.MeshStandardMaterial({
+    const { material } = useMesh('box', {
+        size: [sx, sy, sz],
         color,
         emissive: EMISSIVE_COLOR,
         emissiveIntensity: PULSE_MIN,
         roughness: 0.6,
         metalness: 0.2,
+        castShadow: true,
+        receiveShadow: true,
     });
-    const mesh = new THREE.Mesh(geometry, material);
-    mesh.castShadow = true;
-    mesh.receiveShadow = true;
-    useThreeRoot();
-    useObject3D(mesh);
 
     // Subtle pulsing emissive
     let elapsed = 0;

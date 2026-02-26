@@ -1,7 +1,6 @@
-import * as THREE from 'three';
 import { useComponent, Transform } from '@pulse-ts/core';
 import { useRigidBody, useBoxCollider } from '@pulse-ts/physics';
-import { useThreeRoot, useObject3D } from '@pulse-ts/three';
+import { useMesh } from '@pulse-ts/three';
 
 export interface PlatformNodeProps {
     position: [number, number, number];
@@ -23,15 +22,12 @@ export function PlatformNode(props: Readonly<PlatformNodeProps>) {
     });
 
     // Three.js visual
-    const root = useThreeRoot();
-    const geometry = new THREE.BoxGeometry(sx, sy, sz);
-    const material = new THREE.MeshStandardMaterial({
+    useMesh('box', {
+        size: [sx, sy, sz],
         color,
         roughness: 0.8,
         metalness: 0.1,
+        castShadow: true,
+        receiveShadow: true,
     });
-    const mesh = new THREE.Mesh(geometry, material);
-    mesh.castShadow = true;
-    mesh.receiveShadow = true;
-    useObject3D(mesh);
 }

@@ -104,7 +104,7 @@ Add a few visible objects so camera motion is obvious.
 
 ```ts
 import * as THREE from 'three';
-import { useThreeRoot, useObject3D } from '@pulse-ts/three';
+import { useMesh, useObject3D } from '@pulse-ts/three';
 import { useFrameUpdate } from '@pulse-ts/core';
 
 function SceneContent() {
@@ -119,15 +119,15 @@ function SceneContent() {
   useObject3D(new THREE.AmbientLight(0xffffff, 0.25));
 
   // Spinning cube
-  const cube = new THREE.Mesh(
-    new THREE.BoxGeometry(1, 1, 1),
-    new THREE.MeshStandardMaterial({ color: 0x3aa3ff, roughness: 0.6 })
-  );
-  cube.position.set(0, 0.5, 0);
-  useObject3D(cube);
+  const { mesh } = useMesh('box', {
+    size: [1, 1, 1],
+    color: 0x3aa3ff,
+    roughness: 0.6,
+  });
+  mesh.position.set(0, 0.5, 0);
 
   useFrameUpdate((dt) => {
-    cube.rotation.y += 0.6 * dt;
+    mesh.rotation.y += 0.6 * dt;
   });
 }
 ```
