@@ -100,7 +100,10 @@ export function integrateTransforms(
     for (const rb of bodies) {
         const t = getComponent(rb.owner, Transform);
         if (!t) continue;
-        if (rb.type === 'dynamic') {
+        // Both dynamic and kinematic bodies integrate velocity → position/rotation.
+        // Kinematic velocity is set externally each step (no gravity or forces applied);
+        // dynamic velocity is managed by integrateVelocities.
+        if (rb.type === 'dynamic' || rb.type === 'kinematic') {
             t.localPosition.addScaled(rb.linearVelocity, dt);
             const wx = rb.angularVelocity.x,
                 wy = rb.angularVelocity.y,
