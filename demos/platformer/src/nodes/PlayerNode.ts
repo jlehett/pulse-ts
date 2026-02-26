@@ -79,9 +79,18 @@ export function getKinematicSurfaceVelocityXZ(
     return [vx, vz];
 }
 
+/**
+ * Shared mutable object that tracks the player's current respawn position.
+ * Updated by CheckpointNode when the player activates a checkpoint.
+ */
+export interface RespawnState {
+    position: [number, number, number];
+}
+
 export interface PlayerNodeProps {
     spawn: [number, number, number];
     deathPlaneY: number;
+    respawnState: RespawnState;
 }
 
 export function PlayerNode(props: Readonly<PlayerNodeProps>) {
@@ -192,7 +201,7 @@ export function PlayerNode(props: Readonly<PlayerNodeProps>) {
 
         // Death plane respawn
         if (pos.y < props.deathPlaneY) {
-            transform.localPosition.set(...props.spawn);
+            transform.localPosition.set(...props.respawnState.position);
             body.setLinearVelocity(0, 0, 0);
             jumpLock = false;
         }

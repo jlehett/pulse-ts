@@ -2,10 +2,10 @@
 id: TICKET-013
 epic: EPIC-002
 title: Hazard platforms
-status: todo
+status: done
 priority: medium
 created: 2026-02-25
-updated: 2026-02-25
+updated: 2026-02-26
 ---
 
 ## Description
@@ -19,11 +19,12 @@ Add hazard platform variants that kill the player on contact and trigger an imme
 
 ## Acceptance Criteria
 
-- [ ] Hazard platforms visually stand out from regular platforms
-- [ ] Player touching a hazard respawns at the last checkpoint (or spawn)
-- [ ] Hazards can be placed in the level config
-- [ ] All existing physics tests pass
+- [x] Hazard platforms visually stand out from regular platforms
+- [x] Player touching a hazard respawns at the last checkpoint (or spawn)
+- [x] Hazards can be placed in the level config
+- [x] All existing physics tests pass
 
 ## Notes
 
 - **2026-02-25**: Ticket created. No blockers.
+- **2026-02-26**: Implemented together with TICKET-019 (Checkpoints). Created `HazardNode` with pulsing red/orange emissive box, trigger collider, and player respawn on contact via shared `RespawnState`. Added `HazardDef` interface and level data to `level.ts`. Two hazards placed in the level. All 18 tests pass.

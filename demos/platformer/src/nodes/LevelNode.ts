@@ -1,11 +1,13 @@
 import * as THREE from 'three';
 import { useChild } from '@pulse-ts/core';
 import { useThreeContext, useObject3D } from '@pulse-ts/three';
-import { PlayerNode } from './PlayerNode';
+import { PlayerNode, type RespawnState } from './PlayerNode';
 import { PlatformNode } from './PlatformNode';
 import { MovingPlatformNode } from './MovingPlatformNode';
 import { RotatingPlatformNode } from './RotatingPlatformNode';
 import { CollectibleNode } from './CollectibleNode';
+import { CheckpointNode } from './CheckpointNode';
+import { HazardNode } from './HazardNode';
 import { GoalNode } from './GoalNode';
 import { CameraRigNode } from './CameraRigNode';
 import { level } from '../config/level';
@@ -37,10 +39,16 @@ export function LevelNode() {
     // Fog for depth
     scene.fog = new THREE.Fog(0x0a0a1a, 30, 80);
 
+    // Shared respawn state — checkpoints and hazards update this
+    const respawnState: RespawnState = {
+        position: [...level.playerSpawn],
+    };
+
     // Player
     const playerNode = useChild(PlayerNode, {
         spawn: level.playerSpawn,
         deathPlaneY: level.deathPlaneY,
+        respawnState,
     });
 
     // Platforms
@@ -77,6 +85,25 @@ export function LevelNode() {
     for (const col of level.collectibles) {
         useChild(CollectibleNode, {
             position: col.position,
+        });
+    }
+
+    // Checkpoints
+    for (const cp of level.checkpoints) {
+        useChild(CheckpointNode, {
+            position: cp.position,
+            respawnState,
+        });
+    }
+
+    // Hazards
+    for (const hazard of level.hazards) {
+        useChild(HazardNode, {
+            position: hazard.position,
+            size: hazard.size,
+            color: hazard.color,
+            respawnState,
+            player: playerNode,
         });
     }
 

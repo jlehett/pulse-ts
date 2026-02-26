@@ -26,6 +26,16 @@ export interface CollectibleDef {
     position: [number, number, number];
 }
 
+export interface CheckpointDef {
+    position: [number, number, number];
+}
+
+export interface HazardDef {
+    position: [number, number, number];
+    size: [number, number, number];
+    color?: number;
+}
+
 export interface LevelDef {
     playerSpawn: [number, number, number];
     deathPlaneY: number;
@@ -33,6 +43,8 @@ export interface LevelDef {
     movingPlatforms: MovingPlatformDef[];
     rotatingPlatforms: RotatingPlatformDef[];
     collectibles: CollectibleDef[];
+    checkpoints: CheckpointDef[];
+    hazards: HazardDef[];
     goalPosition: [number, number, number];
 }
 
@@ -93,6 +105,20 @@ export const level: LevelDef = {
         { position: [18, 4, -1] },
         { position: [23, 5.2, 0] },
         { position: [34, 6.8, 0] },
+    ],
+
+    checkpoints: [
+        // After the stepping stones, before the higher path
+        { position: [18, 3.0, -1] },
+        // Before the final destination
+        { position: [28, 5.0, 0] },
+    ],
+
+    hazards: [
+        // Dangerous gap between stepping stones
+        { position: [10, 0.2, 0], size: [2, 0.15, 3], color: 0xcc3300 },
+        // Hazard on the higher path approach
+        { position: [25.5, 3.8, 0], size: [1.5, 0.15, 3], color: 0xcc3300 },
     ],
 
     goalPosition: [34, 6.8, 0],
