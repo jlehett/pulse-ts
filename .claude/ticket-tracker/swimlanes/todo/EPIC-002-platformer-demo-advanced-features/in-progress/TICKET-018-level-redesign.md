@@ -2,7 +2,7 @@
 id: TICKET-018
 epic: EPIC-002
 title: Level redesign with 2–3 distinct stages
-status: todo
+status: in-progress
 priority: medium
 branch: ticket-018-level-redesign-3-distinct-stages
 created: 2026-02-25
@@ -31,3 +31,4 @@ Update `level.ts` to hold all platform/hazard/enemy/collectible/goal definitions
 ## Notes
 
 - **2026-02-25**: Ticket created. Blocked by TICKET-011 (moving/rotating platforms). Best done after most other feature tickets are complete.
+- **2026-02-26**: Starting implementation — 3-stage level redesign.
