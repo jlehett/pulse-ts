@@ -2,10 +2,10 @@
 id: TICKET-004
 epic: EPIC-001
 title: Pool Vec3/Quat in collision detection
-status: todo
+status: done
 priority: high
 created: 2026-02-24
-updated: 2026-02-24
+updated: 2026-02-25
 ---
 
 ## Description
@@ -27,3 +27,5 @@ Introduce a simple object pool so narrow-phase collision math reuses pre-allocat
 ## Notes
 
 - **2026-02-24**: Ticket created. Blocked by TICKET-002 (need baseline). Can be implemented alongside TICKET-005 and TICKET-006 once baseline is captured.
+- **2026-02-25**: Status changed to in-progress
+- **2026-02-25**: Status changed to done. Vec3 pool implemented in detect.ts. PR #11 merged.
