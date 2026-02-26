@@ -3,7 +3,10 @@ import type { Vec3, Node } from '@pulse-ts/core';
 /**
  * Supported high-level rigid body motion types.
  * - `dynamic`: simulated; affected by forces, impulses, gravity, and collisions.
- * - `kinematic`: controlled externally (e.g., set directly); does not respond to forces.
+ * - `kinematic`: scripted movement; set `linearVelocity`/`angularVelocity` each step to drive
+ *   motion. Integrates velocity → position like dynamic, but ignores gravity, forces, impulses,
+ *   and damping. Has infinite mass from the collision solver's perspective — pushes dynamic
+ *   bodies but is never displaced by them.
  * - `static`: immovable; used for level geometry or anchors.
  */
 export type RigidBodyType = 'dynamic' | 'kinematic' | 'static';
