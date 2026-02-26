@@ -3,9 +3,11 @@ import {
     useComponent,
     useNode,
     useFrameUpdate,
+    getComponent,
     Transform,
 } from '@pulse-ts/core';
 import { useRigidBody, useSphereCollider, useOnCollisionStart } from '@pulse-ts/physics';
+import { PlayerTag } from '../components/PlayerTag';
 import { useThreeRoot, useObject3D } from '@pulse-ts/three';
 
 const COLLECTIBLE_RADIUS = 0.25;
@@ -60,8 +62,9 @@ export function CollectibleNode(props: Readonly<CollectibleNodeProps>) {
         );
     });
 
-    // Increment counter and destroy on contact with any other node (player)
-    useOnCollisionStart(() => {
+    // Increment counter and destroy on player contact only
+    useOnCollisionStart(({ other }) => {
+        if (!getComponent(other, PlayerTag)) return;
         props.collectibleState.collected++;
         node.destroy();
     });
