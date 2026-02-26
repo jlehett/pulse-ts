@@ -5,7 +5,8 @@ title: Particle burst on collectible pickup
 status: todo
 priority: low
 created: 2026-02-25
-updated: 2026-02-25
+updated: 2026-02-26
+branch: ticket-021-particle-burst-collectible
 ---
 
 ## Description
