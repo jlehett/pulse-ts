@@ -3,9 +3,10 @@ id: TICKET-020
 epic: EPIC-002
 title: Patrolling enemy
 status: todo
+branch: ticket-020-patrolling-enemy
 priority: medium
 created: 2026-02-25
-updated: 2026-02-25
+updated: 2026-02-26
 ---
 
 ## Description
