@@ -198,6 +198,10 @@ export function useParticles(options: Readonly<ParticlesOptions>): ParticleEmitt
     });
 
     const points = new THREE.Points(geometry, material);
+    // Particles can spawn anywhere in the scene; the bounding sphere computed
+    // from the initial zero-filled buffer would cause incorrect frustum culling
+    // once the camera moves away from the origin.
+    points.frustumCulled = false;
     useObject3D(points);
 
     // --- Per-frame sync ---

@@ -20,7 +20,7 @@ jest.mock('three', () => ({
         needsUpdate: false,
     })),
     ShaderMaterial: jest.fn(() => ({ dispose: mockDispose })),
-    Points: jest.fn(() => ({})),
+    Points: jest.fn(() => ({ frustumCulled: true })),
     AdditiveBlending: 1,
     NormalBlending: 0,
 }));
@@ -190,5 +190,16 @@ describe('useParticles — hook integration', () => {
         emitter.burst(7);
         step(1);
         expect(mockSetDrawRange).toHaveBeenCalledWith(0, 7);
+    });
+
+    test('Points object has frustumCulled disabled', () => {
+        const THREE = jest.requireMock('three');
+        setup({ maxCount: 10 });
+
+        // The Points constructor is called once
+        expect(THREE.Points).toHaveBeenCalledTimes(1);
+        // The resulting object should have frustumCulled set to false
+        const pointsInstance = THREE.Points.mock.results[0].value;
+        expect(pointsInstance.frustumCulled).toBe(false);
     });
 });
