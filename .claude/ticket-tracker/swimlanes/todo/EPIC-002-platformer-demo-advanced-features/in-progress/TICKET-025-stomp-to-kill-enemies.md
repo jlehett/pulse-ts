@@ -2,7 +2,7 @@
 id: TICKET-025
 epic: EPIC-002
 title: Stomp to kill enemies
-status: todo
+status: in-progress
 priority: medium
 branch: ticket-025-stomp-to-kill-enemies
 created: 2026-02-26
@@ -29,3 +29,4 @@ Reuses `ParticleBurstNode` from TICKET-021 for the destruction effect (with enem
 ## Notes
 
 - **2026-02-26**: Ticket created. Requires modifying EnemyNode collision handler and possibly extending ParticleBurstNode props.
+- **2026-02-26**: Starting implementation.
