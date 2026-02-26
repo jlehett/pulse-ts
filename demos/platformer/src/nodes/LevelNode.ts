@@ -22,24 +22,21 @@ export function LevelNode() {
     scene.add(ambient);
 
     const directional = new THREE.DirectionalLight(0xffffff, 1.0);
-    directional.position.set(10, 20, 10);
+    directional.position.set(32, 25, 15);
     directional.castShadow = true;
-    // 1024×1024 is half the linear resolution of the original 2048 — 4× less
-    // GPU memory and bandwidth. The tighter frustum below keeps texel density
-    // acceptable by fitting the orthographic shadow volume to the actual level
-    // bounds (x: 0–36, z: ±4, y: −10–12) rather than the original over-sized
-    // box (left −30, right 50, top 20, bottom −10).
-    directional.shadow.mapSize.set(1024, 1024);
+    // 2048×2048 shadow map for the wider 3-stage level (X: 0–67).
+    // The frustum is fitted to cover the full level bounds with margin.
+    directional.shadow.mapSize.set(2048, 2048);
     directional.shadow.camera.near = 0.5;
-    directional.shadow.camera.far = 80;
-    directional.shadow.camera.left = -5;
-    directional.shadow.camera.right = 30;
+    directional.shadow.camera.far = 100;
+    directional.shadow.camera.left = -10;
+    directional.shadow.camera.right = 72;
     directional.shadow.camera.top = 15;
     directional.shadow.camera.bottom = -12;
     scene.add(directional);
 
-    // Fog for depth
-    scene.fog = new THREE.Fog(0x0a0a1a, 30, 80);
+    // Fog for depth — pushed back to accommodate the wider level
+    scene.fog = new THREE.Fog(0x0a0a1a, 40, 100);
 
     // Shared respawn state — checkpoints and hazards update this
     const respawnState: RespawnState = {
