@@ -2,10 +2,11 @@
 id: TICKET-014
 epic: EPIC-002
 title: Collectible counter HUD
-status: todo
+status: done
 priority: medium
 created: 2026-02-25
-updated: 2026-02-25
+updated: 2026-02-26
+branch: ticket-014-collectible-counter-hud
 ---
 
 ## Description
@@ -19,11 +20,12 @@ Display a live collectible counter on screen (e.g., "Gems: 3 / 5") so the player
 
 ## Acceptance Criteria
 
-- [ ] Counter visible on screen from game start
-- [ ] Count increments correctly on each pickup
-- [ ] Total reflects actual collectibles in the level
-- [ ] Overlay is styled consistently with the stats overlay
+- [x] Counter visible on screen from game start
+- [x] Count increments correctly on each pickup
+- [x] Total reflects actual collectibles in the level
+- [x] Overlay is styled consistently with the stats overlay
 
 ## Notes
 
 - **2026-02-25**: Ticket created. No blockers.
+- **2026-02-26**: Implemented. Added `CollectibleState` shared mutable counter, `CollectibleHudNode` DOM overlay (top-right, monospace green-on-dark matching StatsOverlaySystem), and wired everything through `LevelNode`. Counter increments on pickup and survives respawn since collected gems stay destroyed.

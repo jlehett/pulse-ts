@@ -13,8 +13,14 @@ const SPIN_SPEED = 2;
 const BOB_SPEED = 2;
 const BOB_AMPLITUDE = 0.2;
 
+/** Shared mutable counter incremented each time a collectible is picked up. */
+export interface CollectibleState {
+    collected: number;
+}
+
 export interface CollectibleNodeProps {
     position: [number, number, number];
+    collectibleState: CollectibleState;
 }
 
 export function CollectibleNode(props: Readonly<CollectibleNodeProps>) {
@@ -54,8 +60,9 @@ export function CollectibleNode(props: Readonly<CollectibleNodeProps>) {
         );
     });
 
-    // Destroy on contact with any other node (player)
+    // Increment counter and destroy on contact with any other node (player)
     useOnCollisionStart(() => {
+        props.collectibleState.collected++;
         node.destroy();
     });
 }
