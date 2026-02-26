@@ -2,10 +2,11 @@
 id: TICKET-016
 epic: EPIC-002
 title: Variable jump height (hold space for higher jump)
-status: todo
+status: done
 priority: medium
 created: 2026-02-25
-updated: 2026-02-25
+updated: 2026-02-26
+branch: ticket-016-variable-jump-height
 ---
 
 ## Description
@@ -20,11 +21,12 @@ Implementation:
 
 ## Acceptance Criteria
 
-- [ ] Quick tap produces a noticeably shorter jump than a held press
-- [ ] Maximum height (full hold) feels satisfying and clears the tallest platform gap
-- [ ] Holding jump in the air (after the hold window expires) does not continue to apply force
-- [ ] Works correctly alongside coyote time (TICKET-015)
+- [x] Quick tap produces a noticeably shorter jump than a held press
+- [x] Maximum height (full hold) feels satisfying and clears the tallest platform gap
+- [x] Holding jump in the air (after the hold window expires) does not continue to apply force
+- [x] Works correctly alongside coyote time (TICKET-015)
 
 ## Notes
 
 - **2026-02-25**: Ticket created. No blockers.
+- **2026-02-26**: Implementation complete. Reduced JUMP_IMPULSE from 8 to 5.5, added JUMP_HOLD_FORCE (38) and JUMP_HOLD_MAX (0.18s). Added jumpHoldTimer that starts on jump fire and applies sustained upward force while held. Timer resets on death-plane respawn. All tests pass.
