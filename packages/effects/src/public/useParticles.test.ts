@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
 // ---------------------------------------------------------------------------
 // Mock Three.js — must be before any import that touches 'three'
 // ---------------------------------------------------------------------------
@@ -85,7 +83,9 @@ describe('useParticles — hook integration', () => {
     test('burst() spawns particles that are alive', () => {
         const { emitter } = setup({
             maxCount: 50,
-            init: (p) => { p.lifetime = 5; },
+            init: (p) => {
+                p.lifetime = 5;
+            },
         });
 
         emitter.burst(10, [0, 0, 0]);
@@ -95,7 +95,9 @@ describe('useParticles — hook integration', () => {
     test('particles die after their lifetime expires', () => {
         const { emitter, step } = setup({
             maxCount: 10,
-            init: (p) => { p.lifetime = 0.05; },
+            init: (p) => {
+                p.lifetime = 0.05;
+            },
         });
 
         emitter.burst(5);
@@ -108,7 +110,9 @@ describe('useParticles — hook integration', () => {
     test('continuous emission spawns particles over time', () => {
         const { emitter, step } = setup({
             maxCount: 200,
-            init: (p) => { p.lifetime = 10; },
+            init: (p) => {
+                p.lifetime = 10;
+            },
         });
 
         emitter.rate = 100;
@@ -158,7 +162,9 @@ describe('useParticles — hook integration', () => {
         const updateFn = jest.fn();
         const { emitter, step } = setup({
             maxCount: 10,
-            init: (p) => { p.lifetime = 5; },
+            init: (p) => {
+                p.lifetime = 5;
+            },
             update: updateFn,
         });
 
@@ -184,7 +190,9 @@ describe('useParticles — hook integration', () => {
     test('setDrawRange is called after ticking with alive particles', () => {
         const { emitter, step } = setup({
             maxCount: 20,
-            init: (p) => { p.lifetime = 5; },
+            init: (p) => {
+                p.lifetime = 5;
+            },
         });
 
         emitter.burst(7);

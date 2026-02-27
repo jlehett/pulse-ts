@@ -1,4 +1,4 @@
-import type { Transport, TransportStatus } from '../../domain/types';
+import type { Transport, TransportStatus } from '../../../domain/types';
 import type { MemoryHub } from './hub';
 
 let peerCounter = 0;

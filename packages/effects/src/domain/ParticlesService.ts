@@ -3,7 +3,6 @@ import { Service } from '@pulse-ts/core';
 import {
     ParticlePool,
     type Particle,
-    type Point3,
     type InitFn,
     type UpdateFn,
 } from './ParticlePool';
@@ -173,9 +172,9 @@ export function buildInit(
 
     return (p: Particle) => {
         p.lifetime = lifetime;
-        p.velocity.randomDirection().scale(
-            minSpeed + Math.random() * (maxSpeed - minSpeed),
-        );
+        p.velocity
+            .randomDirection()
+            .scale(minSpeed + Math.random() * (maxSpeed - minSpeed));
         p.color.set(color);
         p.size = particleSize;
         p.opacity = opacity;
@@ -320,7 +319,16 @@ export class ParticlesService extends Service {
             this._root.add(points);
         }
 
-        managed = { pool, geometry, material, points, posAttr, colorAttr, opacityAttr, sizeAttr };
+        managed = {
+            pool,
+            geometry,
+            material,
+            points,
+            posAttr,
+            colorAttr,
+            opacityAttr,
+            sizeAttr,
+        };
         this._pools.set(blending, managed);
         return managed;
     }
@@ -358,7 +366,8 @@ export class ParticlesService extends Service {
 
 /** @internal Copy alive particle data into the typed arrays. */
 function syncBuffers(managed: ManagedPool): void {
-    const { pool, posAttr, colorAttr, opacityAttr, sizeAttr, geometry } = managed;
+    const { pool, posAttr, colorAttr, opacityAttr, sizeAttr, geometry } =
+        managed;
     const particles = pool.particles;
     let visible = 0;
 

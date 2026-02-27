@@ -85,7 +85,7 @@ export interface PatrolHandle {
 // ---------------------------------------------------------------------------
 
 const EASINGS: Record<EasingPreset, (t: number) => number> = {
-    'linear': (t) => t,
+    linear: (t) => t,
     'ease-in': (t) => t * t,
     'ease-out': (t) => t * (2 - t),
     'ease-in-out': (t) => (t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t),
@@ -107,13 +107,6 @@ function lerp3(a: Point3, b: Point3, t: number): Point3 {
         a[1] + (b[1] - a[1]) * t,
         a[2] + (b[2] - a[2]) * t,
     ];
-}
-
-function dist3(a: Point3, b: Point3): number {
-    const dx = b[0] - a[0];
-    const dy = b[1] - a[1];
-    const dz = b[2] - a[2];
-    return Math.sqrt(dx * dx + dy * dy + dz * dz);
 }
 
 // ---------------------------------------------------------------------------

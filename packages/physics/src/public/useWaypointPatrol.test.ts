@@ -3,11 +3,9 @@ import { installPhysics } from './install';
 import { useRigidBody } from './hooks';
 import { useWaypointPatrol } from './useWaypointPatrol';
 import type { PatrolHandle, Point3 } from './useWaypointPatrol';
-import { RigidBody } from './components/RigidBody';
 
 /** Fixed step size in milliseconds (matching the world config below). */
 const FIXED_MS = 10;
-const FIXED_DT = FIXED_MS / 1000; // 0.01s
 
 /**
  * Helper: mounts a component with a patrol and returns the handle, the
@@ -56,7 +54,10 @@ function setupPatrol(options: Parameters<typeof useWaypointPatrol>[1]) {
 describe('useWaypointPatrol — speed mode', () => {
     test('moves body toward second waypoint', () => {
         const { getPos, step } = setupPatrol({
-            waypoints: [[0, 0, 0], [10, 0, 0]],
+            waypoints: [
+                [0, 0, 0],
+                [10, 0, 0],
+            ],
             speed: 5,
         });
 
@@ -67,8 +68,11 @@ describe('useWaypointPatrol — speed mode', () => {
     });
 
     test('ping-pongs between two waypoints', () => {
-        const { getPos, step, handle } = setupPatrol({
-            waypoints: [[0, 0, 0], [1, 0, 0]],
+        const { getPos, step } = setupPatrol({
+            waypoints: [
+                [0, 0, 0],
+                [1, 0, 0],
+            ],
             speed: 10, // fast — traverses in ~6 frames
         });
 
@@ -83,7 +87,10 @@ describe('useWaypointPatrol — speed mode', () => {
 
     test('pause stops movement and resume continues', () => {
         const { getPos, step, handle } = setupPatrol({
-            waypoints: [[0, 0, 0], [10, 0, 0]],
+            waypoints: [
+                [0, 0, 0],
+                [10, 0, 0],
+            ],
             speed: 5,
         });
 
@@ -106,8 +113,12 @@ describe('useWaypointPatrol — speed mode', () => {
     });
 
     test('handles 3+ waypoints with ping-pong', () => {
-        const { getPos, step, handle } = setupPatrol({
-            waypoints: [[0, 0, 0], [1, 0, 0], [2, 0, 0]],
+        const { step, handle } = setupPatrol({
+            waypoints: [
+                [0, 0, 0],
+                [1, 0, 0],
+                [2, 0, 0],
+            ],
             speed: 100, // very fast
         });
 
@@ -118,7 +129,11 @@ describe('useWaypointPatrol — speed mode', () => {
 
     test('loop mode wraps around instead of ping-ponging', () => {
         const { step, handle } = setupPatrol({
-            waypoints: [[0, 0, 0], [1, 0, 0], [1, 1, 0]],
+            waypoints: [
+                [0, 0, 0],
+                [1, 0, 0],
+                [1, 1, 0],
+            ],
             speed: 100,
             loop: true,
         });
@@ -130,7 +145,10 @@ describe('useWaypointPatrol — speed mode', () => {
 
     test('currentSegment starts at 0', () => {
         const { handle } = setupPatrol({
-            waypoints: [[0, 0, 0], [10, 0, 0]],
+            waypoints: [
+                [0, 0, 0],
+                [10, 0, 0],
+            ],
             speed: 5,
         });
         expect(handle.currentSegment).toBe(0);
@@ -144,7 +162,10 @@ describe('useWaypointPatrol — speed mode', () => {
 describe('useWaypointPatrol — duration mode', () => {
     test('moves body toward target over duration', () => {
         const { getPos, step } = setupPatrol({
-            waypoints: [[0, 0, 0], [10, 0, 0]],
+            waypoints: [
+                [0, 0, 0],
+                [10, 0, 0],
+            ],
             duration: 1, // 1 second per segment
         });
 
@@ -158,7 +179,10 @@ describe('useWaypointPatrol — duration mode', () => {
     test('custom easing function is applied', () => {
         const customEasing = jest.fn((t: number) => t * t * t);
         const { step } = setupPatrol({
-            waypoints: [[0, 0, 0], [10, 0, 0]],
+            waypoints: [
+                [0, 0, 0],
+                [10, 0, 0],
+            ],
             duration: 1,
             easing: customEasing,
         });
@@ -177,7 +201,10 @@ describe('useWaypointPatrol — duration mode', () => {
         );
 
         const { step } = setupPatrol({
-            waypoints: [[0, 0, 0], [10, 0, 0]],
+            waypoints: [
+                [0, 0, 0],
+                [10, 0, 0],
+            ],
             duration: 1,
             interpolate: customInterp,
         });
@@ -193,7 +220,11 @@ describe('useWaypointPatrol — duration mode', () => {
 
     test('advances segments after duration elapses', () => {
         const { step, handle } = setupPatrol({
-            waypoints: [[0, 0, 0], [10, 0, 0], [20, 0, 0]],
+            waypoints: [
+                [0, 0, 0],
+                [10, 0, 0],
+                [20, 0, 0],
+            ],
             duration: 0.5,
         });
 
@@ -204,7 +235,10 @@ describe('useWaypointPatrol — duration mode', () => {
 
     test('ease-in-out preset is accepted', () => {
         const { getPos, step } = setupPatrol({
-            waypoints: [[0, 0, 0], [10, 0, 0]],
+            waypoints: [
+                [0, 0, 0],
+                [10, 0, 0],
+            ],
             duration: 1,
             easing: 'ease-in-out',
         });
@@ -223,7 +257,10 @@ describe('useWaypointPatrol — duration mode', () => {
 describe('useWaypointPatrol — general', () => {
     test('handle exposes readonly state', () => {
         const { handle } = setupPatrol({
-            waypoints: [[0, 0, 0], [10, 0, 0]],
+            waypoints: [
+                [0, 0, 0],
+                [10, 0, 0],
+            ],
             speed: 5,
         });
 

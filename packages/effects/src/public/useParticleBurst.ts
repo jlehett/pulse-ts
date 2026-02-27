@@ -5,7 +5,7 @@ import {
     buildUpdate,
     type ParticleStyleOptions,
 } from '../domain/ParticlesService';
-import type { Point3 } from '../domain/ParticlePool';
+import type { Point3, Particle } from '../domain/ParticlePool';
 import type { BlendingMode } from './useParticles';
 
 // ---------------------------------------------------------------------------
@@ -87,7 +87,7 @@ export function useParticleBurst(
     if (!pool.update) {
         pool.update = (p, dt) => {
             const custom = p.userData._customUpdate as
-                | ((p: typeof p, dt: number) => void)
+                | ((p: Particle, dt: number) => void)
                 | undefined;
             custom?.(p, dt);
         };

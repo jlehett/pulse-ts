@@ -42,8 +42,13 @@ function makeDirtyVec3(owner: Transform, v: Vec3): Vec3 {
     for (const key of ['x', 'y', 'z'] as const) {
         let val = v[key];
         Object.defineProperty(v, key, {
-            get() { return val; },
-            set(newVal: number) { val = newVal; mark(); },
+            get() {
+                return val;
+            },
+            set(newVal: number) {
+                val = newVal;
+                mark();
+            },
             enumerable: true,
             configurable: true,
         });
@@ -66,8 +71,13 @@ function makeDirtyQuat(owner: Transform, q: Quat): Quat {
     for (const key of ['x', 'y', 'z', 'w'] as const) {
         let val = q[key];
         Object.defineProperty(q, key, {
-            get() { return val; },
-            set(newVal: number) { val = newVal; mark(); },
+            get() {
+                return val;
+            },
+            set(newVal: number) {
+                val = newVal;
+                mark();
+            },
             enumerable: true,
             configurable: true,
         });

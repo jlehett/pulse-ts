@@ -173,11 +173,7 @@ export function useFollowCamera(
         camera.position.z += (desiredZ - camera.position.z) * t;
 
         // Look at target + lookAhead offset
-        camera.lookAt(
-            tx + lookAhead[0],
-            ty + lookAhead[1],
-            tz + lookAhead[2],
-        );
+        camera.lookAt(tx + lookAhead[0], ty + lookAhead[1], tz + lookAhead[2]);
     });
 
     return { camera };

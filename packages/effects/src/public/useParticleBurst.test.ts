@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
 // ---------------------------------------------------------------------------
 // Mock Three.js — must be before any import that touches 'three'
 // ---------------------------------------------------------------------------
@@ -78,14 +76,20 @@ describe('useParticleBurst', () => {
 
     test('returns a function', () => {
         const { burst } = setup({
-            count: 10, lifetime: 0.5, color: 0xff0000, speed: [1, 2],
+            count: 10,
+            lifetime: 0.5,
+            color: 0xff0000,
+            speed: [1, 2],
         });
         expect(typeof burst).toBe('function');
     });
 
     test('burst spawns the specified number of particles', () => {
         const { burst, service } = setup({
-            count: 12, lifetime: 1, color: 0xff0000, speed: [1, 2],
+            count: 12,
+            lifetime: 1,
+            color: 0xff0000,
+            speed: [1, 2],
         });
 
         burst([0, 0, 0]);
@@ -95,7 +99,10 @@ describe('useParticleBurst', () => {
 
     test('particles die after their lifetime expires', () => {
         const { burst, service, step } = setup({
-            count: 5, lifetime: 0.05, color: 0xff0000, speed: [1, 2],
+            count: 5,
+            lifetime: 0.05,
+            color: 0xff0000,
+            speed: [1, 2],
         });
 
         burst([0, 0, 0]);
@@ -107,7 +114,11 @@ describe('useParticleBurst', () => {
 
     test('gravity pulls particles down', () => {
         const { burst, service, step } = setup({
-            count: 1, lifetime: 5, color: 0xff0000, speed: [0, 0], gravity: 100,
+            count: 1,
+            lifetime: 5,
+            color: 0xff0000,
+            speed: [0, 0],
+            gravity: 100,
         });
 
         burst([0, 10, 0]);
@@ -115,7 +126,7 @@ describe('useParticleBurst', () => {
 
         // After 16ms with gravity=100, velocity.y should decrease
         const pool = service.getPool('normal').pool;
-        const p = pool.particles.find(p => p.alive);
+        const p = pool.particles.find((p) => p.alive);
         expect(p).toBeDefined();
         expect(p!.velocity.y).toBeLessThan(0);
     });
@@ -123,7 +134,10 @@ describe('useParticleBurst', () => {
     test('custom init callback runs after built-in', () => {
         const customInit = jest.fn();
         const { burst } = setup({
-            count: 3, lifetime: 1, color: 0xff0000, speed: [1, 2],
+            count: 3,
+            lifetime: 1,
+            color: 0xff0000,
+            speed: [1, 2],
             init: customInit,
         });
 
@@ -134,7 +148,10 @@ describe('useParticleBurst', () => {
     test('custom update callback runs each tick', () => {
         const customUpdate = jest.fn();
         const { burst, step } = setup({
-            count: 1, lifetime: 5, color: 0xff0000, speed: [0, 0],
+            count: 1,
+            lifetime: 5,
+            color: 0xff0000,
+            speed: [0, 0],
             update: customUpdate,
         });
 
@@ -152,11 +169,17 @@ describe('useParticleBurst', () => {
         function TestNode() {
             service = installParticles({ maxPerPool: 50 });
             normalBurst = useParticleBurst({
-                count: 5, lifetime: 1, color: 0xff0000, speed: [1, 2],
+                count: 5,
+                lifetime: 1,
+                color: 0xff0000,
+                speed: [1, 2],
                 blending: 'normal',
             });
             additiveBurst = useParticleBurst({
-                count: 3, lifetime: 1, color: 0x00ff00, speed: [1, 2],
+                count: 3,
+                lifetime: 1,
+                color: 0x00ff00,
+                speed: [1, 2],
                 blending: 'additive',
             });
         }
@@ -176,7 +199,10 @@ describe('useParticleBurst', () => {
         expect(() => {
             function TestNode() {
                 useParticleBurst({
-                    count: 1, lifetime: 1, color: 0xff0000, speed: [1, 2],
+                    count: 1,
+                    lifetime: 1,
+                    color: 0xff0000,
+                    speed: [1, 2],
                 });
             }
             world.mount(TestNode);
@@ -185,15 +211,19 @@ describe('useParticleBurst', () => {
 
     test('shrink option reduces particle size over time', () => {
         const { burst, service, step } = setup({
-            count: 1, lifetime: 1, color: 0xff0000, speed: [0, 0],
-            size: 0.1, shrink: true,
+            count: 1,
+            lifetime: 1,
+            color: 0xff0000,
+            speed: [0, 0],
+            size: 0.1,
+            shrink: true,
         });
 
         burst([0, 0, 0]);
         step(1); // 16ms
 
         const pool = service.getPool('normal').pool;
-        const p = pool.particles.find(p => p.alive);
+        const p = pool.particles.find((p) => p.alive);
         expect(p).toBeDefined();
         expect(p!.size).toBeLessThan(0.1);
     });

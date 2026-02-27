@@ -42,7 +42,9 @@ describe('ParticlePool — burst & lifecycle', () => {
     test('particles are recycled after dying', () => {
         const pool = new ParticlePool({
             maxCount: 5,
-            init: (p) => { p.lifetime = 0.1; },
+            init: (p) => {
+                p.lifetime = 0.1;
+            },
         });
 
         pool.burst(5);
@@ -60,7 +62,9 @@ describe('ParticlePool — burst & lifecycle', () => {
     test('particles despawn when age >= lifetime', () => {
         const pool = new ParticlePool({
             maxCount: 10,
-            init: (p) => { p.lifetime = 0.5; },
+            init: (p) => {
+                p.lifetime = 0.5;
+            },
         });
 
         pool.burst(5);
@@ -74,7 +78,10 @@ describe('ParticlePool — burst & lifecycle', () => {
     test('reset clears particle state between reuses', () => {
         const pool = new ParticlePool({
             maxCount: 1,
-            init: (p) => { p.lifetime = 0.1; p.userData.tag = 'first'; },
+            init: (p) => {
+                p.lifetime = 0.1;
+                p.userData.tag = 'first';
+            },
         });
 
         pool.burst(1);
@@ -83,7 +90,9 @@ describe('ParticlePool — burst & lifecycle', () => {
 
         pool.tick(0.2); // dies
 
-        pool.init = (p) => { p.lifetime = 1; };
+        pool.init = (p) => {
+            p.lifetime = 1;
+        };
         pool.burst(1);
         expect(p.userData).toEqual({}); // reset clears userData
         expect(p.opacity).toBe(1);
@@ -187,8 +196,12 @@ describe('ParticlePool — update & integration', () => {
         const dts: number[] = [];
         const pool = new ParticlePool({
             maxCount: 1,
-            init: (p) => { p.lifetime = 5; },
-            update: (_p, dt) => { dts.push(dt); },
+            init: (p) => {
+                p.lifetime = 5;
+            },
+            update: (_p, dt) => {
+                dts.push(dt);
+            },
         });
 
         pool.burst(1);
@@ -224,7 +237,9 @@ describe('ParticlePool — update & integration', () => {
         const updateFn = jest.fn<void, [Particle, number]>();
         const pool = new ParticlePool({
             maxCount: 5,
-            init: (p) => { p.lifetime = 0.05; },
+            init: (p) => {
+                p.lifetime = 0.05;
+            },
             update: updateFn,
         });
 
@@ -245,7 +260,9 @@ describe('ParticlePool — continuous emission', () => {
     test('emitting at a rate spawns particles over time', () => {
         const pool = new ParticlePool({
             maxCount: 100,
-            init: (p) => { p.lifetime = 10; },
+            init: (p) => {
+                p.lifetime = 10;
+            },
         });
 
         pool.rate = 50; // 50 particles/second
@@ -261,7 +278,9 @@ describe('ParticlePool — continuous emission', () => {
     test('fractional accumulation prevents particle loss', () => {
         const pool = new ParticlePool({
             maxCount: 100,
-            init: (p) => { p.lifetime = 10; },
+            init: (p) => {
+                p.lifetime = 10;
+            },
         });
 
         pool.rate = 3; // 3 particles/second
@@ -275,7 +294,9 @@ describe('ParticlePool — continuous emission', () => {
     test('setting emitting=false stops emission', () => {
         const pool = new ParticlePool({
             maxCount: 100,
-            init: (p) => { p.lifetime = 10; },
+            init: (p) => {
+                p.lifetime = 10;
+            },
         });
 
         pool.rate = 50;
@@ -291,7 +312,9 @@ describe('ParticlePool — continuous emission', () => {
     test('rate=0 with emitting=true spawns nothing', () => {
         const pool = new ParticlePool({
             maxCount: 100,
-            init: (p) => { p.lifetime = 10; },
+            init: (p) => {
+                p.lifetime = 10;
+            },
         });
 
         pool.rate = 0;

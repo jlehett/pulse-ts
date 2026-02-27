@@ -1,10 +1,17 @@
-import { useWorld, useComponent, useFrameUpdate, useDestroy, Transform } from '@pulse-ts/core';
+import {
+    useWorld,
+    useComponent,
+    useFrameUpdate,
+    useDestroy,
+    Transform,
+} from '@pulse-ts/core';
 import {
     ParticlesService,
     buildInit,
     buildUpdate,
     type ParticleStyleOptions,
 } from '../domain/ParticlesService';
+import type { Particle } from '../domain/ParticlePool';
 import type { BlendingMode } from './useParticles';
 
 // ---------------------------------------------------------------------------
@@ -82,7 +89,7 @@ export function useParticleEmitter(
     if (!pool.update) {
         pool.update = (p, dt) => {
             const custom = p.userData._customUpdate as
-                | ((p: typeof p, dt: number) => void)
+                | ((p: Particle, dt: number) => void)
                 | undefined;
             custom?.(p, dt);
         };
@@ -116,10 +123,18 @@ export function useParticleEmitter(
     });
 
     const handle: EmitterHandle = {
-        pause() { active = false; },
-        resume() { active = true; },
-        get active() { return active; },
-        set active(v: boolean) { active = v; },
+        pause() {
+            active = false;
+        },
+        resume() {
+            active = true;
+        },
+        get active() {
+            return active;
+        },
+        set active(v: boolean) {
+            active = v;
+        },
     };
 
     return handle;

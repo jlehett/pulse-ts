@@ -124,9 +124,13 @@ describe('kinematic body — solver interaction', () => {
         const constraint: ContactConstraint = {
             a: kCol,
             b: dCol,
-            nx: 1, ny: 0, nz: 0,
+            nx: 1,
+            ny: 0,
+            nz: 0,
             depth: 0.1,
-            px: 0.45, py: 0, pz: 0,
+            px: 0.45,
+            py: 0,
+            pz: 0,
         };
         solveContactsIterative([constraint], 4, dt);
 

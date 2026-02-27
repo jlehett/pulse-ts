@@ -12,6 +12,7 @@
     "test": "nx run-many --target=test --all --exclude=pulse-ts",
     "bench": "nx run-many --target=bench --all --exclude=pulse-ts",
     "lint": "nx run-many --target=lint --all --exclude=pulse-ts",
+    "lint:fix": "nx run-many --target=lint:fix --all --exclude=pulse-ts",
     "release": "nx run-many --target=release --all --exclude=pulse-ts",
     "format": "nx format:write --exclude=pulse-ts",
     "docs:dev": "vitepress dev apps/docs",

@@ -122,19 +122,19 @@ function sineWave(phase: number): number {
 }
 
 function triangleWave(phase: number): number {
-    const t = ((phase / (2 * Math.PI) % 1) + 1) % 1;
+    const t = (((phase / (2 * Math.PI)) % 1) + 1) % 1;
     if (t < 0.25) return 4 * t;
     if (t < 0.75) return 2 - 4 * t;
     return 4 * t - 4;
 }
 
 function squareWave(phase: number): number {
-    const t = ((phase / (2 * Math.PI) % 1) + 1) % 1;
+    const t = (((phase / (2 * Math.PI)) % 1) + 1) % 1;
     return t < 0.5 ? 1 : -1;
 }
 
 function sawtoothWave(phase: number): number {
-    const t = ((phase / (2 * Math.PI) % 1) + 1) % 1;
+    const t = (((phase / (2 * Math.PI)) % 1) + 1) % 1;
     return 2 * t - 1;
 }
 
@@ -223,10 +223,19 @@ export function useAnimate(options: Readonly<AnimateOptions>): AnimatedValue {
         });
 
         return {
-            get value() { return currentValue; },
-            play() { /* no-op */ },
-            reset() { elapsed = 0; currentValue = 0; },
-            get finished() { return false; },
+            get value() {
+                return currentValue;
+            },
+            play() {
+                /* no-op */
+            },
+            reset() {
+                elapsed = 0;
+                currentValue = 0;
+            },
+            get finished() {
+                return false;
+            },
         };
     }
 
@@ -241,15 +250,28 @@ export function useAnimate(options: Readonly<AnimateOptions>): AnimatedValue {
             if (!playing || done) return;
             elapsed += dt;
             const raw = Math.min(elapsed / options.duration, 1);
-            currentValue = options.from + (options.to - options.from) * ease(raw);
+            currentValue =
+                options.from + (options.to - options.from) * ease(raw);
             if (raw >= 1) done = true;
         });
 
         return {
-            get value() { return currentValue; },
-            play() { playing = true; done = false; },
-            reset() { elapsed = 0; currentValue = options.from; playing = false; done = false; },
-            get finished() { return done; },
+            get value() {
+                return currentValue;
+            },
+            play() {
+                playing = true;
+                done = false;
+            },
+            reset() {
+                elapsed = 0;
+                currentValue = options.from;
+                playing = false;
+                done = false;
+            },
+            get finished() {
+                return done;
+            },
         };
     }
 
@@ -267,10 +289,19 @@ export function useAnimate(options: Readonly<AnimateOptions>): AnimatedValue {
         });
 
         return {
-            get value() { return currentValue; },
-            play() { /* no-op */ },
-            reset() { elapsed = 0; currentValue = min; },
-            get finished() { return false; },
+            get value() {
+                return currentValue;
+            },
+            play() {
+                /* no-op */
+            },
+            reset() {
+                elapsed = 0;
+                currentValue = min;
+            },
+            get finished() {
+                return false;
+            },
         };
     }
 
@@ -286,9 +317,18 @@ export function useAnimate(options: Readonly<AnimateOptions>): AnimatedValue {
     });
 
     return {
-        get value() { return currentValue; },
-        play() { /* no-op */ },
-        reset() { elapsed = 0; currentValue = 0; },
-        get finished() { return false; },
+        get value() {
+            return currentValue;
+        },
+        play() {
+            /* no-op */
+        },
+        reset() {
+            elapsed = 0;
+            currentValue = 0;
+        },
+        get finished() {
+            return false;
+        },
     };
 }

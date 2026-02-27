@@ -6,7 +6,13 @@ import {
     Transform,
     useContext,
 } from '@pulse-ts/core';
-import { useRigidBody, useBoxCollider, useOnCollisionStart, useWaypointPatrol, RigidBody } from '@pulse-ts/physics';
+import {
+    useRigidBody,
+    useBoxCollider,
+    useOnCollisionStart,
+    useWaypointPatrol,
+    RigidBody,
+} from '@pulse-ts/physics';
 import { useMesh } from '@pulse-ts/three';
 import { useSound } from '@pulse-ts/audio';
 import { useAnimate, useParticleBurst } from '@pulse-ts/effects';
@@ -65,8 +71,12 @@ export function EnemyNode(props: Readonly<EnemyNodeProps>) {
     const respawnState = useContext(RespawnCtx);
     const playerNode = useContext(PlayerNodeCtx);
     const burst = useParticleBurst({
-        count: 24, lifetime: 0.5, color: STOMP_PARTICLE_COLOR,
-        speed: [1.5, 4], gravity: 9.8, blending: 'additive',
+        count: 24,
+        lifetime: 0.5,
+        color: STOMP_PARTICLE_COLOR,
+        speed: [1.5, 4],
+        gravity: 9.8,
+        blending: 'additive',
     });
     const [sx, sy, sz] = props.size;
     const color = props.color ?? DEFAULT_COLOR;
@@ -96,7 +106,12 @@ export function EnemyNode(props: Readonly<EnemyNodeProps>) {
     });
 
     // Subtle pulsing emissive
-    const pulse = useAnimate({ wave: 'sine', min: 0.3, max: 0.8, frequency: 4 });
+    const pulse = useAnimate({
+        wave: 'sine',
+        min: 0.3,
+        max: 0.8,
+        frequency: 4,
+    });
     useFrameUpdate(() => {
         material.emissiveIntensity = pulse.value;
     });

@@ -1,4 +1,4 @@
-import type { TransportStatus } from '../../domain/types';
+import type { TransportStatus } from '../../../domain/types';
 
 /**
  * A peer in the memory hub.

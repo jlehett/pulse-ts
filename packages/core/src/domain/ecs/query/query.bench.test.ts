@@ -49,21 +49,15 @@ const w10k = makeWorld(10_000);
 // ---------------------------------------------------------------------------
 describe('ECS query — single component (Transform)', () => {
     bench('100 entities', () => {
-        let c = 0;
-        for (const _ of SINGLE_Q.run(w100)) c++;
-        return c;
+        SINGLE_Q.run(w100);
     });
 
     bench('1 000 entities', () => {
-        let c = 0;
-        for (const _ of SINGLE_Q.run(w1k)) c++;
-        return c;
+        SINGLE_Q.run(w1k);
     });
 
     bench('10 000 entities', () => {
-        let c = 0;
-        for (const _ of SINGLE_Q.run(w10k)) c++;
-        return c;
+        SINGLE_Q.run(w10k);
     });
 });
 
@@ -74,20 +68,14 @@ describe('ECS query — single component (Transform)', () => {
 // ---------------------------------------------------------------------------
 describe('ECS query — two components (Transform + Bounds)', () => {
     bench('100 entities', () => {
-        let c = 0;
-        for (const _ of DOUBLE_Q.run(w100)) c++;
-        return c;
+        DOUBLE_Q.run(w100);
     });
 
     bench('1 000 entities', () => {
-        let c = 0;
-        for (const _ of DOUBLE_Q.run(w1k)) c++;
-        return c;
+        DOUBLE_Q.run(w1k);
     });
 
     bench('10 000 entities', () => {
-        let c = 0;
-        for (const _ of DOUBLE_Q.run(w10k)) c++;
-        return c;
+        DOUBLE_Q.run(w10k);
     });
 });

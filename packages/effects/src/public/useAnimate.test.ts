@@ -3,7 +3,6 @@ import { useAnimate } from './useAnimate';
 import type { AnimatedValue, AnimateOptions } from './useAnimate';
 
 const TICK_MS = 10;
-const DT = TICK_MS / 1000; // 0.01s
 
 /**
  * Helper: mounts an FC that calls useAnimate and returns the handle +

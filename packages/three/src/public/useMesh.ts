@@ -203,11 +203,7 @@ function createGeometry<T extends GeometryType>(
         }
         case 'cone': {
             const o = opts as ConeGeometryOptions;
-            return new THREE.ConeGeometry(
-                o.radius,
-                o.height,
-                o.radialSegments,
-            );
+            return new THREE.ConeGeometry(o.radius, o.height, o.radialSegments);
         }
         case 'icosahedron': {
             const o = opts as IcosahedronGeometryOptions;

@@ -258,7 +258,12 @@ describe('useMesh', () => {
             height: 3,
         });
         expect((result.geometry as any)._type).toBe('CylinderGeometry');
-        expect((result.geometry as any)._args).toEqual([0.2, 0.8, 3, undefined]);
+        expect((result.geometry as any)._args).toEqual([
+            0.2,
+            0.8,
+            3,
+            undefined,
+        ]);
     });
 
     test('creates a ConeGeometry', () => {

@@ -1,5 +1,11 @@
 /** @jest-environment jsdom */
-import { World, Node, Transform, useComponent } from '@pulse-ts/core';
+import {
+    World,
+    Node,
+    Transform,
+    useComponent,
+    getComponent,
+} from '@pulse-ts/core';
 import { ThreeService } from '../domain/services/Three';
 import { useFollowCamera } from './useFollowCamera';
 import type { FollowCameraResult } from './useFollowCamera';
@@ -218,9 +224,8 @@ describe('useFollowCamera', () => {
     });
 
     test('lower smoothing produces a lazier follow', () => {
-        let result!: FollowCameraResult;
         function CamFC() {
-            result = useFollowCamera(targetNode, {
+            useFollowCamera(targetNode, {
                 offset: [0, 0, 0],
                 smoothing: 0.5, // very lazy
                 interpolate: false,
@@ -250,14 +255,8 @@ describe('useFollowCamera', () => {
         // First tick to establish prev position and run frame
         world.tick(10);
 
-        // Move the target
-        const t = (targetNode as any)._components?.get(Transform) as Transform
-            ?? Array.from((targetNode as any).components?.values?.() ?? []).find(
-                (c: any) => c instanceof Transform,
-            ) as Transform;
-
         // Use getComponent to get transform
-        const transform = require('@pulse-ts/core').getComponent(targetNode, Transform) as Transform;
+        const transform = getComponent(targetNode, Transform) as Transform;
         transform.localPosition.set(10, 4, -6);
 
         // Half-step tick: should trigger fixedEarly then frame with alpha ~0.5

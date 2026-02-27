@@ -41,7 +41,9 @@ export function findPairs(
         for (let x = minx; x <= maxx; x++)
             for (let y = miny; y <= maxy; y++)
                 for (let z = minz; z <= maxz; z++) {
-                    const key = ((x + 0x8000) * 0x10000 + (y + 0x8000)) * 0x10000 + (z + 0x8000);
+                    const key =
+                        ((x + 0x8000) * 0x10000 + (y + 0x8000)) * 0x10000 +
+                        (z + 0x8000);
                     let list = buckets.get(key);
                     if (!list) buckets.set(key, (list = []));
                     list.push(c);

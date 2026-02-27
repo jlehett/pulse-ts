@@ -146,7 +146,9 @@ export interface ParticleEmitter {
  * }
  * ```
  */
-export function useParticles(options: Readonly<ParticlesOptions>): ParticleEmitter {
+export function useParticles(
+    options: Readonly<ParticlesOptions>,
+): ParticleEmitter {
     const defaultSize = options.size ?? 1;
 
     // Wrap init to apply default size before user callback
@@ -224,7 +226,10 @@ export function useParticles(options: Readonly<ParticlesOptions>): ParticleEmitt
         burst(count: number, position?: Point3, initOverride?: InitFn) {
             // Wrap the override to also apply default size
             const wrappedOverride = initOverride
-                ? (p: Particle) => { p.size = defaultSize; initOverride(p); }
+                ? (p: Particle) => {
+                      p.size = defaultSize;
+                      initOverride(p);
+                  }
                 : undefined;
             pool.burst(count, position, wrappedOverride);
         },

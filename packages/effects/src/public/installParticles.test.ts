@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
 // ---------------------------------------------------------------------------
 // Mock Three.js — must be before any import that touches 'three'
 // ---------------------------------------------------------------------------
@@ -96,7 +94,9 @@ describe('installParticles', () => {
 
         // Create a pool and burst some particles
         const managed = service.getPool('normal');
-        managed.pool.init = (p) => { p.lifetime = 5; };
+        managed.pool.init = (p) => {
+            p.lifetime = 5;
+        };
         managed.pool.burst(3);
 
         world.tick(TICK_MS);

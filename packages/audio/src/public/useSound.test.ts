@@ -69,17 +69,12 @@ class StubBiquadFilter {
 
 class StubAudioBuffer {
     private _data: Float32Array;
-    constructor(_numChannels: number, length: number, _sampleRate: number) {
+    constructor(_numChannels: number, length: number) {
         this._data = new Float32Array(length);
     }
-    getChannelData(_channel: number): Float32Array {
+    getChannelData(): Float32Array {
         return this._data;
     }
-}
-
-class StubGainNode {
-    gain = { value: 1 };
-    connect = jest.fn();
 }
 
 class StubAudioContext {
@@ -100,8 +95,8 @@ class StubAudioContext {
     createBiquadFilter() {
         return new StubBiquadFilter();
     }
-    createBuffer(numChannels: number, length: number, sampleRate: number) {
-        return new StubAudioBuffer(numChannels, length, sampleRate);
+    createBuffer(numChannels: number, length: number) {
+        return new StubAudioBuffer(numChannels, length);
     }
 }
 
@@ -168,7 +163,10 @@ describe('useSound — tone', () => {
         const osc = createdNodes.oscillators[0];
         expect(osc.type).toBe('square');
         expect(osc.frequency.setValueAtTime).toHaveBeenCalledWith(400, 0);
-        expect(osc.frequency.linearRampToValueAtTime).toHaveBeenCalledWith(800, 0.08);
+        expect(osc.frequency.linearRampToValueAtTime).toHaveBeenCalledWith(
+            800,
+            0.08,
+        );
     });
 
     test('applies gain envelope that ramps to zero', () => {
@@ -194,7 +192,10 @@ describe('useSound — tone', () => {
 
         expect(createdNodes.oscillators[0].type).toBe('sine');
         // gains[0] is the master gain; gains[1] is the tone gain
-        expect(createdNodes.gains[1].gain.setValueAtTime).toHaveBeenCalledWith(0.1, 0);
+        expect(createdNodes.gains[1].gain.setValueAtTime).toHaveBeenCalledWith(
+            0.1,
+            0,
+        );
     });
 
     test('connects through master gain destination', () => {
@@ -227,7 +228,10 @@ describe('useSound — noise', () => {
         const filter = createdNodes.filters[0];
         expect(filter.type).toBe('bandpass');
         expect(filter.frequency.setValueAtTime).toHaveBeenCalledWith(2000, 0);
-        expect(filter.frequency.linearRampToValueAtTime).toHaveBeenCalledWith(500, 0.15);
+        expect(filter.frequency.linearRampToValueAtTime).toHaveBeenCalledWith(
+            500,
+            0.15,
+        );
     });
 
     test('sets filter Q value', () => {
@@ -238,7 +242,10 @@ describe('useSound — noise', () => {
         });
         sfx.play();
 
-        expect(createdNodes.filters[0].Q.setValueAtTime).toHaveBeenCalledWith(5, 0);
+        expect(createdNodes.filters[0].Q.setValueAtTime).toHaveBeenCalledWith(
+            5,
+            0,
+        );
     });
 
     test('defaults filter to bandpass and Q to 1', () => {
@@ -249,7 +256,10 @@ describe('useSound — noise', () => {
         sfx.play();
 
         expect(createdNodes.filters[0].type).toBe('bandpass');
-        expect(createdNodes.filters[0].Q.setValueAtTime).toHaveBeenCalledWith(1, 0);
+        expect(createdNodes.filters[0].Q.setValueAtTime).toHaveBeenCalledWith(
+            1,
+            0,
+        );
     });
 
     test('creates white noise buffer with correct size', () => {
@@ -346,6 +356,8 @@ describe('useSound — general', () => {
         function BadComponent() {
             useSound('tone', { frequency: 440, duration: 0.1 });
         }
-        expect(() => world.mount(BadComponent)).toThrow('AudioService not provided');
+        expect(() => world.mount(BadComponent)).toThrow(
+            'AudioService not provided',
+        );
     });
 });

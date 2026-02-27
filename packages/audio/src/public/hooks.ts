@@ -26,7 +26,9 @@ export function useAudio(): AudioService {
     const world = __fcCurrent().world;
     const service = world.getService(AudioService);
     if (!service) {
-        throw new Error('AudioService not provided to world. Call installAudio(world) first.');
+        throw new Error(
+            'AudioService not provided to world. Call installAudio(world) first.',
+        );
     }
     return service;
 }

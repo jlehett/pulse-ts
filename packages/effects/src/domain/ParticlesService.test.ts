@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
 // ---------------------------------------------------------------------------
 // Mock Three.js
 // ---------------------------------------------------------------------------
@@ -8,7 +6,6 @@ const mockDispose = jest.fn();
 const mockSetDrawRange = jest.fn();
 const mockSetAttribute = jest.fn();
 const mockAdd = jest.fn();
-const mockRemove = jest.fn();
 
 jest.mock('three', () => ({
     BufferGeometry: jest.fn(() => ({
@@ -45,8 +42,22 @@ import type { Particle, Vec3Mut, ColorMut } from './ParticlePool';
 
 function createTestParticle(overrides: Partial<Particle> = {}): Particle {
     return {
-        position: { x: 0, y: 0, z: 0, set: jest.fn().mockReturnThis(), randomDirection: jest.fn().mockReturnThis(), scale: jest.fn().mockReturnThis() } as unknown as Vec3Mut,
-        velocity: { x: 0, y: 5, z: 0, set: jest.fn().mockReturnThis(), randomDirection: jest.fn().mockReturnThis(), scale: jest.fn().mockReturnThis() } as unknown as Vec3Mut,
+        position: {
+            x: 0,
+            y: 0,
+            z: 0,
+            set: jest.fn().mockReturnThis(),
+            randomDirection: jest.fn().mockReturnThis(),
+            scale: jest.fn().mockReturnThis(),
+        } as unknown as Vec3Mut,
+        velocity: {
+            x: 0,
+            y: 5,
+            z: 0,
+            set: jest.fn().mockReturnThis(),
+            randomDirection: jest.fn().mockReturnThis(),
+            scale: jest.fn().mockReturnThis(),
+        } as unknown as Vec3Mut,
         color: { r: 1, g: 1, b: 1, set: jest.fn() } as unknown as ColorMut,
         opacity: 1,
         size: 1,
@@ -76,7 +87,10 @@ describe('ParticlesService', () => {
     });
 
     test('accepts custom options', () => {
-        const service = new ParticlesService({ maxPerPool: 200, defaultSize: 0.1 });
+        const service = new ParticlesService({
+            maxPerPool: 200,
+            defaultSize: 0.1,
+        });
         expect(service.maxPerPool).toBe(200);
         expect(service.defaultSize).toBe(0.1);
     });
@@ -140,7 +154,9 @@ describe('ParticlesService', () => {
         const managed = service.getPool('normal');
 
         // Burst some particles with a real init
-        managed.pool.init = (p) => { p.lifetime = 5; };
+        managed.pool.init = (p) => {
+            p.lifetime = 5;
+        };
         managed.pool.burst(3);
         expect(managed.pool.aliveCount).toBe(3);
 
@@ -153,7 +169,9 @@ describe('ParticlesService', () => {
         const service = new ParticlesService({ maxPerPool: 10 });
         const managed = service.getPool('normal');
 
-        managed.pool.init = (p) => { p.lifetime = 5; };
+        managed.pool.init = (p) => {
+            p.lifetime = 5;
+        };
         managed.pool.burst(2);
         service.tick(0.016);
 
@@ -254,7 +272,13 @@ describe('buildInit', () => {
 
     test('writes gravity and shrink flags to userData', () => {
         const init = buildInit(
-            { lifetime: 1, color: 0xff0000, speed: [1, 2], gravity: 9.8, shrink: true },
+            {
+                lifetime: 1,
+                color: 0xff0000,
+                speed: [1, 2],
+                gravity: 9.8,
+                shrink: true,
+            },
             0.08,
         );
 
@@ -297,10 +321,15 @@ describe('buildUpdate', () => {
     test('runs genericUpdate then user update', () => {
         const callOrder: string[] = [];
 
-        const userUpdate = jest.fn(() => { callOrder.push('user'); });
+        const userUpdate = jest.fn(() => {
+            callOrder.push('user');
+        });
         const update = buildUpdate({
-            lifetime: 1, color: 0, speed: [0, 0],
-            gravity: 9.8, update: userUpdate,
+            lifetime: 1,
+            color: 0,
+            speed: [0, 0],
+            gravity: 9.8,
+            update: userUpdate,
         });
 
         const p = createTestParticle({
@@ -317,10 +346,16 @@ describe('buildUpdate', () => {
 
     test('works without user update', () => {
         const update = buildUpdate({
-            lifetime: 1, color: 0, speed: [0, 0],
+            lifetime: 1,
+            color: 0,
+            speed: [0, 0],
         });
 
-        const p = createTestParticle({ userData: { _fadeOut: true }, age: 0.5, lifetime: 1 });
+        const p = createTestParticle({
+            userData: { _fadeOut: true },
+            age: 0.5,
+            lifetime: 1,
+        });
         update(p, 0.016);
 
         expect(p.opacity).toBeCloseTo(0.5);

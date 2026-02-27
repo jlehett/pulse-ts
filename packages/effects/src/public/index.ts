@@ -11,11 +11,17 @@ export { installParticles } from './installParticles';
 export { useParticleBurst } from './useParticleBurst';
 export type { ParticleBurstOptions, BurstFn } from './useParticleBurst';
 export { useParticleEmitter } from './useParticleEmitter';
-export type { ParticleEmitterOptions, EmitterHandle } from './useParticleEmitter';
+export type {
+    ParticleEmitterOptions,
+    EmitterHandle,
+} from './useParticleEmitter';
 
 // Service + install options (for advanced use)
 export { ParticlesService } from '../domain/ParticlesService';
-export type { ParticlesInstallOptions, ParticleStyleOptions } from '../domain/ParticlesService';
+export type {
+    ParticlesInstallOptions,
+    ParticleStyleOptions,
+} from '../domain/ParticlesService';
 
 // Animated values
 export { useAnimate } from './useAnimate';

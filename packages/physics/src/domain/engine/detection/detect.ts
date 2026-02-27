@@ -121,9 +121,12 @@ export function detectManifold(a: Collider, b: Collider): ContactConstraint[] {
             const vy = p.y - fb.center.y;
             const vz = p.z - fb.center.z;
             return (
-                Math.abs(vx * fb.U0.x + vy * fb.U0.y + vz * fb.U0.z) <= fb.hx + eps &&
-                Math.abs(vx * fb.U1.x + vy * fb.U1.y + vz * fb.U1.z) <= fb.hy + eps &&
-                Math.abs(vx * fb.U2.x + vy * fb.U2.y + vz * fb.U2.z) <= fb.hz + eps
+                Math.abs(vx * fb.U0.x + vy * fb.U0.y + vz * fb.U0.z) <=
+                    fb.hx + eps &&
+                Math.abs(vx * fb.U1.x + vy * fb.U1.y + vz * fb.U1.z) <=
+                    fb.hy + eps &&
+                Math.abs(vx * fb.U2.x + vy * fb.U2.y + vz * fb.U2.z) <=
+                    fb.hz + eps
             );
         };
         const insideA = (p: Vec3) => {
@@ -131,9 +134,12 @@ export function detectManifold(a: Collider, b: Collider): ContactConstraint[] {
             const vy = p.y - fa.center.y;
             const vz = p.z - fa.center.z;
             return (
-                Math.abs(vx * fa.U0.x + vy * fa.U0.y + vz * fa.U0.z) <= fa.hx + eps &&
-                Math.abs(vx * fa.U1.x + vy * fa.U1.y + vz * fa.U1.z) <= fa.hy + eps &&
-                Math.abs(vx * fa.U2.x + vy * fa.U2.y + vz * fa.U2.z) <= fa.hz + eps
+                Math.abs(vx * fa.U0.x + vy * fa.U0.y + vz * fa.U0.z) <=
+                    fa.hx + eps &&
+                Math.abs(vx * fa.U1.x + vy * fa.U1.y + vz * fa.U1.z) <=
+                    fa.hy + eps &&
+                Math.abs(vx * fa.U2.x + vy * fa.U2.y + vz * fa.U2.z) <=
+                    fa.hz + eps
             );
         };
         const supportB =
@@ -153,7 +159,17 @@ export function detectManifold(a: Collider, b: Collider): ContactConstraint[] {
                 (v.z - fb.center.z) * nz;
             const depth = supportB - proj;
             if (depth > eps)
-                constraints.push({ a, b, nx, ny, nz, depth, px: v.x, py: v.y, pz: v.z });
+                constraints.push({
+                    a,
+                    b,
+                    nx,
+                    ny,
+                    nz,
+                    depth,
+                    px: v.x,
+                    py: v.y,
+                    pz: v.z,
+                });
         }
         for (const v of vertsB) {
             if (!insideA(v)) continue;
@@ -163,7 +179,17 @@ export function detectManifold(a: Collider, b: Collider): ContactConstraint[] {
                 (v.z - fa.center.z) * -nz;
             const depth = supportA - proj;
             if (depth > eps)
-                constraints.push({ a, b, nx, ny, nz, depth, px: v.x, py: v.y, pz: v.z });
+                constraints.push({
+                    a,
+                    b,
+                    nx,
+                    ny,
+                    nz,
+                    depth,
+                    px: v.x,
+                    py: v.y,
+                    pz: v.z,
+                });
         }
         if (constraints.length === 0)
             return [{ a, b, nx, ny, nz, depth: base.depth }];
@@ -197,7 +223,14 @@ export function detectManifold(a: Collider, b: Collider): ContactConstraint[] {
     if (a.kind === 'plane' && b.kind === 'box') {
         // flip
         const pts = detectManifold(b, a);
-        return pts.map((c) => ({ a, b, nx: -c.nx, ny: -c.ny, nz: -c.nz, depth: c.depth }));
+        return pts.map((c) => ({
+            a,
+            b,
+            nx: -c.nx,
+            ny: -c.ny,
+            nz: -c.nz,
+            depth: c.depth,
+        }));
     }
     // Specialized: capsule-plane (up to 2 points: caps that penetrate, else closest point on segment)
     if (a.kind === 'capsule' && b.kind === 'plane') {
@@ -256,7 +289,14 @@ export function detectManifold(a: Collider, b: Collider): ContactConstraint[] {
     }
     if (a.kind === 'plane' && b.kind === 'capsule') {
         const pts = detectManifold(b, a);
-        return pts.map((c) => ({ a, b, nx: -c.nx, ny: -c.ny, nz: -c.nz, depth: c.depth }));
+        return pts.map((c) => ({
+            a,
+            b,
+            nx: -c.nx,
+            ny: -c.ny,
+            nz: -c.nz,
+            depth: c.depth,
+        }));
     }
     // Specialized: box-capsule (sample along capsule segment)
     if (a.kind === 'box' && b.kind === 'capsule') {
@@ -278,7 +318,9 @@ export function detectManifold(a: Collider, b: Collider): ContactConstraint[] {
             const qx = Math.min(fb.hx, Math.max(-fb.hx, pLx));
             const qy = Math.min(fb.hy, Math.max(-fb.hy, pLy));
             const qz = Math.min(fb.hz, Math.max(-fb.hz, pLz));
-            const dx = pLx - qx, dy = pLy - qy, dz = pLz - qz;
+            const dx = pLx - qx,
+                dy = pLy - qy,
+                dz = pLz - qz;
             const d2 = dx * dx + dy * dy + dz * dz;
             if (d2 <= b.capRadius * b.capRadius) {
                 // World normal (transform local normal to world space).
@@ -298,9 +340,21 @@ export function detectManifold(a: Collider, b: Collider): ContactConstraint[] {
                     ny,
                     nz,
                     depth: b.capRadius - d,
-                    px: fb.center.x + fb.U0.x * qx + fb.U1.x * qy + fb.U2.x * qz,
-                    py: fb.center.y + fb.U0.y * qx + fb.U1.y * qy + fb.U2.y * qz,
-                    pz: fb.center.z + fb.U0.z * qx + fb.U1.z * qy + fb.U2.z * qz,
+                    px:
+                        fb.center.x +
+                        fb.U0.x * qx +
+                        fb.U1.x * qy +
+                        fb.U2.x * qz,
+                    py:
+                        fb.center.y +
+                        fb.U0.y * qx +
+                        fb.U1.y * qy +
+                        fb.U2.y * qz,
+                    pz:
+                        fb.center.z +
+                        fb.U0.z * qx +
+                        fb.U1.z * qy +
+                        fb.U2.z * qz,
                 });
             }
         }
@@ -310,7 +364,14 @@ export function detectManifold(a: Collider, b: Collider): ContactConstraint[] {
     }
     if (a.kind === 'capsule' && b.kind === 'box') {
         const pts = detectManifold(b, a);
-        return pts.map((c) => ({ a, b, nx: -c.nx, ny: -c.ny, nz: -c.nz, depth: c.depth }));
+        return pts.map((c) => ({
+            a,
+            b,
+            nx: -c.nx,
+            ny: -c.ny,
+            nz: -c.nz,
+            depth: c.depth,
+        }));
     }
     // Fallback: single contact with approximate point at A's center
     const c = detectCollision(a, b);
@@ -328,9 +389,18 @@ function boxVerticesWorld(f: ReturnType<typeof obbFrame>): Vec3[] {
             for (const sz of [-1, 1])
                 verts.push(
                     sv3(
-                        center.x + U0.x * hx * sx + U1.x * hy * sy + U2.x * hz * sz,
-                        center.y + U0.y * hx * sx + U1.y * hy * sy + U2.y * hz * sz,
-                        center.z + U0.z * hx * sx + U1.z * hy * sy + U2.z * hz * sz,
+                        center.x +
+                            U0.x * hx * sx +
+                            U1.x * hy * sy +
+                            U2.x * hz * sz,
+                        center.y +
+                            U0.y * hx * sx +
+                            U1.y * hy * sy +
+                            U2.y * hz * sz,
+                        center.z +
+                            U0.z * hx * sx +
+                            U1.z * hy * sy +
+                            U2.z * hz * sz,
                     ),
                 );
     return verts;
@@ -346,7 +416,9 @@ function sphereSphere(
     bz: number,
     br: number,
 ): Contact {
-    const dx = bx - ax, dy = by - ay, dz = bz - az;
+    const dx = bx - ax,
+        dy = by - ay,
+        dz = bz - az;
     const rs = ar + br;
     const d2 = dx * dx + dy * dy + dz * dz;
     if (d2 >= rs * rs) return null;
@@ -371,7 +443,9 @@ function sphereOBB(
     const ux = Quat.rotateVector(rot, UNIT_X, sv3());
     const uy = Quat.rotateVector(rot, UNIT_Y, sv3());
     const uz = Quat.rotateVector(rot, UNIT_Z, sv3());
-    const dx = sx - bc.x, dy = sy - bc.y, dz = sz - bc.z;
+    const dx = sx - bc.x,
+        dy = sy - bc.y,
+        dz = sz - bc.z;
     const px = dx * ux.x + dy * ux.y + dz * ux.z;
     const py = dx * uy.x + dy * uy.y + dz * uy.z;
     const pz = dx * uz.x + dy * uz.y + dz * uz.z;
@@ -381,24 +455,43 @@ function sphereOBB(
     const cwx = bc.x + ux.x * cx + uy.x * cy + uz.x * cz;
     const cwy = bc.y + ux.y * cx + uy.y * cy + uz.y * cz;
     const cwz = bc.z + ux.z * cx + uy.z * cy + uz.z * cz;
-    const vx = sx - cwx, vy = sy - cwy, vz = sz - cwz;
+    const vx = sx - cwx,
+        vy = sy - cwy,
+        vz = sz - cwz;
     const d2 = vx * vx + vy * vy + vz * vz;
     if (d2 > r * r) return null;
     const d = Math.sqrt(Math.max(1e-8, d2));
-    let nx = vx / d, ny = vy / d, nz = vz / d;
+    let nx = vx / d,
+        ny = vy / d,
+        nz = vz / d;
     if (d === 0) {
-        const pxp = Math.min(Math.abs(px + box.halfX), Math.abs(box.halfX - px));
-        const pyp = Math.min(Math.abs(py + box.halfY), Math.abs(box.halfY - py));
-        const pzp = Math.min(Math.abs(pz + box.halfZ), Math.abs(box.halfZ - pz));
+        const pxp = Math.min(
+            Math.abs(px + box.halfX),
+            Math.abs(box.halfX - px),
+        );
+        const pyp = Math.min(
+            Math.abs(py + box.halfY),
+            Math.abs(box.halfY - py),
+        );
+        const pzp = Math.min(
+            Math.abs(pz + box.halfZ),
+            Math.abs(box.halfZ - pz),
+        );
         if (pxp <= pyp && pxp <= pzp) {
             const sign = px < 0 ? -1 : 1;
-            nx = ux.x * sign; ny = ux.y * sign; nz = ux.z * sign;
+            nx = ux.x * sign;
+            ny = ux.y * sign;
+            nz = ux.z * sign;
         } else if (pyp <= pzp) {
             const sign = py < 0 ? -1 : 1;
-            nx = uy.x * sign; ny = uy.y * sign; nz = uy.z * sign;
+            nx = uy.x * sign;
+            ny = uy.y * sign;
+            nz = uy.z * sign;
         } else {
             const sign = pz < 0 ? -1 : 1;
-            nx = uz.x * sign; ny = uz.y * sign; nz = uz.z * sign;
+            nx = uz.x * sign;
+            ny = uz.y * sign;
+            nz = uz.z * sign;
         }
     }
     return { nx, ny, nz, depth: r - d };
@@ -411,10 +504,26 @@ function obbObb(a: Collider, b: Collider): Contact {
     const trb = tb.getWorldTRS();
     const ra = tra.rotation;
     const rb = trb.rotation;
-    const offA = Quat.rotateVector(ra, sv3(a.offset.x, a.offset.y, a.offset.z), sv3());
-    const offB = Quat.rotateVector(rb, sv3(b.offset.x, b.offset.y, b.offset.z), sv3());
-    const ca = sv3(tra.position.x + offA.x, tra.position.y + offA.y, tra.position.z + offA.z);
-    const cb = sv3(trb.position.x + offB.x, trb.position.y + offB.y, trb.position.z + offB.z);
+    const offA = Quat.rotateVector(
+        ra,
+        sv3(a.offset.x, a.offset.y, a.offset.z),
+        sv3(),
+    );
+    const offB = Quat.rotateVector(
+        rb,
+        sv3(b.offset.x, b.offset.y, b.offset.z),
+        sv3(),
+    );
+    const ca = sv3(
+        tra.position.x + offA.x,
+        tra.position.y + offA.y,
+        tra.position.z + offA.z,
+    );
+    const cb = sv3(
+        trb.position.x + offB.x,
+        trb.position.y + offB.y,
+        trb.position.z + offB.z,
+    );
     const A0 = Quat.rotateVector(ra, UNIT_X, sv3());
     const A1 = Quat.rotateVector(ra, UNIT_Y, sv3());
     const A2 = Quat.rotateVector(ra, UNIT_Z, sv3());
@@ -422,17 +531,38 @@ function obbObb(a: Collider, b: Collider): Contact {
     const B1 = Quat.rotateVector(rb, UNIT_Y, sv3());
     const B2 = Quat.rotateVector(rb, UNIT_Z, sv3());
     const T = sv3(cb.x - ca.x, cb.y - ca.y, cb.z - ca.z);
-    const proj = (u: Vec3, v: Vec3, w: Vec3, hx: number, hy: number, hz: number, L: Vec3) =>
+    const proj = (
+        u: Vec3,
+        v: Vec3,
+        w: Vec3,
+        hx: number,
+        hy: number,
+        hz: number,
+        L: Vec3,
+    ) =>
         Math.abs(hx * (u.x * L.x + u.y * L.y + u.z * L.z)) +
         Math.abs(hy * (v.x * L.x + v.y * L.y + v.z * L.z)) +
         Math.abs(hz * (w.x * L.x + w.y * L.y + w.z * L.z));
     let minOverlap = Infinity;
-    let sepNx = 0, sepNy = 0, sepNz = 0;
+    let sepNx = 0,
+        sepNy = 0,
+        sepNz = 0;
     const axes = [
-        A0, A1, A2, B0, B1, B2,
-        cross(A0, B0, sv3()), cross(A0, B1, sv3()), cross(A0, B2, sv3()),
-        cross(A1, B0, sv3()), cross(A1, B1, sv3()), cross(A1, B2, sv3()),
-        cross(A2, B0, sv3()), cross(A2, B1, sv3()), cross(A2, B2, sv3()),
+        A0,
+        A1,
+        A2,
+        B0,
+        B1,
+        B2,
+        cross(A0, B0, sv3()),
+        cross(A0, B1, sv3()),
+        cross(A0, B2, sv3()),
+        cross(A1, B0, sv3()),
+        cross(A1, B1, sv3()),
+        cross(A1, B2, sv3()),
+        cross(A2, B0, sv3()),
+        cross(A2, B1, sv3()),
+        cross(A2, B2, sv3()),
     ];
     const dotT = (L: Vec3) => Math.abs(T.x * L.x + T.y * L.y + T.z * L.z);
     // Single reusable scratch for the normalised test axis — avoids one
@@ -449,9 +579,19 @@ function obbObb(a: Collider, b: Collider): Contact {
         if (overlap <= 0) return null;
         if (overlap < minOverlap) {
             minOverlap = overlap;
-            const dir = (cb.x - ca.x) * _n.x + (cb.y - ca.y) * _n.y + (cb.z - ca.z) * _n.z;
-            if (dir < 0) { sepNx = -_n.x; sepNy = -_n.y; sepNz = -_n.z; }
-            else { sepNx = _n.x; sepNy = _n.y; sepNz = _n.z; }
+            const dir =
+                (cb.x - ca.x) * _n.x +
+                (cb.y - ca.y) * _n.y +
+                (cb.z - ca.z) * _n.z;
+            if (dir < 0) {
+                sepNx = -_n.x;
+                sepNy = -_n.y;
+                sepNz = -_n.z;
+            } else {
+                sepNx = _n.x;
+                sepNy = _n.y;
+                sepNz = _n.z;
+            }
         }
     }
     return { nx: sepNx, ny: sepNy, nz: sepNz, depth: minOverlap };
@@ -467,10 +607,22 @@ function cross(a: Vec3, b: Vec3, out: Vec3): Vec3 {
 function planeWorld(c: Collider): { p: Vec3; n: Vec3 } {
     const t = getComponent(c.owner, Transform)!;
     const trs = t.getWorldTRS();
-    const normalInput = sv3(c.planeNormal.x, c.planeNormal.y, c.planeNormal.z).normalize();
+    const normalInput = sv3(
+        c.planeNormal.x,
+        c.planeNormal.y,
+        c.planeNormal.z,
+    ).normalize();
     const n = Quat.rotateVector(trs.rotation, normalInput, sv3());
-    const off = Quat.rotateVector(trs.rotation, sv3(c.offset.x, c.offset.y, c.offset.z), sv3());
-    const p = sv3(trs.position.x + off.x, trs.position.y + off.y, trs.position.z + off.z);
+    const off = Quat.rotateVector(
+        trs.rotation,
+        sv3(c.offset.x, c.offset.y, c.offset.z),
+        sv3(),
+    );
+    const p = sv3(
+        trs.position.x + off.x,
+        trs.position.y + off.y,
+        trs.position.z + off.z,
+    );
     return { p, n };
 }
 
@@ -511,8 +663,16 @@ function capsuleWorldSegment(c: Collider): { a: Vec3; b: Vec3; r: number } {
     const t = getComponent(c.owner, Transform)!;
     const trs = t.getWorldTRS();
     const up = Quat.rotateVector(trs.rotation, UNIT_Y, sv3());
-    const off = Quat.rotateVector(trs.rotation, sv3(c.offset.x, c.offset.y, c.offset.z), sv3());
-    const center = sv3(trs.position.x + off.x, trs.position.y + off.y, trs.position.z + off.z);
+    const off = Quat.rotateVector(
+        trs.rotation,
+        sv3(c.offset.x, c.offset.y, c.offset.z),
+        sv3(),
+    );
+    const center = sv3(
+        trs.position.x + off.x,
+        trs.position.y + off.y,
+        trs.position.z + off.z,
+    );
     const a = sv3(
         center.x + up.x * c.capHalfHeight,
         center.y + up.y * c.capHalfHeight,
@@ -527,8 +687,12 @@ function capsuleWorldSegment(c: Collider): { a: Vec3; b: Vec3; r: number } {
 }
 
 function closestPointOnSegment(p: Vec3, a: Vec3, b: Vec3, out: Vec3): Vec3 {
-    const abx = b.x - a.x, aby = b.y - a.y, abz = b.z - a.z;
-    const apx = p.x - a.x, apy = p.y - a.y, apz = p.z - a.z;
+    const abx = b.x - a.x,
+        aby = b.y - a.y,
+        abz = b.z - a.z;
+    const apx = p.x - a.x,
+        apy = p.y - a.y,
+        apz = p.z - a.z;
     const ab2 = abx * abx + aby * aby + abz * abz || 1e-8;
     let t = (apx * abx + apy * aby + apz * abz) / ab2;
     t = Math.max(0, Math.min(1, t));
@@ -546,7 +710,9 @@ function capsuleSphere(
     const { a, b, r } = capsuleWorldSegment(cap);
     const p = sv3(sphereCenter.x, sphereCenter.y, sphereCenter.z);
     const q = closestPointOnSegment(p, a, b, sv3());
-    const dx = p.x - q.x, dy = p.y - q.y, dz = p.z - q.z;
+    const dx = p.x - q.x,
+        dy = p.y - q.y,
+        dz = p.z - q.z;
     const d2 = dx * dx + dy * dy + dz * dz;
     const rr = r + sphereRadius;
     if (d2 >= rr * rr) return null;
@@ -571,8 +737,16 @@ function obbFrame(box: Collider) {
     const t = getComponent(box.owner, Transform)!;
     const trs = t.getWorldTRS();
     const r = trs.rotation;
-    const off = Quat.rotateVector(r, sv3(box.offset.x, box.offset.y, box.offset.z), sv3());
-    const center = sv3(trs.position.x + off.x, trs.position.y + off.y, trs.position.z + off.z);
+    const off = Quat.rotateVector(
+        r,
+        sv3(box.offset.x, box.offset.y, box.offset.z),
+        sv3(),
+    );
+    const center = sv3(
+        trs.position.x + off.x,
+        trs.position.y + off.y,
+        trs.position.z + off.z,
+    );
     const U0 = Quat.rotateVector(r, UNIT_X, sv3());
     const U1 = Quat.rotateVector(r, UNIT_Y, sv3());
     const U2 = Quat.rotateVector(r, UNIT_Z, sv3());
@@ -590,7 +764,9 @@ function closestPointSegmentAABBLocal(
     hy: number,
     hz: number,
 ): { p: Vec3; q: Vec3; s: number; dist2: number } {
-    const dx = b.x - a.x, dy = b.y - a.y, dz = b.z - a.z;
+    const dx = b.x - a.x,
+        dy = b.y - a.y,
+        dz = b.z - a.z;
     const candidates: number[] = [0, 1];
     for (const [ai, di, h] of [
         [a.x, dx, hx],
@@ -618,9 +794,15 @@ function closestPointSegmentAABBLocal(
         const sm = (sL + sR) * 0.5;
         const testS = [sL, sm, sR];
         for (const s of testS) {
-            const px = a.x + dx * s, py = a.y + dy * s, pz = a.z + dz * s;
-            const qx = clamp(px, -hx, hx), qy = clamp(py, -hy, hy), qz = clamp(pz, -hz, hz);
-            const ex = px - qx, ey = py - qy, ez = pz - qz;
+            const px = a.x + dx * s,
+                py = a.y + dy * s,
+                pz = a.z + dz * s;
+            const qx = clamp(px, -hx, hx),
+                qy = clamp(py, -hy, hy),
+                qz = clamp(pz, -hz, hz);
+            const ex = px - qx,
+                ey = py - qy,
+                ez = pz - qz;
             const dist2 = ex * ex + ey * ey + ez * ez;
             if (dist2 < bestDist2) {
                 bestP.set(px, py, pz);
@@ -638,7 +820,9 @@ export function capsuleObb(cap: Collider, box: Collider): Contact {
     const { center, U0, U1, U2, hx, hy, hz } = obbFrame(box);
     const seg = capsuleWorldSegment(cap);
     const toLocal = (v: Vec3) => {
-        const vx = v.x - center.x, vy = v.y - center.y, vz = v.z - center.z;
+        const vx = v.x - center.x,
+            vy = v.y - center.y,
+            vz = v.z - center.z;
         return sv3(
             vx * U0.x + vy * U0.y + vz * U0.z,
             vx * U1.x + vy * U1.y + vz * U1.z,
@@ -657,7 +841,9 @@ export function capsuleObb(cap: Collider, box: Collider): Contact {
     let ny = U0.y * nLx + U1.y * nLy + U2.y * nLz;
     let nz = U0.z * nLx + U1.z * nLy + U2.z * nLz;
     const len = Math.hypot(nx, ny, nz) || 1;
-    nx /= len; ny /= len; nz /= len;
+    nx /= len;
+    ny /= len;
+    nz /= len;
     const d = Math.sqrt(best.dist2);
     return { nx, ny, nz, depth: cap.capRadius - d };
 }
@@ -667,9 +853,15 @@ export function capsuleCapsule(a: Collider, b: Collider): Contact {
     const sa = capsuleWorldSegment(a);
     const sb = capsuleWorldSegment(b);
     // Use scalars for direction vectors — eliminates 5 Vec3 allocations.
-    const dax = sa.b.x - sa.a.x, day = sa.b.y - sa.a.y, daz = sa.b.z - sa.a.z;
-    const dbx = sb.b.x - sb.a.x, dby = sb.b.y - sb.a.y, dbz = sb.b.z - sb.a.z;
-    const rx = sa.a.x - sb.a.x, ry = sa.a.y - sb.a.y, rz = sa.a.z - sb.a.z;
+    const dax = sa.b.x - sa.a.x,
+        day = sa.b.y - sa.a.y,
+        daz = sa.b.z - sa.a.z;
+    const dbx = sb.b.x - sb.a.x,
+        dby = sb.b.y - sb.a.y,
+        dbz = sb.b.z - sb.a.z;
+    const rx = sa.a.x - sb.a.x,
+        ry = sa.a.y - sb.a.y,
+        rz = sa.a.z - sb.a.z;
     const aLen2 = dax * dax + day * day + daz * daz || 1e-8;
     const bLen2 = dbx * dbx + dby * dby + dbz * dbz || 1e-8;
     const aDotb = dax * dbx + day * dby + daz * dbz;
@@ -683,13 +875,15 @@ export function capsuleCapsule(a: Collider, b: Collider): Contact {
     // refine s with clamped t
     s = (aDotb * t - aDotr) / aLen2;
     s = Math.max(0, Math.min(1, s));
-    const vx = (sb.a.x + dbx * t) - (sa.a.x + dax * s);
-    const vy = (sb.a.y + dby * t) - (sa.a.y + day * s);
-    const vz = (sb.a.z + dbz * t) - (sa.a.z + daz * s);
+    const vx = sb.a.x + dbx * t - (sa.a.x + dax * s);
+    const vy = sb.a.y + dby * t - (sa.a.y + day * s);
+    const vz = sb.a.z + dbz * t - (sa.a.z + daz * s);
     const d2 = vx * vx + vy * vy + vz * vz;
     const rr = a.capRadius + b.capRadius;
     if (d2 >= rr * rr) return null;
     const d = Math.sqrt(Math.max(1e-8, d2));
-    const nx = vx / d, ny = vy / d, nz = vz / d;
+    const nx = vx / d,
+        ny = vy / d,
+        nz = vz / d;
     return { nx, ny, nz, depth: rr - d };
 }

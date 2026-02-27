@@ -1,4 +1,4 @@
-import type { Transport, TransportStatus } from '../../domain/types';
+import type { Transport, TransportStatus } from '../../../domain/types';
 
 type WebSocketCtor = new (
     url: string | URL,

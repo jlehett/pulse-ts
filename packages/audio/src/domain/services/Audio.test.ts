@@ -81,7 +81,9 @@ describe('AudioService', () => {
         expect(svc.masterVolume).toBe(0.3);
         expect(svc.destination).toBeDefined();
         // The gain value should reflect the new volume
-        expect((svc.destination as unknown as StubGainNode).gain.value).toBe(0.3);
+        expect((svc.destination as unknown as StubGainNode).gain.value).toBe(
+            0.3,
+        );
     });
 
     test('masterVolume setter works before context creation', () => {

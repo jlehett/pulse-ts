@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
 // ---------------------------------------------------------------------------
 // Mock Three.js — must be before any import that touches 'three'
 // ---------------------------------------------------------------------------
@@ -78,7 +76,10 @@ describe('useParticleEmitter', () => {
 
     test('returns an EmitterHandle', () => {
         const { handle } = setup({
-            rate: 50, lifetime: 1, color: 0xff0000, speed: [1, 2],
+            rate: 50,
+            lifetime: 1,
+            color: 0xff0000,
+            speed: [1, 2],
         });
 
         expect(typeof handle.pause).toBe('function');
@@ -88,7 +89,10 @@ describe('useParticleEmitter', () => {
 
     test('emits particles over time when active', () => {
         const { service, step } = setup({
-            rate: 100, lifetime: 10, color: 0xff0000, speed: [1, 2],
+            rate: 100,
+            lifetime: 10,
+            color: 0xff0000,
+            speed: [1, 2],
         });
 
         step(10); // 10 * 16ms = 160ms → ~16 particles at rate=100
@@ -99,7 +103,10 @@ describe('useParticleEmitter', () => {
 
     test('starts active by default', () => {
         const { handle } = setup({
-            rate: 50, lifetime: 1, color: 0xff0000, speed: [1, 2],
+            rate: 50,
+            lifetime: 1,
+            color: 0xff0000,
+            speed: [1, 2],
         });
 
         expect(handle.active).toBe(true);
@@ -107,7 +114,10 @@ describe('useParticleEmitter', () => {
 
     test('autoStart: false starts paused', () => {
         const { handle, service, step } = setup({
-            rate: 100, lifetime: 10, color: 0xff0000, speed: [1, 2],
+            rate: 100,
+            lifetime: 10,
+            color: 0xff0000,
+            speed: [1, 2],
             autoStart: false,
         });
 
@@ -120,7 +130,10 @@ describe('useParticleEmitter', () => {
 
     test('pause() stops emission', () => {
         const { handle, service, step } = setup({
-            rate: 100, lifetime: 10, color: 0xff0000, speed: [1, 2],
+            rate: 100,
+            lifetime: 10,
+            color: 0xff0000,
+            speed: [1, 2],
         });
 
         step(5); // emit some
@@ -133,7 +146,10 @@ describe('useParticleEmitter', () => {
 
     test('resume() restarts emission', () => {
         const { handle, service, step } = setup({
-            rate: 100, lifetime: 10, color: 0xff0000, speed: [1, 2],
+            rate: 100,
+            lifetime: 10,
+            color: 0xff0000,
+            speed: [1, 2],
             autoStart: false,
         });
 
@@ -148,7 +164,10 @@ describe('useParticleEmitter', () => {
     test('custom update callback runs each tick', () => {
         const customUpdate = jest.fn();
         const { step } = setup({
-            rate: 100, lifetime: 5, color: 0xff0000, speed: [0, 0],
+            rate: 100,
+            lifetime: 5,
+            color: 0xff0000,
+            speed: [0, 0],
             update: customUpdate,
         });
 
@@ -162,7 +181,10 @@ describe('useParticleEmitter', () => {
         expect(() => {
             function TestNode() {
                 useParticleEmitter({
-                    rate: 50, lifetime: 1, color: 0xff0000, speed: [1, 2],
+                    rate: 50,
+                    lifetime: 1,
+                    color: 0xff0000,
+                    speed: [1, 2],
                 });
             }
             world.mount(TestNode);
@@ -171,7 +193,10 @@ describe('useParticleEmitter', () => {
 
     test('uses additive blending when specified', () => {
         const { service, step } = setup({
-            rate: 100, lifetime: 10, color: 0xff0000, speed: [1, 2],
+            rate: 100,
+            lifetime: 10,
+            color: 0xff0000,
+            speed: [1, 2],
             blending: 'additive',
         });
 

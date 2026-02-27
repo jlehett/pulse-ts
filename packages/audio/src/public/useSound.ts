@@ -122,7 +122,10 @@ function playTone(audio: AudioService, opts: ToneOptions): void {
 
     if (Array.isArray(opts.frequency)) {
         osc.frequency.setValueAtTime(opts.frequency[0], now);
-        osc.frequency.linearRampToValueAtTime(opts.frequency[1], now + opts.duration);
+        osc.frequency.linearRampToValueAtTime(
+            opts.frequency[1],
+            now + opts.duration,
+        );
     } else {
         osc.frequency.setValueAtTime(opts.frequency, now);
     }
@@ -157,7 +160,10 @@ function playNoise(audio: AudioService, opts: NoiseOptions): void {
     filter.type = opts.filter ?? 'bandpass';
     if (Array.isArray(opts.frequency)) {
         filter.frequency.setValueAtTime(opts.frequency[0], now);
-        filter.frequency.linearRampToValueAtTime(opts.frequency[1], now + opts.duration);
+        filter.frequency.linearRampToValueAtTime(
+            opts.frequency[1],
+            now + opts.duration,
+        );
     } else {
         filter.frequency.setValueAtTime(opts.frequency, now);
     }

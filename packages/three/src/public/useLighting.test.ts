@@ -12,6 +12,11 @@ jest.mock('three', () => {
         x = 0;
         y = 0;
         z = 0;
+        constructor(ix?: number, iy?: number, iz?: number) {
+            this.x = ix || 0;
+            this.y = iy || 0;
+            this.z = iz || 0;
+        }
         set(x: number, y: number, z: number) {
             this.x = x;
             this.y = y;
@@ -324,9 +329,8 @@ describe('useFog', () => {
     });
 
     test('does not clear fog if scene fog was replaced by another', () => {
-        let fog1!: THREE.Fog;
         function FC1() {
-            fog1 = useFog({ color: 0x111111 });
+            useFog({ color: 0x111111 });
         }
         const node1 = world.mount(FC1);
 

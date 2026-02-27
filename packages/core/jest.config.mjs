@@ -6,6 +6,10 @@ export default {
         '^.+\\.(ts|tsx|js|jsx)$': ['babel-jest'],
     },
     testMatch: ['**/*.test.ts', '**/*.test.tsx'],
-    testPathIgnorePatterns: ['<rootDir>/*/node_modules/', '<rootDir>/*/dist/', '\\.bench\\.test\\.ts$'],
+    testPathIgnorePatterns: [
+        '<rootDir>/*/node_modules/',
+        '<rootDir>/*/dist/',
+        '\\.bench\\.test\\.ts$',
+    ],
     watchman: false,
 };

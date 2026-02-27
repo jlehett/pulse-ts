@@ -97,10 +97,7 @@ beforeEach(resetNodes);
 // Helper: mount a component that calls useSpatialSound and returns the handle
 // ---------------------------------------------------------------------------
 
-function mountSpatialSound(
-    type: 'tone',
-    options: any,
-): SpatialSoundHandle {
+function mountSpatialSound(type: 'tone', options: any): SpatialSoundHandle {
     const world = new World();
     installAudio(world);
     let handle!: SpatialSoundHandle;
@@ -347,7 +344,9 @@ describe('useSpatialSound — general', () => {
         function BadComponent() {
             useSpatialSound('tone', { frequency: 100 });
         }
-        expect(() => world.mount(BadComponent)).toThrow('AudioService not provided');
+        expect(() => world.mount(BadComponent)).toThrow(
+            'AudioService not provided',
+        );
     });
 
     test('stop before play is a no-op', () => {
