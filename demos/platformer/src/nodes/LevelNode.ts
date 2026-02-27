@@ -1,7 +1,7 @@
 import { useChild, useProvideContext } from '@pulse-ts/core';
 import { useAmbientLight, useDirectionalLight, useFog } from '@pulse-ts/three';
 import { installParticles } from '@pulse-ts/effects';
-import { PlayerNode, type RespawnState, type ShakeState } from './PlayerNode';
+import { PlayerNode, type RespawnState } from './PlayerNode';
 import { PlatformNode } from './PlatformNode';
 import { MovingPlatformNode } from './MovingPlatformNode';
 import { RotatingPlatformNode } from './RotatingPlatformNode';
@@ -13,7 +13,7 @@ import { EnemyNode } from './EnemyNode';
 import { GoalNode } from './GoalNode';
 import { CameraRigNode } from './CameraRigNode';
 import { level } from '../config/level';
-import { RespawnCtx, ShakeCtx, CollectibleCtx, PlayerNodeCtx } from '../contexts';
+import { RespawnCtx, CollectibleCtx, PlayerNodeCtx } from '../contexts';
 
 export function LevelNode() {
     // Lighting
@@ -44,11 +44,9 @@ export function LevelNode() {
     const respawnState: RespawnState = {
         position: [...level.playerSpawn],
     };
-    const shakeState: ShakeState = { intensity: 0 };
     const collectibleState: CollectibleState = { collected: 0 };
 
     useProvideContext(RespawnCtx, respawnState);
-    useProvideContext(ShakeCtx, shakeState);
     useProvideContext(CollectibleCtx, collectibleState);
 
     // Particle effects — world-level service for shared particle pools

@@ -1,5 +1,4 @@
 import { getKinematicSurfaceVelocity } from '@pulse-ts/physics';
-import { LANDING_VEL_THRESHOLD, SHAKE_INTENSITY_SCALE } from './PlayerNode';
 
 /** Default fixed timestep matching the engine default (60 Hz). */
 const DT = 1 / 60;
@@ -135,16 +134,5 @@ describe('getKinematicSurfaceVelocity', () => {
 
         const finalRadius = Math.sqrt(rx * rx + rz * rz);
         expect(finalRadius).toBeCloseTo(5, 3);
-    });
-});
-
-describe('Landing shake constants', () => {
-    it('LANDING_VEL_THRESHOLD is positive', () => {
-        expect(LANDING_VEL_THRESHOLD).toBeGreaterThan(0);
-    });
-
-    it('SHAKE_INTENSITY_SCALE is positive and small', () => {
-        expect(SHAKE_INTENSITY_SCALE).toBeGreaterThan(0);
-        expect(SHAKE_INTENSITY_SCALE).toBeLessThan(1);
     });
 });
