@@ -6,7 +6,11 @@ import {
     Transform,
     useContext,
 } from '@pulse-ts/core';
-import { useRigidBody, useSphereCollider, useOnCollisionStart } from '@pulse-ts/physics';
+import {
+    useRigidBody,
+    useSphereCollider,
+    useOnCollisionStart,
+} from '@pulse-ts/physics';
 import { PlayerTag } from '../components/PlayerTag';
 import { useMesh } from '@pulse-ts/three';
 import { useSound } from '@pulse-ts/audio';
@@ -28,8 +32,13 @@ export function CollectibleNode(props: Readonly<CollectibleNodeProps>) {
     const node = useNode();
     const collectibleState = useContext(CollectibleCtx);
     const burst = useParticleBurst({
-        count: 24, lifetime: 0.5, color: 0xf4d03f,
-        speed: [1.5, 4], gravity: 9.8, blending: 'additive',
+        count: 24,
+        lifetime: 0.5,
+        color: 0xf4d03f,
+        speed: [1.5, 4],
+        gravity: 9.8,
+        size: 0.4,
+        blending: 'additive',
     });
 
     const transform = useComponent(Transform);

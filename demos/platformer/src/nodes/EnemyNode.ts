@@ -76,6 +76,7 @@ export function EnemyNode(props: Readonly<EnemyNodeProps>) {
         color: STOMP_PARTICLE_COLOR,
         speed: [1.5, 4],
         gravity: 9.8,
+        size: 0.4,
         blending: 'additive',
     });
     const [sx, sy, sz] = props.size;
