@@ -1,6 +1,6 @@
 import { useChild, useProvideContext } from '@pulse-ts/core';
 import { useAmbientLight, useDirectionalLight, useFog } from '@pulse-ts/three';
-import { useParticles } from '@pulse-ts/effects';
+import { installParticles } from '@pulse-ts/effects';
 import { PlayerNode, type RespawnState, type ShakeState } from './PlayerNode';
 import { PlatformNode } from './PlatformNode';
 import { MovingPlatformNode } from './MovingPlatformNode';
@@ -11,10 +11,9 @@ import { CheckpointNode } from './CheckpointNode';
 import { HazardNode } from './HazardNode';
 import { EnemyNode } from './EnemyNode';
 import { GoalNode } from './GoalNode';
-import { burstInit, BURST_GRAVITY } from '../config/particles';
 import { CameraRigNode } from './CameraRigNode';
 import { level } from '../config/level';
-import { RespawnCtx, ShakeCtx, CollectibleCtx, PlayerNodeCtx, ParticleEffectsCtx } from '../contexts';
+import { RespawnCtx, ShakeCtx, CollectibleCtx, PlayerNodeCtx } from '../contexts';
 
 export function LevelNode() {
     // Lighting
@@ -52,18 +51,8 @@ export function LevelNode() {
     useProvideContext(ShakeCtx, shakeState);
     useProvideContext(CollectibleCtx, collectibleState);
 
-    // Particle effects — provided here so all sibling children can access via context
-    const emitter = useParticles({
-        maxCount: 200,
-        size: 0.08,
-        blending: 'additive',
-        init: burstInit(),
-        update: (p, dt) => {
-            p.velocity.y -= BURST_GRAVITY * dt;
-            p.opacity = 1 - p.age / p.lifetime;
-        },
-    });
-    useProvideContext(ParticleEffectsCtx, emitter);
+    // Particle effects — world-level service for shared particle pools
+    installParticles({ maxPerPool: 200, defaultSize: 0.08 });
 
     // Player
     const playerNode = useChild(PlayerNode, {

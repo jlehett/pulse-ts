@@ -10,8 +10,8 @@ import { useRigidBody, useSphereCollider, useOnCollisionStart } from '@pulse-ts/
 import { PlayerTag } from '../components/PlayerTag';
 import { useMesh } from '@pulse-ts/three';
 import { useSound } from '@pulse-ts/audio';
-import { useAnimate } from '@pulse-ts/effects';
-import { CollectibleCtx, ParticleEffectsCtx } from '../contexts';
+import { useAnimate, useParticleBurst } from '@pulse-ts/effects';
+import { CollectibleCtx } from '../contexts';
 
 const COLLECTIBLE_RADIUS = 0.25;
 
@@ -27,7 +27,10 @@ export interface CollectibleNodeProps {
 export function CollectibleNode(props: Readonly<CollectibleNodeProps>) {
     const node = useNode();
     const collectibleState = useContext(CollectibleCtx);
-    const fx = useContext(ParticleEffectsCtx);
+    const burst = useParticleBurst({
+        count: 24, lifetime: 0.5, color: 0xf4d03f,
+        speed: [1.5, 4], gravity: 9.8, blending: 'additive',
+    });
 
     const transform = useComponent(Transform);
     transform.localPosition.set(...props.position);
@@ -74,7 +77,7 @@ export function CollectibleNode(props: Readonly<CollectibleNodeProps>) {
         if (!getComponent(other, PlayerTag)) return;
         collectSfx.play();
         collectibleState.collected++;
-        fx.burst(24, [
+        burst([
             transform.localPosition.x,
             transform.localPosition.y,
             transform.localPosition.z,
