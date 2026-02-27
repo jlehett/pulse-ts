@@ -9,10 +9,9 @@ import {
 import { useRigidBody, useBoxCollider, useOnCollisionStart, useWaypointPatrol, RigidBody } from '@pulse-ts/physics';
 import { useMesh } from '@pulse-ts/three';
 import { useSound } from '@pulse-ts/audio';
-import { useAnimate } from '@pulse-ts/effects';
+import { useAnimate, useParticleBurst } from '@pulse-ts/effects';
 import { PlayerTag } from '../components/PlayerTag';
-import { burstInit } from '../config/particles';
-import { RespawnCtx, PlayerNodeCtx, ParticleEffectsCtx } from '../contexts';
+import { RespawnCtx, PlayerNodeCtx } from '../contexts';
 
 const DEFAULT_COLOR = 0x8b1a1a;
 const EMISSIVE_COLOR = 0xcc2200;
@@ -65,7 +64,10 @@ export interface EnemyNodeProps {
 export function EnemyNode(props: Readonly<EnemyNodeProps>) {
     const respawnState = useContext(RespawnCtx);
     const playerNode = useContext(PlayerNodeCtx);
-    const fx = useContext(ParticleEffectsCtx);
+    const burst = useParticleBurst({
+        count: 24, lifetime: 0.5, color: STOMP_PARTICLE_COLOR,
+        speed: [1.5, 4], gravity: 9.8, blending: 'additive',
+    });
     const [sx, sy, sz] = props.size;
     const color = props.color ?? DEFAULT_COLOR;
     const speed = props.speed ?? 2;
@@ -127,11 +129,11 @@ export function EnemyNode(props: Readonly<EnemyNodeProps>) {
         if (isStomp) {
             deathSfx.play();
             // Red particle burst at enemy position
-            fx.burst(24, [
+            burst([
                 transform.localPosition.x,
                 transform.localPosition.y,
                 transform.localPosition.z,
-            ], burstInit(STOMP_PARTICLE_COLOR));
+            ]);
 
             // Bounce the player upward
             playerBody.setLinearVelocity(
