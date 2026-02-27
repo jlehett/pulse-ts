@@ -13,7 +13,7 @@ import {
     useCooldown,
 } from '@pulse-ts/core';
 import { useAction, useAxis2D } from '@pulse-ts/input';
-import { RespawnCtx, ShakeCtx } from '../contexts';
+import { RespawnCtx } from '../contexts';
 import {
     useRigidBody,
     useCapsuleCollider,
@@ -45,23 +45,6 @@ export interface RespawnState {
     position: [number, number, number];
 }
 
-/**
- * Shared mutable object for camera shake. PlayerNode writes `intensity` on
- * hard landings; CameraRigNode reads and decays it each frame.
- */
-export interface ShakeState {
-    intensity: number;
-}
-
-/** Minimum absolute vertical velocity (m/s) to trigger a camera shake on landing. */
-export const LANDING_VEL_THRESHOLD = 6;
-
-/**
- * Multiplier that converts excess landing velocity (above threshold) into
- * shake intensity. Higher values produce stronger shakes.
- */
-export const SHAKE_INTENSITY_SCALE = 0.15;
-
 export interface PlayerNodeProps {
     spawn: [number, number, number];
     deathPlaneY: number;
@@ -70,7 +53,6 @@ export interface PlayerNodeProps {
 export function PlayerNode(props: Readonly<PlayerNodeProps>) {
     const node = useNode();
     const respawnState = useContext(RespawnCtx);
-    const shakeState = useContext(ShakeCtx);
     useComponent(PlayerTag);
     const transform = useComponent(Transform);
     transform.localPosition.set(...props.spawn);
@@ -173,16 +155,9 @@ export function PlayerNode(props: Readonly<PlayerNodeProps>) {
         const hit = raycast(rayOrigin, rayDir, GROUND_RAY_DIST, (c) => c.owner !== node);
         const grounded = hit !== null;
 
-        // Detect landing: transition from airborne to grounded. Capture the
-        // vertical speed before it is zeroed by the ground contact so we can
-        // scale shake intensity by impact velocity.
+        // Detect landing: transition from airborne to grounded.
         if (!prevGrounded && grounded) {
             landSfx.play();
-            const absVy = Math.abs(body.linearVelocity.y);
-            if (absVy > LANDING_VEL_THRESHOLD) {
-                shakeState.intensity =
-                    (absVy - LANDING_VEL_THRESHOLD) * SHAKE_INTENSITY_SCALE;
-            }
         }
 
         // Release the jump lock once the player has actually left the ground.

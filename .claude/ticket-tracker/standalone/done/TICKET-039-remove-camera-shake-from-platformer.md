@@ -1,7 +1,7 @@
 ---
 id: TICKET-039
 title: Remove camera shake from platformer demo
-status: in-progress
+status: done
 priority: low
 created: 2026-02-26
 updated: 2026-02-26
@@ -24,3 +24,4 @@ Remove the camera shake feature entirely from the platformer demo. The effect is
 ## Notes
 
 - **2026-02-26**: Starting implementation.
+- **2026-02-26**: Removed ShakeState, ShakeCtx, shake constants, shake trigger logic, and shake application from CameraRigNode. Updated tests. Merged via PR.
