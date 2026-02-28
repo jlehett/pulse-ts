@@ -20,7 +20,7 @@ import {
 } from '@pulse-ts/physics';
 import { useMesh } from '@pulse-ts/three';
 import { useSound } from '@pulse-ts/audio';
-import { useParticleBurst } from '@pulse-ts/effects';
+import { useParticleBurst, useParticleEmitter } from '@pulse-ts/effects';
 import { useReplicateTransform, useChannel } from '@pulse-ts/network';
 import { PlayerTag } from '../components/PlayerTag';
 import { GameCtx, PlayerIdCtx } from '../contexts';
@@ -44,6 +44,12 @@ export const DASH_COOLDOWN = 1.0;
 
 /** Knockback impulse magnitude applied on player-player collision. */
 export const KNOCKBACK_FORCE = 8;
+
+/** Number of particles in the knockout mega-burst. */
+export const KNOCKOUT_BURST_COUNT = 80;
+
+/** Emission rate (particles/sec) for the dash trail. */
+export const DASH_TRAIL_RATE = 100;
 
 /** Player colors: P1 = teal, P2 = coral. */
 const PLAYER_COLORS = [0x48c9b0, 0xe74c3c] as const;
@@ -158,6 +164,7 @@ export function LocalPlayerNode() {
         body.setLinearVelocity(0, 0, 0);
         dashTimer.cancel();
         dashCD.reset();
+        dashTrail.pause();
     });
 
     // Dash state
@@ -217,6 +224,31 @@ export function LocalPlayerNode() {
         blending: 'additive',
     });
 
+    // Knockout mega-burst — player-colored explosion on death
+    const knockoutBurst = useParticleBurst({
+        count: KNOCKOUT_BURST_COUNT,
+        lifetime: 0.6,
+        color: PLAYER_COLORS[playerId],
+        speed: [2, 6],
+        gravity: 8,
+        size: 0.4,
+        blending: 'additive',
+        shrink: true,
+    });
+
+    // Dash trail — continuous emitter active only while dashing
+    const dashTrail = useParticleEmitter({
+        rate: DASH_TRAIL_RATE,
+        lifetime: 0.3,
+        color: PLAYER_COLORS[playerId],
+        speed: [0.5, 1.5],
+        gravity: 2,
+        size: 0.25,
+        blending: 'additive',
+        shrink: true,
+        autoStart: false,
+    });
+
     // Knockback on collision with another player
     useOnCollisionStart(({ other }) => {
         if (other === node) return;
@@ -249,6 +281,7 @@ export function LocalPlayerNode() {
             const vy = body.linearVelocity.y;
             body.setLinearVelocity(0, vy, 0);
             dashTimer.cancel();
+            if (dashTrail.active) dashTrail.pause();
 
             // Still check death plane during freeze for safety
             if (transform.localPosition.y < DEATH_PLANE_Y) {
@@ -267,6 +300,7 @@ export function LocalPlayerNode() {
             dashTimer.reset();
             dashCD.trigger();
             dashSfx.play();
+            dashTrail.resume();
         }
 
         const vy = body.linearVelocity.y;
@@ -279,6 +313,7 @@ export function LocalPlayerNode() {
                 dashDirZ * DASH_SPEED,
             );
         } else {
+            if (dashTrail.active) dashTrail.pause();
             // Normal movement — set velocity directly for tight control
             const vx = move.x * MOVE_SPEED;
             const vz = -move.y * MOVE_SPEED; // W = forward = -Z
@@ -287,6 +322,12 @@ export function LocalPlayerNode() {
 
         // Death plane — respawn when falling off the arena
         if (transform.localPosition.y < DEATH_PLANE_Y) {
+            knockoutBurst([
+                transform.localPosition.x,
+                transform.localPosition.y,
+                transform.localPosition.z,
+            ]);
+            dashTrail.pause();
             deathSfx.play();
             knockout.publish(playerId);
             transform.localPosition.set(...spawn);

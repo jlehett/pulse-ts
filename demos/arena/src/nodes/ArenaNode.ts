@@ -67,7 +67,7 @@ export function ArenaNode({ playerId, hub }: ArenaNodeProps) {
     useProvideContext(PlayerIdCtx, playerId);
 
     // Particle effects pool
-    installParticles({ maxPerPool: 200, defaultSize: 0.08 });
+    installParticles({ maxPerPool: 256, defaultSize: 0.08 });
 
     // Arena platform
     useChild(PlatformNode);
