@@ -35,7 +35,7 @@ async function createPlayerWorld(
 
     const three = installThree(world, {
         canvas,
-        clearColor: 0x0a0a1a,
+        clearColor: 0x0a0e1e,
     });
 
     three.renderer.shadowMap.enabled = true;
