@@ -11,6 +11,8 @@ import {
 import { PlatformNode } from './PlatformNode';
 import { LocalPlayerNode } from './LocalPlayerNode';
 import { RemotePlayerNode } from './RemotePlayerNode';
+import { GameManagerNode } from './GameManagerNode';
+import { ScoreHudNode } from './ScoreHudNode';
 import { CameraRigNode } from './CameraRigNode';
 
 export interface ArenaNodeProps {
@@ -67,6 +69,12 @@ export function ArenaNode({ playerId, hub }: ArenaNodeProps) {
     // Remote player — replicated from the other world
     const remoteId = 1 - playerId;
     useChild(RemotePlayerNode, { remotePlayerId: remoteId });
+
+    // Game manager — tracks knockout scores
+    useChild(GameManagerNode);
+
+    // Score HUD
+    useChild(ScoreHudNode);
 
     // Camera rig — follows local player
     useChild(CameraRigNode);

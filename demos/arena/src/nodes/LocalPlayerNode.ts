@@ -14,10 +14,11 @@ import { useAxis2D, useAction } from '@pulse-ts/input';
 import { useRigidBody, useSphereCollider } from '@pulse-ts/physics';
 import { useMesh } from '@pulse-ts/three';
 import { useSound } from '@pulse-ts/audio';
-import { useReplicateTransform } from '@pulse-ts/network';
+import { useReplicateTransform, useChannel } from '@pulse-ts/network';
 import { PlayerTag } from '../components/PlayerTag';
 import { PlayerIdCtx } from '../contexts';
 import { SPAWN_POSITIONS, DEATH_PLANE_Y } from '../config/arena';
+import { KnockoutChannel } from '../config/channels';
 
 /** Sphere radius for the player ball. */
 export const PLAYER_RADIUS = 0.5;
@@ -98,6 +99,9 @@ export function LocalPlayerNode() {
     const getMove = useAxis2D('move');
     const getDash = useAction('dash');
 
+    // Knockout channel — publish when falling off the arena
+    const knockout = useChannel(KnockoutChannel);
+
     // Dash state
     const dashTimer = useTimer(DASH_DURATION);
     const dashCD = useCooldown(DASH_COOLDOWN);
@@ -169,6 +173,7 @@ export function LocalPlayerNode() {
         // Death plane — respawn when falling off the arena
         if (transform.localPosition.y < DEATH_PLANE_Y) {
             deathSfx.play();
+            knockout.publish(playerId);
             transform.localPosition.set(...spawn);
             body.setLinearVelocity(0, 0, 0);
             dashTimer.cancel();
