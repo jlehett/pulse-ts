@@ -2,7 +2,7 @@
 id: TICKET-048
 epic: EPIC-008
 title: Audio polish
-status: todo
+status: in-progress
 priority: low
 created: 2026-02-26
 updated: 2026-02-28
