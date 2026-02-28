@@ -3,16 +3,25 @@ import { installAudio } from '@pulse-ts/audio';
 import { installInput } from '@pulse-ts/input';
 import { installPhysics } from '@pulse-ts/physics';
 import { installThree, StatsOverlaySystem } from '@pulse-ts/three';
+import {
+    installNetwork,
+    createMemoryHub,
+    type MemoryHub,
+} from '@pulse-ts/network';
 import { ArenaNode } from './nodes/ArenaNode';
 import { p1Bindings, p2Bindings } from './config/bindings';
 
 const p1Canvas = document.getElementById('p1') as HTMLCanvasElement;
 const p2Canvas = document.getElementById('p2') as HTMLCanvasElement;
 
-function createPlayerWorld(
+// Shared networking hub — both worlds communicate through this
+const hub = createMemoryHub();
+
+async function createPlayerWorld(
     canvas: HTMLCanvasElement,
     bindings: typeof p1Bindings,
     playerId: number,
+    memoryHub: MemoryHub,
 ) {
     const world = new World();
 
@@ -20,6 +29,7 @@ function createPlayerWorld(
     installAudio(world);
     installInput(world, { preventDefault: true, bindings });
     installPhysics(world, { gravity: { x: 0, y: -20, z: 0 } });
+    await installNetwork(world);
 
     const three = installThree(world, {
         canvas,
@@ -35,13 +45,17 @@ function createPlayerWorld(
         }),
     );
 
-    world.mount(ArenaNode, { playerId });
+    world.mount(ArenaNode, { playerId, hub: memoryHub });
 
     return world;
 }
 
-const world1 = createPlayerWorld(p1Canvas, p1Bindings, 0);
-const world2 = createPlayerWorld(p2Canvas, p2Bindings, 1);
+async function main() {
+    const world1 = await createPlayerWorld(p1Canvas, p1Bindings, 0, hub);
+    const world2 = await createPlayerWorld(p2Canvas, p2Bindings, 1, hub);
 
-world1.start();
-world2.start();
+    world1.start();
+    world2.start();
+}
+
+main();

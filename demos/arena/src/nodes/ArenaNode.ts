@@ -1,6 +1,7 @@
 import { useProvideContext, useChild } from '@pulse-ts/core';
 import { useAmbientLight, useDirectionalLight, useFog } from '@pulse-ts/three';
 import { installParticles } from '@pulse-ts/effects';
+import { useMemory, useRoom, type MemoryHub } from '@pulse-ts/network';
 import {
     GameCtx,
     PlayerIdCtx,
@@ -9,10 +10,12 @@ import {
 } from '../contexts';
 import { PlatformNode } from './PlatformNode';
 import { LocalPlayerNode } from './LocalPlayerNode';
+import { RemotePlayerNode } from './RemotePlayerNode';
 import { CameraRigNode } from './CameraRigNode';
 
 export interface ArenaNodeProps {
     playerId: number;
+    hub: MemoryHub;
 }
 
 /**
@@ -20,7 +23,11 @@ export interface ArenaNodeProps {
  * Sets up lighting, fog, shared contexts, and particle pools.
  * Each world instance mounts its own ArenaNode with a different playerId.
  */
-export function ArenaNode({ playerId }: ArenaNodeProps) {
+export function ArenaNode({ playerId, hub }: ArenaNodeProps) {
+    // Network — connect to shared hub and join arena room
+    useMemory(hub, { peerId: `player-${playerId}` });
+    useRoom('arena');
+
     // Lighting — overhead sun with shadows covering the circular arena
     useAmbientLight({ color: 0xb0c4de, intensity: 0.4 });
     useDirectionalLight({
@@ -56,6 +63,10 @@ export function ArenaNode({ playerId }: ArenaNodeProps) {
     // Local player
     const playerNode = useChild(LocalPlayerNode);
     useProvideContext(LocalPlayerNodeCtx, playerNode);
+
+    // Remote player — replicated from the other world
+    const remoteId = 1 - playerId;
+    useChild(RemotePlayerNode, { remotePlayerId: remoteId });
 
     // Camera rig — follows local player
     useChild(CameraRigNode);
