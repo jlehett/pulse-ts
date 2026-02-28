@@ -56,7 +56,7 @@ export function ArenaNode({ playerId, hub, wsUrl }: ArenaNodeProps) {
         intensity: 1.0,
         position: [0, 20, 10],
         castShadow: true,
-        shadowMapSize: 2048,
+        shadowMapSize: 1024,
         shadowBounds: {
             near: 0.5,
             far: 60,
