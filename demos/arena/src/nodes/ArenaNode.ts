@@ -9,6 +9,7 @@ import {
 } from '../contexts';
 import { PlatformNode } from './PlatformNode';
 import { LocalPlayerNode } from './LocalPlayerNode';
+import { CameraRigNode } from './CameraRigNode';
 
 export interface ArenaNodeProps {
     playerId: number;
@@ -55,4 +56,7 @@ export function ArenaNode({ playerId }: ArenaNodeProps) {
     // Local player
     const playerNode = useChild(LocalPlayerNode);
     useProvideContext(LocalPlayerNodeCtx, playerNode);
+
+    // Camera rig — follows local player
+    useChild(CameraRigNode);
 }
