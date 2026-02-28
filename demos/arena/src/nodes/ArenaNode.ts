@@ -1,8 +1,14 @@
 import { useProvideContext, useChild } from '@pulse-ts/core';
 import { useAmbientLight, useDirectionalLight, useFog } from '@pulse-ts/three';
 import { installParticles } from '@pulse-ts/effects';
-import { GameCtx, PlayerIdCtx, type GameState } from '../contexts';
+import {
+    GameCtx,
+    PlayerIdCtx,
+    LocalPlayerNodeCtx,
+    type GameState,
+} from '../contexts';
 import { PlatformNode } from './PlatformNode';
+import { LocalPlayerNode } from './LocalPlayerNode';
 
 export interface ArenaNodeProps {
     playerId: number;
@@ -45,4 +51,8 @@ export function ArenaNode({ playerId }: ArenaNodeProps) {
 
     // Arena platform
     useChild(PlatformNode);
+
+    // Local player
+    const playerNode = useChild(LocalPlayerNode);
+    useProvideContext(LocalPlayerNodeCtx, playerNode);
 }
