@@ -2,7 +2,7 @@
 id: TICKET-048
 epic: EPIC-008
 title: Audio polish
-status: in-progress
+status: done
 priority: low
 created: 2026-02-26
 updated: 2026-02-28
@@ -18,11 +18,11 @@ Sound effects for the arena: knockout death sound (descending tone), round-win f
 
 ## Acceptance Criteria
 
-- [ ] Knockout death sound — descending tone via `useSound('tone', ...)`
-- [ ] Round-win fanfare — arpeggio via `useSound('arpeggio', ...)`
-- [ ] Dash whoosh — noise via `useSound('noise', ...)`
-- [ ] Countdown beeps — short tones for 3-2-1 countdown
-- [ ] Sounds integrated into appropriate game events
+- [x] Knockout death sound — descending tone via `useSound('tone', ...)`
+- [x] Round-win fanfare — arpeggio via `useSound('arpeggio', ...)`
+- [x] Dash whoosh — noise via `useSound('noise', ...)`
+- [x] Countdown beeps — short tones for 3-2-1 countdown
+- [x] Sounds integrated into appropriate game events
 
 ## Notes
 
