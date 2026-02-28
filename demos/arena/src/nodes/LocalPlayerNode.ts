@@ -23,9 +23,9 @@ import { useSound } from '@pulse-ts/audio';
 import { useParticleBurst } from '@pulse-ts/effects';
 import { useReplicateTransform, useChannel } from '@pulse-ts/network';
 import { PlayerTag } from '../components/PlayerTag';
-import { PlayerIdCtx } from '../contexts';
+import { GameCtx, PlayerIdCtx } from '../contexts';
 import { SPAWN_POSITIONS, DEATH_PLANE_Y } from '../config/arena';
-import { KnockoutChannel } from '../config/channels';
+import { KnockoutChannel, RoundResetChannel } from '../config/channels';
 
 /** Sphere radius for the player ball. */
 export const PLAYER_RADIUS = 0.5;
@@ -119,6 +119,7 @@ export function computeDashDirection(
 export function LocalPlayerNode() {
     const node = useNode();
     const playerId = useContext(PlayerIdCtx);
+    const gameState = useContext(GameCtx);
     const spawn = SPAWN_POSITIONS[playerId];
 
     // Network identity and replication — send our transform to the other world
@@ -150,6 +151,14 @@ export function LocalPlayerNode() {
 
     // Knockout channel — publish when falling off the arena
     const knockout = useChannel(KnockoutChannel);
+
+    // Round reset — teleport back to spawn when a new round starts
+    useChannel(RoundResetChannel, () => {
+        transform.localPosition.set(...spawn);
+        body.setLinearVelocity(0, 0, 0);
+        dashTimer.cancel();
+        dashCD.reset();
+    });
 
     // Dash state
     const dashTimer = useTimer(DASH_DURATION);
@@ -235,6 +244,20 @@ export function LocalPlayerNode() {
     });
 
     useFixedUpdate(() => {
+        // Freeze input during non-playing phases
+        if (gameState.phase !== 'playing') {
+            const vy = body.linearVelocity.y;
+            body.setLinearVelocity(0, vy, 0);
+            dashTimer.cancel();
+
+            // Still check death plane during freeze for safety
+            if (transform.localPosition.y < DEATH_PLANE_Y) {
+                transform.localPosition.set(...spawn);
+                body.setLinearVelocity(0, 0, 0);
+            }
+            return;
+        }
+
         const move = getMove();
         const dashAction = getDash();
 
