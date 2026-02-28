@@ -84,7 +84,10 @@ async function startWebSocket() {
     world.start();
 }
 
+// Toggle canvas layout based on mode
 if (mode === 'ws') {
+    document.getElementById('split-screen')!.style.display = 'none';
+    document.getElementById('solo')!.style.display = 'block';
     startWebSocket();
 } else {
     startSplitScreen();

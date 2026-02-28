@@ -44,13 +44,6 @@
             <canvas id="p2"></canvas>
         </div>
         <canvas id="solo"></canvas>
-        <script>
-            // Toggle canvas layout based on URL mode param
-            if (new URLSearchParams(location.search).get('mode') === 'ws') {
-                document.getElementById('split-screen').style.display = 'none';
-                document.getElementById('solo').style.display = 'block';
-            }
-        </script>
         <script type="module" src="/src/main.ts"></script>
     </body>
 </html>
