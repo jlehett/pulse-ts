@@ -2,7 +2,7 @@
 id: TICKET-050
 epic: EPIC-008
 title: Leaderboard persistence
-status: in-progress
+status: done
 priority: low
 created: 2026-02-26
 updated: 2026-02-28
@@ -19,13 +19,15 @@ labels:
 
 ## Acceptance Criteria
 
-- [ ] `leaderboard.ts` utility with read/write functions for localStorage
-- [ ] `GameManagerNode` saves match result on match end
-- [ ] `ScoreHudNode` displays all-time win record
-- [ ] `installSave` called in main.ts
-- [ ] Full unit tests for leaderboard utility (`leaderboard.test.ts`)
+- [x] `leaderboard.ts` utility with read/write functions for localStorage
+- [x] `GameManagerNode` saves match result on match end
+- [x] `ScoreHudNode` displays all-time win record
+- [x] `installSave` called in main.ts
+- [x] Full unit tests for leaderboard utility (`leaderboard.test.ts`)
 
 ## Notes
 
 - **2026-02-26**: Ticket created.
 - **2026-02-28**: Status changed to in-progress
+- **2026-02-28**: Implemented leaderboard utility, GameManagerNode save, ScoreHudNode all-time display, installSave wiring. 55 tests pass.
+- **2026-02-28**: Status changed to done
