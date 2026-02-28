@@ -5,11 +5,12 @@ title: Round reset and match flow
 status: todo
 priority: medium
 created: 2026-02-26
-updated: 2026-02-26
+updated: 2026-02-28
 labels:
   - arena
   - gameplay
   - ui
+branch: ticket-047-round-reset-and-match-flow
 ---
 
 ## Description
