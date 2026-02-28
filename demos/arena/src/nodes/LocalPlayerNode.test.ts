@@ -5,6 +5,8 @@ import {
     DASH_DURATION,
     DASH_COOLDOWN,
     KNOCKBACK_FORCE,
+    KNOCKOUT_BURST_COUNT,
+    DASH_TRAIL_RATE,
     computeDashDirection,
     computeKnockback,
 } from './LocalPlayerNode';
@@ -33,6 +35,14 @@ describe('LocalPlayerNode constants', () => {
 
     it('knockback force is positive', () => {
         expect(KNOCKBACK_FORCE).toBeGreaterThan(0);
+    });
+
+    it('knockout burst count is a large positive number', () => {
+        expect(KNOCKOUT_BURST_COUNT).toBeGreaterThanOrEqual(40);
+    });
+
+    it('dash trail rate is positive', () => {
+        expect(DASH_TRAIL_RATE).toBeGreaterThan(0);
     });
 });
 
