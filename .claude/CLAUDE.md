@@ -66,6 +66,13 @@ Directory conventions (example)
         - guides/
         - learn/
 
+Pre-merge checklist
+- Before a ticket can be considered done, run lint:fix then lint on all changed packages/demos.
+  - For packages: npx nx lint {packageName} -- --fix, then npx nx lint {packageName}
+  - For demos: npx eslint --fix demos/{demoName}/src/, then npx eslint demos/{demoName}/src/
+- Fix any remaining lint errors that auto-fix cannot resolve.
+- This step happens after tests pass but before the final build verification.
+
 Non-goals
 - No cross-layer imports that violate boundaries.
 - No wide, flat directories when deeper structure improves clarity.
