@@ -3,15 +3,11 @@ import { installAudio } from '@pulse-ts/audio';
 import { installInput } from '@pulse-ts/input';
 import { installPhysics } from '@pulse-ts/physics';
 import { installThree, StatsOverlaySystem } from '@pulse-ts/three';
-import { createMemoryHub } from '@pulse-ts/network';
 import { ArenaNode } from './nodes/ArenaNode';
 import { p1Bindings, p2Bindings } from './config/bindings';
 
 const p1Canvas = document.getElementById('p1') as HTMLCanvasElement;
 const p2Canvas = document.getElementById('p2') as HTMLCanvasElement;
-
-// Shared networking hub — both worlds communicate through this
-const hub = createMemoryHub();
 
 function createPlayerWorld(
     canvas: HTMLCanvasElement,
