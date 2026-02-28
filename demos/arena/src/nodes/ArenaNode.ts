@@ -1,7 +1,12 @@
 import { useProvideContext, useChild } from '@pulse-ts/core';
 import { useAmbientLight, useDirectionalLight, useFog } from '@pulse-ts/three';
 import { installParticles } from '@pulse-ts/effects';
-import { useMemory, useRoom, type MemoryHub } from '@pulse-ts/network';
+import {
+    useMemory,
+    useWebSocket,
+    useRoom,
+    type MemoryHub,
+} from '@pulse-ts/network';
 import {
     GameCtx,
     PlayerIdCtx,
@@ -20,17 +25,28 @@ import { CameraRigNode } from './CameraRigNode';
 
 export interface ArenaNodeProps {
     playerId: number;
-    hub: MemoryHub;
+    /** Shared in-memory hub for split-screen mode. */
+    hub?: MemoryHub;
+    /** WebSocket URL for networked mode (mutually exclusive with hub). */
+    wsUrl?: string;
 }
 
 /**
  * Top-level orchestrator node for the arena demo.
  * Sets up lighting, fog, shared contexts, and particle pools.
  * Each world instance mounts its own ArenaNode with a different playerId.
+ *
+ * Supports two transport modes:
+ * - **Split-screen** (default): pass `hub` for in-memory networking.
+ * - **WebSocket**: pass `wsUrl` to connect via a relay server.
  */
-export function ArenaNode({ playerId, hub }: ArenaNodeProps) {
-    // Network — connect to shared hub and join arena room
-    useMemory(hub, { peerId: `player-${playerId}` });
+export function ArenaNode({ playerId, hub, wsUrl }: ArenaNodeProps) {
+    // Network — connect via memory hub (split-screen) or WebSocket (server mode)
+    if (wsUrl) {
+        useWebSocket(wsUrl, { autoReconnect: true });
+    } else if (hub) {
+        useMemory(hub, { peerId: `player-${playerId}` });
+    }
     useRoom('arena');
 
     // Lighting — overhead sun with shadows covering the circular arena
