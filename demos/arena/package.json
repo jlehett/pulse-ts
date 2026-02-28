@@ -7,7 +7,8 @@
         "dev": "vite",
         "build": "tsc && vite build",
         "preview": "vite preview",
-        "test": "jest"
+        "test": "jest",
+        "server": "npx tsx src/server.ts"
     },
     "babel": {
         "presets": [
@@ -30,7 +31,8 @@
         "@pulse-ts/physics": "*",
         "@pulse-ts/save": "*",
         "@pulse-ts/three": "*",
-        "three": "^0.179.1"
+        "three": "^0.179.1",
+        "ws": "^8.11.0"
     },
     "devDependencies": {
         "@types/three": "^0.178.1",

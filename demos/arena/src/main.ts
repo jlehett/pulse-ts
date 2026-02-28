@@ -9,20 +9,21 @@ import {
     createMemoryHub,
     type MemoryHub,
 } from '@pulse-ts/network';
-import { ArenaNode } from './nodes/ArenaNode';
+import { ArenaNode, type ArenaNodeProps } from './nodes/ArenaNode';
 import { p1Bindings, p2Bindings } from './config/bindings';
 
-const p1Canvas = document.getElementById('p1') as HTMLCanvasElement;
-const p2Canvas = document.getElementById('p2') as HTMLCanvasElement;
+const params = new URLSearchParams(location.search);
+const mode = params.get('mode'); // 'ws' for WebSocket, null for split-screen
+const playerParam = params.get('player'); // 'p1' or 'p2' (WebSocket mode only)
 
-// Shared networking hub — both worlds communicate through this
-const hub = createMemoryHub();
+/** Default WebSocket relay URL when running in WS mode. */
+const WS_URL = 'ws://localhost:8080';
 
 async function createPlayerWorld(
     canvas: HTMLCanvasElement,
     bindings: typeof p1Bindings,
     playerId: number,
-    memoryHub: MemoryHub,
+    arenaProps: Omit<ArenaNodeProps, 'playerId'>,
 ) {
     const world = new World();
 
@@ -47,17 +48,44 @@ async function createPlayerWorld(
         }),
     );
 
-    world.mount(ArenaNode, { playerId, hub: memoryHub });
+    world.mount(ArenaNode, { playerId, ...arenaProps });
 
     return world;
 }
 
-async function main() {
-    const world1 = await createPlayerWorld(p1Canvas, p1Bindings, 0, hub);
-    const world2 = await createPlayerWorld(p2Canvas, p2Bindings, 1, hub);
+/**
+ * Split-screen mode (default): two canvases, two worlds, in-memory hub.
+ */
+async function startSplitScreen() {
+    const p1Canvas = document.getElementById('p1') as HTMLCanvasElement;
+    const p2Canvas = document.getElementById('p2') as HTMLCanvasElement;
+    const hub: MemoryHub = createMemoryHub();
+
+    const world1 = await createPlayerWorld(p1Canvas, p1Bindings, 0, { hub });
+    const world2 = await createPlayerWorld(p2Canvas, p2Bindings, 1, { hub });
 
     world1.start();
     world2.start();
 }
 
-main();
+/**
+ * WebSocket mode: single canvas, one world, relay server transport.
+ * URL params: `?mode=ws&player=p1` or `?mode=ws&player=p2`.
+ */
+async function startWebSocket() {
+    const canvas = document.getElementById('solo') as HTMLCanvasElement;
+    const playerId = playerParam === 'p2' ? 1 : 0;
+    const bindings = playerId === 0 ? p1Bindings : p2Bindings;
+
+    const world = await createPlayerWorld(canvas, bindings, playerId, {
+        wsUrl: WS_URL,
+    });
+
+    world.start();
+}
+
+if (mode === 'ws') {
+    startWebSocket();
+} else {
+    startSplitScreen();
+}
