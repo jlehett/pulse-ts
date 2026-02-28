@@ -19,7 +19,8 @@
     "docs:build": "typedoc && vitepress build apps/docs",
     "docs:preview": "vitepress preview apps/docs",
     "api:build": "typedoc",
-    "demo:platformer": "npm run dev -w demos/platformer"
+    "demo:platformer": "npm run dev -w demos/platformer",
+    "demo:arena": "npm run dev -w demos/arena"
   },
   "devDependencies": {
     "@babel/preset-env": "^7.26.0",
