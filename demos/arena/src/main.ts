@@ -2,6 +2,7 @@ import { World, installDefaults } from '@pulse-ts/core';
 import { installAudio } from '@pulse-ts/audio';
 import { installInput } from '@pulse-ts/input';
 import { installPhysics } from '@pulse-ts/physics';
+import { installSave } from '@pulse-ts/save';
 import { installThree, StatsOverlaySystem } from '@pulse-ts/three';
 import {
     installNetwork,
@@ -26,6 +27,7 @@ async function createPlayerWorld(
     const world = new World();
 
     installDefaults(world);
+    installSave(world);
     installAudio(world);
     installInput(world, { preventDefault: true, bindings });
     installPhysics(world, { gravity: { x: 0, y: -20, z: 0 } });

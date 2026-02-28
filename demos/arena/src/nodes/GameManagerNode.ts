@@ -9,6 +9,7 @@ import {
     RESET_PAUSE_DURATION,
     COUNTDOWN_DURATION,
 } from '../config/arena';
+import { saveMatchResult } from '../leaderboard';
 
 /**
  * Compute the countdown display value from the remaining countdown time.
@@ -86,6 +87,7 @@ export function GameManagerNode() {
         if (gameState.scores[scorer] >= WIN_COUNT) {
             gameState.phase = 'match_over';
             gameState.matchWinner = scorer;
+            saveMatchResult(scorer, gameState.scores[knockedOutPlayerId]);
             matchFanfareSfx.play();
         } else {
             gameState.phase = 'ko_flash';
