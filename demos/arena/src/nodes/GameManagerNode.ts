@@ -1,4 +1,5 @@
 import { useContext, useFixedUpdate, useTimer } from '@pulse-ts/core';
+import { useSound } from '@pulse-ts/audio';
 import { useChannel } from '@pulse-ts/network';
 import { GameCtx } from '../contexts';
 import { KnockoutChannel, RoundResetChannel } from '../config/channels';
@@ -46,6 +47,32 @@ export function GameManagerNode() {
     const resetPauseTimer = useTimer(RESET_PAUSE_DURATION);
     const countdownTimer = useTimer(COUNTDOWN_DURATION);
 
+    const countdownBeepSfx = useSound('tone', {
+        wave: 'sine',
+        frequency: 880,
+        duration: 0.1,
+        gain: 0.15,
+    });
+    const countdownGoSfx = useSound('tone', {
+        wave: 'sine',
+        frequency: 1320,
+        duration: 0.15,
+        gain: 0.15,
+    });
+    const koAnnounceSfx = useSound('tone', {
+        wave: 'sawtooth',
+        frequency: [200, 100],
+        duration: 0.4,
+        gain: 0.12,
+    });
+    const matchFanfareSfx = useSound('arpeggio', {
+        wave: 'sine',
+        notes: [523.25, 659.25, 783.99, 1046.5],
+        interval: 0.08,
+        duration: 0.4,
+        gain: 0.12,
+    });
+
     const roundReset = useChannel(RoundResetChannel);
 
     useChannel<number>(KnockoutChannel, (knockedOutPlayerId) => {
@@ -59,11 +86,15 @@ export function GameManagerNode() {
         if (gameState.scores[scorer] >= WIN_COUNT) {
             gameState.phase = 'match_over';
             gameState.matchWinner = scorer;
+            matchFanfareSfx.play();
         } else {
             gameState.phase = 'ko_flash';
             koFlashTimer.reset();
+            koAnnounceSfx.play();
         }
     });
+
+    let prevCountdown = -1;
 
     useFixedUpdate(() => {
         switch (gameState.phase) {
@@ -84,16 +115,24 @@ export function GameManagerNode() {
                 }
                 break;
 
-            case 'countdown':
+            case 'countdown': {
                 if (!countdownTimer.active) {
                     gameState.phase = 'playing';
                     gameState.countdownValue = -1;
+                    prevCountdown = -1;
                 } else {
-                    gameState.countdownValue = computeCountdownValue(
+                    const value = computeCountdownValue(
                         countdownTimer.remaining,
                     );
+                    if (value !== prevCountdown) {
+                        if (value > 0) countdownBeepSfx.play();
+                        else countdownGoSfx.play();
+                        prevCountdown = value;
+                    }
+                    gameState.countdownValue = value;
                 }
                 break;
+            }
 
             // 'playing' and 'match_over' — no automatic transitions
             default:
