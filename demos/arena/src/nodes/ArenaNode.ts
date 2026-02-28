@@ -13,6 +13,9 @@ import { LocalPlayerNode } from './LocalPlayerNode';
 import { RemotePlayerNode } from './RemotePlayerNode';
 import { GameManagerNode } from './GameManagerNode';
 import { ScoreHudNode } from './ScoreHudNode';
+import { KnockoutOverlayNode } from './KnockoutOverlayNode';
+import { CountdownOverlayNode } from './CountdownOverlayNode';
+import { MatchOverOverlayNode } from './MatchOverOverlayNode';
 import { CameraRigNode } from './CameraRigNode';
 
 export interface ArenaNodeProps {
@@ -52,7 +55,14 @@ export function ArenaNode({ playerId, hub }: ArenaNodeProps) {
     useFog({ color: 0x0a0a1a, near: 30, far: 60 });
 
     // Shared game state
-    const gameState: GameState = { scores: [0, 0], round: 1 };
+    const gameState: GameState = {
+        scores: [0, 0],
+        round: 1,
+        phase: 'playing',
+        lastKnockedOut: -1,
+        countdownValue: -1,
+        matchWinner: -1,
+    };
     useProvideContext(GameCtx, gameState);
     useProvideContext(PlayerIdCtx, playerId);
 
@@ -75,6 +85,11 @@ export function ArenaNode({ playerId, hub }: ArenaNodeProps) {
 
     // Score HUD
     useChild(ScoreHudNode);
+
+    // Round lifecycle overlays
+    useChild(KnockoutOverlayNode);
+    useChild(CountdownOverlayNode);
+    useChild(MatchOverOverlayNode);
 
     // Camera rig — follows local player
     useChild(CameraRigNode);
