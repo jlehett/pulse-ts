@@ -4,7 +4,9 @@ import {
     DASH_SPEED,
     DASH_DURATION,
     DASH_COOLDOWN,
+    KNOCKBACK_FORCE,
     computeDashDirection,
+    computeKnockback,
 } from './LocalPlayerNode';
 
 describe('LocalPlayerNode constants', () => {
@@ -27,6 +29,10 @@ describe('LocalPlayerNode constants', () => {
 
     it('dash cooldown is longer than dash duration', () => {
         expect(DASH_COOLDOWN).toBeGreaterThan(DASH_DURATION);
+    });
+
+    it('knockback force is positive', () => {
+        expect(KNOCKBACK_FORCE).toBeGreaterThan(0);
     });
 });
 
@@ -69,5 +75,41 @@ describe('computeDashDirection', () => {
         expect(len).toBeCloseTo(1);
         expect(x).toBeCloseTo(3 / 5);
         expect(z).toBeCloseTo(-4 / 5);
+    });
+});
+
+describe('computeKnockback', () => {
+    it('pushes away from other player along X axis', () => {
+        const [x, y, z] = computeKnockback(5, 0, 3, 0, 10);
+        expect(x).toBeCloseTo(10);
+        expect(z).toBeCloseTo(0);
+        expect(y).toBeCloseTo(5); // upward arc = magnitude * 0.5
+    });
+
+    it('pushes away from other player along Z axis', () => {
+        const [x, y, z] = computeKnockback(0, 5, 0, 2, 10);
+        expect(x).toBeCloseTo(0);
+        expect(z).toBeCloseTo(10);
+        expect(y).toBeCloseTo(5);
+    });
+
+    it('pushes away diagonally and normalizes direction', () => {
+        const [x, y, z] = computeKnockback(1, 1, 0, 0, 10);
+        const horizontalLen = Math.sqrt(x * x + z * z);
+        expect(horizontalLen).toBeCloseTo(10);
+        expect(y).toBeCloseTo(5);
+    });
+
+    it('handles overlapping positions with fallback direction', () => {
+        const [x, y, z] = computeKnockback(3, 3, 3, 3, 8);
+        expect(x).toBe(8);
+        expect(y).toBe(4);
+        expect(z).toBe(0);
+    });
+
+    it('scales with magnitude', () => {
+        const [x1] = computeKnockback(5, 0, 0, 0, 5);
+        const [x2] = computeKnockback(5, 0, 0, 0, 10);
+        expect(x2).toBeCloseTo(x1 * 2);
     });
 });
