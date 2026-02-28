@@ -40,7 +40,7 @@ export function ArenaNode({ playerId, hub }: ArenaNodeProps) {
         intensity: 1.0,
         position: [0, 20, 10],
         castShadow: true,
-        shadowMapSize: 1024,
+        shadowMapSize: 2048,
         shadowBounds: {
             near: 0.5,
             far: 60,
@@ -51,8 +51,8 @@ export function ArenaNode({ playerId, hub }: ArenaNodeProps) {
         },
     });
 
-    // Fog for depth and atmosphere
-    useFog({ color: 0x0a0a1a, near: 30, far: 60 });
+    // Fog — pulled closer for atmospheric depth falloff
+    useFog({ color: 0x0a0e1e, near: 20, far: 50 });
 
     // Shared game state
     const gameState: GameState = {
