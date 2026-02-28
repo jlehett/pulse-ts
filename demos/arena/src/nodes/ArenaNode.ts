@@ -1,7 +1,8 @@
-import { useProvideContext } from '@pulse-ts/core';
+import { useProvideContext, useChild } from '@pulse-ts/core';
 import { useAmbientLight, useDirectionalLight, useFog } from '@pulse-ts/three';
 import { installParticles } from '@pulse-ts/effects';
 import { GameCtx, PlayerIdCtx, type GameState } from '../contexts';
+import { PlatformNode } from './PlatformNode';
 
 export interface ArenaNodeProps {
     playerId: number;
@@ -41,4 +42,7 @@ export function ArenaNode({ playerId }: ArenaNodeProps) {
 
     // Particle effects pool
     installParticles({ maxPerPool: 200, defaultSize: 0.08 });
+
+    // Arena platform
+    useChild(PlatformNode);
 }
