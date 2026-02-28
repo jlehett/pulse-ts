@@ -5,6 +5,7 @@ import {
     useFrameUpdate,
     useWorld,
     useContext,
+    useStableId,
     Transform,
     useTimer,
     useCooldown,
@@ -13,6 +14,7 @@ import { useAxis2D, useAction } from '@pulse-ts/input';
 import { useRigidBody, useSphereCollider } from '@pulse-ts/physics';
 import { useMesh } from '@pulse-ts/three';
 import { useSound } from '@pulse-ts/audio';
+import { useReplicateTransform } from '@pulse-ts/network';
 import { PlayerTag } from '../components/PlayerTag';
 import { PlayerIdCtx } from '../contexts';
 import { SPAWN_POSITIONS, DEATH_PLANE_Y } from '../config/arena';
@@ -68,6 +70,10 @@ export function computeDashDirection(
 export function LocalPlayerNode() {
     const playerId = useContext(PlayerIdCtx);
     const spawn = SPAWN_POSITIONS[playerId];
+
+    // Network identity and replication — send our transform to the other world
+    useStableId(`player-${playerId}`);
+    useReplicateTransform({ role: 'producer' });
 
     useComponent(PlayerTag);
 
