@@ -5,10 +5,11 @@ title: Audio polish
 status: todo
 priority: low
 created: 2026-02-26
-updated: 2026-02-26
+updated: 2026-02-28
 labels:
   - arena
   - audio
+branch: ticket-048-audio-polish
 ---
 
 ## Description
