@@ -2,7 +2,7 @@
 id: TICKET-059
 epic: EPIC-009
 title: Online play lobby UI
-status: todo
+status: in-progress
 priority: medium
 created: 2026-03-01
 updated: 2026-03-01
@@ -26,3 +26,7 @@ DOM overlay lobby screen for online play. Two options: "Host Game" and "Join Gam
 - [ ] Connection status indicator (connecting, connected, error)
 - [ ] Game starts automatically when both players are connected
 - [ ] Unit tests for lobby state transitions
+
+## Notes
+
+- **2026-03-01**: Status changed to in-progress. Host picks player, joiner gets remaining. Join flow simplified to address input + connect.
