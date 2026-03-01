@@ -3,7 +3,6 @@ import { installAudio } from '@pulse-ts/audio';
 import { installInput } from '@pulse-ts/input';
 import { installPhysics } from '@pulse-ts/physics';
 import { installThree, StatsOverlaySystem } from '@pulse-ts/three';
-import { installSave } from '@pulse-ts/save';
 import { installNetwork } from '@pulse-ts/network';
 import { ArenaNode } from './nodes/ArenaNode';
 import { allBindings } from './config/bindings';
@@ -25,8 +24,6 @@ function startLocalGame() {
         canvas,
         clearColor: 0x0a0a1a,
     });
-
-    installSave(world, { plugins: ['@pulse-ts/three'] });
 
     three.renderer.shadowMap.enabled = true;
     three.renderer.shadowMap.type = 1; // THREE.PCFShadowMap
@@ -52,7 +49,6 @@ async function startOnlineGame(lobby: LobbyResult) {
         clearColor: 0x0a0a1a,
     });
 
-    installSave(world, { plugins: ['@pulse-ts/three'] });
     await installNetwork(world);
 
     three.renderer.shadowMap.enabled = true;
