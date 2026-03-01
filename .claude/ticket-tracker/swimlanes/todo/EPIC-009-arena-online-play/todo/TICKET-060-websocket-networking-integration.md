@@ -6,6 +6,7 @@ status: todo
 priority: medium
 created: 2026-03-01
 updated: 2026-03-01
+branch: ticket-060-websocket-networking-integration
 labels:
   - arena
   - network
