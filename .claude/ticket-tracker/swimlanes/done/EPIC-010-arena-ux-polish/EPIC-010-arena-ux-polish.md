@@ -1,7 +1,7 @@
 ---
 id: EPIC-010
 title: Arena UX Polish
-status: todo
+status: done
 created: 2026-03-01
 updated: 2026-03-01
 ---
@@ -16,3 +16,7 @@ Post-launch UX improvements for the arena demo — return-to-menu flow, host lob
 - TICKET-062: Host pre-game lobby waiting room
 - TICKET-063: Remove leaderboard system
 - TICKET-064: Join flow WebSocket connection validation
+
+## Notes
+
+- **2026-03-01**: Epic closed — all tickets complete
