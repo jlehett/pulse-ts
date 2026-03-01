@@ -5,7 +5,8 @@ title: Leaderboard persistence
 status: todo
 priority: low
 created: 2026-02-26
-updated: 2026-02-28
+updated: 2026-03-01
+branch: ticket-050-leaderboard-persistence
 labels:
   - arena
   - save
