@@ -4,6 +4,7 @@ epic: EPIC-008
 title: Cylinder collider support
 status: todo
 priority: medium
+branch: ticket-054-cylinder-collider-support
 created: 2026-03-01
 updated: 2026-03-01
 labels:
