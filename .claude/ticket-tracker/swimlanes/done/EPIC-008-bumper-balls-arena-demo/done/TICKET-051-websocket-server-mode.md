@@ -2,10 +2,10 @@
 id: TICKET-051
 epic: EPIC-008
 title: WebSocket server mode
-status: todo
+status: done
 priority: low
 created: 2026-02-26
-updated: 2026-02-28
+updated: 2026-03-01
 labels:
   - arena
   - network
@@ -31,3 +31,4 @@ labels:
 - **2026-02-28**: Implemented server.ts relay, dual-mode main.ts, ArenaNode transport switching, solo canvas in index.html. 55 tests pass.
 - **2026-02-28**: Status changed to done
 - **2026-02-28**: Reopened. TICKET-053 (split-screen canvas fix) removed all client-side WebSocket integration as part of cleanup: URL param handling removed from main.ts, `#solo` canvas removed from index.html, `useWebSocket`/`wsUrl` prop removed from ArenaNode, `ws` dependency removed from package.json. The server-side code (`server.ts`) still exists. To resolve: re-add `ws` dependency, restore the `#solo` canvas and display toggle in index.html, re-add `wsUrl` prop and `useWebSocket` conditional to ArenaNode, and restore URL param parsing and `startWebSocket()` function in main.ts.
+- **2026-03-01**: Superseded by EPIC-009 (arena online play). Scope expanded to include main menu UI and lobby flow instead of URL params. Closing this ticket; work continues in TICKET-058, TICKET-059, TICKET-060.
