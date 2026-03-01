@@ -1,5 +1,5 @@
 import { useComponent, Transform, useFrameUpdate } from '@pulse-ts/core';
-import { useRigidBody, useBoxCollider } from '@pulse-ts/physics';
+import { useRigidBody, useCylinderCollider } from '@pulse-ts/physics';
 import { useMesh, useObject3D } from '@pulse-ts/three';
 import { useAnimate } from '@pulse-ts/effects';
 import * as THREE from 'three';
@@ -19,16 +19,16 @@ const RING_COLOR = 0x00ccff;
 
 /**
  * Circular arena platform — a flat cylinder with a pulsing emissive torus
- * around its edge. Uses a box collider for the floor surface (no edge walls
- * so players can be knocked off).
+ * around its edge. Uses a cylinder collider for accurate circular collision
+ * (no edge walls so players can be knocked off).
  */
 export function PlatformNode() {
     const transform = useComponent(Transform);
     transform.localPosition.set(0, 0, 0);
 
-    // Physics — static box collider approximating the cylinder floor
+    // Physics — static cylinder collider matching the visual cylinder
     useRigidBody({ type: 'static' });
-    useBoxCollider(PLATFORM_RADIUS, PLATFORM_HEIGHT / 2, PLATFORM_RADIUS, {
+    useCylinderCollider(PLATFORM_RADIUS, PLATFORM_HEIGHT / 2, {
         friction: 0.6,
         restitution: 0,
     });

@@ -53,6 +53,22 @@ describe('inertia auto-compute', () => {
         expect(rb.inertiaTensor.y).toBeLessThan(rb.inertiaTensor.z);
     });
 
+    it('computes cylinder inertia (iy = 0.5*m*r^2, iy < ix)', () => {
+        const { rb, col } = setup();
+        rb.mass = 4;
+        col.kind = 'cylinder';
+        col.cylRadius = 0.5;
+        col.cylHalfHeight = 0.8;
+        refreshAutomaticInertia(rb, () => true);
+        // Iyy = 0.5 * 4 * 0.25 = 0.5
+        expect(rb.inertiaTensor.y).toBeCloseTo(0.5, 5);
+        // Ixx = (1/12) * 4 * (3*0.25 + 2.56) = (1/12) * 4 * 3.31 = 1.10333...
+        const h = 0.8 * 2;
+        const expectedIx = (1 / 12) * 4 * (3 * 0.5 * 0.5 + h * h);
+        expect(rb.inertiaTensor.x).toBeCloseTo(expectedIx, 5);
+        expect(rb.inertiaTensor.y).toBeLessThan(rb.inertiaTensor.x);
+    });
+
     it('sets plane inertia to zero', () => {
         const { rb, col } = setup();
         rb.mass = 2;

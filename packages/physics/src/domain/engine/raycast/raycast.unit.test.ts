@@ -35,4 +35,47 @@ describe('raycast unit', () => {
         expect(hitNone).not.toBeNull();
         expect(hitNone!.node).toBe(n1);
     });
+
+    it('hits a cylinder barrel', () => {
+        const world = new World();
+        const n = new Node();
+        world.add(n);
+        const t = attachComponent(n, Transform);
+        t.localPosition.set(0, 0, 0);
+        const c = attachComponent(n, Collider);
+        c.kind = 'cylinder';
+        c.cylRadius = 1;
+        c.cylHalfHeight = 2;
+
+        const origin = new Vec3(-3, 0, 0);
+        const dir = new Vec3(1, 0, 0);
+        const hit = raycast([c], origin, dir, Infinity);
+        expect(hit).not.toBeNull();
+        // Should hit the barrel at x = -1
+        expect(hit!.distance).toBeCloseTo(2, 1);
+        // Normal should point along -X (outward from barrel)
+        expect(hit!.normal.x).toBeCloseTo(-1, 1);
+    });
+
+    it('hits a cylinder cap', () => {
+        const world = new World();
+        const n = new Node();
+        world.add(n);
+        const t = attachComponent(n, Transform);
+        t.localPosition.set(0, 0, 0);
+        const c = attachComponent(n, Collider);
+        c.kind = 'cylinder';
+        c.cylRadius = 2;
+        c.cylHalfHeight = 1;
+
+        // Ray from above, pointing down
+        const origin = new Vec3(0, 5, 0);
+        const dir = new Vec3(0, -1, 0);
+        const hit = raycast([c], origin, dir, Infinity);
+        expect(hit).not.toBeNull();
+        // Should hit the top cap at y = 1
+        expect(hit!.distance).toBeCloseTo(4, 1);
+        // Normal should point +Y (cap normal)
+        expect(hit!.normal.y).toBeCloseTo(1, 1);
+    });
 });

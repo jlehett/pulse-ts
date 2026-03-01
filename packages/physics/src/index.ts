@@ -4,7 +4,7 @@
  *
  * Features:
  * - Rigid bodies with forces, impulses, and simple angular motion
- * - Sphere and oriented box (OBB) colliders, triggers, and basic material props
+ * - Sphere, box, plane, capsule, and cylinder colliders with triggers and material props
  * - Fixed-step integration via `PhysicsSystem`
  * - Raycasts and collision events with convenient FC hooks
  *
@@ -51,7 +51,11 @@ export {
     SphereCollider,
     BoxCollider,
 } from './public/components/Collider';
-export { PlaneCollider, CapsuleCollider } from './public/components/Collider';
+export {
+    PlaneCollider,
+    CapsuleCollider,
+    CylinderCollider,
+} from './public/components/Collider';
 
 // FC Hooks
 export {
@@ -61,6 +65,7 @@ export {
     useBoxCollider,
     usePlaneCollider,
     useCapsuleCollider,
+    useCylinderCollider,
     useOnCollisionStart,
     useOnCollisionEnd,
     useOnCollision,

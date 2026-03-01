@@ -3,7 +3,7 @@ import { Collider } from '../../../public/components/Collider';
 import { computeAABB } from './aabb';
 
 describe('computeAABB', () => {
-    function setup(kind: 'sphere' | 'box' | 'capsule' | 'plane') {
+    function setup(kind: 'sphere' | 'box' | 'capsule' | 'plane' | 'cylinder') {
         const world = new World();
         const n = new Node();
         world.add(n);
@@ -51,5 +51,20 @@ describe('computeAABB', () => {
     it('plane returns null for AABB (infinite)', () => {
         const { c } = setup('plane');
         expect(computeAABB(c)).toBeNull();
+    });
+
+    it('upright cylinder produces tight AABB', () => {
+        const { t, c } = setup('cylinder');
+        c.cylRadius = 2;
+        c.cylHalfHeight = 0.5;
+        t.localPosition.set(0, 1, 0);
+        const bb = computeAABB(c)!;
+        // Upright: X/Z extent = radius, Y extent = halfHeight
+        expect(bb.min.x).toBeCloseTo(-2);
+        expect(bb.max.x).toBeCloseTo(2);
+        expect(bb.min.y).toBeCloseTo(0.5);
+        expect(bb.max.y).toBeCloseTo(1.5);
+        expect(bb.min.z).toBeCloseTo(-2);
+        expect(bb.max.z).toBeCloseTo(2);
     });
 });

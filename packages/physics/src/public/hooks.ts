@@ -118,6 +118,31 @@ export function useCapsuleCollider(
 }
 
 /**
+ * Ensures a cylinder collider is present on the current node, oriented along local Y
+ * with flat disc end-caps.
+ *
+ * @example
+ * ```ts
+ * useCylinderCollider(14, 0.25, { friction: 0.6 });
+ * ```
+ * @param radius Cylinder radius in world units.
+ * @param halfHeight Half the height along the local Y axis.
+ * @param init Optional overrides applied once to the collider.
+ */
+export function useCylinderCollider(
+    radius = 0.5,
+    halfHeight = 0.5,
+    init?: Partial<Collider>,
+): Collider {
+    const col = useComponent(Collider);
+    col.kind = 'cylinder';
+    col.cylRadius = radius;
+    col.cylHalfHeight = halfHeight;
+    if (init) Object.assign(col, init);
+    return col;
+}
+
+/**
  * Registers a callback for the start of collisions involving the current node.
  *
  * @example
