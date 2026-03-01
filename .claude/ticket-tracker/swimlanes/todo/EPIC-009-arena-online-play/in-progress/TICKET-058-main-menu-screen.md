@@ -2,7 +2,7 @@
 id: TICKET-058
 epic: EPIC-009
 title: Main menu screen
-status: todo
+status: in-progress
 priority: medium
 created: 2026-03-01
 updated: 2026-03-01
@@ -23,3 +23,7 @@ Replace the current instant-start flow with a title screen. The menu shows the g
 - [ ] "Online Play" transitions to the lobby UI (TICKET-059)
 - [ ] Menu is a DOM overlay, styled consistently with existing HUD elements
 - [ ] Unit tests for menu state transitions
+
+## Notes
+
+- **2026-03-01**: Status changed to in-progress. Implementing main menu screen.
