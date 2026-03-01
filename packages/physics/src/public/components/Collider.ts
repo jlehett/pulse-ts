@@ -5,7 +5,7 @@ import { PhysicsService } from '../../domain/services/PhysicsService';
 /**
  * Supported collider primitive types.
  */
-export type ColliderKind = 'sphere' | 'box' | 'plane' | 'capsule';
+export type ColliderKind = 'sphere' | 'box' | 'plane' | 'capsule' | 'cylinder';
 
 /**
  * Base Collider component responsible for describing collision geometry.
@@ -61,6 +61,12 @@ export class Collider extends Component {
     capRadius = 0.5;
     /** Capsule half height along the local Y axis (applies when `kind === 'capsule'`). */
     capHalfHeight = 0.5;
+
+    // cylinder-only params
+    /** Cylinder radius (applies when `kind === 'cylinder'`). */
+    cylRadius = 0.5;
+    /** Cylinder half height along the local Y axis (applies when `kind === 'cylinder'`). */
+    cylHalfHeight = 0.5;
 
     /**
      * Registers the collider with the physics service when attached to a node.
@@ -149,5 +155,27 @@ export class CapsuleCollider extends Collider {
         this.kind = 'capsule';
         this.capRadius = radius;
         this.capHalfHeight = halfHeight;
+    }
+}
+
+/**
+ * Cylinder collider oriented along the node's local Y axis with flat disc end-caps.
+ *
+ * @example
+ * ```ts
+ * const cyl = useCylinderCollider(2, 0.5);
+ * cyl.friction = 0.8;
+ * ```
+ */
+export class CylinderCollider extends Collider {
+    /**
+     * @param radius Cylinder radius in world units.
+     * @param halfHeight Half the height along the local Y axis.
+     */
+    constructor(radius = 0.5, halfHeight = 0.5) {
+        super();
+        this.kind = 'cylinder';
+        this.cylRadius = radius;
+        this.cylHalfHeight = halfHeight;
     }
 }

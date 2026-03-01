@@ -96,6 +96,38 @@ export function detectCollision(a: Collider, b: Collider): Contact {
             ? { nx: -res.nx, ny: -res.ny, nz: -res.nz, depth: res.depth }
             : null;
     }
+    // cylinder combos
+    // sphereCylinder returns normal from cylinder toward sphere (B→A),
+    // convention requires A→B, so negate when a=sphere,b=cylinder.
+    if (a.kind === 'sphere' && b.kind === 'cylinder') {
+        const cyl = cylinderWorldFrame(b);
+        const res = sphereCylinder(ax, ay, az, a.radius, cyl);
+        return res
+            ? { nx: -res.nx, ny: -res.ny, nz: -res.nz, depth: res.depth }
+            : null;
+    }
+    if (a.kind === 'cylinder' && b.kind === 'sphere') {
+        const cyl = cylinderWorldFrame(a);
+        return sphereCylinder(bx, by, bz, b.radius, cyl);
+    }
+    if (a.kind === 'cylinder' && b.kind === 'plane') return cylinderPlane(a, b);
+    if (a.kind === 'plane' && b.kind === 'cylinder') {
+        const res = cylinderPlane(b, a);
+        return res
+            ? { nx: -res.nx, ny: -res.ny, nz: -res.nz, depth: res.depth }
+            : null;
+    }
+    // cylinderBox returns normal from box toward cylinder (B→A when a=cyl,b=box),
+    // convention requires A→B, so negate when a=cylinder,b=box.
+    if (a.kind === 'cylinder' && b.kind === 'box') {
+        const res = cylinderBox(a, b);
+        return res
+            ? { nx: -res.nx, ny: -res.ny, nz: -res.nz, depth: res.depth }
+            : null;
+    }
+    if (a.kind === 'box' && b.kind === 'cylinder') {
+        return cylinderBox(b, a);
+    }
     return null;
 }
 
@@ -846,6 +878,327 @@ export function capsuleObb(cap: Collider, box: Collider): Contact {
     nz /= len;
     const d = Math.sqrt(best.dist2);
     return { nx, ny, nz, depth: cap.capRadius - d };
+}
+
+interface CylFrame {
+    cx: number;
+    cy: number;
+    cz: number;
+    ux: number;
+    uy: number;
+    uz: number;
+    halfHeight: number;
+    radius: number;
+}
+
+function cylinderWorldFrame(c: Collider): CylFrame {
+    const t = getComponent(c.owner, Transform)!;
+    const trs = t.getWorldTRS();
+    const up = Quat.rotateVector(trs.rotation, UNIT_Y, sv3());
+    const off = Quat.rotateVector(
+        trs.rotation,
+        sv3(c.offset.x, c.offset.y, c.offset.z),
+        sv3(),
+    );
+    return {
+        cx: trs.position.x + off.x,
+        cy: trs.position.y + off.y,
+        cz: trs.position.z + off.z,
+        ux: up.x,
+        uy: up.y,
+        uz: up.z,
+        halfHeight: c.cylHalfHeight,
+        radius: c.cylRadius,
+    };
+}
+
+/**
+ * Sphere vs cylinder collision.
+ * Projects sphere center onto cylinder local frame (axial + radial decomposition)
+ * and handles 3 regions: barrel surface, flat cap face, and cap rim edge.
+ * Normal points from cylinder toward sphere.
+ */
+function sphereCylinder(
+    sx: number,
+    sy: number,
+    sz: number,
+    sr: number,
+    cyl: CylFrame,
+): Contact {
+    // Vector from cylinder center to sphere center
+    const dx = sx - cyl.cx,
+        dy = sy - cyl.cy,
+        dz = sz - cyl.cz;
+
+    // Axial projection (along cylinder axis)
+    const axial = dx * cyl.ux + dy * cyl.uy + dz * cyl.uz;
+
+    // Radial component (perpendicular to axis)
+    const rx = dx - axial * cyl.ux;
+    const ry = dy - axial * cyl.uy;
+    const rz = dz - axial * cyl.uz;
+    const radialDist = Math.sqrt(rx * rx + ry * ry + rz * rz);
+
+    // Clamp to cylinder surface: closest point on cylinder to sphere center
+    const clampedAxial = Math.max(
+        -cyl.halfHeight,
+        Math.min(cyl.halfHeight, axial),
+    );
+
+    const insideBarrel = radialDist <= cyl.radius;
+    const insideCaps = Math.abs(axial) <= cyl.halfHeight;
+
+    let cpx: number, cpy: number, cpz: number;
+
+    if (insideBarrel && insideCaps) {
+        // Sphere center is inside the cylinder — push out along shortest axis
+        const axialPen = cyl.halfHeight - Math.abs(axial);
+        const radialPen = cyl.radius - radialDist;
+
+        if (axialPen < radialPen) {
+            // Push out along axis (cap face)
+            const sign = axial >= 0 ? 1 : -1;
+            cpx = cyl.cx + sign * cyl.halfHeight * cyl.ux;
+            cpy = cyl.cy + sign * cyl.halfHeight * cyl.uy;
+            cpz = cyl.cz + sign * cyl.halfHeight * cyl.uz;
+            // Add the radial offset to keep contact point on cap disc
+            cpx += rx;
+            cpy += ry;
+            cpz += rz;
+            // Normal points from cylinder toward sphere (along cap normal)
+            const nx = cyl.ux * sign;
+            const ny = cyl.uy * sign;
+            const nz = cyl.uz * sign;
+            const depth = axialPen + sr;
+            return { nx, ny, nz, depth };
+        } else {
+            // Push out radially (barrel)
+            if (radialDist < 1e-8) {
+                // Sphere center is on axis — pick arbitrary radial
+                return {
+                    nx: 1,
+                    ny: 0,
+                    nz: 0,
+                    depth: cyl.radius + sr,
+                };
+            }
+            const invR = 1 / radialDist;
+            const nx = rx * invR;
+            const ny = ry * invR;
+            const nz = rz * invR;
+            const depth = radialPen + sr;
+            return { nx, ny, nz, depth };
+        }
+    }
+
+    if (insideCaps) {
+        // Sphere is beside the barrel (within cap range but outside radius)
+        // Closest point is on barrel surface at clamped axial height
+        if (radialDist < 1e-8) {
+            cpx = cyl.cx + clampedAxial * cyl.ux + cyl.radius;
+            cpy = cyl.cy + clampedAxial * cyl.uy;
+            cpz = cyl.cz + clampedAxial * cyl.uz;
+        } else {
+            const invR = 1 / radialDist;
+            const rnx = rx * invR;
+            const rny = ry * invR;
+            const rnz = rz * invR;
+            cpx = cyl.cx + clampedAxial * cyl.ux + cyl.radius * rnx;
+            cpy = cyl.cy + clampedAxial * cyl.uy + cyl.radius * rny;
+            cpz = cyl.cz + clampedAxial * cyl.uz + cyl.radius * rnz;
+        }
+    } else if (insideBarrel) {
+        // Sphere is above/below a cap face but within the cylinder radius
+        const sign = axial >= 0 ? 1 : -1;
+        cpx = cyl.cx + sign * cyl.halfHeight * cyl.ux + rx;
+        cpy = cyl.cy + sign * cyl.halfHeight * cyl.uy + ry;
+        cpz = cyl.cz + sign * cyl.halfHeight * cyl.uz + rz;
+    } else {
+        // Sphere is outside both barrel and caps — closest point is on cap rim edge
+        const sign = axial >= 0 ? 1 : -1;
+        if (radialDist < 1e-8) {
+            cpx = cyl.cx + sign * cyl.halfHeight * cyl.ux + cyl.radius;
+            cpy = cyl.cy + sign * cyl.halfHeight * cyl.uy;
+            cpz = cyl.cz + sign * cyl.halfHeight * cyl.uz;
+        } else {
+            const invR = 1 / radialDist;
+            const rnx = rx * invR;
+            const rny = ry * invR;
+            const rnz = rz * invR;
+            cpx = cyl.cx + sign * cyl.halfHeight * cyl.ux + cyl.radius * rnx;
+            cpy = cyl.cy + sign * cyl.halfHeight * cyl.uy + cyl.radius * rny;
+            cpz = cyl.cz + sign * cyl.halfHeight * cyl.uz + cyl.radius * rnz;
+        }
+    }
+
+    // Distance from closest point on cylinder to sphere center
+    const vx = sx - cpx,
+        vy = sy - cpy,
+        vz = sz - cpz;
+    const d2 = vx * vx + vy * vy + vz * vz;
+    if (d2 >= sr * sr) return null;
+    const d = Math.sqrt(Math.max(1e-8, d2));
+    const inv = 1 / d;
+    return {
+        nx: vx * inv,
+        ny: vy * inv,
+        nz: vz * inv,
+        depth: sr - d,
+    };
+}
+
+/**
+ * Cylinder vs plane collision.
+ * Finds the deepest point on the cylinder disc rims against the plane.
+ */
+function cylinderPlane(cyl: Collider, plane: Collider): Contact {
+    const cylF = cylinderWorldFrame(cyl);
+    const { p, n } = planeWorld(plane);
+
+    // Radial direction on plane (component of plane normal perpendicular to cyl axis)
+    const dot = n.x * cylF.ux + n.y * cylF.uy + n.z * cylF.uz;
+    // Radial component of plane normal
+    let prx = n.x - dot * cylF.ux;
+    let pry = n.y - dot * cylF.uy;
+    let prz = n.z - dot * cylF.uz;
+    const prLen = Math.sqrt(prx * prx + pry * pry + prz * prz);
+    if (prLen > 1e-8) {
+        prx /= prLen;
+        pry /= prLen;
+        prz /= prLen;
+    }
+
+    // Test both cap rim points (deepest point on each disc toward the plane)
+    let minDist = Infinity;
+
+    for (const sign of [-1, 1]) {
+        // Cap center
+        const ccx = cylF.cx + sign * cylF.halfHeight * cylF.ux;
+        const ccy = cylF.cy + sign * cylF.halfHeight * cylF.uy;
+        const ccz = cylF.cz + sign * cylF.halfHeight * cylF.uz;
+        // Deepest rim point: move in the direction opposite to the plane normal's radial component
+        const px = ccx - cylF.radius * prx;
+        const py = ccy - cylF.radius * pry;
+        const pz = ccz - cylF.radius * prz;
+        const dist = (px - p.x) * n.x + (py - p.y) * n.y + (pz - p.z) * n.z;
+        if (dist < minDist) {
+            minDist = dist;
+        }
+    }
+
+    if (minDist >= 0) return null;
+    return {
+        nx: -n.x,
+        ny: -n.y,
+        nz: -n.z,
+        depth: -minDist,
+    };
+}
+
+/**
+ * Cylinder vs OBB collision.
+ * Samples the cylinder axis and cap rim points against the OBB using
+ * closest-point approach, similar to box-capsule pattern.
+ */
+function cylinderBox(cyl: Collider, box: Collider): Contact {
+    const cylF = cylinderWorldFrame(cyl);
+    const fb = obbFrame(box);
+
+    // Sample points on the cylinder: axis samples + cap rim samples
+    let bestDepth = -Infinity;
+    let bestNx = 0,
+        bestNy = 0,
+        bestNz = 0;
+
+    const testPoint = (
+        px: number,
+        py: number,
+        pz: number,
+        testRadius: number,
+    ): void => {
+        // Transform point to OBB local space
+        const vx = px - fb.center.x;
+        const vy = py - fb.center.y;
+        const vz = pz - fb.center.z;
+        const pLx = vx * fb.U0.x + vy * fb.U0.y + vz * fb.U0.z;
+        const pLy = vx * fb.U1.x + vy * fb.U1.y + vz * fb.U1.z;
+        const pLz = vx * fb.U2.x + vy * fb.U2.y + vz * fb.U2.z;
+        // Closest point on OBB in local space
+        const qx = Math.min(fb.hx, Math.max(-fb.hx, pLx));
+        const qy = Math.min(fb.hy, Math.max(-fb.hy, pLy));
+        const qz = Math.min(fb.hz, Math.max(-fb.hz, pLz));
+        const ex = pLx - qx,
+            ey = pLy - qy,
+            ez = pLz - qz;
+        const d2 = ex * ex + ey * ey + ez * ez;
+        if (d2 > testRadius * testRadius) return;
+        // Compute world-space normal
+        let nx = fb.U0.x * ex + fb.U1.x * ey + fb.U2.x * ez;
+        let ny = fb.U0.y * ex + fb.U1.y * ey + fb.U2.y * ez;
+        let nz = fb.U0.z * ex + fb.U1.z * ey + fb.U2.z * ez;
+        const len = Math.hypot(nx, ny, nz) || 1;
+        nx /= len;
+        ny /= len;
+        nz /= len;
+        const d = Math.sqrt(Math.max(1e-8, d2));
+        const depth = testRadius - d;
+        if (depth > bestDepth) {
+            bestDepth = depth;
+            bestNx = nx;
+            bestNy = ny;
+            bestNz = nz;
+        }
+    };
+
+    // Sample along cylinder axis (5 points)
+    for (let i = 0; i <= 4; i++) {
+        const s = -1 + (2 * i) / 4; // -1 to 1
+        const px = cylF.cx + s * cylF.halfHeight * cylF.ux;
+        const py = cylF.cy + s * cylF.halfHeight * cylF.uy;
+        const pz = cylF.cz + s * cylF.halfHeight * cylF.uz;
+        testPoint(px, py, pz, cylF.radius);
+    }
+
+    // Sample cap rim points (8 points per cap)
+    // Build a radial basis perpendicular to cylinder axis
+    let bx0: number, by0: number, bz0: number;
+    if (Math.abs(cylF.ux) < 0.9) {
+        // cross(up, unitX)
+        bx0 = 0;
+        by0 = cylF.uz;
+        bz0 = -cylF.uy;
+    } else {
+        // cross(up, unitZ)
+        bx0 = cylF.uy;
+        by0 = -cylF.ux;
+        bz0 = 0;
+    }
+    const bLen = Math.sqrt(bx0 * bx0 + by0 * by0 + bz0 * bz0) || 1;
+    bx0 /= bLen;
+    by0 /= bLen;
+    bz0 /= bLen;
+    // Second basis vector: cross(up, b0)
+    const bx1 = cylF.uy * bz0 - cylF.uz * by0;
+    const by1 = cylF.uz * bx0 - cylF.ux * bz0;
+    const bz1 = cylF.ux * by0 - cylF.uy * bx0;
+
+    for (const capSign of [-1, 1]) {
+        const ccx = cylF.cx + capSign * cylF.halfHeight * cylF.ux;
+        const ccy = cylF.cy + capSign * cylF.halfHeight * cylF.uy;
+        const ccz = cylF.cz + capSign * cylF.halfHeight * cylF.uz;
+        for (let i = 0; i < 8; i++) {
+            const angle = (i * Math.PI * 2) / 8;
+            const cos = Math.cos(angle);
+            const sin = Math.sin(angle);
+            const rx = cylF.radius * (cos * bx0 + sin * bx1);
+            const ry = cylF.radius * (cos * by0 + sin * by1);
+            const rz = cylF.radius * (cos * bz0 + sin * bz1);
+            testPoint(ccx + rx, ccy + ry, ccz + rz, 0);
+        }
+    }
+
+    if (bestDepth <= 0) return null;
+    return { nx: bestNx, ny: bestNy, nz: bestNz, depth: bestDepth };
 }
 
 export function capsuleCapsule(a: Collider, b: Collider): Contact {

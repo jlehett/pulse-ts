@@ -41,6 +41,23 @@ export function computeAABB(c: Collider): { min: Vec3; max: Vec3 } | null {
             max: new Vec3(cx + ex, cy + ey, cz + ez),
         };
     }
+    if (c.kind === 'cylinder') {
+        const up = Quat.rotateVector(r, new Vec3(0, 1, 0));
+        // Tight cylinder AABB: per axis, extent = |up_i| * halfHeight + sqrt(1 - up_i^2) * radius
+        const ex =
+            Math.abs(up.x) * c.cylHalfHeight +
+            Math.sqrt(Math.max(0, 1 - up.x * up.x)) * c.cylRadius;
+        const ey =
+            Math.abs(up.y) * c.cylHalfHeight +
+            Math.sqrt(Math.max(0, 1 - up.y * up.y)) * c.cylRadius;
+        const ez =
+            Math.abs(up.z) * c.cylHalfHeight +
+            Math.sqrt(Math.max(0, 1 - up.z * up.z)) * c.cylRadius;
+        return {
+            min: new Vec3(cx - ex, cy - ey, cz - ez),
+            max: new Vec3(cx + ex, cy + ey, cz + ez),
+        };
+    }
     if (c.kind === 'plane') {
         // Infinite plane: do not include in broadphase buckets
         return null;

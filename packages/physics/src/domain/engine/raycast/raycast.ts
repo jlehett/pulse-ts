@@ -271,6 +271,147 @@ export function raycast(
                 const inv = 1 / Math.max(1e-8, Math.hypot(nx, ny, nz));
                 n = { x: nx * inv, y: ny * inv, z: nz * inv };
             }
+        } else if (c.kind === 'cylinder') {
+            // Ray-cylinder: barrel (infinite cylinder intersection clamped to height)
+            // + disc cap tests
+            const up = Quat.rotateVector(trs.rotation, new Vec3(0, 1, 0));
+            const cylR = c.cylRadius;
+            const hh = c.cylHalfHeight;
+
+            // Barrel intersection (infinite cylinder)
+            const abx = up.x,
+                aby = up.y,
+                abz = up.z;
+            // Project ray direction onto axis-perpendicular plane
+            const projN = dx * abx + dy * aby + dz * abz;
+            const rox = ox - center.x,
+                roy = oy - center.y,
+                roz = oz - center.z;
+            const projM = rox * abx + roy * aby + roz * abz;
+            const ndx = dx - projN * abx,
+                ndy = dy - projN * aby,
+                ndz = dz - projN * abz;
+            const mdx = rox - projM * abx,
+                mdy = roy - projM * aby,
+                mdz = roz - projM * abz;
+            const A = ndx * ndx + ndy * ndy + ndz * ndz;
+            const B = mdx * ndx + mdy * ndy + mdz * ndz;
+            const C = mdx * mdx + mdy * mdy + mdz * mdz - cylR * cylR;
+
+            let tCyl: number | null = null;
+            if (A > 1e-8) {
+                const disc = B * B - A * C;
+                if (disc >= 0) {
+                    const rt = Math.sqrt(disc);
+                    const t0 = (-B - rt) / A;
+                    const t1 = (-B + rt) / A;
+                    for (const tc of [t0, t1]) {
+                        if (tc < 0) continue;
+                        // Check if hit lies within finite height
+                        const hx2 = ox + dx * tc,
+                            hy2 = oy + dy * tc,
+                            hz2 = oz + dz * tc;
+                        const s =
+                            (hx2 - center.x) * abx +
+                            (hy2 - center.y) * aby +
+                            (hz2 - center.z) * abz;
+                        if (s >= -hh && s <= hh) {
+                            tCyl = tc;
+                            break; // t0 < t1, take first valid
+                        }
+                    }
+                }
+            }
+
+            // Disc cap tests (ray-plane intersection + radius check)
+            let tCapA: number | null = null;
+            let tCapB: number | null = null;
+            const denom = dx * abx + dy * aby + dz * abz;
+            if (Math.abs(denom) > 1e-8) {
+                // Top cap (+hh)
+                const capAx = center.x + abx * hh;
+                const capAy = center.y + aby * hh;
+                const capAz = center.z + abz * hh;
+                const tA =
+                    ((capAx - ox) * abx +
+                        (capAy - oy) * aby +
+                        (capAz - oz) * abz) /
+                    denom;
+                if (tA >= 0) {
+                    const px2 = ox + dx * tA - capAx;
+                    const py2 = oy + dy * tA - capAy;
+                    const pz2 = oz + dz * tA - capAz;
+                    if (px2 * px2 + py2 * py2 + pz2 * pz2 <= cylR * cylR) {
+                        tCapA = tA;
+                    }
+                }
+                // Bottom cap (-hh)
+                const capBx = center.x - abx * hh;
+                const capBy = center.y - aby * hh;
+                const capBz = center.z - abz * hh;
+                const tB2 =
+                    ((capBx - ox) * abx +
+                        (capBy - oy) * aby +
+                        (capBz - oz) * abz) /
+                    denom;
+                if (tB2 >= 0) {
+                    const px2 = ox + dx * tB2 - capBx;
+                    const py2 = oy + dy * tB2 - capBy;
+                    const pz2 = oz + dz * tB2 - capBz;
+                    if (px2 * px2 + py2 * py2 + pz2 * pz2 <= cylR * cylR) {
+                        tCapB = tB2;
+                    }
+                }
+            }
+
+            // Pick closest valid hit
+            let tHit: number | null = null;
+            let hitType: 'barrel' | 'capA' | 'capB' = 'barrel';
+            if (tCyl != null) {
+                tHit = tCyl;
+                hitType = 'barrel';
+            }
+            if (tCapA != null && (tHit == null || tCapA < tHit)) {
+                tHit = tCapA;
+                hitType = 'capA';
+            }
+            if (tCapB != null && (tHit == null || tCapB < tHit)) {
+                tHit = tCapB;
+                hitType = 'capB';
+            }
+
+            if (tHit != null && tHit >= 0 && tHit <= maxDist) {
+                hitDist = tHit;
+                const px2 = ox + dx * tHit,
+                    py2 = oy + dy * tHit,
+                    pz2 = oz + dz * tHit;
+                let nx2 = 0,
+                    ny2 = 0,
+                    nz2 = 0;
+                if (hitType === 'barrel') {
+                    // Radial normal
+                    const s =
+                        (px2 - center.x) * abx +
+                        (py2 - center.y) * aby +
+                        (pz2 - center.z) * abz;
+                    const qx = center.x + abx * s;
+                    const qy = center.y + aby * s;
+                    const qz = center.z + abz * s;
+                    nx2 = px2 - qx;
+                    ny2 = py2 - qy;
+                    nz2 = pz2 - qz;
+                } else if (hitType === 'capA') {
+                    nx2 = abx;
+                    ny2 = aby;
+                    nz2 = abz;
+                } else {
+                    nx2 = -abx;
+                    ny2 = -aby;
+                    nz2 = -abz;
+                }
+                const inv = 1 / Math.max(1e-8, Math.hypot(nx2, ny2, nz2));
+                n = { x: nx2 * inv, y: ny2 * inv, z: nz2 * inv };
+            }
         }
         if (hitDist != null && (!best || hitDist < best.dist))
             best = { dist: hitDist, node: c.owner, nx: n.x, ny: n.y, nz: n.z };

@@ -66,6 +66,26 @@ export function refreshAutomaticInertia(
         );
         return;
     }
+    if (col.kind === 'cylinder') {
+        const r = Math.max(0, col.cylRadius);
+        const h = Math.max(0, col.cylHalfHeight * 2);
+        if (r === 0 && h === 0) {
+            rb.inertiaTensor.set(0, 0, 0);
+            rb.inverseInertiaTensor.set(0, 0, 0);
+            return;
+        }
+        // Solid cylinder: Iyy = 0.5 * m * r^2, Ixx = Izz = (1/12) * m * (3r^2 + h^2)
+        const iy = 0.5 * mass * r * r;
+        const ix = (1 / 12) * mass * (3 * r * r + h * h);
+        const iz = ix;
+        rb.inertiaTensor.set(ix, iy, iz);
+        rb.inverseInertiaTensor.set(
+            ix > 0 ? 1 / ix : 0,
+            iy > 0 ? 1 / iy : 0,
+            iz > 0 ? 1 / iz : 0,
+        );
+        return;
+    }
     if (col.kind === 'plane') {
         // Infinite plane: treat inertia as zero to prevent angular motion when mistakenly dynamic
         rb.inertiaTensor.set(0, 0, 0);
