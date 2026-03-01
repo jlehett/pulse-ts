@@ -1,7 +1,7 @@
 ---
 id: EPIC-009
 title: Arena online play
-status: todo
+status: done
 created: 2026-03-01
 updated: 2026-03-01
 ---
@@ -17,3 +17,4 @@ Deliver a polished menu-driven experience where players can either play locally 
 ## Notes
 
 - **2026-03-01**: Epic created. 3 tickets (TICKET-058 through TICKET-060). Supersedes TICKET-051 (WebSocket server mode) from EPIC-008.
+- **2026-03-01**: Epic closed — all tickets complete.

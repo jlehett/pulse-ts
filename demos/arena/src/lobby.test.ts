@@ -154,6 +154,7 @@ describe('showLobby', () => {
         const result = (await promise) as LobbyResult;
         expect(result).toEqual({
             mode: 'join',
+            playerId: 1,
             wsUrl: 'ws://192.168.1.50:8080',
         });
     });

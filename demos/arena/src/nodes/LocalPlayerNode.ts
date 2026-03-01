@@ -21,6 +21,7 @@ import {
 import { useMesh } from '@pulse-ts/three';
 import { useSound } from '@pulse-ts/audio';
 import { useParticleBurst, useParticleEmitter } from '@pulse-ts/effects';
+import { useReplicateTransform } from '@pulse-ts/network';
 import { PlayerTag } from '../components/PlayerTag';
 import { GameCtx } from '../contexts';
 import { SPAWN_POSITIONS, DEATH_PLANE_Y } from '../config/arena';
@@ -125,6 +126,8 @@ export interface LocalPlayerNodeProps {
     moveAction: string;
     /** Input action name for the dash button (e.g. 'p1Dash'). */
     dashAction: string;
+    /** Enable network replication as producer (online mode). */
+    replicate?: boolean;
 }
 
 /**
@@ -136,12 +139,14 @@ export function LocalPlayerNode({
     playerId,
     moveAction,
     dashAction,
+    replicate,
 }: Readonly<LocalPlayerNodeProps>) {
     const node = useNode();
     const gameState = useContext(GameCtx);
     const spawn = SPAWN_POSITIONS[playerId];
 
     useStableId(`player-${playerId}`);
+    if (replicate) useReplicateTransform({ role: 'producer' });
 
     useComponent(PlayerTag);
 

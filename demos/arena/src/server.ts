@@ -1,15 +1,12 @@
 /**
- * Optional WebSocket relay server for the arena demo.
+ * WebSocket relay server for the arena demo's online play mode.
  *
  * Run with:
  * ```sh
  * npx tsx src/server.ts
  * ```
  *
- * Then open two browser tabs:
- * - `http://localhost:5173/?mode=ws&player=p1`
- * - `http://localhost:5173/?mode=ws&player=p2`
- *
+ * Then use the in-game menu: Online Play → Host Game / Join Game.
  * The server relays messages between connected clients using
  * {@link attachWsServer} with a default `"arena"` room.
  */
