@@ -1,6 +1,7 @@
 import { useFrameUpdate, useDestroy, useContext } from '@pulse-ts/core';
 import { useThreeContext } from '@pulse-ts/three';
 import { GameCtx } from '../contexts';
+import { loadLeaderboard } from '../leaderboard';
 
 /**
  * DOM overlay showing P1 and P2 scores.
@@ -28,7 +29,10 @@ export function ScoreHudNode() {
     container.appendChild(el);
 
     useFrameUpdate(() => {
-        el.textContent = `P1: ${gameState.scores[0]}  |  P2: ${gameState.scores[1]}`;
+        const board = loadLeaderboard();
+        el.textContent =
+            `P1: ${gameState.scores[0]}  |  P2: ${gameState.scores[1]}` +
+            `    ALL-TIME  P1: ${board.p1Wins}  P2: ${board.p2Wins}`;
     });
 
     useDestroy(() => {
