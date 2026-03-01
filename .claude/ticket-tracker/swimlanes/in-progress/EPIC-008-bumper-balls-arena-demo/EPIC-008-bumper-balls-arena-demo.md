@@ -1,7 +1,7 @@
 ---
 id: EPIC-008
 title: Bumper Balls Arena Demo
-status: done
+status: in-progress
 created: 2026-02-26
 updated: 2026-02-28
 ---
@@ -20,3 +20,4 @@ Deliver a polished multiplayer demo that exercises every engine package (core, i
 
 - **2026-02-26**: Epic created. 13 tickets (TICKET-040 through TICKET-052). Milestones: foundation (040–043), minimal playable (044–045), complete game loop (046–047), polish (048–050), extras (051–052).
 - **2026-02-28**: All 13 tickets complete. Epic closed.
+- **2026-02-28**: Epic reopened. TICKET-050 (leaderboard persistence) and TICKET-051 (WebSocket server mode) reverted to todo — their integrations were removed during TICKET-053 cleanup. 12 of 14 tickets remain done.
