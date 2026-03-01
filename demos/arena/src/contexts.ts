@@ -22,6 +22,8 @@ export interface GameState {
     matchWinner: number;
     /** Pending knockout: player ID that just fell off (-1 = none). */
     pendingKnockout: number;
+    /** Whether the game is currently paused. */
+    paused: boolean;
 }
 
 /** Shared game state context — read/written by GameManagerNode, read by HUD. */

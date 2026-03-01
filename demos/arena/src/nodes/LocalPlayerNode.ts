@@ -181,6 +181,12 @@ export function LocalPlayerNode({
     // Track round number to detect round resets via shared state
     let lastRound = gameState.round;
 
+    // Saved velocity for pause/unpause (prevents cheating by pausing after knockback)
+    let wasPaused = false;
+    let savedVx = 0;
+    let savedVy = 0;
+    let savedVz = 0;
+
     // Previous physics position for frame interpolation
     let prevX = spawn[0];
     let prevY = spawn[1];
@@ -295,6 +301,24 @@ export function LocalPlayerNode({
             dashTimer.cancel();
             dashCD.reset();
             dashTrail.pause();
+        }
+
+        // Freeze while paused — save velocity on entry, restore on exit
+        if (gameState.paused) {
+            if (!wasPaused) {
+                savedVx = body.linearVelocity.x;
+                savedVy = body.linearVelocity.y;
+                savedVz = body.linearVelocity.z;
+                wasPaused = true;
+            }
+            body.setLinearVelocity(0, 0, 0);
+            dashTimer.cancel();
+            if (dashTrail.active) dashTrail.pause();
+            return;
+        }
+        if (wasPaused) {
+            wasPaused = false;
+            body.setLinearVelocity(savedVx, savedVy, savedVz);
         }
 
         // Freeze input during non-playing phases

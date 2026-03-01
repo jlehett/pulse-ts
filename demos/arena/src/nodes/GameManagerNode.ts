@@ -74,6 +74,8 @@ export function GameManagerNode() {
     let prevCountdown = -1;
 
     useFixedUpdate(() => {
+        if (gameState.paused) return;
+
         // Poll for knockout events from LocalPlayerNodes
         if (gameState.pendingKnockout >= 0 && gameState.phase === 'playing') {
             const knockedOutPlayerId = gameState.pendingKnockout;

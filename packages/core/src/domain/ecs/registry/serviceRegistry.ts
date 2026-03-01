@@ -38,5 +38,15 @@ export class ServiceRegistry {
         this.reg.remove(Service as any);
     }
 
+    /** Iterates all registered service instances. */
+    values(): Iterable<Service> {
+        return this.reg.values();
+    }
+
+    /** Removes all entries without calling detach. */
+    clear(): void {
+        this.reg.clear();
+    }
+
     //#endregion
 }

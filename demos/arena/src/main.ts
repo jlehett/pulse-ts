@@ -33,8 +33,8 @@ function startLocalGame(): Promise<void> {
 
         world.mount(ArenaNode, {
             onRequestMenu: () => {
-                world.stop();
-                world.clearScene();
+                three.renderer.clear();
+                world.destroy();
                 resolve();
             },
         });
@@ -72,8 +72,8 @@ async function startOnlineGame(lobby: LobbyResult): Promise<void> {
                 playerId: lobby.playerId,
                 wsUrl: lobby.wsUrl,
                 onRequestMenu: () => {
-                    world.stop();
-                    world.clearScene();
+                    three.renderer.clear();
+                    world.destroy();
                     resolve();
                 },
             });

@@ -11,6 +11,7 @@ import { ScoreHudNode } from './ScoreHudNode';
 import { KnockoutOverlayNode } from './KnockoutOverlayNode';
 import { CountdownOverlayNode } from './CountdownOverlayNode';
 import { MatchOverOverlayNode } from './MatchOverOverlayNode';
+import { PauseMenuNode } from './PauseMenuNode';
 import { CameraRigNode } from './CameraRigNode';
 
 export interface ArenaNodeProps {
@@ -69,6 +70,7 @@ export function ArenaNode(props?: Readonly<ArenaNodeProps>) {
         countdownValue: -1,
         matchWinner: -1,
         pendingKnockout: -1,
+        paused: false,
     };
     useProvideContext(GameCtx, gameState);
 
@@ -114,6 +116,7 @@ export function ArenaNode(props?: Readonly<ArenaNodeProps>) {
     useChild(KnockoutOverlayNode);
     useChild(CountdownOverlayNode);
     useChild(MatchOverOverlayNode, { onRequestMenu: props?.onRequestMenu });
+    useChild(PauseMenuNode, { onRequestMenu: props?.onRequestMenu });
 
     // Camera rig — fixed overhead view
     useChild(CameraRigNode);

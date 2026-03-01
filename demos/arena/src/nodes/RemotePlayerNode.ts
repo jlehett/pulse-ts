@@ -58,7 +58,7 @@ export function RemotePlayerNode({
 
     // Detect when the remote player falls off the arena (replicated position)
     useFixedUpdate(() => {
-        if (gameState.phase !== 'playing') return;
+        if (gameState.phase !== 'playing' || gameState.paused) return;
         if (transform.localPosition.y < DEATH_PLANE_Y) {
             gameState.pendingKnockout = remotePlayerId;
         }
