@@ -2,7 +2,7 @@
 id: TICKET-060
 epic: EPIC-009
 title: WebSocket networking integration
-status: todo
+status: in-progress
 priority: medium
 created: 2026-03-01
 updated: 2026-03-01
@@ -31,3 +31,4 @@ Wire up the WebSocket transport so two players on different machines can play. R
 ## Notes
 
 - **2026-03-01**: Ticket created. Supersedes TICKET-051 from EPIC-008. The server-side `server.ts` already exists and is functional.
+- **2026-03-01**: Status changed to in-progress.
