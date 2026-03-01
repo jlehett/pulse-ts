@@ -6,10 +6,12 @@ import { installThree, StatsOverlaySystem } from '@pulse-ts/three';
 import { installSave } from '@pulse-ts/save';
 import { ArenaNode } from './nodes/ArenaNode';
 import { allBindings } from './config/bindings';
+import { showMainMenu } from './menu';
 
 const canvas = document.getElementById('arena') as HTMLCanvasElement;
+const container = canvas.parentElement ?? document.body;
 
-async function start() {
+function startLocalGame() {
     const world = new World();
 
     installDefaults(world);
@@ -32,6 +34,17 @@ async function start() {
     world.mount(ArenaNode);
 
     world.start();
+}
+
+async function start() {
+    const choice = await showMainMenu(container);
+
+    if (choice === 'local') {
+        startLocalGame();
+    } else {
+        // Online play — will be implemented in TICKET-059/TICKET-060
+        start();
+    }
 }
 
 start();
