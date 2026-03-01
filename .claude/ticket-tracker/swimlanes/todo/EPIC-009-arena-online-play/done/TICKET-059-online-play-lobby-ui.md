@@ -2,7 +2,7 @@
 id: TICKET-059
 epic: EPIC-009
 title: Online play lobby UI
-status: in-progress
+status: done
 priority: medium
 created: 2026-03-01
 updated: 2026-03-01
@@ -19,14 +19,15 @@ DOM overlay lobby screen for online play. Two options: "Host Game" and "Join Gam
 
 ## Acceptance Criteria
 
-- [ ] "Host Game" flow shows connection info (IP/port) for the other player
-- [ ] "Join Game" flow has an input field for host address
-- [ ] Player role selection (P1 or P2) in both flows
-- [ ] "Back" button returns to main menu
-- [ ] Connection status indicator (connecting, connected, error)
-- [ ] Game starts automatically when both players are connected
-- [ ] Unit tests for lobby state transitions
+- [x] "Host Game" flow shows connection info (IP/port) for the other player
+- [x] "Join Game" flow has an input field for host address
+- [x] Player role selection (P1 or P2) — host only; joiner assigned by server
+- [x] "Back" button returns to main menu
+- [x] Connection status indicator (connecting, connected, error)
+- [x] Game starts automatically when both players are connected
+- [x] Unit tests for lobby state transitions
 
 ## Notes
 
 - **2026-03-01**: Status changed to in-progress. Host picks player, joiner gets remaining. Join flow simplified to address input + connect.
+- **2026-03-01**: Implemented `lobby.ts` with multi-screen state machine (lobby menu → host setup → host waiting, join setup). Wired into main.ts online flow. 16 new tests, 80 total pass, lint clean. Status changed to done.
