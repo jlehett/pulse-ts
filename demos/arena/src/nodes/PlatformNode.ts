@@ -3,9 +3,10 @@ import { useRigidBody, useBoxCollider } from '@pulse-ts/physics';
 import { useMesh, useObject3D } from '@pulse-ts/three';
 import { useAnimate } from '@pulse-ts/effects';
 import * as THREE from 'three';
+import { ARENA_RADIUS } from '../config/arena';
 
-/** Radius of the arena cylinder. */
-export const PLATFORM_RADIUS = 10;
+/** Radius of the arena cylinder (sourced from arena config). */
+export const PLATFORM_RADIUS = ARENA_RADIUS;
 
 /** Height (thickness) of the arena cylinder. */
 export const PLATFORM_HEIGHT = 0.5;

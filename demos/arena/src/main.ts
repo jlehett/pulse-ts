@@ -3,33 +3,18 @@ import { installAudio } from '@pulse-ts/audio';
 import { installInput } from '@pulse-ts/input';
 import { installPhysics } from '@pulse-ts/physics';
 import { installThree, StatsOverlaySystem } from '@pulse-ts/three';
-import {
-    installNetwork,
-    createMemoryHub,
-    type MemoryHub,
-} from '@pulse-ts/network';
 import { ArenaNode } from './nodes/ArenaNode';
-import { p1Bindings, p2Bindings } from './config/bindings';
+import { allBindings } from './config/bindings';
 
-const p1Canvas = document.getElementById('p1') as HTMLCanvasElement;
-const p2Canvas = document.getElementById('p2') as HTMLCanvasElement;
+const canvas = document.getElementById('arena') as HTMLCanvasElement;
 
-// Shared networking hub — both worlds communicate through this
-const hub = createMemoryHub();
-
-async function createPlayerWorld(
-    canvas: HTMLCanvasElement,
-    bindings: typeof p1Bindings,
-    playerId: number,
-    memoryHub: MemoryHub,
-) {
+async function start() {
     const world = new World();
 
     installDefaults(world);
     installAudio(world);
-    installInput(world, { preventDefault: true, bindings });
+    installInput(world, { preventDefault: true, bindings: allBindings });
     installPhysics(world, { gravity: { x: 0, y: -20, z: 0 } });
-    await installNetwork(world);
 
     const three = installThree(world, {
         canvas,
@@ -39,23 +24,11 @@ async function createPlayerWorld(
     three.renderer.shadowMap.enabled = true;
     three.renderer.shadowMap.type = 1; // THREE.PCFShadowMap
 
-    world.addSystem(
-        new StatsOverlaySystem({
-            position: playerId === 0 ? 'top-left' : 'top-right',
-        }),
-    );
+    world.addSystem(new StatsOverlaySystem({ position: 'top-left' }));
 
-    world.mount(ArenaNode, { playerId, hub: memoryHub });
+    world.mount(ArenaNode);
 
-    return world;
+    world.start();
 }
 
-async function startSplitScreen() {
-    const world1 = await createPlayerWorld(p1Canvas, p1Bindings, 0, hub);
-    const world2 = await createPlayerWorld(p2Canvas, p2Bindings, 1, hub);
-
-    world1.start();
-    world2.start();
-}
-
-startSplitScreen();
+start();

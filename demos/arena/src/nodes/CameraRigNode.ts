@@ -1,28 +1,19 @@
-import { useContext } from '@pulse-ts/core';
-import { useFollowCamera } from '@pulse-ts/three';
-import { LocalPlayerNodeCtx } from '../contexts';
+import { useThreeContext } from '@pulse-ts/three';
 
-/** Camera offset — elevated, slightly behind for a top-down-ish arena view. */
-export const CAMERA_OFFSET: [number, number, number] = [0, 18, 10];
+/** Fixed camera height above the arena center. */
+export const CAMERA_HEIGHT = 26;
 
-/** Look-ahead bias — slightly above the player so the camera tilts down. */
-const LOOK_AHEAD: [number, number, number] = [0, 0, 0];
-
-/** Smoothing factor — how quickly the camera catches up to the player. */
-const SMOOTHING = 6;
+/** Small Z offset to avoid degenerate straight-down lookAt. */
+export const CAMERA_Z_OFFSET = 2;
 
 /**
- * Camera rig that follows the local player from an elevated rear angle.
- * Each world mounts its own CameraRigNode, so each canvas independently
- * tracks its own player.
+ * Fixed overhead camera centered on the arena.
+ * Both players are always visible on the small platform, so there is
+ * no need to follow an individual player.
  */
 export function CameraRigNode() {
-    const playerNode = useContext(LocalPlayerNodeCtx);
+    const { camera } = useThreeContext();
 
-    useFollowCamera(playerNode, {
-        offset: CAMERA_OFFSET,
-        lookAhead: LOOK_AHEAD,
-        smoothing: SMOOTHING,
-        interpolate: true,
-    });
+    camera.position.set(0, CAMERA_HEIGHT, CAMERA_Z_OFFSET);
+    camera.lookAt(0, 0, 0);
 }
