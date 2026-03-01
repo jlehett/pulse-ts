@@ -13,6 +13,8 @@ export interface HostResult {
 /** Result returned when a joiner completes the lobby. */
 export interface JoinResult {
     mode: 'join';
+    /** Player ID assigned to the joiner (always 1 — P2). */
+    playerId: number;
     /** WebSocket URL to the host's relay server. */
     wsUrl: string;
 }
@@ -194,6 +196,7 @@ function showJoinSetup(overlay: HTMLElement, finish: Finish) {
         }
         finish({
             mode: 'join',
+            playerId: 1,
             wsUrl: `ws://${address}:${DEFAULT_PORT}`,
         });
     });

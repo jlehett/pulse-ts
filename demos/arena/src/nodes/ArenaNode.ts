@@ -1,9 +1,11 @@
 import { useProvideContext, useChild } from '@pulse-ts/core';
 import { useAmbientLight, useDirectionalLight, useFog } from '@pulse-ts/three';
+import { useWebSocket, useRoom } from '@pulse-ts/network';
 import { installParticles } from '@pulse-ts/effects';
 import { GameCtx, type GameState } from '../contexts';
 import { PlatformNode } from './PlatformNode';
 import { LocalPlayerNode } from './LocalPlayerNode';
+import { RemotePlayerNode } from './RemotePlayerNode';
 import { GameManagerNode } from './GameManagerNode';
 import { ScoreHudNode } from './ScoreHudNode';
 import { KnockoutOverlayNode } from './KnockoutOverlayNode';
@@ -11,12 +13,30 @@ import { CountdownOverlayNode } from './CountdownOverlayNode';
 import { MatchOverOverlayNode } from './MatchOverOverlayNode';
 import { CameraRigNode } from './CameraRigNode';
 
+export interface ArenaNodeProps {
+    /** Local player ID for online mode (0 or 1). Omit for local 2-player. */
+    playerId?: number;
+    /** WebSocket URL for online mode. Omit for local 2-player. */
+    wsUrl?: string;
+}
+
 /**
  * Top-level orchestrator node for the arena demo.
  * Sets up lighting, fog, shared contexts, and particle pools.
- * Mounts two local players in a single world — no network needed.
+ *
+ * In local mode (no props): mounts two local players in a single world.
+ * In online mode (playerId + wsUrl): connects via WebSocket and mounts
+ * one local player (producer) and one remote player (consumer).
  */
-export function ArenaNode() {
+export function ArenaNode(props?: Readonly<ArenaNodeProps>) {
+    const online = props?.wsUrl != null && props?.playerId != null;
+
+    // Network setup (online mode only)
+    if (online) {
+        useWebSocket(props.wsUrl!, { autoReconnect: true });
+        useRoom('arena');
+    }
+
     // Lighting — overhead sun with shadows covering the circular arena
     useAmbientLight({ color: 0xb0c4de, intensity: 0.4 });
     useDirectionalLight({
@@ -56,17 +76,31 @@ export function ArenaNode() {
     // Arena platform
     useChild(PlatformNode);
 
-    // Both players — each reads its own namespaced input actions
-    useChild(LocalPlayerNode, {
-        playerId: 0,
-        moveAction: 'p1Move',
-        dashAction: 'p1Dash',
-    });
-    useChild(LocalPlayerNode, {
-        playerId: 1,
-        moveAction: 'p2Move',
-        dashAction: 'p2Dash',
-    });
+    if (online) {
+        // Online mode — one local player (producer) + one remote player (consumer)
+        const localId = props.playerId!;
+        const remoteId = 1 - localId;
+
+        useChild(LocalPlayerNode, {
+            playerId: localId,
+            moveAction: 'p1Move',
+            dashAction: 'p1Dash',
+            replicate: true,
+        });
+        useChild(RemotePlayerNode, { remotePlayerId: remoteId });
+    } else {
+        // Local mode — both players on shared input
+        useChild(LocalPlayerNode, {
+            playerId: 0,
+            moveAction: 'p1Move',
+            dashAction: 'p1Dash',
+        });
+        useChild(LocalPlayerNode, {
+            playerId: 1,
+            moveAction: 'p2Move',
+            dashAction: 'p2Dash',
+        });
+    }
 
     // Game manager — tracks knockout scores
     useChild(GameManagerNode);
