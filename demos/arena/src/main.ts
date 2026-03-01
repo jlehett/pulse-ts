@@ -7,6 +7,7 @@ import { installSave } from '@pulse-ts/save';
 import { ArenaNode } from './nodes/ArenaNode';
 import { allBindings } from './config/bindings';
 import { showMainMenu } from './menu';
+import { showLobby } from './lobby';
 
 const canvas = document.getElementById('arena') as HTMLCanvasElement;
 const container = canvas.parentElement ?? document.body;
@@ -42,8 +43,13 @@ async function start() {
     if (choice === 'local') {
         startLocalGame();
     } else {
-        // Online play — will be implemented in TICKET-059/TICKET-060
-        start();
+        const lobby = await showLobby(container);
+        if (lobby === 'back') {
+            start();
+        } else {
+            // Online game — TICKET-060 will implement startOnlineGame(lobby)
+            start();
+        }
     }
 }
 
