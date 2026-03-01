@@ -12,71 +12,94 @@ import { showLobby, type LobbyResult } from './lobby';
 const canvas = document.getElementById('arena') as HTMLCanvasElement;
 const container = canvas.parentElement ?? document.body;
 
-function startLocalGame() {
-    const world = new World();
+function startLocalGame(): Promise<void> {
+    return new Promise((resolve) => {
+        const world = new World();
 
-    installDefaults(world);
-    installAudio(world);
-    installInput(world, { preventDefault: true, bindings: allBindings });
-    installPhysics(world, { gravity: { x: 0, y: -20, z: 0 } });
+        installDefaults(world);
+        installAudio(world);
+        installInput(world, { preventDefault: true, bindings: allBindings });
+        installPhysics(world, { gravity: { x: 0, y: -20, z: 0 } });
 
-    const three = installThree(world, {
-        canvas,
-        clearColor: 0x0a0a1a,
+        const three = installThree(world, {
+            canvas,
+            clearColor: 0x0a0a1a,
+        });
+
+        three.renderer.shadowMap.enabled = true;
+        three.renderer.shadowMap.type = 1; // THREE.PCFShadowMap
+
+        world.addSystem(new StatsOverlaySystem({ position: 'top-left' }));
+
+        world.mount(ArenaNode, {
+            onRequestMenu: () => {
+                world.stop();
+                world.clearScene();
+                resolve();
+            },
+        });
+
+        world.start();
     });
-
-    three.renderer.shadowMap.enabled = true;
-    three.renderer.shadowMap.type = 1; // THREE.PCFShadowMap
-
-    world.addSystem(new StatsOverlaySystem({ position: 'top-left' }));
-
-    world.mount(ArenaNode);
-
-    world.start();
 }
 
-async function startOnlineGame(lobby: LobbyResult) {
-    const world = new World();
+async function startOnlineGame(lobby: LobbyResult): Promise<void> {
+    return new Promise((resolve) => {
+        const setup = async () => {
+            const world = new World();
 
-    installDefaults(world);
-    installAudio(world);
-    // Online mode: both players use WASD + Space (p1 bindings)
-    installInput(world, { preventDefault: true, bindings: allBindings });
-    installPhysics(world, { gravity: { x: 0, y: -20, z: 0 } });
+            installDefaults(world);
+            installAudio(world);
+            installInput(world, {
+                preventDefault: true,
+                bindings: allBindings,
+            });
+            installPhysics(world, { gravity: { x: 0, y: -20, z: 0 } });
 
-    const three = installThree(world, {
-        canvas,
-        clearColor: 0x0a0a1a,
+            const three = installThree(world, {
+                canvas,
+                clearColor: 0x0a0a1a,
+            });
+
+            await installNetwork(world);
+
+            three.renderer.shadowMap.enabled = true;
+            three.renderer.shadowMap.type = 1; // THREE.PCFShadowMap
+
+            world.addSystem(new StatsOverlaySystem({ position: 'top-left' }));
+
+            world.mount(ArenaNode, {
+                playerId: lobby.playerId,
+                wsUrl: lobby.wsUrl,
+                onRequestMenu: () => {
+                    world.stop();
+                    world.clearScene();
+                    resolve();
+                },
+            });
+
+            world.start();
+        };
+        setup();
     });
-
-    await installNetwork(world);
-
-    three.renderer.shadowMap.enabled = true;
-    three.renderer.shadowMap.type = 1; // THREE.PCFShadowMap
-
-    world.addSystem(new StatsOverlaySystem({ position: 'top-left' }));
-
-    world.mount(ArenaNode, {
-        playerId: lobby.playerId,
-        wsUrl: lobby.wsUrl,
-    });
-
-    world.start();
 }
 
 async function start() {
     const choice = await showMainMenu(container);
 
     if (choice === 'local') {
-        startLocalGame();
+        await startLocalGame();
     } else {
         const lobby = await showLobby(container);
         if (lobby === 'back') {
-            start();
+            // Fall through to restart
         } else {
-            startOnlineGame(lobby);
+            await startOnlineGame(lobby);
         }
     }
+
+    // Loop back to main menu
+    start();
 }
 
 start();

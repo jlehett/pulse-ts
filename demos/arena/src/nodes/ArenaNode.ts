@@ -18,6 +18,8 @@ export interface ArenaNodeProps {
     playerId?: number;
     /** WebSocket URL for online mode. Omit for local 2-player. */
     wsUrl?: string;
+    /** Callback invoked when the player requests to return to the main menu. */
+    onRequestMenu?: () => void;
 }
 
 /**
@@ -111,7 +113,7 @@ export function ArenaNode(props?: Readonly<ArenaNodeProps>) {
     // Round lifecycle overlays
     useChild(KnockoutOverlayNode);
     useChild(CountdownOverlayNode);
-    useChild(MatchOverOverlayNode);
+    useChild(MatchOverOverlayNode, { onRequestMenu: props?.onRequestMenu });
 
     // Camera rig — fixed overhead view
     useChild(CameraRigNode);
