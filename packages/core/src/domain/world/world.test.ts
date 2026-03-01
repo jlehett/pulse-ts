@@ -1,6 +1,8 @@
 import { Node } from '../ecs/base/node';
 import { Transform } from '../components/spatial/Transform';
 import { attachComponent } from '../ecs/registry/componentRegistry';
+import { Service } from '../ecs/base/Service';
+import { System } from '../ecs/base/System';
 import { World } from './world';
 
 describe('World', () => {
@@ -139,6 +141,53 @@ describe('World', () => {
         expect(c).toBe(2);
         const stats3 = w.debugStats();
         expect(stats3.ticks.frame.early.disabled).toBe(false);
+    });
+
+    test('destroy stops loop, clears nodes, and detaches services/systems', () => {
+        const w = new World();
+        w.add(new Node());
+        w.add(new Node());
+
+        // Track service detach
+        let serviceDetached = false;
+        const svc = w.provideService(
+            Object.assign(Object.create(Service.prototype) as Service, {
+                attach(world: World) {
+                    Service.prototype.attach.call(this, world);
+                },
+                detach() {
+                    serviceDetached = true;
+                    Service.prototype.detach.call(this);
+                },
+            }),
+        );
+
+        // Track system detach
+        let systemDetached = false;
+        const sys = w.addSystem(
+            Object.assign(Object.create(System.prototype) as System, {
+                update() {},
+                attach(world: World) {
+                    System.prototype.attach.call(this, world);
+                },
+                detach() {
+                    systemDetached = true;
+                    System.prototype.detach.call(this);
+                },
+            }),
+        );
+
+        expect(w.debugStats().nodes).toBeGreaterThanOrEqual(2);
+        expect(w.getService(svc.constructor as any)).toBe(svc);
+        expect(w.getSystem(sys.constructor as any)).toBe(sys);
+
+        w.destroy();
+
+        expect(w.debugStats().nodes).toBe(0);
+        expect(serviceDetached).toBe(true);
+        expect(systemDetached).toBe(true);
+        expect(w.getService(svc.constructor as any)).toBeUndefined();
+        expect(w.getSystem(sys.constructor as any)).toBeUndefined();
     });
 
     test('getAmbientAlpha reflects fraction of fixed step during frame', () => {

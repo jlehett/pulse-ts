@@ -1,7 +1,6 @@
 import { useContext, useFixedUpdate, useTimer } from '@pulse-ts/core';
 import { useSound } from '@pulse-ts/audio';
 import { GameCtx } from '../contexts';
-import { saveMatchResult } from '../leaderboard';
 import {
     WIN_COUNT,
     KO_FLASH_DURATION,
@@ -75,6 +74,8 @@ export function GameManagerNode() {
     let prevCountdown = -1;
 
     useFixedUpdate(() => {
+        if (gameState.paused) return;
+
         // Poll for knockout events from LocalPlayerNodes
         if (gameState.pendingKnockout >= 0 && gameState.phase === 'playing') {
             const knockedOutPlayerId = gameState.pendingKnockout;
@@ -87,7 +88,6 @@ export function GameManagerNode() {
             if (gameState.scores[scorer] >= WIN_COUNT) {
                 gameState.phase = 'match_over';
                 gameState.matchWinner = scorer;
-                saveMatchResult(scorer, gameState.scores[knockedOutPlayerId]);
                 matchFanfareSfx.play();
             } else {
                 gameState.phase = 'ko_flash';

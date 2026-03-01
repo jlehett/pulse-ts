@@ -37,5 +37,15 @@ export class SystemRegistry {
         this.reg.remove(System as any);
     }
 
+    /** Iterates all registered system instances. */
+    values(): Iterable<System> {
+        return this.reg.values();
+    }
+
+    /** Removes all entries without calling detach. */
+    clear(): void {
+        this.reg.clear();
+    }
+
     //#endregion
 }

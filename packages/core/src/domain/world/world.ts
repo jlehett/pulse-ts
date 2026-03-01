@@ -282,6 +282,40 @@ export class World implements WorldTimingApi, WorldTransformRegistry {
     }
 
     /**
+     * Fully tears down the world: stops the loop, destroys all nodes
+     * (including the internal system node), and detaches every service
+     * and system so their event listeners and DOM elements are cleaned up.
+     *
+     * After calling `destroy()` the world instance should not be reused.
+     *
+     * @example
+     * ```ts
+     * const world = new World();
+     * world.start();
+     * // ... later
+     * world.destroy(); // stops loop, removes all nodes, detaches services
+     * ```
+     */
+    destroy(): void {
+        this.stop();
+        this.clearScene();
+
+        // Destroy the internal system node (clearScene preserves it)
+        if (this.systemNode) {
+            this.systemNode.destroy();
+            this.systemNode = null;
+        }
+
+        // Detach all services (removes event listeners, DOM elements, etc.)
+        for (const s of this.services.values()) s.detach();
+        this.services.clear();
+
+        // Detach all systems (disposes ticks, removes overlays, etc.)
+        for (const s of this.systems.values()) s.detach();
+        this.systems.clear();
+    }
+
+    /**
      * Ticks the world.
      * @param dtMs The delta time in milliseconds.
      */

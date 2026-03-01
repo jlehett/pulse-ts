@@ -21,4 +21,7 @@ export const allBindings = {
     }),
     /** Player 2 dash — Enter. */
     p2Dash: Key('Enter'),
+
+    /** Pause toggle — Escape. */
+    pause: Key('Escape'),
 };
