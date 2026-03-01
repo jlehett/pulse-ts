@@ -2,7 +2,7 @@
 id: TICKET-054
 epic: EPIC-008
 title: Cylinder collider support
-status: todo
+status: in-progress
 priority: medium
 branch: ticket-054-cylinder-collider-support
 created: 2026-03-01
@@ -29,3 +29,4 @@ Add `useCylinderCollider(radius, height, options)` hook to `@pulse-ts/physics`, 
 ## Notes
 
 - **2026-03-01**: Ticket created.
+- **2026-03-01**: Status changed to in-progress. Starting implementation on branch `ticket-054-cylinder-collider-support`.
