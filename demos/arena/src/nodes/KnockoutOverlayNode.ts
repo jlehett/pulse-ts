@@ -1,14 +1,16 @@
 import { useFrameUpdate, useDestroy, useContext } from '@pulse-ts/core';
 import { useThreeContext } from '@pulse-ts/three';
-import { GameCtx, PlayerIdCtx } from '../contexts';
+import { GameCtx } from '../contexts';
+
+/** Player labels indexed by player ID. */
+const PLAYER_LABELS = ['P1', 'P2'];
 
 /**
- * DOM overlay that shows a white flash and "You scored!" / "Opponent scored!"
+ * DOM overlay that shows a white flash and "P1 scored!" / "P2 scored!"
  * text during the `ko_flash` phase. Fades out when the phase ends.
  */
 export function KnockoutOverlayNode() {
     const gameState = useContext(GameCtx);
-    const playerId = useContext(PlayerIdCtx);
     const { renderer } = useThreeContext();
     const container = renderer.domElement.parentElement ?? document.body;
 
@@ -48,10 +50,8 @@ export function KnockoutOverlayNode() {
         text.style.opacity = visible ? '1' : '0';
 
         if (visible) {
-            const scorerIsLocal = gameState.lastKnockedOut !== playerId;
-            text.textContent = scorerIsLocal
-                ? 'You scored!'
-                : 'Opponent scored!';
+            const scorer = 1 - gameState.lastKnockedOut;
+            text.textContent = `${PLAYER_LABELS[scorer]} scored!`;
         }
     });
 

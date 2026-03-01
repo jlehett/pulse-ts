@@ -1,16 +1,9 @@
 import { useProvideContext, useChild } from '@pulse-ts/core';
 import { useAmbientLight, useDirectionalLight, useFog } from '@pulse-ts/three';
 import { installParticles } from '@pulse-ts/effects';
-import { useMemory, useRoom, type MemoryHub } from '@pulse-ts/network';
-import {
-    GameCtx,
-    PlayerIdCtx,
-    LocalPlayerNodeCtx,
-    type GameState,
-} from '../contexts';
+import { GameCtx, type GameState } from '../contexts';
 import { PlatformNode } from './PlatformNode';
 import { LocalPlayerNode } from './LocalPlayerNode';
-import { RemotePlayerNode } from './RemotePlayerNode';
 import { GameManagerNode } from './GameManagerNode';
 import { ScoreHudNode } from './ScoreHudNode';
 import { KnockoutOverlayNode } from './KnockoutOverlayNode';
@@ -18,21 +11,12 @@ import { CountdownOverlayNode } from './CountdownOverlayNode';
 import { MatchOverOverlayNode } from './MatchOverOverlayNode';
 import { CameraRigNode } from './CameraRigNode';
 
-export interface ArenaNodeProps {
-    playerId: number;
-    hub: MemoryHub;
-}
-
 /**
  * Top-level orchestrator node for the arena demo.
  * Sets up lighting, fog, shared contexts, and particle pools.
- * Each world instance mounts its own ArenaNode with a different playerId.
+ * Mounts two local players in a single world — no network needed.
  */
-export function ArenaNode({ playerId, hub }: ArenaNodeProps) {
-    // Network — connect to shared hub and join arena room
-    useMemory(hub, { peerId: `player-${playerId}` });
-    useRoom('arena');
-
+export function ArenaNode() {
     // Lighting — overhead sun with shadows covering the circular arena
     useAmbientLight({ color: 0xb0c4de, intensity: 0.4 });
     useDirectionalLight({
@@ -44,10 +28,10 @@ export function ArenaNode({ playerId, hub }: ArenaNodeProps) {
         shadowBounds: {
             near: 0.5,
             far: 60,
-            left: -15,
-            right: 15,
-            top: 15,
-            bottom: -15,
+            left: -20,
+            right: 20,
+            top: 20,
+            bottom: -20,
         },
     });
 
@@ -62,9 +46,9 @@ export function ArenaNode({ playerId, hub }: ArenaNodeProps) {
         lastKnockedOut: -1,
         countdownValue: -1,
         matchWinner: -1,
+        pendingKnockout: -1,
     };
     useProvideContext(GameCtx, gameState);
-    useProvideContext(PlayerIdCtx, playerId);
 
     // Particle effects pool
     installParticles({ maxPerPool: 256, defaultSize: 0.08 });
@@ -72,13 +56,17 @@ export function ArenaNode({ playerId, hub }: ArenaNodeProps) {
     // Arena platform
     useChild(PlatformNode);
 
-    // Local player
-    const playerNode = useChild(LocalPlayerNode);
-    useProvideContext(LocalPlayerNodeCtx, playerNode);
-
-    // Remote player — replicated from the other world
-    const remoteId = 1 - playerId;
-    useChild(RemotePlayerNode, { remotePlayerId: remoteId });
+    // Both players — each reads its own namespaced input actions
+    useChild(LocalPlayerNode, {
+        playerId: 0,
+        moveAction: 'p1Move',
+        dashAction: 'p1Dash',
+    });
+    useChild(LocalPlayerNode, {
+        playerId: 1,
+        moveAction: 'p2Move',
+        dashAction: 'p2Dash',
+    });
 
     // Game manager — tracks knockout scores
     useChild(GameManagerNode);
@@ -91,6 +79,6 @@ export function ArenaNode({ playerId, hub }: ArenaNodeProps) {
     useChild(CountdownOverlayNode);
     useChild(MatchOverOverlayNode);
 
-    // Camera rig — follows local player
+    // Camera rig — fixed overhead view
     useChild(CameraRigNode);
 }

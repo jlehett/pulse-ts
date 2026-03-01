@@ -1,8 +1,6 @@
 import { useContext, useFixedUpdate, useTimer } from '@pulse-ts/core';
 import { useSound } from '@pulse-ts/audio';
-import { useChannel } from '@pulse-ts/network';
 import { GameCtx } from '../contexts';
-import { KnockoutChannel, RoundResetChannel } from '../config/channels';
 import {
     WIN_COUNT,
     KO_FLASH_DURATION,
@@ -37,8 +35,8 @@ export function computeCountdownValue(remaining: number): number {
  * State-machine game manager that drives the round lifecycle:
  * PLAYING → KO_FLASH → RESETTING → COUNTDOWN → PLAYING.
  *
- * Subscribes to knockout events and orchestrates phase transitions
- * using fixed-update timers. Ignores knockouts during non-playing phases.
+ * Polls the shared game state for knockout events (pendingKnockout)
+ * and orchestrates phase transitions using fixed-update timers.
  */
 export function GameManagerNode() {
     const gameState = useContext(GameCtx);
@@ -73,37 +71,35 @@ export function GameManagerNode() {
         gain: 0.12,
     });
 
-    const roundReset = useChannel(RoundResetChannel);
-
-    useChannel<number>(KnockoutChannel, (knockedOutPlayerId) => {
-        // Only score during active play — prevents double-scoring
-        if (gameState.phase !== 'playing') return;
-
-        const scorer = 1 - knockedOutPlayerId;
-        gameState.scores[scorer]++;
-        gameState.lastKnockedOut = knockedOutPlayerId;
-
-        if (gameState.scores[scorer] >= WIN_COUNT) {
-            gameState.phase = 'match_over';
-            gameState.matchWinner = scorer;
-            matchFanfareSfx.play();
-        } else {
-            gameState.phase = 'ko_flash';
-            koFlashTimer.reset();
-            koAnnounceSfx.play();
-        }
-    });
-
     let prevCountdown = -1;
 
     useFixedUpdate(() => {
+        // Poll for knockout events from LocalPlayerNodes
+        if (gameState.pendingKnockout >= 0 && gameState.phase === 'playing') {
+            const knockedOutPlayerId = gameState.pendingKnockout;
+            gameState.pendingKnockout = -1;
+
+            const scorer = 1 - knockedOutPlayerId;
+            gameState.scores[scorer]++;
+            gameState.lastKnockedOut = knockedOutPlayerId;
+
+            if (gameState.scores[scorer] >= WIN_COUNT) {
+                gameState.phase = 'match_over';
+                gameState.matchWinner = scorer;
+                matchFanfareSfx.play();
+            } else {
+                gameState.phase = 'ko_flash';
+                koFlashTimer.reset();
+                koAnnounceSfx.play();
+            }
+        }
+
         switch (gameState.phase) {
             case 'ko_flash':
                 if (!koFlashTimer.active) {
                     gameState.phase = 'resetting';
                     resetPauseTimer.reset();
                     gameState.round++;
-                    roundReset.publish(gameState.round);
                 }
                 break;
 

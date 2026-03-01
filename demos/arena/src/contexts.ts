@@ -1,4 +1,4 @@
-import { createContext, type Node } from '@pulse-ts/core';
+import { createContext } from '@pulse-ts/core';
 
 /** Current phase of the round lifecycle. */
 export type RoundPhase =
@@ -20,13 +20,9 @@ export interface GameState {
     countdownValue: number;
     /** Player ID of the match winner (-1 = no winner yet). */
     matchWinner: number;
+    /** Pending knockout: player ID that just fell off (-1 = none). */
+    pendingKnockout: number;
 }
 
 /** Shared game state context — read/written by GameManagerNode, read by HUD. */
 export const GameCtx = createContext<GameState>('Game');
-
-/** Identifies which player this world controls (0 or 1). */
-export const PlayerIdCtx = createContext<number>('PlayerId');
-
-/** Reference to the local player's Node — read by camera rig and collision handlers. */
-export const LocalPlayerNodeCtx = createContext<Node>('LocalPlayerNode');

@@ -1,14 +1,13 @@
 import { useFrameUpdate, useDestroy, useContext } from '@pulse-ts/core';
 import { useThreeContext } from '@pulse-ts/three';
-import { GameCtx, PlayerIdCtx } from '../contexts';
+import { GameCtx } from '../contexts';
 
 /**
  * DOM overlay showing P1 and P2 scores.
- * Positioned at the top-center of each canvas.
+ * Positioned at the top-center of the canvas.
  */
 export function ScoreHudNode() {
     const gameState = useContext(GameCtx);
-    const playerId = useContext(PlayerIdCtx);
     const { renderer } = useThreeContext();
     const container = renderer.domElement.parentElement ?? document.body;
 
@@ -28,13 +27,8 @@ export function ScoreHudNode() {
     } as Partial<CSSStyleDeclaration>);
     container.appendChild(el);
 
-    const labels = playerId === 0 ? ['P1', 'P2'] : ['P2', 'P1'];
-    const indices = playerId === 0 ? [0, 1] : [1, 0];
-
     useFrameUpdate(() => {
-        el.textContent =
-            `${labels[0]}: ${gameState.scores[indices[0]]}  |  ` +
-            `${labels[1]}: ${gameState.scores[indices[1]]}`;
+        el.textContent = `P1: ${gameState.scores[0]}  |  P2: ${gameState.scores[1]}`;
     });
 
     useDestroy(() => {

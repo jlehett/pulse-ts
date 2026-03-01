@@ -21,17 +21,18 @@ import {
 import { useMesh } from '@pulse-ts/three';
 import { useSound } from '@pulse-ts/audio';
 import { useParticleBurst, useParticleEmitter } from '@pulse-ts/effects';
-import { useReplicateTransform, useChannel } from '@pulse-ts/network';
 import { PlayerTag } from '../components/PlayerTag';
-import { GameCtx, PlayerIdCtx } from '../contexts';
+import { GameCtx } from '../contexts';
 import { SPAWN_POSITIONS, DEATH_PLANE_Y } from '../config/arena';
-import { KnockoutChannel, RoundResetChannel } from '../config/channels';
 
 /** Sphere radius for the player ball. */
-export const PLAYER_RADIUS = 0.5;
+export const PLAYER_RADIUS = 0.8;
 
-/** Movement speed in units per second. */
-export const MOVE_SPEED = 12;
+/** Impulse applied per fixed tick when movement input is held. */
+export const MOVE_IMPULSE = 0.6;
+
+/** Linear damping — lower values mean longer coasting and harder to control. */
+export const LINEAR_DAMPING = 0.15;
 
 /** Velocity applied during a dash. */
 export const DASH_SPEED = 30;
@@ -43,7 +44,10 @@ export const DASH_DURATION = 0.15;
 export const DASH_COOLDOWN = 1.0;
 
 /** Knockback impulse magnitude applied on player-player collision. */
-export const KNOCKBACK_FORCE = 8;
+export const KNOCKBACK_FORCE = 20;
+
+/** Minimum seconds between collision impact sounds. */
+export const IMPACT_COOLDOWN = 0.4;
 
 /** Number of particles in the knockout mega-burst. */
 export const KNOCKOUT_BURST_COUNT = 80;
@@ -68,7 +72,7 @@ const PLAYER_COLORS = [0x48c9b0, 0xe74c3c] as const;
  *
  * @example
  * ```ts
- * computeKnockback(0, 0, -1, 0, 8); // [8, 4, 0] — pushed right + up
+ * computeKnockback(0, 0, -1, 0, 8); // [8, 0, 0] — pushed right
  * ```
  */
 export function computeKnockback(
@@ -82,14 +86,10 @@ export function computeKnockback(
     const dz = selfZ - otherZ;
     const len = Math.sqrt(dx * dx + dz * dz);
     if (len > 0) {
-        return [
-            (dx / len) * magnitude,
-            magnitude * 0.5,
-            (dz / len) * magnitude,
-        ];
+        return [(dx / len) * magnitude, 0, (dz / len) * magnitude];
     }
-    // Overlapping — push in arbitrary direction with upward arc
-    return [magnitude, magnitude * 0.5, 0];
+    // Overlapping — push in arbitrary direction
+    return [magnitude, 0, 0];
 }
 
 /**
@@ -118,19 +118,30 @@ export function computeDashDirection(
     return [0, -1]; // default forward
 }
 
+export interface LocalPlayerNodeProps {
+    /** Player index (0 or 1). */
+    playerId: number;
+    /** Input action name for the 2D movement axis (e.g. 'p1Move'). */
+    moveAction: string;
+    /** Input action name for the dash button (e.g. 'p1Dash'). */
+    dashAction: string;
+}
+
 /**
- * Local player node — a dynamic sphere with WASD/arrow movement and a dash
- * mechanic. Each world instance mounts one of these for its local player.
+ * Local player node — a dynamic sphere with movement and a dash mechanic.
+ * Each instance controls one player, reading from its own namespaced
+ * input actions so both players coexist in a single world.
  */
-export function LocalPlayerNode() {
+export function LocalPlayerNode({
+    playerId,
+    moveAction,
+    dashAction,
+}: Readonly<LocalPlayerNodeProps>) {
     const node = useNode();
-    const playerId = useContext(PlayerIdCtx);
     const gameState = useContext(GameCtx);
     const spawn = SPAWN_POSITIONS[playerId];
 
-    // Network identity and replication — send our transform to the other world
     useStableId(`player-${playerId}`);
-    useReplicateTransform({ role: 'producer' });
 
     useComponent(PlayerTag);
 
@@ -140,7 +151,7 @@ export function LocalPlayerNode() {
     const body = useRigidBody({
         type: 'dynamic',
         mass: 1,
-        linearDamping: 0.05,
+        linearDamping: LINEAR_DAMPING,
         angularDamping: 1,
     });
     // Lock rotation so the ball doesn't tumble
@@ -152,26 +163,18 @@ export function LocalPlayerNode() {
     });
 
     const world = useWorld();
-    const getMove = useAxis2D('move');
-    const getDash = useAction('dash');
-
-    // Knockout channel — publish when falling off the arena
-    const knockout = useChannel(KnockoutChannel);
-
-    // Round reset — teleport back to spawn when a new round starts
-    useChannel(RoundResetChannel, () => {
-        transform.localPosition.set(...spawn);
-        body.setLinearVelocity(0, 0, 0);
-        dashTimer.cancel();
-        dashCD.reset();
-        dashTrail.pause();
-    });
+    const getMove = useAxis2D(moveAction);
+    const getDash = useAction(dashAction);
 
     // Dash state
     const dashTimer = useTimer(DASH_DURATION);
     const dashCD = useCooldown(DASH_COOLDOWN);
+    const impactCD = useCooldown(IMPACT_COOLDOWN);
     let dashDirX = 0;
     let dashDirZ = 0;
+
+    // Track round number to detect round resets via shared state
+    let lastRound = gameState.round;
 
     // Previous physics position for frame interpolation
     let prevX = spawn[0];
@@ -265,7 +268,10 @@ export function LocalPlayerNode() {
             KNOCKBACK_FORCE,
         );
         body.applyImpulse(ix, iy, iz);
-        impactSfx.play();
+        if (impactCD.ready) {
+            impactSfx.play();
+            impactCD.trigger();
+        }
 
         // Particle burst at the midpoint between the two players
         impactBurst([
@@ -276,6 +282,16 @@ export function LocalPlayerNode() {
     });
 
     useFixedUpdate(() => {
+        // Round reset — teleport to spawn when GameManagerNode increments round
+        if (gameState.round !== lastRound) {
+            lastRound = gameState.round;
+            transform.localPosition.set(...spawn);
+            body.setLinearVelocity(0, 0, 0);
+            dashTimer.cancel();
+            dashCD.reset();
+            dashTrail.pause();
+        }
+
         // Freeze input during non-playing phases
         if (gameState.phase !== 'playing') {
             const vy = body.linearVelocity.y;
@@ -303,10 +319,9 @@ export function LocalPlayerNode() {
             dashTrail.resume();
         }
 
-        const vy = body.linearVelocity.y;
-
         if (dashTimer.active) {
             // During dash, override horizontal velocity with locked direction
+            const vy = body.linearVelocity.y;
             body.setLinearVelocity(
                 dashDirX * DASH_SPEED,
                 vy,
@@ -314,10 +329,12 @@ export function LocalPlayerNode() {
             );
         } else {
             if (dashTrail.active) dashTrail.pause();
-            // Normal movement — set velocity directly for tight control
-            const vx = move.x * MOVE_SPEED;
-            const vz = -move.y * MOVE_SPEED; // W = forward = -Z
-            body.setLinearVelocity(vx, vy, vz);
+            // Momentum-based movement — apply impulse, damping handles deceleration
+            const ix = move.x * MOVE_IMPULSE;
+            const iz = -move.y * MOVE_IMPULSE;
+            if (ix !== 0 || iz !== 0) {
+                body.applyImpulse(ix, 0, iz);
+            }
         }
 
         // Death plane — respawn when falling off the arena
@@ -329,7 +346,7 @@ export function LocalPlayerNode() {
             ]);
             dashTrail.pause();
             deathSfx.play();
-            knockout.publish(playerId);
+            gameState.pendingKnockout = playerId;
             transform.localPosition.set(...spawn);
             body.setLinearVelocity(0, 0, 0);
             dashTimer.cancel();

@@ -1,14 +1,19 @@
 import { useFrameUpdate, useDestroy, useContext } from '@pulse-ts/core';
 import { useThreeContext } from '@pulse-ts/three';
-import { GameCtx, PlayerIdCtx } from '../contexts';
+import { GameCtx } from '../contexts';
+
+/** Player colors: P1 = teal, P2 = coral. */
+const PLAYER_COLORS = ['#48c9b0', '#e74c3c'];
+
+/** Player labels indexed by player ID. */
+const PLAYER_LABELS = ['P1', 'P2'];
 
 /**
- * DOM overlay that shows "YOU WIN!" or "YOU LOSE!" with a dark backdrop
+ * DOM overlay that shows "P1 WINS!" or "P2 WINS!" with a dark backdrop
  * during the `match_over` phase. Fades in via CSS transition.
  */
 export function MatchOverOverlayNode() {
     const gameState = useContext(GameCtx);
-    const playerId = useContext(PlayerIdCtx);
     const { renderer } = useThreeContext();
     const container = renderer.domElement.parentElement ?? document.body;
 
@@ -47,9 +52,9 @@ export function MatchOverOverlayNode() {
         text.style.opacity = visible ? '1' : '0';
 
         if (visible) {
-            const isWinner = gameState.matchWinner === playerId;
-            text.textContent = isWinner ? 'YOU WIN!' : 'YOU LOSE!';
-            text.style.color = isWinner ? '#48c9b0' : '#e74c3c';
+            const winner = gameState.matchWinner;
+            text.textContent = `${PLAYER_LABELS[winner]} WINS!`;
+            text.style.color = PLAYER_COLORS[winner];
         }
     });
 
