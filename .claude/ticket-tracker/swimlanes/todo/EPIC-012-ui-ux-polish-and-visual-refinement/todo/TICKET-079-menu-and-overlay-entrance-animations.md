@@ -3,6 +3,7 @@ id: TICKET-079
 epic: EPIC-012
 title: Menu and overlay entrance animations
 status: todo
+branch: ticket-079-menu-and-overlay-entrance-animations
 priority: medium
 created: 2026-03-02
 updated: 2026-03-02
