@@ -11,11 +11,7 @@ import {
     getReplayHitProximity,
     hasReplayHit,
 } from '../replay';
-import {
-    PLAYER_COLORS,
-    TRAIL_VELOCITY_THRESHOLD,
-    TRAIL_BASE_INTERVAL,
-} from '../config/arena';
+import { PLAYER_COLORS, TRAIL_BASE_INTERVAL } from '../config/arena';
 
 /** Height of each cinematic letterbox bar as a CSS value. */
 export const LETTERBOX_HEIGHT = '8%';
@@ -268,7 +264,7 @@ export function ReplayNode() {
                     const vel = getReplayVelocity(pid);
                     if (!vel) continue;
                     const vmag = Math.sqrt(vel[0] * vel[0] + vel[2] * vel[2]);
-                    if (vmag > TRAIL_VELOCITY_THRESHOLD) {
+                    if (vmag > 0.1) {
                         const pos = getReplayPosition(pid);
                         if (pos) {
                             trailBursts[pid](pos);

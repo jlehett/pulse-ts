@@ -30,7 +30,7 @@ import {
     SPAWN_POSITIONS,
     DEATH_PLANE_Y,
     PLAYER_COLORS,
-    TRAIL_VELOCITY_THRESHOLD,
+    TRAIL_VELOCITY_REFERENCE,
     TRAIL_BASE_INTERVAL,
 } from '../config/arena';
 import { KnockoutChannel } from '../config/channels';
@@ -540,11 +540,11 @@ export function LocalPlayerNode({
             const vx = body.linearVelocity.x;
             const vz = body.linearVelocity.z;
             const vmag = Math.sqrt(vx * vx + vz * vz);
-            if (vmag > TRAIL_VELOCITY_THRESHOLD) {
+            if (vmag > 0.1) {
                 trailAccum += dt;
                 const interval = Math.max(
                     0.01,
-                    TRAIL_BASE_INTERVAL / (vmag / TRAIL_VELOCITY_THRESHOLD),
+                    TRAIL_BASE_INTERVAL / (vmag / TRAIL_VELOCITY_REFERENCE),
                 );
                 if (trailAccum >= interval) {
                     trailAccum = 0;
