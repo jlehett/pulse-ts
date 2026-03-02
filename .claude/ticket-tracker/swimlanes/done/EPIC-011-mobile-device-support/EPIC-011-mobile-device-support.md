@@ -1,9 +1,9 @@
 ---
 id: EPIC-011
 title: Mobile Device Support for Arena Demo
-status: todo
+status: done
 created: 2026-03-01
-updated: 2026-03-01
+updated: 2026-03-02
 ---
 
 ## Description
@@ -20,3 +20,4 @@ touch controls, read all UI overlays comfortably, and maintain smooth frame rate
 ## Notes
 
 - **2026-03-01**: Epic created. Three tickets: touch controls, responsive UI, mobile performance.
+- **2026-03-02**: Epic closed — all tickets complete (TICKET-070 cancelled, already at 60 FPS).
