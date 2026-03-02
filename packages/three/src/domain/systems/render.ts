@@ -26,6 +26,10 @@ export class ThreeRenderSystem extends System {
         if (!this.world) return;
         const svc = this.world.getService(ThreeService);
         if (!svc) return;
-        svc.renderer.render(svc.scene, svc.camera);
+        if (svc.composer) {
+            svc.composer.render();
+        } else {
+            svc.renderer.render(svc.scene, svc.camera);
+        }
     }
 }

@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import type { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
 import { Service } from '@pulse-ts/core';
 import { Node, createTRS, type TRS, World } from '@pulse-ts/core';
 
@@ -58,6 +59,13 @@ export class ThreeService extends Service {
     readonly scene: THREE.Scene = new THREE.Scene();
     readonly camera: THREE.PerspectiveCamera;
     readonly options: Required<ThreeOptions>;
+
+    /**
+     * Optional post-processing composer. When set, the render system
+     * calls `composer.render()` instead of `renderer.render()`.
+     * Set via {@link setComposer}.
+     */
+    composer: EffectComposer | null = null;
 
     private roots = new Map<Node, RootRecord>();
     private resizeObs: ResizeObserver | null = null;
@@ -190,6 +198,37 @@ export class ThreeService extends Service {
 
     //#endregion
 
+    /**
+     * Assigns a post-processing {@link EffectComposer} to be used for
+     * rendering instead of `renderer.render()`. The composer is
+     * automatically resized when the canvas resizes.
+     *
+     * @param composer - The EffectComposer to use, or `null` to remove.
+     *
+     * @example
+     * ```ts
+     * import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
+     * import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
+     *
+     * const composer = new EffectComposer(three.renderer);
+     * composer.addPass(new RenderPass(three.scene, three.camera));
+     * three.setComposer(composer);
+     * ```
+     */
+    setComposer(composer: EffectComposer | null): void {
+        this.composer = composer;
+        if (composer) {
+            const c = this.renderer.domElement;
+            const w = c.clientWidth | 0;
+            const h = c.clientHeight | 0;
+            if (w > 0 && h > 0) {
+                composer.setSize(w, h);
+            }
+        }
+    }
+
+    //#endregion
+
     //#region Private Methods
 
     private resizeToCanvas() {
@@ -200,6 +239,7 @@ export class ThreeService extends Service {
             this.renderer.setSize(w, h, false);
             this.camera.aspect = w / (h || 1);
             this.camera.updateProjectionMatrix();
+            this.composer?.setSize(w, h);
         }
     }
 

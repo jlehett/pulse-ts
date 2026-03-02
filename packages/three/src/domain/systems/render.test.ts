@@ -42,7 +42,7 @@ function createCanvas() {
     return canvas as HTMLCanvasElement;
 }
 
-test('ThreeRenderSystem invokes renderer.render(scene, camera)', () => {
+test('ThreeRenderSystem invokes renderer.render(scene, camera) when no composer', () => {
     const world = new World();
     const svc = world.provideService(
         new ThreeService({ canvas: createCanvas() }),
@@ -53,4 +53,21 @@ test('ThreeRenderSystem invokes renderer.render(scene, camera)', () => {
 
     const renderer = svc.renderer as unknown as { render: jest.Mock };
     expect(renderer.render).toHaveBeenCalledTimes(1);
+});
+
+test('ThreeRenderSystem uses composer.render() when composer is set', () => {
+    const world = new World();
+    const svc = world.provideService(
+        new ThreeService({ canvas: createCanvas() }),
+    );
+    const sys = world.addSystem(new ThreeRenderSystem());
+
+    const mockComposer = { render: jest.fn(), setSize: jest.fn() };
+    svc.setComposer(mockComposer as any);
+
+    (sys as any).update();
+
+    expect(mockComposer.render).toHaveBeenCalledTimes(1);
+    const renderer = svc.renderer as unknown as { render: jest.Mock };
+    expect(renderer.render).not.toHaveBeenCalled();
 });
