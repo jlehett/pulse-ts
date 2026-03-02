@@ -2,7 +2,7 @@
 id: TICKET-081
 epic: EPIC-013
 title: Online player indicator ring
-status: todo
+status: done
 branch: ticket-081-online-player-indicator-ring
 priority: medium
 created: 2026-03-02
@@ -21,12 +21,13 @@ online mode.
 
 ## Acceptance Criteria
 
-- [ ] Yellow ring visible beneath local player in online mode
-- [ ] Ring is not visible in local 2-player mode
-- [ ] Ring follows the player position smoothly
-- [ ] Ring has subtle emissive glow under bloom
-- [ ] All tests pass
+- [x] Yellow ring visible beneath local player in online mode
+- [x] Ring is not visible in local 2-player mode
+- [x] Ring follows the player position smoothly
+- [x] Ring has subtle emissive glow under bloom
+- [x] All tests pass
 
 ## Notes
 
 - **2026-03-02**: Ticket created.
+- **2026-03-02**: Implementation complete — light yellow torus ring (0xffee88) added to LocalPlayerNode, gated on `replicate` prop (online mode only). Ring sits at player's feet, emissive glow for bloom visibility. 150 tests pass, lint clean.

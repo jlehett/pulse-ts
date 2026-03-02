@@ -9,6 +9,9 @@ import {
     IMPACT_COOLDOWN,
     KNOCKOUT_BURST_COUNT,
     DASH_TRAIL_RATE,
+    INDICATOR_RING_COLOR,
+    INDICATOR_RING_RADIUS,
+    INDICATOR_RING_TUBE,
     computeDashDirection,
     computeKnockback,
 } from './LocalPlayerNode';
@@ -54,6 +57,27 @@ describe('LocalPlayerNode constants', () => {
 
     it('dash trail rate is positive', () => {
         expect(DASH_TRAIL_RATE).toBeGreaterThan(0);
+    });
+});
+
+describe('Indicator ring constants', () => {
+    it('ring color is a warm yellow', () => {
+        // Light yellow: R > 0xF0, G > 0xE0, B < 0xA0
+        const r = (INDICATOR_RING_COLOR >> 16) & 0xff;
+        const g = (INDICATOR_RING_COLOR >> 8) & 0xff;
+        const b = INDICATOR_RING_COLOR & 0xff;
+        expect(r).toBeGreaterThan(0xf0);
+        expect(g).toBeGreaterThan(0xe0);
+        expect(b).toBeLessThan(0xa0);
+    });
+
+    it('ring radius is larger than the player sphere', () => {
+        expect(INDICATOR_RING_RADIUS).toBeGreaterThan(PLAYER_RADIUS);
+    });
+
+    it('ring tube is thin', () => {
+        expect(INDICATOR_RING_TUBE).toBeGreaterThan(0);
+        expect(INDICATOR_RING_TUBE).toBeLessThan(0.1);
     });
 });
 

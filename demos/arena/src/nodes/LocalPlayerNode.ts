@@ -18,7 +18,8 @@ import {
     useSphereCollider,
     useOnCollisionStart,
 } from '@pulse-ts/physics';
-import { useMesh } from '@pulse-ts/three';
+import { useMesh, useObject3D } from '@pulse-ts/three';
+import * as THREE from 'three';
 import { useSound } from '@pulse-ts/audio';
 import { useParticleBurst, useParticleEmitter } from '@pulse-ts/effects';
 import { useReplicateTransform, useChannel } from '@pulse-ts/network';
@@ -72,6 +73,15 @@ interface KnockbackMsg {
 
 /** Player colors: P1 = teal, P2 = coral. */
 const PLAYER_COLORS = [0x48c9b0, 0xe74c3c] as const;
+
+/** Color of the online-mode "you" indicator ring. */
+export const INDICATOR_RING_COLOR = 0xffee88;
+
+/** Radius of the indicator ring (slightly larger than the player sphere). */
+export const INDICATOR_RING_RADIUS = 1.2;
+
+/** Tube thickness of the indicator ring. */
+export const INDICATOR_RING_TUBE = 0.04;
 
 /**
  * Compute a knockback impulse vector from one position to another.
@@ -237,6 +247,27 @@ export function LocalPlayerNode({
         metalness: 0.4,
         castShadow: true,
     });
+
+    // Online mode indicator ring — light yellow circle beneath the local player
+    if (replicate) {
+        const ringGeo = new THREE.TorusGeometry(
+            INDICATOR_RING_RADIUS,
+            INDICATOR_RING_TUBE,
+            8,
+            48,
+        );
+        const ringMat = new THREE.MeshStandardMaterial({
+            color: INDICATOR_RING_COLOR,
+            emissive: INDICATOR_RING_COLOR,
+            emissiveIntensity: 0.5,
+            roughness: 0.3,
+            metalness: 0.3,
+        });
+        const ringMesh = new THREE.Mesh(ringGeo, ringMat);
+        ringMesh.rotation.x = -Math.PI / 2; // lay flat
+        ringMesh.position.y = -PLAYER_RADIUS + 0.05; // sit at bottom of sphere
+        useObject3D(ringMesh);
+    }
 
     // Sound effects
     const dashSfx = useSound('noise', {
