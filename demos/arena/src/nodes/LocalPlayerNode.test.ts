@@ -10,8 +10,8 @@ import {
     KNOCKOUT_BURST_COUNT,
     DASH_TRAIL_RATE,
     INDICATOR_RING_COLOR,
-    INDICATOR_RING_RADIUS,
-    INDICATOR_RING_TUBE,
+    INDICATOR_RING_SCALE,
+    INDICATOR_RING_BORDER,
     computeDashDirection,
     computeKnockback,
 } from './LocalPlayerNode';
@@ -71,13 +71,13 @@ describe('Indicator ring constants', () => {
         expect(b).toBeLessThan(0xa0);
     });
 
-    it('ring radius is larger than the player sphere', () => {
-        expect(INDICATOR_RING_RADIUS).toBeGreaterThan(PLAYER_RADIUS);
+    it('ring scale is larger than 1 (bigger than player)', () => {
+        expect(INDICATOR_RING_SCALE).toBeGreaterThan(1);
     });
 
-    it('ring tube is thin', () => {
-        expect(INDICATOR_RING_TUBE).toBeGreaterThan(0);
-        expect(INDICATOR_RING_TUBE).toBeLessThan(0.1);
+    it('ring border is a small positive pixel value', () => {
+        expect(INDICATOR_RING_BORDER).toBeGreaterThan(0);
+        expect(INDICATOR_RING_BORDER).toBeLessThanOrEqual(4);
     });
 });
 
