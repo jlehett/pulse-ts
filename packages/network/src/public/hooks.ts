@@ -387,6 +387,25 @@ export function usePeers() {
 }
 
 /**
+ * Subscribe to peer-leave events. Fires when the server notifies this client
+ * that another peer has disconnected from their shared room.
+ *
+ * @param handler Callback invoked with the leaving peer's id.
+ *
+ * @example
+ * useOnPeerLeave((peerId) => {
+ *     console.log(`${peerId} left the game`);
+ * });
+ */
+export function useOnPeerLeave(handler: (peerId: string) => void): void {
+    const svc = ensureRuntime();
+    useInit(() => {
+        const off = svc.onPeerLeave.on(handler);
+        return () => off();
+    });
+}
+
+/**
  * Use a channel with addressed publish to a specific peer (or peers).
  *
  * @param to Peer id or list of ids.

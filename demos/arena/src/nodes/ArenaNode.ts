@@ -12,6 +12,7 @@ import { KnockoutOverlayNode } from './KnockoutOverlayNode';
 import { CountdownOverlayNode } from './CountdownOverlayNode';
 import { MatchOverOverlayNode } from './MatchOverOverlayNode';
 import { PauseMenuNode } from './PauseMenuNode';
+import { DisconnectOverlayNode } from './DisconnectOverlayNode';
 import { CameraRigNode } from './CameraRigNode';
 
 export interface ArenaNodeProps {
@@ -19,6 +20,8 @@ export interface ArenaNodeProps {
     playerId?: number;
     /** WebSocket URL for online mode. Omit for local 2-player. */
     wsUrl?: string;
+    /** Whether the local player is the host (online mode). */
+    isHost?: boolean;
     /** Callback invoked when the player requests to return to the main menu. */
     onRequestMenu?: () => void;
 }
@@ -91,7 +94,7 @@ export function ArenaNode(props?: Readonly<ArenaNodeProps>) {
             dashAction: 'p1Dash',
             replicate: true,
         });
-        useChild(RemotePlayerNode, { remotePlayerId: remoteId });
+        useChild(RemotePlayerNode, { remotePlayerId: remoteId, online: true });
     } else {
         // Local mode — both players on shared input
         useChild(LocalPlayerNode, {
@@ -107,7 +110,7 @@ export function ArenaNode(props?: Readonly<ArenaNodeProps>) {
     }
 
     // Game manager — tracks knockout scores
-    useChild(GameManagerNode);
+    useChild(GameManagerNode, online ? { online } : undefined);
 
     // Score HUD
     useChild(ScoreHudNode);
@@ -116,7 +119,15 @@ export function ArenaNode(props?: Readonly<ArenaNodeProps>) {
     useChild(KnockoutOverlayNode);
     useChild(CountdownOverlayNode);
     useChild(MatchOverOverlayNode, { onRequestMenu: props?.onRequestMenu });
-    useChild(PauseMenuNode, { onRequestMenu: props?.onRequestMenu });
+    useChild(PauseMenuNode, { onRequestMenu: props?.onRequestMenu, online });
+
+    // Disconnect overlay (online mode only)
+    if (online) {
+        useChild(DisconnectOverlayNode, {
+            isHost: props.isHost ?? false,
+            onRequestMenu: props.onRequestMenu,
+        });
+    }
 
     // Camera rig — fixed overhead view
     useChild(CameraRigNode);

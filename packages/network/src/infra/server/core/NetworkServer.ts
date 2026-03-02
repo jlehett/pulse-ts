@@ -190,6 +190,16 @@ export class NetworkServer {
     }
 
     private removePeer(id: string) {
+        // Notify remaining room members before removing, so they know this
+        // specific peer left (not just that the transport closed).
+        const rooms = this.peers.roomsForPeer(id);
+        if (rooms.length > 0) {
+            this.broadcast(
+                { channel: ReservedChannels.PEER_LEAVE, data: id },
+                rooms,
+                id,
+            );
+        }
         this.peers.removePeer(id);
         this.opts.onDisconnect?.(id);
     }

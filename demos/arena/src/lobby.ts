@@ -1,8 +1,16 @@
-/** Default WebSocket server port for the arena relay. */
-const DEFAULT_PORT = 8080;
-
 /** Timeout (ms) waiting for host acknowledgement after join-request. */
 const JOIN_TIMEOUT = 5000;
+
+/**
+ * Build the WebSocket relay URL from the current page location.
+ * Works for localhost, LAN IPs, and external tunnel URLs (e.g. ngrok).
+ *
+ * @returns A `ws://` or `wss://` URL pointing at the current host.
+ */
+function getRelayUrl(): string {
+    const proto = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    return `${proto}//${window.location.host}`;
+}
 
 /** Result returned when the host completes the lobby. */
 export interface HostResult {
@@ -159,7 +167,7 @@ function showHostWaiting(
     playerId: number,
 ) {
     const content = clearAndCreateContent(overlay);
-    const wsUrl = `ws://localhost:${DEFAULT_PORT}`;
+    const wsUrl = getRelayUrl();
 
     const heading = createHeading('HOSTING');
 
@@ -171,11 +179,8 @@ function showHostWaiting(
         lineHeight: '1.8',
     } as Partial<CSSStyleDeclaration>);
     info.innerHTML = [
-        'Start the relay server on this machine:',
-        `<span style="color:#48c9b0">npx tsx src/server.ts</span>`,
-        '',
-        `Port: <span style="color:#fff">${DEFAULT_PORT}</span>`,
-        'Share your IP address with your opponent.',
+        'Share this page\u2019s URL with your opponent:',
+        `<span style="color:#48c9b0">${window.location.href}</span>`,
     ].join('<br>');
 
     const status = createStatusIndicator();
@@ -261,42 +266,16 @@ function showHostWaiting(
 
 function showJoinSetup(overlay: HTMLElement, finish: Finish) {
     const content = clearAndCreateContent(overlay);
+    const wsUrl = getRelayUrl();
 
     const heading = createHeading('JOIN GAME');
 
-    const label = createSubheading('Host address');
-
-    const input = document.createElement('input');
-    input.type = 'text';
-    input.placeholder = '192.168.1.x';
-    Object.assign(input.style, {
-        font: '16px monospace',
-        color: '#fff',
-        backgroundColor: 'rgba(255,255,255,0.08)',
-        border: '2px solid rgba(255,255,255,0.2)',
-        borderRadius: '6px',
-        padding: '10px 16px',
-        width: '240px',
-        textAlign: 'center',
-        outline: 'none',
-    } as Partial<CSSStyleDeclaration>);
-    input.addEventListener('focus', () => {
-        input.style.borderColor = '#e74c3c';
-    });
-    input.addEventListener('blur', () => {
-        input.style.borderColor = 'rgba(255,255,255,0.2)';
-    });
-
     const status = createStatusIndicator();
-    const btnConnect = createButton('Connect', '#e74c3c');
     const btnBack = createButton('Back', '#888');
-    const buttons = createColumn(btnConnect, btnBack);
 
     content.appendChild(heading);
-    content.appendChild(label);
-    content.appendChild(input);
     content.appendChild(status.el);
-    content.appendChild(buttons);
+    content.appendChild(btnBack);
 
     let ws: WebSocket | null = null;
     let joinTimeout: ReturnType<typeof setTimeout> | null = null;
@@ -315,93 +294,66 @@ function showJoinSetup(overlay: HTMLElement, finish: Finish) {
         ws = null;
     }
 
-    function resetForRetry() {
-        cleanup();
-        cleaned = false;
-        btnConnect.disabled = false;
-        btnConnect.style.opacity = '1';
-    }
+    // Auto-connect immediately — the relay lives on the same host.
+    status.set('connecting', 'Connecting...');
+    ws = new WebSocket(wsUrl);
 
-    btnConnect.addEventListener('click', () => {
-        const address = input.value.trim();
-        if (!address) {
-            status.set('error', 'Enter a host address');
-            return;
-        }
+    ws.addEventListener('open', () => {
+        if (cleaned) return;
+        status.set('connecting', 'Connected. Looking for host...');
+        sendLobbyMessage(ws!, { type: 'join-request' });
 
-        // Reset previous attempt
-        if (ws) resetForRetry();
-        cleaned = false;
-
-        const wsUrl = `ws://${address}:${DEFAULT_PORT}`;
-
-        btnConnect.disabled = true;
-        btnConnect.style.opacity = '0.5';
-        status.set('connecting', 'Connecting...');
-
-        ws = new WebSocket(wsUrl);
-
-        ws.addEventListener('open', () => {
+        // Timeout if host doesn't respond
+        joinTimeout = setTimeout(() => {
             if (cleaned) return;
-            status.set('connecting', 'Connected. Looking for host...');
-            sendLobbyMessage(ws!, { type: 'join-request' });
+            status.set('error', 'No host found in lobby');
+        }, JOIN_TIMEOUT);
+    });
 
-            // Timeout if host doesn't respond
-            joinTimeout = setTimeout(() => {
-                if (cleaned) return;
-                status.set('error', 'No host found in lobby');
-                resetForRetry();
-            }, JOIN_TIMEOUT);
-        });
+    ws.addEventListener('error', () => {
+        if (cleaned) return;
+        status.set('error', 'Could not connect to server');
+    });
 
-        ws.addEventListener('error', () => {
-            if (cleaned) return;
-            status.set('error', 'Could not connect to server');
-            resetForRetry();
-        });
+    ws.addEventListener('close', () => {
+        if (cleaned) return;
+        status.set('error', 'Connection lost');
+    });
 
-        ws.addEventListener('close', () => {
-            if (cleaned) return;
-            status.set('error', 'Connection lost');
-            resetForRetry();
-        });
+    ws.addEventListener('message', (event) => {
+        if (cleaned) return;
+        const msg = parseLobbyMessage(event);
+        if (!msg) return;
 
-        ws.addEventListener('message', (event) => {
-            if (cleaned) return;
-            const msg = parseLobbyMessage(event);
-            if (!msg) return;
-
-            if (msg.type === 'host-accept') {
-                if (joinTimeout) {
-                    clearTimeout(joinTimeout);
-                    joinTimeout = null;
-                }
-                const joinerPlayerId = msg.joinerPlayerId ?? 1;
-                status.set('connected', 'Waiting for host to start...');
-
-                // Now listen for game-start
-                const onGameStart = (e: MessageEvent) => {
-                    const m = parseLobbyMessage(e);
-                    if (m?.type === 'game-start') {
-                        ws!.removeEventListener('message', onGameStart);
-                        cleanup();
-                        finish({
-                            mode: 'join',
-                            playerId: joinerPlayerId,
-                            wsUrl,
-                        });
-                    }
-                };
-                ws!.addEventListener('message', onGameStart);
-            } else if (msg.type === 'lobby-full') {
-                if (joinTimeout) {
-                    clearTimeout(joinTimeout);
-                    joinTimeout = null;
-                }
-                status.set('error', 'Lobby is full');
-                resetForRetry();
+        if (msg.type === 'host-accept') {
+            if (joinTimeout) {
+                clearTimeout(joinTimeout);
+                joinTimeout = null;
             }
-        });
+            const joinerPlayerId = msg.joinerPlayerId ?? 1;
+            status.set('connected', 'Waiting for host to start...');
+
+            // Now listen for game-start
+            const onGameStart = (e: MessageEvent) => {
+                const m = parseLobbyMessage(e);
+                if (m?.type === 'game-start') {
+                    ws!.removeEventListener('message', onGameStart);
+                    cleanup();
+                    finish({
+                        mode: 'join',
+                        playerId: joinerPlayerId,
+                        wsUrl,
+                    });
+                }
+            };
+            ws!.addEventListener('message', onGameStart);
+        } else if (msg.type === 'lobby-full') {
+            if (joinTimeout) {
+                clearTimeout(joinTimeout);
+                joinTimeout = null;
+            }
+            status.set('error', 'Lobby is full');
+        }
     });
 
     btnBack.addEventListener('click', () => {

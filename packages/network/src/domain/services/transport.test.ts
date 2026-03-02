@@ -139,4 +139,27 @@ describe('TransportService', () => {
 
         expect(got).toEqual(['hello']);
     });
+
+    it('emits onPeerLeave when a __peer_leave packet is received', async () => {
+        const hub = createMemoryHub();
+        const aT = new MemoryTransport(hub, 'a');
+        const bT = new MemoryTransport(hub, 'b');
+
+        const a = new TransportService({ selfId: 'a' });
+        const b = new TransportService({ selfId: 'b' });
+        a.setTransport(aT);
+        b.setTransport(bT);
+        await a.connect();
+        await b.connect();
+
+        const left: string[] = [];
+        b.onPeerLeave.on((id) => left.push(id));
+
+        // Simulate a server-sent __peer_leave packet
+        a.publish('__peer_leave', 'a');
+        a.pump();
+        b.pump();
+
+        expect(left).toEqual(['a']);
+    });
 });

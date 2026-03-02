@@ -18,6 +18,9 @@ const PLAYER_COLORS = [0x48c9b0, 0xe74c3c] as const;
 
 export interface RemotePlayerNodeProps {
     remotePlayerId: number;
+    /** When true, skip the death-plane check — knockouts are received
+     *  via the knockout channel from the dying machine instead. */
+    online?: boolean;
 }
 
 /**
@@ -27,13 +30,17 @@ export interface RemotePlayerNodeProps {
  */
 export function RemotePlayerNode({
     remotePlayerId,
+    online,
 }: Readonly<RemotePlayerNodeProps>) {
     const gameState = useContext(GameCtx);
     const spawn = SPAWN_POSITIONS[remotePlayerId];
 
     // Network identity — matches the producer's StableId in the other world
     useStableId(`player-${remotePlayerId}`);
-    useReplicateTransform({ role: 'consumer' });
+    // Higher lambda = snappier tracking. Default 12 is too sluggish for a
+    // fast-paced arena — remote players visually lag behind their true position,
+    // making collisions appear to trigger at a distance ("forcefield" effect).
+    useReplicateTransform({ role: 'consumer', lambda: 25 });
 
     useComponent(PlayerTag);
 
@@ -56,11 +63,15 @@ export function RemotePlayerNode({
         castShadow: true,
     });
 
-    // Detect when the remote player falls off the arena (replicated position)
-    useFixedUpdate(() => {
-        if (gameState.phase !== 'playing' || gameState.paused) return;
-        if (transform.localPosition.y < DEATH_PLANE_Y) {
-            gameState.pendingKnockout = remotePlayerId;
-        }
-    });
+    // Detect when the remote player falls off the arena (replicated position).
+    // In online mode, replicated position lags — knockouts arrive via the
+    // knockout channel from the dying machine, so skip this check.
+    if (!online) {
+        useFixedUpdate(() => {
+            if (gameState.phase !== 'playing' || gameState.paused) return;
+            if (transform.localPosition.y < DEATH_PLANE_Y) {
+                gameState.pendingKnockout = remotePlayerId;
+            }
+        });
+    }
 }

@@ -14,6 +14,7 @@ export {
     useNetworkStats,
     useNetworkStatus,
     usePeers,
+    useOnPeerLeave,
     useRPC,
     useRPCTo,
     useReplication,

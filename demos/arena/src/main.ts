@@ -61,7 +61,9 @@ async function startOnlineGame(lobby: LobbyResult): Promise<void> {
                 clearColor: 0x0a0a1a,
             });
 
-            await installNetwork(world);
+            await installNetwork(world, {
+                replication: { sendHz: 60 },
+            });
 
             three.renderer.shadowMap.enabled = true;
             three.renderer.shadowMap.type = 1; // THREE.PCFShadowMap
@@ -71,6 +73,7 @@ async function startOnlineGame(lobby: LobbyResult): Promise<void> {
             world.mount(ArenaNode, {
                 playerId: lobby.playerId,
                 wsUrl: lobby.wsUrl,
+                isHost: lobby.mode === 'host',
                 onRequestMenu: () => {
                     three.renderer.clear();
                     world.destroy();

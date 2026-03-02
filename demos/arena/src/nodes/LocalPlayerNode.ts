@@ -21,10 +21,11 @@ import {
 import { useMesh } from '@pulse-ts/three';
 import { useSound } from '@pulse-ts/audio';
 import { useParticleBurst, useParticleEmitter } from '@pulse-ts/effects';
-import { useReplicateTransform } from '@pulse-ts/network';
+import { useReplicateTransform, useChannel } from '@pulse-ts/network';
 import { PlayerTag } from '../components/PlayerTag';
 import { GameCtx } from '../contexts';
 import { SPAWN_POSITIONS, DEATH_PLANE_Y } from '../config/arena';
+import { KnockoutChannel } from '../config/channels';
 
 /** Sphere radius for the player ball. */
 export const PLAYER_RADIUS = 0.8;
@@ -55,6 +56,18 @@ export const KNOCKOUT_BURST_COUNT = 80;
 
 /** Emission rate (particles/sec) for the dash trail. */
 export const DASH_TRAIL_RATE = 100;
+
+/**
+ * Window (ms) to ignore network knockback after a local collision.
+ * Prevents double-knockback when both machines detect the same collision.
+ */
+const KNOCKBACK_DEDUP_WINDOW = 150;
+
+/** Knockback message sent over the network to the other player. */
+interface KnockbackMsg {
+    targetPlayerId: number;
+    impulse: [number, number, number];
+}
 
 /** Player colors: P1 = teal, P2 = coral. */
 const PLAYER_COLORS = [0x48c9b0, 0xe74c3c] as const;
@@ -146,7 +159,6 @@ export function LocalPlayerNode({
     const spawn = SPAWN_POSITIONS[playerId];
 
     useStableId(`player-${playerId}`);
-    if (replicate) useReplicateTransform({ role: 'producer' });
 
     useComponent(PlayerTag);
 
@@ -161,6 +173,22 @@ export function LocalPlayerNode({
     });
     // Lock rotation so the ball doesn't tumble
     body.setInertiaTensor(0, 0, 0);
+
+    // Replicate after body is created so we can include velocity for
+    // dead-reckoning on the consumer side.
+    let publishKnockback: ((msg: KnockbackMsg) => void) | null = null;
+    let lastLocalKnockbackTime = -Infinity;
+    let publishKnockout: ((id: number) => void) | null = null;
+
+    if (replicate) {
+        useReplicateTransform({
+            role: 'producer',
+            readVelocity: () => body.linearVelocity,
+        });
+
+        const knockoutCh = useChannel(KnockoutChannel);
+        publishKnockout = (id) => knockoutCh.publish(id);
+    }
 
     useSphereCollider(PLAYER_RADIUS, {
         friction: 0.3,
@@ -263,6 +291,38 @@ export function LocalPlayerNode({
         autoStart: false,
     });
 
+    // Knockback channel — in online mode, receive impulses from the remote
+    // player's collision detection and apply them to our local body, with
+    // impact effects so the defender sees and hears the hit.
+    if (replicate) {
+        const kb = useChannel<KnockbackMsg>('knockback', (msg) => {
+            if (msg.targetPlayerId !== playerId) return;
+            // Dedup: skip if we already detected this collision locally.
+            if (Date.now() - lastLocalKnockbackTime < KNOCKBACK_DEDUP_WINDOW)
+                return;
+            body.applyImpulse(msg.impulse[0], msg.impulse[1], msg.impulse[2]);
+
+            // Impact feedback — particles + sound so the defender sees the hit.
+            // Spawn particles on the local player's surface in the direction
+            // the hit came from (opposite of the impulse direction).
+            const hx = -msg.impulse[0];
+            const hz = -msg.impulse[2];
+            const hLen = Math.sqrt(hx * hx + hz * hz);
+            if (hLen > 0) {
+                impactBurst([
+                    transform.localPosition.x + (hx / hLen) * PLAYER_RADIUS,
+                    transform.localPosition.y,
+                    transform.localPosition.z + (hz / hLen) * PLAYER_RADIUS,
+                ]);
+            }
+            if (impactCD.ready) {
+                impactSfx.play();
+                impactCD.trigger();
+            }
+        });
+        publishKnockback = (msg) => kb.publish(msg);
+    }
+
     // Knockback on collision with another player
     useOnCollisionStart(({ other }) => {
         if (other === node) return;
@@ -279,9 +339,21 @@ export function LocalPlayerNode({
             KNOCKBACK_FORCE,
         );
         body.applyImpulse(ix, iy, iz);
+        lastLocalKnockbackTime = Date.now();
+
         if (impactCD.ready) {
             impactSfx.play();
             impactCD.trigger();
+        }
+
+        // Send inverse knockback to the remote player so they feel the
+        // hit even if their machine didn't detect the collision locally
+        // (remote positions lag due to network latency).
+        if (publishKnockback) {
+            publishKnockback({
+                targetPlayerId: 1 - playerId,
+                impulse: [-ix, -iy, -iz],
+            });
         }
 
         // Particle burst at the midpoint between the two players
@@ -376,6 +448,7 @@ export function LocalPlayerNode({
             dashTrail.pause();
             deathSfx.play();
             gameState.pendingKnockout = playerId;
+            if (publishKnockout) publishKnockout(playerId);
             transform.localPosition.set(...spawn);
             body.setLinearVelocity(0, 0, 0);
             dashTimer.cancel();

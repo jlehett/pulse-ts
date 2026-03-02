@@ -82,6 +82,31 @@ afterAll(() => {
     delete (globalThis as any).WebSocket;
 });
 
+// ---------------------------------------------------------------------------
+// window.location mock — lobby derives relay URLs from the current page.
+// ---------------------------------------------------------------------------
+
+const locationBackup = window.location;
+
+beforeAll(() => {
+    Object.defineProperty(window, 'location', {
+        writable: true,
+        value: {
+            protocol: 'http:',
+            host: 'localhost:5173',
+            port: '5173',
+            href: 'http://localhost:5173/',
+        },
+    });
+});
+
+afterAll(() => {
+    Object.defineProperty(window, 'location', {
+        writable: true,
+        value: locationBackup,
+    });
+});
+
 describe('showLobby', () => {
     let container: HTMLDivElement;
 
@@ -155,7 +180,9 @@ describe('showLobby', () => {
         clickButton('Host Game');
         clickButton('Player 1');
         expect(container.textContent).toContain('HOSTING');
-        expect(container.textContent).toContain('8080');
+        expect(container.textContent).toContain(
+            'Share this page\u2019s URL with your opponent',
+        );
     });
 
     it('connects WebSocket when host enters waiting screen', () => {
@@ -163,7 +190,7 @@ describe('showLobby', () => {
         clickButton('Host Game');
         clickButton('Player 1');
         expect(mockWsInstances).toHaveLength(1);
-        expect(latestWs().url).toBe('ws://localhost:8080');
+        expect(latestWs().url).toBe('ws://localhost:5173');
     });
 
     it('shows waiting status after host WebSocket opens', () => {
@@ -263,7 +290,7 @@ describe('showLobby', () => {
         expect(result).toEqual({
             mode: 'host',
             playerId: 0,
-            wsUrl: 'ws://localhost:8080',
+            wsUrl: 'ws://localhost:5173',
         });
     });
 
@@ -302,48 +329,25 @@ describe('showLobby', () => {
 
     // --- Join flow ---
 
-    it('navigates to join setup when Join Game is clicked', () => {
+    it('navigates to join screen and auto-connects when Join Game is clicked', () => {
         showLobby(container);
         clickButton('Join Game');
         expect(container.textContent).toContain('JOIN GAME');
-        const input = container.querySelector('input');
-        expect(input).toBeTruthy();
-        expect(input!.placeholder).toBe('192.168.1.x');
-    });
-
-    it('shows error when Connect is clicked with empty address', () => {
-        showLobby(container);
-        clickButton('Join Game');
-        clickButton('Connect');
-        expect(container.textContent).toContain('Enter a host address');
-        expect(mockWsInstances).toHaveLength(0);
-    });
-
-    it('attempts WebSocket connection when Connect is clicked', () => {
-        showLobby(container);
-        clickButton('Join Game');
-        const input = container.querySelector('input')!;
-        input.value = '192.168.1.50';
-        clickButton('Connect');
+        // No IP input — connection happens automatically
+        expect(container.querySelector('input')).toBeNull();
         expect(mockWsInstances).toHaveLength(1);
-        expect(latestWs().url).toBe('ws://192.168.1.50:8080');
+        expect(latestWs().url).toBe('ws://localhost:5173');
     });
 
-    it('shows connecting status while attempting', () => {
+    it('shows connecting status immediately after joining', () => {
         showLobby(container);
         clickButton('Join Game');
-        const input = container.querySelector('input')!;
-        input.value = '192.168.1.50';
-        clickButton('Connect');
         expect(container.textContent).toContain('Connecting');
     });
 
     it('shows error when WebSocket connection fails', () => {
         showLobby(container);
         clickButton('Join Game');
-        const input = container.querySelector('input')!;
-        input.value = '192.168.1.50';
-        clickButton('Connect');
         latestWs().simulateError();
         expect(container.textContent).toContain('Could not connect to server');
     });
@@ -351,9 +355,6 @@ describe('showLobby', () => {
     it('sends join-request after WebSocket opens', () => {
         showLobby(container);
         clickButton('Join Game');
-        const input = container.querySelector('input')!;
-        input.value = '192.168.1.50';
-        clickButton('Connect');
         latestWs().simulateOpen();
         const joinMsg = latestWs().sent.find((s) => s.includes('join-request'));
         expect(joinMsg).toBeTruthy();
@@ -362,9 +363,6 @@ describe('showLobby', () => {
     it('shows error on timeout if host does not respond', () => {
         showLobby(container);
         clickButton('Join Game');
-        const input = container.querySelector('input')!;
-        input.value = '192.168.1.50';
-        clickButton('Connect');
         latestWs().simulateOpen();
         jest.advanceTimersByTime(5000);
         expect(container.textContent).toContain('No host found in lobby');
@@ -373,9 +371,6 @@ describe('showLobby', () => {
     it('shows waiting status after host-accept', () => {
         showLobby(container);
         clickButton('Join Game');
-        const input = container.querySelector('input')!;
-        input.value = '192.168.1.50';
-        clickButton('Connect');
         latestWs().simulateOpen();
         latestWs().simulateMessage({
             channel: 'lobby',
@@ -387,9 +382,6 @@ describe('showLobby', () => {
     it('shows error when lobby is full', () => {
         showLobby(container);
         clickButton('Join Game');
-        const input = container.querySelector('input')!;
-        input.value = '192.168.1.50';
-        clickButton('Connect');
         latestWs().simulateOpen();
         latestWs().simulateMessage({
             channel: 'lobby',
@@ -401,9 +393,6 @@ describe('showLobby', () => {
     it('resolves with join result on game-start', async () => {
         const promise = showLobby(container);
         clickButton('Join Game');
-        const input = container.querySelector('input')!;
-        input.value = '192.168.1.50';
-        clickButton('Connect');
         latestWs().simulateOpen();
         latestWs().simulateMessage({
             channel: 'lobby',
@@ -419,34 +408,18 @@ describe('showLobby', () => {
         expect(result).toEqual({
             mode: 'join',
             playerId: 1,
-            wsUrl: 'ws://192.168.1.50:8080',
+            wsUrl: 'ws://localhost:5173',
         });
     });
 
     it('join Back returns to lobby menu and closes WebSocket', () => {
         showLobby(container);
         clickButton('Join Game');
-        const input = container.querySelector('input')!;
-        input.value = '192.168.1.50';
-        clickButton('Connect');
         const ws = latestWs();
         ws.simulateOpen();
         clickButton('Back');
         expect(container.textContent).toContain('Host Game');
         expect(ws.readyState).toBe(MockWebSocket.CLOSED);
-    });
-
-    it('joiner can retry after error', () => {
-        showLobby(container);
-        clickButton('Join Game');
-        const input = container.querySelector('input')!;
-        input.value = '192.168.1.50';
-        clickButton('Connect');
-        latestWs().simulateError();
-        expect(container.textContent).toContain('Could not connect to server');
-        // Should be able to click Connect again
-        clickButton('Connect');
-        expect(mockWsInstances).toHaveLength(2);
     });
 
     // --- Overlay cleanup ---
