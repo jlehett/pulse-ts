@@ -13,7 +13,7 @@ import {
     RESET_PAUSE_DURATION,
     COUNTDOWN_DURATION,
 } from '../config/arena';
-import { KnockoutChannel } from '../config/channels';
+import { KnockoutChannel, RoundResetChannel } from '../config/channels';
 import {
     startReplay,
     isReplayActive,
@@ -49,6 +49,10 @@ export interface GameManagerNodeProps {
     /** When true, subscribes to the knockout channel for remote events
      *  and skips the paused guard (online mode cannot freeze the game). */
     online?: boolean;
+    /** Whether the local machine is the host in online mode. The host
+     *  broadcasts the "go" signal when the countdown ends; the non-host
+     *  waits for it before transitioning to `playing`. */
+    isHost?: boolean;
 }
 
 /**
@@ -66,10 +70,20 @@ export function GameManagerNode(props?: Readonly<GameManagerNodeProps>) {
     const gameState = useContext(GameCtx);
 
     // In online mode, receive knockout events from the remote machine
+    // and synchronize countdown→playing transition via RoundResetChannel.
+    let publishRoundReset: ((round: number) => void) | null = null;
+    let hostCountdownDone = false;
+
     if (props?.online) {
         useChannel(KnockoutChannel, (knockedOutPlayerId) => {
             gameState.pendingKnockout = knockedOutPlayerId;
         });
+
+        const rc = useChannel(RoundResetChannel, () => {
+            // Non-host: the host says "go" — we can transition to playing
+            hostCountdownDone = true;
+        });
+        publishRoundReset = (round) => rc.publish(round);
     }
 
     const koFlashTimer = useTimer(KO_FLASH_DURATION);
@@ -158,14 +172,31 @@ export function GameManagerNode(props?: Readonly<GameManagerNodeProps>) {
                 break;
 
             case 'countdown': {
-                if (!countdownTimer.active) {
+                const isNonHost = props?.online && !props?.isHost;
+
+                // Check if we should transition to playing:
+                // - Local mode or host: when local countdown expires
+                // - Non-host: when local countdown expires AND host signal received
+                //   OR when host signal arrives before local countdown (snap to playing)
+                const localDone = !countdownTimer.active;
+                const canTransition = localDone
+                    ? !isNonHost || hostCountdownDone
+                    : isNonHost && hostCountdownDone;
+
+                if (canTransition) {
                     gameState.phase = 'playing';
                     gameState.countdownValue = -1;
                     prevCountdown = -1;
+                    hostCountdownDone = false;
+
+                    // Host: broadcast "go" signal so non-host can transition
+                    if (props?.online && props?.isHost) {
+                        publishRoundReset!(gameState.round);
+                    }
                 } else {
-                    const value = computeCountdownValue(
-                        countdownTimer.remaining,
-                    );
+                    const value = localDone
+                        ? 0 // non-host waiting for host — hold on "GO!"
+                        : computeCountdownValue(countdownTimer.remaining);
                     if (value !== prevCountdown) {
                         if (value > 0) countdownBeepSfx.play();
                         else countdownGoSfx.play();

@@ -9,10 +9,11 @@ describe('GameManagerNode', () => {
         expect(typeof GameManagerNode).toBe('function');
     });
 
-    it('accepts optional online prop', () => {
+    it('accepts optional online and isHost props', () => {
         // Type-level check — props are optional
-        const props: GameManagerNodeProps = { online: true };
+        const props: GameManagerNodeProps = { online: true, isHost: true };
         expect(props.online).toBe(true);
+        expect(props.isHost).toBe(true);
     });
 });
 

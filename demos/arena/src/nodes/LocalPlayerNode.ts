@@ -345,6 +345,10 @@ export function LocalPlayerNode({
                 return;
             body.applyImpulse(msg.impulse[0], msg.impulse[1], msg.impulse[2]);
 
+            // Mark hit for replay — the remote machine detected the collision,
+            // so this machine should also show the proper KO replay (not "self KO").
+            markHit();
+
             // Impact feedback — particles + sound so the defender sees the hit.
             // Spawn particles on the local player's surface in the direction
             // the hit came from (opposite of the impulse direction).
