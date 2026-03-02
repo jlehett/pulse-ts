@@ -100,7 +100,7 @@ export function ArenaNode(props?: Readonly<ArenaNodeProps>) {
     useProvideContext(GameCtx, gameState);
 
     // Particle effects pool
-    installParticles({ maxPerPool: 256, defaultSize: 0.08 });
+    installParticles({ maxPerPool: 2048, defaultSize: 0.08 });
 
     // Arena platform
     useChild(PlatformNode);
