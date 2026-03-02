@@ -36,6 +36,7 @@ import {
 import { KnockoutChannel } from '../config/channels';
 import { triggerCameraShake } from './CameraRigNode';
 import { stagePlayerPosition, markHit, getReplayPosition } from '../replay';
+import { triggerShockwave, worldToScreen } from '../shockwave';
 
 /** Sphere radius for the player ball. */
 export const PLAYER_RADIUS = 0.8;
@@ -356,11 +357,21 @@ export function LocalPlayerNode({
             const hz = -msg.impulse[2];
             const hLen = Math.sqrt(hx * hx + hz * hz);
             if (hLen > 0) {
-                impactBurst([
-                    transform.localPosition.x + (hx / hLen) * PLAYER_RADIUS,
-                    transform.localPosition.y,
-                    transform.localPosition.z + (hz / hLen) * PLAYER_RADIUS,
-                ]);
+                const surfX =
+                    transform.localPosition.x + (hx / hLen) * PLAYER_RADIUS;
+                const surfY = transform.localPosition.y;
+                const surfZ =
+                    transform.localPosition.z + (hz / hLen) * PLAYER_RADIUS;
+                impactBurst([surfX, surfY, surfZ]);
+
+                // Screen-space shockwave at the impact surface point
+                const [su, sv] = worldToScreen(
+                    surfX,
+                    surfY,
+                    surfZ,
+                    threeCamera,
+                );
+                triggerShockwave(su, sv);
             }
             if (impactCD.ready) {
                 impactSfx.play();
@@ -412,6 +423,16 @@ export function LocalPlayerNode({
 
         // Small camera shake on collision
         triggerCameraShake(0.3, 0.2);
+
+        // Screen-space shockwave at the midpoint
+        const midX =
+            (transform.localPosition.x + otherTransform.localPosition.x) / 2;
+        const midY =
+            (transform.localPosition.y + otherTransform.localPosition.y) / 2;
+        const midZ =
+            (transform.localPosition.z + otherTransform.localPosition.z) / 2;
+        const [su, sv] = worldToScreen(midX, midY, midZ, threeCamera);
+        triggerShockwave(su, sv);
 
         // Mark this collision for instant replay hit detection
         markHit();

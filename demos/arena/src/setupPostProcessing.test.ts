@@ -26,6 +26,10 @@ jest.mock('three/examples/jsm/postprocessing/OutputPass.js', () => ({
     OutputPass: jest.fn(),
 }));
 
+jest.mock('./shockwave', () => ({
+    createShockwavePass: jest.fn(() => ({ enabled: false, _mock: true })),
+}));
+
 function createMockThreeService() {
     const canvas = document.createElement('canvas');
     Object.defineProperty(canvas, 'clientWidth', { value: 800 });
@@ -61,10 +65,17 @@ describe('setupPostProcessing', () => {
         expect(svc.setComposer).toHaveBeenCalledWith(expect.any(Object));
     });
 
-    it('adds three passes to the composer (render, bloom, output)', () => {
+    it('adds four passes to the composer (render, bloom, shockwave, output)', () => {
         const svc = createMockThreeService();
         setupPostProcessing(svc as any);
         const composer = svc.setComposer.mock.calls[0][0];
-        expect(composer.addPass).toHaveBeenCalledTimes(3);
+        expect(composer.addPass).toHaveBeenCalledTimes(4);
+    });
+
+    it('returns the shockwave pass', () => {
+        const svc = createMockThreeService();
+        const pass = setupPostProcessing(svc as any);
+        expect(pass).toBeDefined();
+        expect((pass as any)._mock).toBe(true);
     });
 });

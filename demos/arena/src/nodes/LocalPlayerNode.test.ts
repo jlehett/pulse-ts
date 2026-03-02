@@ -1,3 +1,7 @@
+jest.mock('three/examples/jsm/postprocessing/ShaderPass.js', () => ({
+    ShaderPass: jest.fn(),
+}));
+
 import {
     PLAYER_RADIUS,
     MOVE_IMPULSE,

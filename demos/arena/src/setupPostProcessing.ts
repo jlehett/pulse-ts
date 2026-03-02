@@ -3,7 +3,9 @@ import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer
 import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
 import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js';
 import { OutputPass } from 'three/examples/jsm/postprocessing/OutputPass.js';
+import type { ShaderPass } from 'three/examples/jsm/postprocessing/ShaderPass.js';
 import type { ThreeService } from '@pulse-ts/three';
+import { createShockwavePass } from './shockwave';
 
 /**
  * Configure the post-processing pipeline for the arena demo.
@@ -11,17 +13,20 @@ import type { ThreeService } from '@pulse-ts/three';
  * Sets up ACESFilmic tone mapping and an EffectComposer with:
  * - {@link RenderPass} — renders the scene
  * - {@link UnrealBloomPass} — subtle glow on bright/emissive elements
+ * - Shockwave `ShaderPass` — radial distortion ring on impact (starts disabled)
  * - {@link OutputPass} — tone mapping and color-space conversion
  *
  * @param three - The ThreeService instance from `installThree()`.
  *
+ * @returns The shockwave `ShaderPass`, needed by `ShockwaveNode` to sync uniforms.
+ *
  * @example
  * ```ts
  * const three = installThree(world, { canvas, clearColor: 0x0a0a1a });
- * setupPostProcessing(three);
+ * const shockwavePass = setupPostProcessing(three);
  * ```
  */
-export function setupPostProcessing(three: ThreeService): void {
+export function setupPostProcessing(three: ThreeService): ShaderPass {
     three.renderer.toneMapping = THREE.ACESFilmicToneMapping;
     three.renderer.toneMappingExposure = 1.0;
 
@@ -34,7 +39,13 @@ export function setupPostProcessing(three: ThreeService): void {
     composer.addPass(
         new UnrealBloomPass(new THREE.Vector2(w, h), 0.4, 0.3, 0.85),
     );
+
+    const shockwavePass = createShockwavePass();
+    composer.addPass(shockwavePass);
+
     composer.addPass(new OutputPass());
 
     three.setComposer(composer);
+
+    return shockwavePass;
 }
