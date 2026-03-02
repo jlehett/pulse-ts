@@ -42,7 +42,7 @@ export function PauseMenuNode(props?: Readonly<PauseMenuNodeProps>) {
         left: '50%',
         transform: 'translate(-50%, -50%)',
         zIndex: '4501',
-        font: 'bold 48px monospace',
+        font: 'bold clamp(28px, 8vw, 48px) monospace',
         color: '#ffffff',
         textShadow: '0 0 20px rgba(0,0,0,0.9)',
         transition: 'opacity 0.3s ease-in-out',
@@ -73,23 +73,29 @@ export function PauseMenuNode(props?: Readonly<PauseMenuNodeProps>) {
             left: '50%',
             transform: 'translateX(-50%)',
             zIndex: '4501',
-            font: 'bold 18px monospace',
+            font: 'bold clamp(14px, 3.5vw, 18px) monospace',
             color: '#fff',
             backgroundColor: 'rgba(255,255,255,0.08)',
             border: '2px solid rgba(255,255,255,0.2)',
             borderRadius: '6px',
             padding: '12px 32px',
+            minHeight: '44px',
             cursor: 'pointer',
             transition: 'all 0.2s ease, opacity 0.3s ease-in-out',
             opacity: '0',
             pointerEvents: 'none',
         } as Partial<CSSStyleDeclaration>);
-        btn.addEventListener('mouseenter', () => {
+        btn.addEventListener('pointerdown', () => {
             btn.style.backgroundColor = 'rgba(255,255,255,0.15)';
             btn.style.borderColor = color;
             btn.style.boxShadow = `0 0 12px ${color}44`;
         });
-        btn.addEventListener('mouseleave', () => {
+        btn.addEventListener('pointerup', () => {
+            btn.style.backgroundColor = 'rgba(255,255,255,0.08)';
+            btn.style.borderColor = 'rgba(255,255,255,0.2)';
+            btn.style.boxShadow = 'none';
+        });
+        btn.addEventListener('pointerleave', () => {
             btn.style.backgroundColor = 'rgba(255,255,255,0.08)';
             btn.style.borderColor = 'rgba(255,255,255,0.2)';
             btn.style.boxShadow = 'none';

@@ -58,6 +58,7 @@ function createOverlay(): HTMLDivElement {
         alignItems: 'center',
         justifyContent: 'center',
         gap: '16px',
+        padding: '0 20px',
         backgroundColor: 'rgba(10, 10, 26, 0.92)',
         opacity: '0',
         transition: 'opacity 0.4s ease-in-out',
@@ -69,10 +70,10 @@ function createTitle(): HTMLDivElement {
     const el = document.createElement('div');
     el.textContent = 'BUMPER BALLS';
     Object.assign(el.style, {
-        font: 'bold 48px monospace',
+        font: 'bold clamp(28px, 8vw, 48px) monospace',
         color: '#fff',
         textShadow: '0 0 20px rgba(72, 201, 176, 0.6)',
-        letterSpacing: '4px',
+        letterSpacing: 'clamp(1px, 0.5vw, 4px)',
     } as Partial<CSSStyleDeclaration>);
     return el;
 }
@@ -81,9 +82,9 @@ function createSubtitle(): HTMLDivElement {
     const el = document.createElement('div');
     el.textContent = 'ARENA';
     Object.assign(el.style, {
-        font: 'bold 24px monospace',
+        font: 'bold clamp(16px, 4vw, 24px) monospace',
         color: '#888',
-        letterSpacing: '8px',
+        letterSpacing: 'clamp(2px, 1vw, 8px)',
         marginBottom: '32px',
     } as Partial<CSSStyleDeclaration>);
     return el;
@@ -100,23 +101,29 @@ function createButton(label: string, color: string): HTMLButtonElement {
     const btn = document.createElement('button');
     btn.textContent = label;
     Object.assign(btn.style, {
-        font: 'bold 18px monospace',
+        font: 'bold clamp(14px, 3.5vw, 18px) monospace',
         color: '#fff',
         backgroundColor: 'rgba(255,255,255,0.08)',
         border: '2px solid rgba(255,255,255,0.2)',
         borderRadius: '6px',
         padding: '12px 32px',
         cursor: 'pointer',
-        minWidth: '200px',
+        minWidth: 'min(200px, 70vw)',
+        minHeight: '44px',
         transition: 'all 0.2s ease',
     } as Partial<CSSStyleDeclaration>);
 
-    btn.addEventListener('mouseenter', () => {
+    btn.addEventListener('pointerdown', () => {
         btn.style.backgroundColor = 'rgba(255,255,255,0.15)';
         btn.style.borderColor = color;
         btn.style.boxShadow = `0 0 12px ${color}44`;
     });
-    btn.addEventListener('mouseleave', () => {
+    btn.addEventListener('pointerup', () => {
+        btn.style.backgroundColor = 'rgba(255,255,255,0.08)';
+        btn.style.borderColor = 'rgba(255,255,255,0.2)';
+        btn.style.boxShadow = 'none';
+    });
+    btn.addEventListener('pointerleave', () => {
         btn.style.backgroundColor = 'rgba(255,255,255,0.08)';
         btn.style.borderColor = 'rgba(255,255,255,0.2)';
         btn.style.boxShadow = 'none';
