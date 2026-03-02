@@ -452,10 +452,22 @@ export function LocalPlayerNode({
 
         // Freeze input during non-playing phases
         if (gameState.phase !== 'playing') {
-            const vy = body.linearVelocity.y;
-            body.setLinearVelocity(0, vy, 0);
+            body.setLinearVelocity(0, 0, 0);
             dashTimer.cancel();
             if (dashTrail.active) dashTrail.pause();
+
+            // During replay, drive transform from the replay buffer so
+            // trsSync (which runs after useFrameUpdate) picks up the position.
+            if (gameState.phase === 'replay') {
+                const replayPos = getReplayPosition(playerId);
+                if (replayPos) {
+                    transform.localPosition.set(
+                        replayPos[0],
+                        replayPos[1],
+                        replayPos[2],
+                    );
+                }
+            }
 
             // Still check death plane during freeze for safety
             if (transform.localPosition.y < DEATH_PLANE_Y) {

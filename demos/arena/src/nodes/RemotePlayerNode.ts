@@ -67,7 +67,8 @@ export function RemotePlayerNode({
         castShadow: true,
     });
 
-    // Stage position for replay recording every fixed step
+    // Stage position for replay recording every fixed step, and drive
+    // transform from replay buffer during playback so trsSync picks it up.
     useFixedUpdate(() => {
         stagePlayerPosition(
             remotePlayerId,
@@ -75,6 +76,17 @@ export function RemotePlayerNode({
             transform.localPosition.y,
             transform.localPosition.z,
         );
+
+        if (gameState.phase === 'replay') {
+            const replayPos = getReplayPosition(remotePlayerId);
+            if (replayPos) {
+                transform.localPosition.set(
+                    replayPos[0],
+                    replayPos[1],
+                    replayPos[2],
+                );
+            }
+        }
     });
 
     // Detect when the remote player falls off the arena (replicated position).
