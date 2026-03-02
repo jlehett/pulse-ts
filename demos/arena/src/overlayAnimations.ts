@@ -94,10 +94,11 @@ export function applyScalePop(el: HTMLElement): void {
  * ```
  */
 export function applyButtonHoverScale(btn: HTMLElement): void {
+    const base = btn.style.transform || '';
     btn.addEventListener('pointerenter', () => {
-        btn.style.transform = 'scale(1.05)';
+        btn.style.transform = `${base} scale(1.05)`.trim();
     });
     btn.addEventListener('pointerleave', () => {
-        btn.style.transform = 'scale(1)';
+        btn.style.transform = base || 'scale(1)';
     });
 }

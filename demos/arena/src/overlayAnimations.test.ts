@@ -116,4 +116,14 @@ describe('applyButtonHoverScale', () => {
         btn.dispatchEvent(new Event('pointerleave'));
         expect(btn.style.transform).toBe('scale(1)');
     });
+
+    it('preserves existing transform when scaling', () => {
+        const btn = createEl();
+        btn.style.transform = 'translateX(-50%)';
+        applyButtonHoverScale(btn);
+        btn.dispatchEvent(new Event('pointerenter'));
+        expect(btn.style.transform).toBe('translateX(-50%) scale(1.05)');
+        btn.dispatchEvent(new Event('pointerleave'));
+        expect(btn.style.transform).toBe('translateX(-50%)');
+    });
 });
