@@ -144,6 +144,35 @@ describe('ThreeService', () => {
         expect(svc.camera.aspect).toBeCloseTo(640 / 360);
     });
 
+    test('setComposer stores reference and calls setSize', () => {
+        const world = new World();
+        const svc = world.provideService(
+            new ThreeService({ canvas: createCanvas(640, 360) }),
+        );
+
+        expect(svc.composer).toBeNull();
+
+        const mockComposer = { render: jest.fn(), setSize: jest.fn() };
+        svc.setComposer(mockComposer as any);
+
+        expect(svc.composer).toBe(mockComposer);
+        expect(mockComposer.setSize).toHaveBeenCalledWith(640, 360);
+    });
+
+    test('setComposer(null) clears the composer', () => {
+        const world = new World();
+        const svc = world.provideService(
+            new ThreeService({ canvas: createCanvas() }),
+        );
+
+        const mockComposer = { render: jest.fn(), setSize: jest.fn() };
+        svc.setComposer(mockComposer as any);
+        expect(svc.composer).toBe(mockComposer);
+
+        svc.setComposer(null);
+        expect(svc.composer).toBeNull();
+    });
+
     test('ensureRoot creates root and respects parenting', () => {
         const world = new World();
         const svc = world.provideService(

@@ -2,7 +2,7 @@
 id: TICKET-077
 epic: EPIC-012
 title: Post-processing pipeline (bloom, FXAA, tone mapping)
-status: in-progress
+status: done
 branch: ticket-077-post-processing-pipeline
 priority: high
 created: 2026-03-02
@@ -33,14 +33,15 @@ color response, and OutputPass handles color space conversion.
 
 ## Acceptance Criteria
 
-- [ ] Engine: ThreeService accepts an optional EffectComposer via setComposer()
-- [ ] Engine: ThreeRenderSystem renders via composer when set, falls back to renderer.render()
-- [ ] Engine: Composer resizes correctly when canvas resizes
-- [ ] Demo: Bloom visible on platform edge ring and particle effects
-- [ ] Demo: Scene doesn't wash out (threshold tuned correctly)
-- [ ] All engine and demo tests pass
+- [x] Engine: ThreeService accepts an optional EffectComposer via setComposer()
+- [x] Engine: ThreeRenderSystem renders via composer when set, falls back to renderer.render()
+- [x] Engine: Composer resizes correctly when canvas resizes
+- [x] Demo: Bloom visible on platform edge ring and particle effects
+- [x] Demo: Scene doesn't wash out (threshold tuned correctly)
+- [x] All engine and demo tests pass
 
 ## Notes
 
 - **2026-03-02**: Ticket created.
 - **2026-03-02**: Starting implementation.
+- **2026-03-02**: Done. Engine: added `composer` field + `setComposer()` to ThreeService, branching in ThreeRenderSystem. Demo: `setupPostProcessing.ts` with RenderPass → UnrealBloomPass → OutputPass + ACESFilmic tone mapping.
