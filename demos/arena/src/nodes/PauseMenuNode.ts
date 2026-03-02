@@ -6,6 +6,8 @@ import { GameCtx } from '../contexts';
 export interface PauseMenuNodeProps {
     /** Callback invoked when the player clicks "Exit Match". */
     onRequestMenu?: () => void;
+    /** When true, the overlay does not freeze the game — it's cosmetic only. */
+    online?: boolean;
 }
 
 /**
@@ -47,7 +49,7 @@ export function PauseMenuNode(props?: Readonly<PauseMenuNodeProps>) {
         opacity: '0',
         pointerEvents: 'none',
     } as Partial<CSSStyleDeclaration>);
-    title.textContent = 'PAUSED';
+    title.textContent = props?.online ? 'MENU' : 'PAUSED';
     container.appendChild(title);
 
     /**
@@ -96,16 +98,27 @@ export function PauseMenuNode(props?: Readonly<PauseMenuNodeProps>) {
         return btn;
     }
 
+    // In online mode, track menu visibility locally — never freeze the game
+    let showMenu = false;
+
     // Resume button (teal accent)
     const resumeBtn = createButton('Resume', '#48c9b0', '50%');
     resumeBtn.addEventListener('click', () => {
-        gameState.paused = false;
+        if (props?.online) {
+            showMenu = false;
+        } else {
+            gameState.paused = false;
+        }
     });
 
     // Exit Match button (coral accent)
     const exitBtn = createButton('Exit Match', '#e74c3c', '60%');
     exitBtn.addEventListener('click', () => {
-        gameState.paused = false;
+        if (props?.online) {
+            showMenu = false;
+        } else {
+            gameState.paused = false;
+        }
         props?.onRequestMenu?.();
     });
 
@@ -113,14 +126,17 @@ export function PauseMenuNode(props?: Readonly<PauseMenuNodeProps>) {
         // Toggle pause on Escape press (only during playing phase)
         const action = getPause();
         if (action.pressed) {
-            if (gameState.paused) {
+            if (props?.online) {
+                // Online: toggle overlay without freezing the game
+                showMenu = !showMenu;
+            } else if (gameState.paused) {
                 gameState.paused = false;
             } else if (gameState.phase === 'playing') {
                 gameState.paused = true;
             }
         }
 
-        const visible = gameState.paused;
+        const visible = props?.online ? showMenu : gameState.paused;
         backdrop.style.opacity = visible ? '1' : '0';
         title.style.opacity = visible ? '1' : '0';
         resumeBtn.style.opacity = visible ? '1' : '0';

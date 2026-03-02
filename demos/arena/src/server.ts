@@ -1,12 +1,19 @@
 /**
- * WebSocket relay server for the arena demo's online play mode.
+ * Standalone WebSocket relay server for the arena demo's online play mode.
+ *
+ * **During development** the relay is embedded in the Vite dev server via
+ * `vite-plugin-relay.ts`, so you do **not** need to run this file separately.
+ * Just start the dev server (`npm run demo:arena`) and hosting works
+ * automatically.
+ *
+ * This standalone server is kept for **production or non-Vite deployments**
+ * where the game client is served separately from the relay.
  *
  * Run with:
  * ```sh
  * npx tsx src/server.ts
  * ```
  *
- * Then use the in-game menu: Online Play → Host Game / Join Game.
  * The server relays messages between connected clients using
  * {@link attachWsServer} with a default `"arena"` room.
  */

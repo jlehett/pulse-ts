@@ -10,6 +10,7 @@ import type {
 } from '../types';
 import { JSON_CODEC } from '../messaging/codec';
 import { channelKey, ChannelName } from '../messaging/channel';
+import { ReservedChannels } from '../messaging/reserved';
 
 /**
  * A service for transporting messages between nodes.
@@ -212,6 +213,13 @@ export class TransportService extends Service {
                     count++;
                     continue;
                 }
+            }
+            // Server-sent peer leave → emit onPeerLeave so usePeers() can
+            // remove the peer and application code can react.
+            if (pkt.channel === ReservedChannels.PEER_LEAVE) {
+                this.onPeerLeave.emit(pkt.data as string);
+                count++;
+                continue;
             }
             const set = this.subs.get(pkt.channel);
             this.onPacketIn.emit(pkt);

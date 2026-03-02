@@ -14,6 +14,8 @@ export const ReservedChannels = {
     ROOM: '__room',
     /** The reserved channel for WebRTC signaling messages. */
     SIGNAL: '__signal',
+    /** The reserved channel for peer leave notifications (server → client). */
+    PEER_LEAVE: '__peer_leave',
 } as const;
 
 /**

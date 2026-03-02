@@ -1,8 +1,18 @@
-import { GameManagerNode, computeCountdownValue } from './GameManagerNode';
+import {
+    GameManagerNode,
+    computeCountdownValue,
+    type GameManagerNodeProps,
+} from './GameManagerNode';
 
 describe('GameManagerNode', () => {
     it('exports the node function', () => {
         expect(typeof GameManagerNode).toBe('function');
+    });
+
+    it('accepts optional online prop', () => {
+        // Type-level check — props are optional
+        const props: GameManagerNodeProps = { online: true };
+        expect(props.online).toBe(true);
     });
 });
 

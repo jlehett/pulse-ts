@@ -1,5 +1,6 @@
 import { useContext, useFixedUpdate, useTimer } from '@pulse-ts/core';
 import { useSound } from '@pulse-ts/audio';
+import { useChannel } from '@pulse-ts/network';
 import { GameCtx } from '../contexts';
 import {
     WIN_COUNT,
@@ -7,6 +8,7 @@ import {
     RESET_PAUSE_DURATION,
     COUNTDOWN_DURATION,
 } from '../config/arena';
+import { KnockoutChannel } from '../config/channels';
 
 /**
  * Compute the countdown display value from the remaining countdown time.
@@ -31,15 +33,30 @@ export function computeCountdownValue(remaining: number): number {
     return 0; // GO!
 }
 
+export interface GameManagerNodeProps {
+    /** When true, subscribes to the knockout channel for remote events
+     *  and skips the paused guard (online mode cannot freeze the game). */
+    online?: boolean;
+}
+
 /**
  * State-machine game manager that drives the round lifecycle:
  * PLAYING → KO_FLASH → RESETTING → COUNTDOWN → PLAYING.
  *
  * Polls the shared game state for knockout events (pendingKnockout)
  * and orchestrates phase transitions using fixed-update timers.
+ *
+ * @param props - Optional configuration for online mode.
  */
-export function GameManagerNode() {
+export function GameManagerNode(props?: Readonly<GameManagerNodeProps>) {
     const gameState = useContext(GameCtx);
+
+    // In online mode, receive knockout events from the remote machine
+    if (props?.online) {
+        useChannel(KnockoutChannel, (knockedOutPlayerId) => {
+            gameState.pendingKnockout = knockedOutPlayerId;
+        });
+    }
 
     const koFlashTimer = useTimer(KO_FLASH_DURATION);
     const resetPauseTimer = useTimer(RESET_PAUSE_DURATION);
@@ -74,7 +91,8 @@ export function GameManagerNode() {
     let prevCountdown = -1;
 
     useFixedUpdate(() => {
-        if (gameState.paused) return;
+        // In online mode, pause is overlay-only — never freeze the state machine
+        if (!props?.online && gameState.paused) return;
 
         // Poll for knockout events from LocalPlayerNodes
         if (gameState.pendingKnockout >= 0 && gameState.phase === 'playing') {

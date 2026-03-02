@@ -13,13 +13,15 @@ import { useReplication } from './hooks';
  * Replicates the local Transform of this node under replica key 'transform'.
  *
  * - Producer: sends { p:{x,y,z}, r:{x,y,z,w}, s:{x,y,z} } at snapshot rate.
+ *   If `readVelocity` is provided, also includes `v:{x,y,z}` for dead-reckoning.
  * - Consumer: applies incoming patches as smoothing targets via InterpolationService.
+ *   When velocity is present, the service extrapolates the target each frame.
  *
  * Usage:
  * - On both sides, ensure `useStableId('entity-id')` or pass `opts.id`.
  * - Call `useReplicateTransform({ role: 'producer'|'consumer'|'both' })`.
  *
- * @param opts Options including id, role, and smoothing parameters.
+ * @param opts Options including id, role, smoothing parameters, and velocity reader.
  */
 export function useReplicateTransform(
     opts: {
@@ -29,6 +31,8 @@ export function useReplicateTransform(
         lambda?: number;
         /** Snap immediately if further than this distance. Default 5 units. */
         snapDist?: number;
+        /** Optional velocity reader for dead-reckoning on the consumer side. */
+        readVelocity?: () => { x: number; y: number; z: number };
     } = {},
 ) {
     const world = useWorld();
@@ -64,28 +68,35 @@ export function useReplicateTransform(
     });
 
     // Wire into replication service via generic hook
+    const readVelocity = opts.readVelocity;
     useReplication('transform', {
         id,
         read:
             role === 'producer' || role === 'both'
-                ? () => ({
-                      p: {
-                          x: trans.localPosition.x,
-                          y: trans.localPosition.y,
-                          z: trans.localPosition.z,
-                      },
-                      r: {
-                          x: trans.localRotation.x,
-                          y: trans.localRotation.y,
-                          z: trans.localRotation.z,
-                          w: trans.localRotation.w,
-                      },
-                      s: {
-                          x: trans.localScale.x,
-                          y: trans.localScale.y,
-                          z: trans.localScale.z,
-                      },
-                  })
+                ? () => {
+                      const data: Record<string, unknown> = {
+                          p: {
+                              x: trans.localPosition.x,
+                              y: trans.localPosition.y,
+                              z: trans.localPosition.z,
+                          },
+                          r: {
+                              x: trans.localRotation.x,
+                              y: trans.localRotation.y,
+                              z: trans.localRotation.z,
+                              w: trans.localRotation.w,
+                          },
+                          s: {
+                              x: trans.localScale.x,
+                              y: trans.localScale.y,
+                              z: trans.localScale.z,
+                          },
+                      };
+                      if (readVelocity) {
+                          data.v = readVelocity();
+                      }
+                      return data;
+                  }
                 : undefined,
         apply:
             role === 'consumer' || role === 'both'

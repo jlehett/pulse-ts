@@ -1,13 +1,16 @@
 import { defineConfig } from 'vite';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { arenaRelayPlugin } from './vite-plugin-relay';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 export default defineConfig({
     root: '.',
+    plugins: [arenaRelayPlugin()],
     server: {
         open: true,
+        host: true,
     },
     resolve: {
         alias: {

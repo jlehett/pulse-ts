@@ -9,6 +9,8 @@ type Target = {
     p?: { x: number; y: number; z: number };
     r?: { x: number; y: number; z: number; w: number };
     s?: { x: number; y: number; z: number };
+    /** Optional linear velocity for dead-reckoning between snapshots. */
+    v?: { x: number; y: number; z: number };
 };
 
 type Entry = {
@@ -82,19 +84,30 @@ export class InterpolationService extends Service {
         const rate = 1 - Math.exp(-e.lambda * dt);
 
         if (target.p) {
-            // snap if far
-            const dx = target.p.x - t.localPosition.x;
-            const dy = target.p.y - t.localPosition.y;
-            const dz = target.p.z - t.localPosition.z;
-            const distSq = dx * dx + dy * dy + dz * dz;
-            if (distSq > e.snapDistSq) {
+            if (target.v) {
+                // Dead-reckoning: advance the target by velocity and snap
+                // directly to the predicted position. Velocity provides
+                // frame-to-frame smoothness between snapshots, so exponential
+                // smoothing is unnecessary and would only add positional lag.
+                target.p.x += target.v.x * dt;
+                target.p.y += target.v.y * dt;
+                target.p.z += target.v.z * dt;
                 t.localPosition.set(target.p.x, target.p.y, target.p.z);
             } else {
-                t.localPosition.set(
-                    t.localPosition.x + dx * rate,
-                    t.localPosition.y + dy * rate,
-                    t.localPosition.z + dz * rate,
-                );
+                // No velocity — fall back to exponential smoothing.
+                const dx = target.p.x - t.localPosition.x;
+                const dy = target.p.y - t.localPosition.y;
+                const dz = target.p.z - t.localPosition.z;
+                const distSq = dx * dx + dy * dy + dz * dz;
+                if (distSq > e.snapDistSq) {
+                    t.localPosition.set(target.p.x, target.p.y, target.p.z);
+                } else {
+                    t.localPosition.set(
+                        t.localPosition.x + dx * rate,
+                        t.localPosition.y + dy * rate,
+                        t.localPosition.z + dz * rate,
+                    );
+                }
             }
         }
         if (target.r) {
