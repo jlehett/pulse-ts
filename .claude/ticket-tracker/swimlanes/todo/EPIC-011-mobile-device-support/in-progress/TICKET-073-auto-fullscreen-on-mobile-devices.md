@@ -2,7 +2,7 @@
 id: TICKET-073
 epic: EPIC-011
 title: Auto-fullscreen on mobile devices
-status: todo
+status: in-progress
 priority: high
 created: 2026-03-02
 updated: 2026-03-02
@@ -34,3 +34,4 @@ to an actual interaction like a touchstart or click.
 ## Notes
 
 - **2026-03-02**: Ticket created.
+- **2026-03-02**: Starting implementation.
