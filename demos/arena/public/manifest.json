@@ -1,0 +1,10 @@
+{
+    "name": "Bumper Balls Arena",
+    "short_name": "Bumper Balls",
+    "description": "A fast-paced bumper balls game built with Pulse TS",
+    "start_url": "/",
+    "display": "fullscreen",
+    "orientation": "landscape",
+    "background_color": "#0a0a0f",
+    "theme_color": "#0a0a1a"
+}
