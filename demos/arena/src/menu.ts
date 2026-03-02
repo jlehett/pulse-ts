@@ -1,3 +1,8 @@
+import {
+    applyStaggeredEntrance,
+    applyButtonHoverScale,
+} from './overlayAnimations';
+
 /** The mode selected by the user from the main menu. */
 export type MenuChoice = 'local' | 'online';
 
@@ -29,10 +34,13 @@ export function showMainMenu(container: HTMLElement): Promise<MenuChoice> {
         overlay.appendChild(buttonRow);
         container.appendChild(overlay);
 
-        // Fade in on next frame
+        // Fade in on next frame, then stagger content
         requestAnimationFrame(() => {
             overlay.style.opacity = '1';
         });
+        applyStaggeredEntrance([title, subtitle, buttonRow], 200);
+        applyButtonHoverScale(btnLocal);
+        applyButtonHoverScale(btnOnline);
 
         function pick(choice: MenuChoice) {
             overlay.style.opacity = '0';

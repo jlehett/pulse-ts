@@ -1,6 +1,10 @@
 import { useFrameUpdate, useDestroy, useContext } from '@pulse-ts/core';
 import { useThreeContext } from '@pulse-ts/three';
 import { GameCtx } from '../contexts';
+import {
+    applyStaggeredEntrance,
+    applyButtonHoverScale,
+} from '../overlayAnimations';
 
 /** Player colors: P1 = teal, P2 = coral. */
 const PLAYER_COLORS = ['#48c9b0', '#e74c3c'];
@@ -95,6 +99,10 @@ export function MatchOverOverlayNode(
     });
     container.appendChild(menuBtn);
 
+    applyButtonHoverScale(menuBtn);
+
+    let wasVisible = false;
+
     useFrameUpdate(() => {
         const visible = gameState.phase === 'match_over';
         backdrop.style.opacity = visible ? '1' : '0';
@@ -107,7 +115,12 @@ export function MatchOverOverlayNode(
             const winner = gameState.matchWinner;
             text.textContent = `${PLAYER_LABELS[winner]} WINS!`;
             text.style.color = PLAYER_COLORS[winner];
+
+            if (!wasVisible) {
+                applyStaggeredEntrance([text, menuBtn], 300);
+            }
         }
+        wasVisible = visible;
     });
 
     useDestroy(() => {

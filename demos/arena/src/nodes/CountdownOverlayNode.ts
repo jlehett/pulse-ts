@@ -1,6 +1,7 @@
 import { useFrameUpdate, useDestroy, useContext } from '@pulse-ts/core';
 import { useThreeContext } from '@pulse-ts/three';
 import { GameCtx } from '../contexts';
+import { applyScalePop } from '../overlayAnimations';
 
 /**
  * Convert a countdown numeric value to a display label.
@@ -44,12 +45,20 @@ export function CountdownOverlayNode() {
     } as Partial<CSSStyleDeclaration>);
     container.appendChild(el);
 
+    let lastValue = -1;
+
     useFrameUpdate(() => {
         const visible = gameState.phase === 'countdown';
         el.style.opacity = visible ? '1' : '0';
 
         if (visible) {
             el.textContent = countdownLabel(gameState.countdownValue);
+            if (gameState.countdownValue !== lastValue) {
+                lastValue = gameState.countdownValue;
+                applyScalePop(el);
+            }
+        } else {
+            lastValue = -1;
         }
     });
 

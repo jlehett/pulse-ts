@@ -1,6 +1,7 @@
 import { useFrameUpdate, useDestroy, useContext } from '@pulse-ts/core';
 import { useThreeContext } from '@pulse-ts/three';
 import { GameCtx } from '../contexts';
+import { applyScalePop } from '../overlayAnimations';
 
 /** Player labels indexed by player ID. */
 const PLAYER_LABELS = ['P1', 'P2'];
@@ -44,6 +45,8 @@ export function KnockoutOverlayNode() {
     } as Partial<CSSStyleDeclaration>);
     container.appendChild(text);
 
+    let wasVisible = false;
+
     useFrameUpdate(() => {
         const visible = gameState.phase === 'ko_flash';
         flash.style.opacity = visible ? '1' : '0';
@@ -52,7 +55,12 @@ export function KnockoutOverlayNode() {
         if (visible) {
             const scorer = 1 - gameState.lastKnockedOut;
             text.textContent = `${PLAYER_LABELS[scorer]} scored!`;
+
+            if (!wasVisible) {
+                applyScalePop(text);
+            }
         }
+        wasVisible = visible;
     });
 
     useDestroy(() => {

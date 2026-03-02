@@ -2,6 +2,10 @@ import { useFrameUpdate, useDestroy, useContext } from '@pulse-ts/core';
 import { useAction } from '@pulse-ts/input';
 import { useThreeContext } from '@pulse-ts/three';
 import { GameCtx } from '../contexts';
+import {
+    applyStaggeredEntrance,
+    applyButtonHoverScale,
+} from '../overlayAnimations';
 
 export interface PauseMenuNodeProps {
     /** Callback invoked when the player clicks "Exit Match". */
@@ -126,6 +130,8 @@ export function PauseMenuNode(props?: Readonly<PauseMenuNodeProps>) {
         }
     });
 
+    applyButtonHoverScale(resumeBtn);
+
     // Exit Match button (coral accent)
     const exitBtn = createButton('Exit Match', '#e74c3c');
     exitBtn.addEventListener('click', () => {
@@ -136,6 +142,10 @@ export function PauseMenuNode(props?: Readonly<PauseMenuNodeProps>) {
         }
         props?.onRequestMenu?.();
     });
+
+    applyButtonHoverScale(exitBtn);
+
+    let wasVisible = false;
 
     useFrameUpdate(() => {
         // Toggle pause on Escape press (only during playing phase)
@@ -156,6 +166,11 @@ export function PauseMenuNode(props?: Readonly<PauseMenuNodeProps>) {
         content.style.opacity = visible ? '1' : '0';
         backdrop.style.pointerEvents = visible ? 'auto' : 'none';
         content.style.pointerEvents = visible ? 'auto' : 'none';
+
+        if (visible && !wasVisible) {
+            applyStaggeredEntrance([title, resumeBtn, exitBtn], 100);
+        }
+        wasVisible = visible;
     });
 
     useDestroy(() => {
