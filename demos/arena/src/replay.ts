@@ -27,7 +27,7 @@ export interface ReplayFrame {
 
 const buffer: ReplayFrame[] = [];
 let writeCount = 0;
-let lastHitWriteCount = -1;
+let hitWriteCounts: number[] = [];
 
 // ---------------------------------------------------------------------------
 // Playback state
@@ -35,7 +35,7 @@ let lastHitWriteCount = -1;
 
 let active = false;
 let playbackFrames: ReplayFrame[] = [];
-let hitIndex = -1;
+let hitIndices: number[] = [];
 let hadRealHit = false;
 let cursorPos = 0;
 let knockedOut = -1;
@@ -143,8 +143,9 @@ export function recordFrame(
 }
 
 /**
- * Mark the current frame as the "hit" moment (last collision before KO).
- * Call from the collision handler in the player node.
+ * Mark the current frame as a collision hit moment.
+ * Call from the collision handler in the player node. Multiple hits
+ * can be recorded per round — all are preserved for replay playback.
  *
  * @example
  * ```ts
@@ -152,7 +153,7 @@ export function recordFrame(
  * ```
  */
 export function markHit(): void {
-    lastHitWriteCount = writeCount;
+    hitWriteCounts.push(writeCount);
 }
 
 // ---------------------------------------------------------------------------
@@ -174,10 +175,13 @@ export function markHit(): void {
  * ```
  */
 export function getSpeedAtFrame(frameIndex: number): number {
-    if (hitIndex < 0) return REPLAY_NORMAL_SPEED;
-    const dist = Math.abs(frameIndex - hitIndex);
-    if (dist >= REPLAY_HIT_WINDOW_FRAMES) return REPLAY_NORMAL_SPEED;
-    const t = dist / REPLAY_HIT_WINDOW_FRAMES;
+    if (hitIndices.length === 0) return REPLAY_NORMAL_SPEED;
+    let minDist = Infinity;
+    for (const hi of hitIndices) {
+        minDist = Math.min(minDist, Math.abs(frameIndex - hi));
+    }
+    if (minDist >= REPLAY_HIT_WINDOW_FRAMES) return REPLAY_NORMAL_SPEED;
+    const t = minDist / REPLAY_HIT_WINDOW_FRAMES;
     return REPLAY_HIT_SPEED + (REPLAY_NORMAL_SPEED - REPLAY_HIT_SPEED) * t;
 }
 
@@ -212,15 +216,14 @@ export function startReplay(knockedOutPlayerId: number): void {
         });
     }
 
-    // Map the hit index into the playback frames array
-    if (lastHitWriteCount >= startWrite && lastHitWriteCount < writeCount) {
-        hitIndex = lastHitWriteCount - startWrite;
-        hadRealHit = true;
-    } else {
-        // No hit recorded — self-KO (player fell on their own)
-        hitIndex = -1;
-        hadRealHit = false;
+    // Map all hit write counts into playback frame indices
+    hitIndices = [];
+    for (const hwc of hitWriteCounts) {
+        if (hwc >= startWrite && hwc < writeCount) {
+            hitIndices.push(hwc - startWrite);
+        }
     }
+    hadRealHit = hitIndices.length > 0;
 
     cursorPos = 0;
     active = true;
@@ -316,11 +319,14 @@ export function getReplayKnockedOut(): number {
  * Used by the camera to zoom in during the impact.
  */
 export function getReplayHitProximity(): number {
-    if (hitIndex < 0 || playbackFrames.length === 0) return 0;
+    if (hitIndices.length === 0 || playbackFrames.length === 0) return 0;
     const idx = Math.min(cursorPos, playbackFrames.length - 1);
-    const dist = Math.abs(idx - hitIndex);
-    if (dist >= REPLAY_HIT_WINDOW_FRAMES) return 0;
-    return 1 - dist / REPLAY_HIT_WINDOW_FRAMES;
+    let minDist = Infinity;
+    for (const hi of hitIndices) {
+        minDist = Math.min(minDist, Math.abs(idx - hi));
+    }
+    if (minDist >= REPLAY_HIT_WINDOW_FRAMES) return 0;
+    return 1 - minDist / REPLAY_HIT_WINDOW_FRAMES;
 }
 
 /**
@@ -338,9 +344,11 @@ export function getReplayHitProximity(): number {
  * ```
  */
 export function getReplayPastHit(): number {
-    if (hitIndex < 0 || playbackFrames.length === 0) return 0;
+    if (hitIndices.length === 0 || playbackFrames.length === 0) return 0;
+    // Use the last hit (KO-causing) for camera follow transition
+    const lastHit = hitIndices[hitIndices.length - 1];
     const idx = Math.min(cursorPos, playbackFrames.length - 1);
-    const dist = idx - hitIndex; // signed: negative = before hit
+    const dist = idx - lastHit; // signed: negative = before hit
     if (dist <= 0) return 0;
     if (dist >= REPLAY_HIT_WINDOW_FRAMES) return 1;
     return dist / REPLAY_HIT_WINDOW_FRAMES;
@@ -421,11 +429,38 @@ export function hasReplayHit(): boolean {
     return hadRealHit;
 }
 
+/**
+ * Get the frame indices of all recorded collision hits in the current replay.
+ * Returns an empty array when no replay is active or no hits were recorded.
+ *
+ * @returns Array of hit frame indices into the playback frames.
+ *
+ * @example
+ * ```ts
+ * for (const hitIdx of getReplayHitIndices()) {
+ *     // fire particles at each hit moment
+ * }
+ * ```
+ */
+export function getReplayHitIndices(): readonly number[] {
+    return hitIndices;
+}
+
+/**
+ * Get the current replay cursor position (floating-point frame index).
+ * Returns 0 when no replay is active.
+ *
+ * @returns Current cursor position in the playback frames.
+ */
+export function getReplayCursorPos(): number {
+    return cursorPos;
+}
+
 /** End the replay and release the playback buffer. */
 export function endReplay(): void {
     active = false;
     playbackFrames = [];
-    hitIndex = -1;
+    hitIndices = [];
     hadRealHit = false;
     cursorPos = 0;
 }
@@ -444,7 +479,7 @@ export function endReplay(): void {
 export function clearRecording(): void {
     buffer.length = 0;
     writeCount = 0;
-    lastHitWriteCount = -1;
+    hitWriteCounts = [];
     staged0x = staged0y = staged0z = 0;
     staged1x = staged1y = staged1z = 0;
 }
@@ -455,7 +490,7 @@ export function clearRecording(): void {
 export function resetReplay(): void {
     buffer.length = 0;
     writeCount = 0;
-    lastHitWriteCount = -1;
+    hitWriteCounts = [];
     staged0x = staged0y = staged0z = 0;
     staged1x = staged1y = staged1z = 0;
     endReplay();
