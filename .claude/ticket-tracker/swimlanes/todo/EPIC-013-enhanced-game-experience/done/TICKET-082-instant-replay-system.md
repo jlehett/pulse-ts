@@ -2,7 +2,8 @@
 id: TICKET-082
 epic: EPIC-013
 title: Instant replay system
-status: todo
+status: done
+branch: ticket-082-instant-replay-system
 priority: high
 created: 2026-03-02
 updated: 2026-03-02
@@ -39,16 +40,18 @@ players before proceeding with the normal next-round flow.
 
 ## Acceptance Criteria
 
-- [ ] Positions recorded continuously during gameplay
-- [ ] Replay triggers automatically on each knockout
-- [ ] Camera follows winning player during replay
-- [ ] Camera zooms in during the hit moment
-- [ ] Slow-motion effect with extra slowdown at impact
-- [ ] "REPLAY" text visible during playback
-- [ ] Normal round flow resumes after replay ends
-- [ ] Works in both local and online mode
-- [ ] All tests pass
+- [x] Positions recorded continuously during gameplay
+- [x] Replay triggers automatically on each knockout
+- [x] Camera follows winning player during replay
+- [x] Camera zooms in during the hit moment
+- [x] Slow-motion effect with extra slowdown at impact
+- [x] "REPLAY" text visible during playback
+- [x] Normal round flow resumes after replay ends
+- [x] Works in both local and online mode
+- [x] All tests pass
 
 ## Notes
 
 - **2026-03-02**: Ticket created.
+- **2026-03-02**: Implementation complete — ring buffer recording, variable-speed playback, cinematic follow-cam with hit zoom, letterbox overlay, 167 tests passing.
+- **2026-03-02**: Polish rounds complete — velocity-proportional trails, self-KO bobbing text, hit impact burst, camera follows loser, particle clearing on replay entry. All 289 tests passing (105 effects + 184 arena).

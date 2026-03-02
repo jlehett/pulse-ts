@@ -21,6 +21,7 @@ import { DisconnectOverlayNode } from './DisconnectOverlayNode';
 import { TouchControlsNode } from './TouchControlsNode';
 import { CameraRigNode } from './CameraRigNode';
 import { VictoryEffectNode } from './VictoryEffectNode';
+import { ReplayNode } from './ReplayNode';
 
 export interface ArenaNodeProps {
     /** Local player ID for online mode (0 or 1). Omit for local 2-player. */
@@ -99,7 +100,7 @@ export function ArenaNode(props?: Readonly<ArenaNodeProps>) {
     useProvideContext(GameCtx, gameState);
 
     // Particle effects pool
-    installParticles({ maxPerPool: 256, defaultSize: 0.08 });
+    installParticles({ maxPerPool: 2048, defaultSize: 0.08 });
 
     // Arena platform
     useChild(PlatformNode);
@@ -155,6 +156,9 @@ export function ArenaNode(props?: Readonly<ArenaNodeProps>) {
 
     // Camera rig — fixed overhead view
     useChild(CameraRigNode);
+
+    // Instant replay overlay — letterboxing + playback driver
+    useChild(ReplayNode);
 
     // Victory confetti — fires on match_over
     useChild(VictoryEffectNode);

@@ -22,13 +22,20 @@ import {
 import { useMesh, useThreeContext } from '@pulse-ts/three';
 import * as THREE from 'three';
 import { useSound } from '@pulse-ts/audio';
-import { useParticleBurst, useParticleEmitter } from '@pulse-ts/effects';
+import { useParticleBurst } from '@pulse-ts/effects';
 import { useReplicateTransform, useChannel } from '@pulse-ts/network';
 import { PlayerTag } from '../components/PlayerTag';
 import { GameCtx } from '../contexts';
-import { SPAWN_POSITIONS, DEATH_PLANE_Y } from '../config/arena';
+import {
+    SPAWN_POSITIONS,
+    DEATH_PLANE_Y,
+    PLAYER_COLORS,
+    TRAIL_VELOCITY_REFERENCE,
+    TRAIL_BASE_INTERVAL,
+} from '../config/arena';
 import { KnockoutChannel } from '../config/channels';
 import { triggerCameraShake } from './CameraRigNode';
+import { stagePlayerPosition, markHit, getReplayPosition } from '../replay';
 
 /** Sphere radius for the player ball. */
 export const PLAYER_RADIUS = 0.8;
@@ -57,9 +64,6 @@ export const IMPACT_COOLDOWN = 0.4;
 /** Number of particles in the knockout mega-burst. */
 export const KNOCKOUT_BURST_COUNT = 80;
 
-/** Emission rate (particles/sec) for the dash trail. */
-export const DASH_TRAIL_RATE = 100;
-
 /**
  * Window (ms) to ignore network knockback after a local collision.
  * Prevents double-knockback when both machines detect the same collision.
@@ -71,9 +75,6 @@ interface KnockbackMsg {
     targetPlayerId: number;
     impulse: [number, number, number];
 }
-
-/** Player colors: P1 = teal, P2 = coral. */
-const PLAYER_COLORS = [0x48c9b0, 0xe74c3c] as const;
 
 /** Color of the online-mode "you" indicator ring (hex). */
 export const INDICATOR_RING_COLOR = 0xffee88;
@@ -320,18 +321,18 @@ export function LocalPlayerNode({
         shrink: true,
     });
 
-    // Dash trail — continuous emitter active only while dashing
-    const dashTrail = useParticleEmitter({
-        rate: DASH_TRAIL_RATE,
-        lifetime: 0.3,
+    // Velocity-proportional trail burst — emitted when moving fast
+    const trailBurst = useParticleBurst({
+        count: 8,
+        lifetime: 1.0,
         color: PLAYER_COLORS[playerId],
-        speed: [0.5, 1.5],
-        gravity: 2,
-        size: 0.25,
+        speed: [0.2, 0.8],
+        gravity: 1,
+        size: 0.4,
         blending: 'additive',
         shrink: true,
-        autoStart: false,
     });
+    let trailAccum = 0;
 
     // Knockback channel — in online mode, receive impulses from the remote
     // player's collision detection and apply them to our local body, with
@@ -407,9 +408,20 @@ export function LocalPlayerNode({
 
         // Small camera shake on collision
         triggerCameraShake(0.3, 0.2);
+
+        // Mark this collision for instant replay hit detection
+        markHit();
     });
 
     useFixedUpdate(() => {
+        // Stage position for replay recording (before any movement)
+        stagePlayerPosition(
+            playerId,
+            transform.localPosition.x,
+            transform.localPosition.y,
+            transform.localPosition.z,
+        );
+
         // Round reset — teleport to spawn when GameManagerNode increments round
         if (gameState.round !== lastRound) {
             lastRound = gameState.round;
@@ -417,7 +429,6 @@ export function LocalPlayerNode({
             body.setLinearVelocity(0, 0, 0);
             dashTimer.cancel();
             dashCD.reset();
-            dashTrail.pause();
         }
 
         // Freeze while paused — save velocity on entry, restore on exit
@@ -430,7 +441,6 @@ export function LocalPlayerNode({
             }
             body.setLinearVelocity(0, 0, 0);
             dashTimer.cancel();
-            if (dashTrail.active) dashTrail.pause();
             return;
         }
         if (wasPaused) {
@@ -440,10 +450,21 @@ export function LocalPlayerNode({
 
         // Freeze input during non-playing phases
         if (gameState.phase !== 'playing') {
-            const vy = body.linearVelocity.y;
-            body.setLinearVelocity(0, vy, 0);
+            body.setLinearVelocity(0, 0, 0);
             dashTimer.cancel();
-            if (dashTrail.active) dashTrail.pause();
+
+            // During replay, drive transform from the replay buffer so
+            // trsSync (which runs after useFrameUpdate) picks up the position.
+            if (gameState.phase === 'replay') {
+                const replayPos = getReplayPosition(playerId);
+                if (replayPos) {
+                    transform.localPosition.set(
+                        replayPos[0],
+                        replayPos[1],
+                        replayPos[2],
+                    );
+                }
+            }
 
             // Still check death plane during freeze for safety
             if (transform.localPosition.y < DEATH_PLANE_Y) {
@@ -462,7 +483,6 @@ export function LocalPlayerNode({
             dashTimer.reset();
             dashCD.trigger();
             dashSfx.play();
-            dashTrail.resume();
         }
 
         if (dashTimer.active) {
@@ -474,7 +494,6 @@ export function LocalPlayerNode({
                 dashDirZ * DASH_SPEED,
             );
         } else {
-            if (dashTrail.active) dashTrail.pause();
             // Momentum-based movement — apply impulse, damping handles deceleration
             const ix = move.x * MOVE_IMPULSE;
             const iz = -move.y * MOVE_IMPULSE;
@@ -490,7 +509,6 @@ export function LocalPlayerNode({
                 transform.localPosition.y,
                 transform.localPosition.z,
             ]);
-            dashTrail.pause();
             deathSfx.play();
             gameState.pendingKnockout = playerId;
             if (publishKnockout) publishKnockout(playerId);
@@ -502,14 +520,46 @@ export function LocalPlayerNode({
     });
 
     // Interpolate visual position for smooth rendering
-    useFrameUpdate(() => {
-        const alpha = world.getAmbientAlpha();
-        const cur = transform.localPosition;
-        root.position.set(
-            prevX + (cur.x - prevX) * alpha,
-            prevY + (cur.y - prevY) * alpha,
-            prevZ + (cur.z - prevZ) * alpha,
-        );
+    useFrameUpdate((dt) => {
+        // During replay, override mesh position from the replay buffer
+        const replayPos = getReplayPosition(playerId);
+        if (replayPos) {
+            root.position.set(replayPos[0], replayPos[1], replayPos[2]);
+        } else {
+            const alpha = world.getAmbientAlpha();
+            const cur = transform.localPosition;
+            root.position.set(
+                prevX + (cur.x - prevX) * alpha,
+                prevY + (cur.y - prevY) * alpha,
+                prevZ + (cur.z - prevZ) * alpha,
+            );
+        }
+
+        // Velocity-proportional trail particles during gameplay
+        if (gameState.phase === 'playing' && !gameState.paused) {
+            const vx = body.linearVelocity.x;
+            const vz = body.linearVelocity.z;
+            const vmag = Math.sqrt(vx * vx + vz * vz);
+            if (vmag > 0.1) {
+                trailAccum += dt;
+                const interval = Math.max(
+                    0.01,
+                    TRAIL_BASE_INTERVAL / (vmag / TRAIL_VELOCITY_REFERENCE),
+                );
+                if (trailAccum >= interval) {
+                    trailAccum = 0;
+                    trailBurst([
+                        root.position.x,
+                        root.position.y,
+                        root.position.z,
+                    ]);
+                }
+            } else {
+                trailAccum = 0;
+            }
+        } else {
+            trailAccum = 0;
+        }
 
         // Update indicator ring screen position (online mode only)
         if (indicatorRing) {

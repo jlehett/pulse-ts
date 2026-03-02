@@ -8,7 +8,6 @@ import {
     KNOCKBACK_FORCE,
     IMPACT_COOLDOWN,
     KNOCKOUT_BURST_COUNT,
-    DASH_TRAIL_RATE,
     INDICATOR_RING_COLOR,
     INDICATOR_RING_SCALE,
     INDICATOR_RING_BORDER,
@@ -53,10 +52,6 @@ describe('LocalPlayerNode constants', () => {
 
     it('knockout burst count is a large positive number', () => {
         expect(KNOCKOUT_BURST_COUNT).toBeGreaterThanOrEqual(40);
-    });
-
-    it('dash trail rate is positive', () => {
-        expect(DASH_TRAIL_RATE).toBeGreaterThan(0);
     });
 });
 

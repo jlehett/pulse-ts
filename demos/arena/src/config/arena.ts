@@ -24,3 +24,27 @@ export const RESET_PAUSE_DURATION = 0.5;
 
 /** Total countdown duration in seconds (3-2-1-GO!). */
 export const COUNTDOWN_DURATION = 4.0;
+
+/** Number of seconds of gameplay to record for instant replay. */
+export const REPLAY_BUFFER_SECONDS = 4;
+
+/** Base playback speed as a fraction of real-time (0.8 = 80%). */
+export const REPLAY_NORMAL_SPEED = 0.8;
+
+/** Playback speed at the hit moment (slowest point). */
+export const REPLAY_HIT_SPEED = 0.15;
+
+/**
+ * Number of game frames around the hit moment that receive slow-motion.
+ * At 60Hz, 15 frames ≈ 0.25 seconds of game time.
+ */
+export const REPLAY_HIT_WINDOW_FRAMES = 15;
+
+/** Player colors: P1 = teal, P2 = coral. */
+export const PLAYER_COLORS = [0x48c9b0, 0xe74c3c] as const;
+
+/** Reference velocity for trail emission scaling (units/sec). At this speed the trail emits at TRAIL_BASE_INTERVAL. */
+export const TRAIL_VELOCITY_REFERENCE = 3;
+
+/** Base emission interval (seconds) at the threshold velocity. Faster movement = denser trail. */
+export const TRAIL_BASE_INTERVAL = 0.015;

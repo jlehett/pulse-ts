@@ -176,6 +176,24 @@ export class ParticlePool {
         this.particles = this._particles;
     }
 
+    /**
+     * Immediately kill all alive particles.
+     *
+     * Useful for clearing lingering particles before a scene transition
+     * (e.g. entering a replay).
+     *
+     * @example
+     * ```ts
+     * pool.killAll(); // all particles are now dead
+     * ```
+     */
+    killAll(): void {
+        for (let i = 0; i < this._particles.length; i++) {
+            this._particles[i].alive = false;
+        }
+        this._accumulator = 0;
+    }
+
     /** Number of currently alive particles. */
     get aliveCount(): number {
         let n = 0;

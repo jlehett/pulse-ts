@@ -3,18 +3,24 @@ import {
     useStableId,
     useContext,
     useFixedUpdate,
+    useFrameUpdate,
     Transform,
 } from '@pulse-ts/core';
 import { useRigidBody, useSphereCollider } from '@pulse-ts/physics';
 import { useMesh } from '@pulse-ts/three';
+import { useParticleBurst } from '@pulse-ts/effects';
 import { useReplicateTransform } from '@pulse-ts/network';
 import { PlayerTag } from '../components/PlayerTag';
 import { GameCtx } from '../contexts';
 import { PLAYER_RADIUS } from './LocalPlayerNode';
-import { SPAWN_POSITIONS, DEATH_PLANE_Y } from '../config/arena';
-
-/** Player colors: P1 = teal, P2 = coral. */
-const PLAYER_COLORS = [0x48c9b0, 0xe74c3c] as const;
+import {
+    SPAWN_POSITIONS,
+    DEATH_PLANE_Y,
+    PLAYER_COLORS,
+    TRAIL_VELOCITY_REFERENCE,
+    TRAIL_BASE_INTERVAL,
+} from '../config/arena';
+import { stagePlayerPosition, getReplayPosition } from '../replay';
 
 export interface RemotePlayerNodeProps {
     remotePlayerId: number;
@@ -55,7 +61,7 @@ export function RemotePlayerNode({
     });
 
     // Visual — same sphere mesh with subtle emissive glow (blooms under post-processing)
-    useMesh('sphere', {
+    const { root } = useMesh('sphere', {
         radius: PLAYER_RADIUS,
         color: PLAYER_COLORS[remotePlayerId],
         emissive: PLAYER_COLORS[remotePlayerId],
@@ -63,6 +69,43 @@ export function RemotePlayerNode({
         roughness: 0.35,
         metalness: 0.4,
         castShadow: true,
+    });
+
+    // Velocity-proportional trail burst — emitted when moving fast
+    const trailBurst = useParticleBurst({
+        count: 8,
+        lifetime: 1.0,
+        color: PLAYER_COLORS[remotePlayerId],
+        speed: [0.2, 0.8],
+        gravity: 1,
+        size: 0.4,
+        blending: 'additive',
+        shrink: true,
+    });
+    let trailAccum = 0;
+    let prevTrailX = spawn[0];
+    let prevTrailZ = spawn[2];
+
+    // Stage position for replay recording every fixed step, and drive
+    // transform from replay buffer during playback so trsSync picks it up.
+    useFixedUpdate(() => {
+        stagePlayerPosition(
+            remotePlayerId,
+            transform.localPosition.x,
+            transform.localPosition.y,
+            transform.localPosition.z,
+        );
+
+        if (gameState.phase === 'replay') {
+            const replayPos = getReplayPosition(remotePlayerId);
+            if (replayPos) {
+                transform.localPosition.set(
+                    replayPos[0],
+                    replayPos[1],
+                    replayPos[2],
+                );
+            }
+        }
     });
 
     // Detect when the remote player falls off the arena (replicated position).
@@ -76,4 +119,39 @@ export function RemotePlayerNode({
             }
         });
     }
+
+    // During replay, override mesh position from the replay buffer.
+    // Also emit velocity-proportional trail particles during gameplay.
+    useFrameUpdate((dt) => {
+        const replayPos = getReplayPosition(remotePlayerId);
+        if (replayPos) {
+            root.position.set(replayPos[0], replayPos[1], replayPos[2]);
+        }
+
+        // Velocity-proportional trail particles during gameplay
+        if (gameState.phase === 'playing' && dt > 0) {
+            const cx = root.position.x;
+            const cz = root.position.z;
+            const vx = (cx - prevTrailX) / dt;
+            const vz = (cz - prevTrailZ) / dt;
+            const vmag = Math.sqrt(vx * vx + vz * vz);
+            if (vmag > 0.1) {
+                trailAccum += dt;
+                const interval = Math.max(
+                    0.01,
+                    TRAIL_BASE_INTERVAL / (vmag / TRAIL_VELOCITY_REFERENCE),
+                );
+                if (trailAccum >= interval) {
+                    trailAccum = 0;
+                    trailBurst([cx, root.position.y, cz]);
+                }
+            } else {
+                trailAccum = 0;
+            }
+            prevTrailX = cx;
+            prevTrailZ = cz;
+        } else {
+            trailAccum = 0;
+        }
+    });
 }

@@ -1,4 +1,9 @@
-import { useContext, useFixedUpdate, useTimer } from '@pulse-ts/core';
+import {
+    useContext,
+    useFixedUpdate,
+    useFixedLate,
+    useTimer,
+} from '@pulse-ts/core';
 import { useSound } from '@pulse-ts/audio';
 import { useChannel } from '@pulse-ts/network';
 import { GameCtx } from '../contexts';
@@ -9,6 +14,13 @@ import {
     COUNTDOWN_DURATION,
 } from '../config/arena';
 import { KnockoutChannel } from '../config/channels';
+import {
+    startReplay,
+    isReplayActive,
+    endReplay,
+    commitFrame,
+    clearRecording,
+} from '../replay';
 
 /**
  * Compute the countdown display value from the remaining countdown time.
@@ -41,10 +53,12 @@ export interface GameManagerNodeProps {
 
 /**
  * State-machine game manager that drives the round lifecycle:
- * PLAYING → KO_FLASH → RESETTING → COUNTDOWN → PLAYING.
+ * PLAYING → REPLAY → KO_FLASH → RESETTING → COUNTDOWN → PLAYING.
  *
- * Polls the shared game state for knockout events (pendingKnockout)
- * and orchestrates phase transitions using fixed-update timers.
+ * When a knockout is detected, an instant replay plays back the last
+ * few seconds before proceeding with the score update and KO flash.
+ * Also commits player positions into the replay ring buffer each
+ * fixed step via `useFixedLate`.
  *
  * @param props - Optional configuration for online mode.
  */
@@ -98,28 +112,40 @@ export function GameManagerNode(props?: Readonly<GameManagerNodeProps>) {
         if (gameState.pendingKnockout >= 0 && gameState.phase === 'playing') {
             const knockedOutPlayerId = gameState.pendingKnockout;
             gameState.pendingKnockout = -1;
-
-            const scorer = 1 - knockedOutPlayerId;
-            gameState.scores[scorer]++;
             gameState.lastKnockedOut = knockedOutPlayerId;
 
-            if (gameState.scores[scorer] >= WIN_COUNT) {
-                gameState.phase = 'match_over';
-                gameState.matchWinner = scorer;
-                matchFanfareSfx.play();
-            } else {
-                gameState.phase = 'ko_flash';
-                koFlashTimer.reset();
-                koAnnounceSfx.play();
-            }
+            // Start instant replay — score is deferred until replay finishes
+            startReplay(knockedOutPlayerId);
+            gameState.phase = 'replay';
         }
 
         switch (gameState.phase) {
+            case 'replay':
+                if (!isReplayActive()) {
+                    endReplay();
+                    // Deferred score increment — happens after replay
+                    const scorer = 1 - gameState.lastKnockedOut;
+                    gameState.scores[scorer]++;
+
+                    if (gameState.scores[scorer] >= WIN_COUNT) {
+                        gameState.phase = 'match_over';
+                        gameState.matchWinner = scorer;
+                        matchFanfareSfx.play();
+                    } else {
+                        gameState.phase = 'ko_flash';
+                        koFlashTimer.reset();
+                        koAnnounceSfx.play();
+                    }
+                }
+                break;
+
             case 'ko_flash':
                 if (!koFlashTimer.active) {
                     gameState.phase = 'resetting';
                     resetPauseTimer.reset();
                     gameState.round++;
+                    // Clear recorded footage so next replay only shows the new round
+                    clearRecording();
                 }
                 break;
 
@@ -153,6 +179,14 @@ export function GameManagerNode(props?: Readonly<GameManagerNodeProps>) {
             // 'playing' and 'match_over' — no automatic transitions
             default:
                 break;
+        }
+    });
+
+    // Commit staged player positions into the replay ring buffer.
+    // Runs after all useFixedUpdate callbacks so both players have staged.
+    useFixedLate(() => {
+        if (gameState.phase === 'playing') {
+            commitFrame();
         }
     });
 }
