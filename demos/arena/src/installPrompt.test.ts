@@ -27,7 +27,6 @@ describe('isIosSafari', () => {
             value: 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1',
             configurable: true,
         });
-        // Ensure not standalone
         Object.defineProperty(navigator, 'standalone', {
             value: false,
             configurable: true,
@@ -85,17 +84,21 @@ describe('showInstallPrompt', () => {
         window.matchMedia = jest.fn().mockReturnValue({ matches: false });
     }
 
-    it('is a no-op on non-iOS browsers', () => {
+    function setDesktop() {
         Object.defineProperty(navigator, 'userAgent', {
             value: 'Mozilla/5.0 Chrome/120',
             configurable: true,
         });
+    }
+
+    it('is a no-op on non-iOS desktop browsers without beforeinstallprompt', () => {
+        setDesktop();
         const cleanup = showInstallPrompt();
-        expect(document.body.children.length).toBe(0);
+        expect(document.body.querySelector('div')).toBeNull();
         cleanup();
     });
 
-    it('shows the banner on iOS Safari', () => {
+    it('shows the iOS banner on iOS Safari', () => {
         setIosSafari();
         const cleanup = showInstallPrompt();
         const banner = document.body.querySelector('div');
@@ -104,26 +107,102 @@ describe('showInstallPrompt', () => {
         cleanup();
     });
 
-    it('does not show again after dismissal', () => {
+    it('does not show again after dismissal (iOS)', () => {
         setIosSafari();
         const cleanup1 = showInstallPrompt();
-        // Click close button
         const closeBtn = document.body.querySelector('button');
         closeBtn!.click();
         cleanup1();
 
-        // Second call should be no-op
         document.body.innerHTML = '';
         const cleanup2 = showInstallPrompt();
         expect(document.body.querySelector('div')).toBeNull();
         cleanup2();
     });
 
-    it('removes banner on cleanup', () => {
+    it('removes iOS banner on cleanup', () => {
         setIosSafari();
         const cleanup = showInstallPrompt();
         expect(document.body.querySelector('div')).not.toBeNull();
         cleanup();
         expect(document.body.querySelector('div')).toBeNull();
+    });
+
+    it('shows Android banner when beforeinstallprompt fires', () => {
+        setDesktop();
+        const cleanup = showInstallPrompt();
+
+        // Simulate beforeinstallprompt event
+        const event = new Event('beforeinstallprompt', {
+            cancelable: true,
+        });
+        (event as any).prompt = jest.fn().mockResolvedValue(undefined);
+        (event as any).userChoice = Promise.resolve({
+            outcome: 'dismissed' as const,
+        });
+        window.dispatchEvent(event);
+
+        const banner = document.body.querySelector('div');
+        expect(banner).not.toBeNull();
+        expect(banner!.textContent).toContain('Install');
+        cleanup();
+    });
+
+    it('calls prompt() when Android Install button is clicked', () => {
+        setDesktop();
+        const cleanup = showInstallPrompt();
+
+        const promptFn = jest.fn().mockResolvedValue(undefined);
+        const event = new Event('beforeinstallprompt', {
+            cancelable: true,
+        });
+        (event as any).prompt = promptFn;
+        (event as any).userChoice = Promise.resolve({
+            outcome: 'accepted' as const,
+        });
+        window.dispatchEvent(event);
+
+        // Find the Install button (not the close button)
+        const buttons = document.body.querySelectorAll('button');
+        const installBtn = Array.from(buttons).find(
+            (b) => b.textContent === 'Install',
+        );
+        expect(installBtn).toBeDefined();
+        installBtn!.click();
+
+        expect(promptFn).toHaveBeenCalled();
+        cleanup();
+    });
+
+    it('does not show Android banner if previously dismissed', () => {
+        setDesktop();
+        localStorage.setItem('pulse-install-prompt-dismissed', '1');
+
+        const cleanup = showInstallPrompt();
+
+        const event = new Event('beforeinstallprompt', {
+            cancelable: true,
+        });
+        (event as any).prompt = jest.fn();
+        (event as any).userChoice = Promise.resolve({
+            outcome: 'dismissed' as const,
+        });
+        window.dispatchEvent(event);
+
+        expect(document.body.querySelector('div')).toBeNull();
+        cleanup();
+    });
+
+    it('removes Android listener on cleanup', () => {
+        setDesktop();
+        const removeSpy = jest.spyOn(window, 'removeEventListener');
+        const cleanup = showInstallPrompt();
+        cleanup();
+
+        expect(removeSpy).toHaveBeenCalledWith(
+            'beforeinstallprompt',
+            expect.any(Function),
+        );
+        removeSpy.mockRestore();
     });
 });
