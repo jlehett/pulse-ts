@@ -36,11 +36,12 @@ function startLocalGame(): Promise<void> {
 
         three.renderer.shadowMap.enabled = true;
         three.renderer.shadowMap.type = 1; // THREE.PCFShadowMap
-        setupPostProcessing(three);
+        const shockwavePass = setupPostProcessing(three);
 
         world.addSystem(new StatsOverlaySystem({ position: 'top-left' }));
 
         world.mount(ArenaNode, {
+            shockwavePass,
             onRequestMenu: () => {
                 three.renderer.clear();
                 world.destroy();
@@ -76,7 +77,7 @@ async function startOnlineGame(lobby: LobbyResult): Promise<void> {
 
             three.renderer.shadowMap.enabled = true;
             three.renderer.shadowMap.type = 1; // THREE.PCFShadowMap
-            setupPostProcessing(three);
+            const shockwavePass = setupPostProcessing(three);
 
             world.addSystem(new StatsOverlaySystem({ position: 'top-left' }));
 
@@ -84,6 +85,7 @@ async function startOnlineGame(lobby: LobbyResult): Promise<void> {
                 playerId: lobby.playerId,
                 wsUrl: lobby.wsUrl,
                 isHost: lobby.mode === 'host',
+                shockwavePass,
                 onRequestMenu: () => {
                     three.renderer.clear();
                     world.destroy();

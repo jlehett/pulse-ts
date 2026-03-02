@@ -1,3 +1,7 @@
+jest.mock('three/examples/jsm/postprocessing/ShaderPass.js', () => ({
+    ShaderPass: jest.fn(),
+}));
+
 import {
     ReplayNode,
     LETTERBOX_HEIGHT,

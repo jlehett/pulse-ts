@@ -1,7 +1,9 @@
 ---
 id: TICKET-086
+epic: EPIC-013
 title: Impact shockwave distortion effect
-status: todo
+status: done
+branch: ticket-086-impact-shockwave-distortion-effect
 priority: normal
 labels: [effects, arena, rendering]
 created: 2026-03-02
@@ -26,13 +28,14 @@ Implement a screen-space or world-space shockwave distortion effect that plays a
 
 ## Acceptance Criteria
 
-- [ ] Shockwave distortion effect plays at the midpoint of player collisions
-- [ ] Effect expands outward and fades over ~0.3s
-- [ ] Distortion is visually noticeable but not gameplay-obscuring
-- [ ] Works alongside existing impact burst particles and camera shake
-- [ ] Performance: no measurable frame drop on mid-range hardware
-- [ ] Tests cover the shockwave trigger logic and lifecycle
+- [x] Shockwave distortion effect plays at the midpoint of player collisions
+- [x] Effect expands outward and fades over ~0.3s
+- [x] Distortion is visually noticeable but not gameplay-obscuring
+- [x] Works alongside existing impact burst particles and camera shake
+- [x] Performance: no measurable frame drop on mid-range hardware
+- [x] Tests cover the shockwave trigger logic and lifecycle
 
 ## Notes
 
 - **2026-03-02**: Created — visual polish idea for impact feedback.
+- **2026-03-02**: Starting implementation.

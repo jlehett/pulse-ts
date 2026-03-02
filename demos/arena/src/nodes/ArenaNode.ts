@@ -7,6 +7,7 @@ import {
 } from '@pulse-ts/three';
 import { useWebSocket, useRoom } from '@pulse-ts/network';
 import { installParticles } from '@pulse-ts/effects';
+import type { ShaderPass } from 'three/examples/jsm/postprocessing/ShaderPass.js';
 import { GameCtx, type GameState } from '../contexts';
 import { PlatformNode } from './PlatformNode';
 import { LocalPlayerNode } from './LocalPlayerNode';
@@ -22,6 +23,7 @@ import { TouchControlsNode } from './TouchControlsNode';
 import { CameraRigNode } from './CameraRigNode';
 import { VictoryEffectNode } from './VictoryEffectNode';
 import { ReplayNode } from './ReplayNode';
+import { ShockwaveNode } from './ShockwaveNode';
 
 export interface ArenaNodeProps {
     /** Local player ID for online mode (0 or 1). Omit for local 2-player. */
@@ -30,6 +32,8 @@ export interface ArenaNodeProps {
     wsUrl?: string;
     /** Whether the local player is the host (online mode). */
     isHost?: boolean;
+    /** The shockwave ShaderPass from `setupPostProcessing`. */
+    shockwavePass?: ShaderPass;
     /** Callback invoked when the player requests to return to the main menu. */
     onRequestMenu?: () => void;
 }
@@ -162,6 +166,9 @@ export function ArenaNode(props?: Readonly<ArenaNodeProps>) {
 
     // Instant replay overlay — letterboxing + playback driver
     useChild(ReplayNode);
+
+    // Shockwave distortion — screen-space ring on impact
+    useChild(ShockwaveNode, { pass: props?.shockwavePass });
 
     // Victory confetti — fires on match_over
     useChild(VictoryEffectNode);
