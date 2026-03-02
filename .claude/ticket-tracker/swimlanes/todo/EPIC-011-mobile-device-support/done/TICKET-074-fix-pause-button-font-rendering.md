@@ -2,7 +2,7 @@
 id: TICKET-074
 epic: EPIC-011
 title: Fix pause button font rendering (monospace serifs)
-status: in-progress
+status: done
 branch: ticket-074-075-076-pause-menu-ui-fixes
 priority: medium
 created: 2026-03-02
@@ -25,10 +25,11 @@ serifs.
 
 ## Acceptance Criteria
 
-- [ ] Pause button displays two clean vertical bars without serif decorations
-- [ ] Visual appearance matches a standard pause icon
-- [ ] Works consistently across major browsers (Chrome, Firefox, Safari)
+- [x] Pause button displays two clean vertical bars without serif decorations
+- [x] Visual appearance matches a standard pause icon
+- [x] Works consistently across major browsers (Chrome, Firefox, Safari)
 
 ## Notes
 
 - **2026-03-02**: Ticket created.
+- **2026-03-02**: Changed pause button font from `monospace` to `sans-serif` in TouchControlsNode — sans-serif renders `I` as clean vertical bars.

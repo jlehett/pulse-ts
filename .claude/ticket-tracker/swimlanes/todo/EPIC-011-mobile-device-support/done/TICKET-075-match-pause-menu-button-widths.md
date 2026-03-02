@@ -2,7 +2,7 @@
 id: TICKET-075
 epic: EPIC-011
 title: Match pause menu button widths (Resume / Exit Match)
-status: in-progress
+status: done
 branch: ticket-074-075-076-pause-menu-ui-fixes
 priority: low
 created: 2026-03-02
@@ -23,10 +23,11 @@ widths on both mobile and non-mobile devices.
 
 ## Acceptance Criteria
 
-- [ ] Resume and Exit Match buttons have the same visible width
-- [ ] Consistent on both mobile and desktop screen sizes
-- [ ] No layout overflow on narrow screens
+- [x] Resume and Exit Match buttons have the same visible width
+- [x] Consistent on both mobile and desktop screen sizes
+- [x] No layout overflow on narrow screens
 
 ## Notes
 
 - **2026-03-02**: Ticket created.
+- **2026-03-02**: Added `minWidth: 'min(200px, 70vw)'` to PauseMenuNode buttons via shared `createButton`.
