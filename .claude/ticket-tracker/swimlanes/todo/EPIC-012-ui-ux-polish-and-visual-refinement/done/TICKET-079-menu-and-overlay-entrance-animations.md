@@ -2,7 +2,8 @@
 id: TICKET-079
 epic: EPIC-012
 title: Menu and overlay entrance animations
-status: todo
+status: done
+branch: ticket-079-menu-and-overlay-entrance-animations
 priority: medium
 created: 2026-03-02
 updated: 2026-03-02
@@ -36,13 +37,15 @@ tickets — this is pure DOM/CSS work.
 
 ## Acceptance Criteria
 
-- [ ] Menu elements stagger in (title → subtitle → buttons) with smooth animations
-- [ ] Countdown numbers pop-scale on each change
-- [ ] Score HUD shows player colors and flashes on score change
-- [ ] All overlay entrances feel smooth and professional
-- [ ] Button hover scale effect on all interactive buttons
-- [ ] All tests pass
+- [x] Menu elements stagger in (title → subtitle → buttons) with smooth animations
+- [x] Countdown numbers pop-scale on each change
+- [x] Score HUD shows player colors and flashes on score change
+- [x] All overlay entrances feel smooth and professional
+- [x] Button hover scale effect on all interactive buttons
+- [x] All tests pass
 
 ## Notes
 
 - **2026-03-02**: Ticket created.
+- **2026-03-02**: Starting implementation.
+- **2026-03-02**: Done. Created `overlayAnimations.ts` utility (4 helpers). Applied staggered entrances to menu, lobby (4 screens), match over, pause, disconnect. Scale pop on countdown numbers and KO text. Player-colored score HUD with pop on change. Hover scale on all buttons.

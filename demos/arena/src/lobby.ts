@@ -1,3 +1,8 @@
+import {
+    applyStaggeredEntrance,
+    applyButtonHoverScale,
+} from './overlayAnimations';
+
 /** Timeout (ms) waiting for host acknowledgement after join-request. */
 const JOIN_TIMEOUT = 5000;
 
@@ -134,6 +139,11 @@ function showLobbyMenu(overlay: HTMLElement, finish: Finish) {
     content.appendChild(heading);
     content.appendChild(buttons);
 
+    applyStaggeredEntrance([heading, buttons], 100);
+    applyButtonHoverScale(btnHost);
+    applyButtonHoverScale(btnJoin);
+    applyButtonHoverScale(btnBack);
+
     btnHost.addEventListener('click', () => showHostSetup(overlay, finish));
     btnJoin.addEventListener('click', () => showJoinSetup(overlay, finish));
     btnBack.addEventListener('click', () => finish('back'));
@@ -155,6 +165,11 @@ function showHostSetup(overlay: HTMLElement, finish: Finish) {
     content.appendChild(subheading);
     content.appendChild(playerRow);
     content.appendChild(btnBack);
+
+    applyStaggeredEntrance([heading, subheading, playerRow, btnBack], 100);
+    applyButtonHoverScale(btnP1);
+    applyButtonHoverScale(btnP2);
+    applyButtonHoverScale(btnBack);
 
     btnP1.addEventListener('click', () => showHostWaiting(overlay, finish, 0));
     btnP2.addEventListener('click', () => showHostWaiting(overlay, finish, 1));
@@ -194,6 +209,10 @@ function showHostWaiting(
     content.appendChild(info);
     content.appendChild(status.el);
     content.appendChild(buttons);
+
+    applyStaggeredEntrance([heading, info, status.el, buttons], 100);
+    applyButtonHoverScale(btnStart);
+    applyButtonHoverScale(btnBack);
 
     // Track connection state for cleanup
     let ws: WebSocket | null = null;
@@ -277,6 +296,9 @@ function showJoinSetup(overlay: HTMLElement, finish: Finish) {
     content.appendChild(heading);
     content.appendChild(status.el);
     content.appendChild(btnBack);
+
+    applyStaggeredEntrance([heading, status.el, btnBack], 100);
+    applyButtonHoverScale(btnBack);
 
     let ws: WebSocket | null = null;
     let joinTimeout: ReturnType<typeof setTimeout> | null = null;

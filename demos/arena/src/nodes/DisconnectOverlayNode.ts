@@ -1,6 +1,10 @@
 import { useFrameUpdate, useDestroy } from '@pulse-ts/core';
 import { useThreeContext } from '@pulse-ts/three';
 import { useOnPeerLeave } from '@pulse-ts/network';
+import {
+    applyStaggeredEntrance,
+    applyButtonHoverScale,
+} from '../overlayAnimations';
 
 export interface DisconnectOverlayNodeProps {
     /** Whether the local player is the host. Determines the disconnect message. */
@@ -104,12 +108,21 @@ export function DisconnectOverlayNode(
     });
     container.appendChild(menuBtn);
 
+    applyButtonHoverScale(menuBtn);
+
+    let wasDisconnected = false;
+
     useFrameUpdate(() => {
         backdrop.style.opacity = disconnected ? '1' : '0';
         text.style.opacity = disconnected ? '1' : '0';
         menuBtn.style.opacity = disconnected ? '1' : '0';
         backdrop.style.pointerEvents = disconnected ? 'auto' : 'none';
         menuBtn.style.pointerEvents = disconnected ? 'auto' : 'none';
+
+        if (disconnected && !wasDisconnected) {
+            applyStaggeredEntrance([text, menuBtn], 300);
+        }
+        wasDisconnected = disconnected;
     });
 
     useDestroy(() => {
