@@ -345,6 +345,10 @@ export function LocalPlayerNode({
                 return;
             body.applyImpulse(msg.impulse[0], msg.impulse[1], msg.impulse[2]);
 
+            // Mark hit for replay — the remote machine detected the collision,
+            // so this machine should also show the proper KO replay (not "self KO").
+            markHit();
+
             // Impact feedback — particles + sound so the defender sees the hit.
             // Spawn particles on the local player's surface in the direction
             // the hit came from (opposite of the impulse direction).
@@ -562,33 +566,40 @@ export function LocalPlayerNode({
         }
 
         // Update indicator ring screen position (online mode only)
+        // Hidden during non-playing phases (replay, ko_flash, etc.)
         if (indicatorRing) {
-            const hw = threeRenderer.domElement.clientWidth / 2;
-            const hh = threeRenderer.domElement.clientHeight / 2;
+            if (gameState.phase !== 'playing') {
+                indicatorRing.style.display = 'none';
+            } else {
+                indicatorRing.style.display = '';
 
-            // Project player center to screen
-            projCenter
-                .set(root.position.x, root.position.y, root.position.z)
-                .project(threeCamera);
-            const sx = projCenter.x * hw + hw;
-            const sy = -projCenter.y * hh + hh;
+                const hw = threeRenderer.domElement.clientWidth / 2;
+                const hh = threeRenderer.domElement.clientHeight / 2;
 
-            // Project edge point to get screen-space radius
-            projEdge
-                .set(
-                    root.position.x + PLAYER_RADIUS * INDICATOR_RING_SCALE,
-                    root.position.y,
-                    root.position.z,
-                )
-                .project(threeCamera);
-            const edgeSx = projEdge.x * hw + hw;
-            const radius = Math.abs(edgeSx - sx);
-            const size = radius * 2;
+                // Project player center to screen
+                projCenter
+                    .set(root.position.x, root.position.y, root.position.z)
+                    .project(threeCamera);
+                const sx = projCenter.x * hw + hw;
+                const sy = -projCenter.y * hh + hh;
 
-            indicatorRing.style.width = `${size}px`;
-            indicatorRing.style.height = `${size}px`;
-            indicatorRing.style.left = `${sx - radius}px`;
-            indicatorRing.style.top = `${sy - radius}px`;
+                // Project edge point to get screen-space radius
+                projEdge
+                    .set(
+                        root.position.x + PLAYER_RADIUS * INDICATOR_RING_SCALE,
+                        root.position.y,
+                        root.position.z,
+                    )
+                    .project(threeCamera);
+                const edgeSx = projEdge.x * hw + hw;
+                const radius = Math.abs(edgeSx - sx);
+                const size = radius * 2;
+
+                indicatorRing.style.width = `${size}px`;
+                indicatorRing.style.height = `${size}px`;
+                indicatorRing.style.left = `${sx - radius}px`;
+                indicatorRing.style.top = `${sy - radius}px`;
+            }
         }
     });
 }

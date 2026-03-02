@@ -8,10 +8,12 @@ import {
     getReplayPosition,
     getReplayVelocity,
     getReplaySpeed,
-    getReplayHitProximity,
+    getReplayHitIndices,
+    getReplayCursorPos,
     hasReplayHit,
 } from '../replay';
 import { PLAYER_COLORS, TRAIL_BASE_INTERVAL } from '../config/arena';
+import { triggerCameraShake } from './CameraRigNode';
 
 /** Height of each cinematic letterbox bar as a CSS value. */
 export const LETTERBOX_HEIGHT = '8%';
@@ -181,7 +183,7 @@ export function ReplayNode() {
     let wasReplay = false;
     let flashTimer = 0;
     let trailAccum = 0;
-    let hitBurstEmitted = false;
+    const hitBurstsEmitted = new Set<number>();
     let selfKoMessagePicked = false;
 
     useFrameUpdate((dt) => {
@@ -239,21 +241,23 @@ export function ReplayNode() {
                 selfKoText.style.opacity = '0';
             }
 
-            // Hit impact burst at the collision moment
-            if (
-                hasReplayHit() &&
-                !hitBurstEmitted &&
-                getReplayHitProximity() > 0.9
-            ) {
-                const p0 = getReplayPosition(0);
-                const p1 = getReplayPosition(1);
-                if (p0 && p1) {
-                    hitImpactBurst([
-                        (p0[0] + p1[0]) / 2,
-                        (p0[1] + p1[1]) / 2,
-                        (p0[2] + p1[2]) / 2,
-                    ]);
-                    hitBurstEmitted = true;
+            // Hit impact bursts + camera shake at each collision moment
+            const cursor = getReplayCursorPos();
+            for (const hitIdx of getReplayHitIndices()) {
+                if (hitBurstsEmitted.has(hitIdx)) continue;
+                // Fire when cursor is within 1 frame of the hit
+                if (Math.abs(cursor - hitIdx) < 1) {
+                    const p0 = getReplayPosition(0);
+                    const p1 = getReplayPosition(1);
+                    if (p0 && p1) {
+                        hitImpactBurst([
+                            (p0[0] + p1[0]) / 2,
+                            (p0[1] + p1[1]) / 2,
+                            (p0[2] + p1[2]) / 2,
+                        ]);
+                        triggerCameraShake(0.4, 0.3);
+                    }
+                    hitBurstsEmitted.add(hitIdx);
                 }
             }
 
@@ -279,7 +283,7 @@ export function ReplayNode() {
         } else {
             selfKoText.style.opacity = '0';
             trailAccum = 0;
-            hitBurstEmitted = false;
+            hitBurstsEmitted.clear();
             selfKoMessagePicked = false;
         }
     });

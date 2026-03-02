@@ -131,8 +131,11 @@ export function ArenaNode(props?: Readonly<ArenaNodeProps>) {
         });
     }
 
-    // Game manager — tracks knockout scores
-    useChild(GameManagerNode, online ? { online } : undefined);
+    // Game manager — tracks knockout scores, host-authoritative countdown sync
+    useChild(
+        GameManagerNode,
+        online ? { online, isHost: props!.isHost } : undefined,
+    );
 
     // Score HUD
     useChild(ScoreHudNode);

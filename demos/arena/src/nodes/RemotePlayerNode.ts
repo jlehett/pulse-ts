@@ -120,14 +120,27 @@ export function RemotePlayerNode({
         });
     }
 
-    // During replay, override mesh position from the replay buffer.
-    // Also emit velocity-proportional trail particles during gameplay.
-    useFrameUpdate((dt) => {
-        const replayPos = getReplayPosition(remotePlayerId);
-        if (replayPos) {
-            root.position.set(replayPos[0], replayPos[1], replayPos[2]);
-        }
+    // During replay, override transform.localPosition from the replay buffer
+    // AFTER InterpolationSystem (order 100) runs, so the network-smoothed
+    // position doesn't fight with the replay position. trsSync (late phase)
+    // then copies our replay position to root.position.
+    useFrameUpdate(
+        () => {
+            if (gameState.phase !== 'replay') return;
+            const replayPos = getReplayPosition(remotePlayerId);
+            if (replayPos) {
+                transform.localPosition.set(
+                    replayPos[0],
+                    replayPos[1],
+                    replayPos[2],
+                );
+            }
+        },
+        { order: 200 },
+    );
 
+    // Emit velocity-proportional trail particles during gameplay.
+    useFrameUpdate((dt) => {
         // Velocity-proportional trail particles during gameplay
         if (gameState.phase === 'playing' && dt > 0) {
             const cx = root.position.x;

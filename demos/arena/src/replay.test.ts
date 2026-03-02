@@ -12,6 +12,8 @@ import {
     getSpeedAtFrame,
     getReplayVelocity,
     getReplaySpeed,
+    getReplayHitIndices,
+    getReplayCursorPos,
     hasReplayHit,
     endReplay,
     clearRecording,
@@ -273,6 +275,74 @@ describe('hasReplayHit', () => {
         expect(getReplaySpeed()).toBeCloseTo(0.8);
         // hitProximity should be 0 throughout (no hit to be near)
         expect(getReplayHitProximity()).toBe(0);
+    });
+});
+
+describe('getReplayHitIndices (multi-hit)', () => {
+    it('returns empty array when no hits recorded', () => {
+        recordFrame(0, 0, 0, 0, 0, 0);
+        startReplay(1);
+        expect(getReplayHitIndices()).toEqual([]);
+    });
+
+    it('tracks a single hit', () => {
+        recordFrame(0, 0, 0, 0, 0, 0);
+        markHit();
+        recordFrame(1, 0, 0, 0, 0, 0);
+        startReplay(1);
+        expect(getReplayHitIndices()).toEqual([1]);
+    });
+
+    it('tracks multiple hits at different frames', () => {
+        for (let i = 0; i < 20; i++) {
+            recordFrame(i, 0, 0, 0, 0, 0);
+            if (i === 5 || i === 12) markHit();
+        }
+        startReplay(1);
+        const indices = getReplayHitIndices();
+        expect(indices.length).toBe(2);
+        expect(indices[0]).toBe(6); // markHit at write count after frame 5
+        expect(indices[1]).toBe(13); // markHit at write count after frame 12
+    });
+
+    it('speed slows around all hits, not just the last', () => {
+        for (let i = 0; i < 80; i++) {
+            recordFrame(i, 0, 0, 0, 0, 0);
+            if (i === 5 || i === 60) markHit();
+        }
+        startReplay(1);
+        const indices = getReplayHitIndices();
+        // Speed should be slow near both hits
+        expect(getSpeedAtFrame(indices[0])).toBeCloseTo(0.15);
+        expect(getSpeedAtFrame(indices[1])).toBeCloseTo(0.15);
+        // Speed should be normal far from both hits (frame 35 is > 15 from both)
+        expect(getSpeedAtFrame(35)).toBeCloseTo(0.8);
+    });
+
+    it('cleared after endReplay', () => {
+        recordFrame(0, 0, 0, 0, 0, 0);
+        markHit();
+        recordFrame(1, 0, 0, 0, 0, 0);
+        startReplay(1);
+        expect(getReplayHitIndices().length).toBe(1);
+        endReplay();
+        expect(getReplayHitIndices()).toEqual([]);
+    });
+});
+
+describe('getReplayCursorPos', () => {
+    it('starts at 0', () => {
+        recordFrame(0, 0, 0, 0, 0, 0);
+        recordFrame(1, 0, 0, 0, 0, 0);
+        startReplay(1);
+        expect(getReplayCursorPos()).toBe(0);
+    });
+
+    it('advances with advanceReplay', () => {
+        for (let i = 0; i < 20; i++) recordFrame(i, 0, 0, 0, 0, 0);
+        startReplay(1);
+        advanceReplay(0.1);
+        expect(getReplayCursorPos()).toBeGreaterThan(0);
     });
 });
 
