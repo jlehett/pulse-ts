@@ -3,7 +3,7 @@ id: TICKET-082
 epic: EPIC-013
 title: Instant replay system
 status: done
-branch: ticket-082-instant-replay-system
+branch: ticket-082-fix-replay-online-bugs
 priority: high
 created: 2026-03-02
 updated: 2026-03-02
