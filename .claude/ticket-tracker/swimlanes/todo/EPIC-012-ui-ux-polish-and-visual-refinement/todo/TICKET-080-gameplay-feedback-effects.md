@@ -3,6 +3,7 @@ id: TICKET-080
 epic: EPIC-012
 title: Gameplay feedback effects (camera shake, colored KO flash, victory confetti)
 status: todo
+branch: ticket-080-gameplay-feedback-effects
 priority: medium
 created: 2026-03-02
 updated: 2026-03-02
