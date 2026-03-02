@@ -353,6 +353,120 @@ describe('InputService', () => {
         expect(svc.action('combo').pressed).toBe(false);
     });
 
+    test('holdAxis2D persists across commits', () => {
+        const svc = new InputService();
+        const w = worldStub();
+        svc.attach(w);
+        svc.setBindings({
+            move: Axis2D({
+                x: { pos: Key('KeyD'), neg: Key('KeyA') },
+                y: { pos: Key('KeyW'), neg: Key('KeyS') },
+            }),
+        });
+
+        svc.holdAxis2D('move', { x: 0.5, y: -0.3 });
+        svc.commit();
+        w._inc();
+        expect(svc.vec2('move')).toMatchObject({ x: 0.5, y: -0.3 });
+
+        // Value persists on next commit without re-calling holdAxis2D
+        svc.commit();
+        w._inc();
+        expect(svc.vec2('move')).toMatchObject({ x: 0.5, y: -0.3 });
+    });
+
+    test('holdAxis2D overrides key-derived vec2', () => {
+        const svc = new InputService();
+        const w = worldStub();
+        svc.attach(w);
+        svc.setBindings({
+            move: Axis2D({
+                x: { pos: Key('KeyD'), neg: Key('KeyA') },
+                y: { pos: Key('KeyW'), neg: Key('KeyS') },
+            }),
+        });
+
+        // Press KeyD -> derived x=1
+        svc.handleKey('KeyD', true);
+        svc.commit();
+        w._inc();
+        expect(svc.vec2('move')).toMatchObject({ x: 1, y: 0 });
+
+        // Hold overrides key-derived values
+        svc.holdAxis2D('move', { x: 0.3, y: 0.7 });
+        svc.commit();
+        w._inc();
+        expect(svc.vec2('move')).toMatchObject({ x: 0.3, y: 0.7 });
+    });
+
+    test('releaseAxis2D restores key-derived values', () => {
+        const svc = new InputService();
+        const w = worldStub();
+        svc.attach(w);
+        svc.setBindings({
+            move: Axis2D({
+                x: { pos: Key('KeyD'), neg: Key('KeyA') },
+                y: { pos: Key('KeyW'), neg: Key('KeyS') },
+            }),
+        });
+
+        svc.handleKey('KeyD', true);
+        svc.holdAxis2D('move', { x: 0.3, y: 0.7 });
+        svc.commit();
+        w._inc();
+        expect(svc.vec2('move')).toMatchObject({ x: 0.3, y: 0.7 });
+
+        // Release hold -> key-derived x=1 takes effect again
+        svc.releaseAxis2D('move');
+        svc.commit();
+        w._inc();
+        expect(svc.vec2('move')).toMatchObject({ x: 1, y: 0 });
+    });
+
+    test('holdAxis2D can be updated with new values', () => {
+        const svc = new InputService();
+        const w = worldStub();
+        svc.attach(w);
+        svc.setBindings({
+            move: Axis2D({
+                x: { pos: Key('KeyD'), neg: Key('KeyA') },
+                y: { pos: Key('KeyW'), neg: Key('KeyS') },
+            }),
+        });
+
+        svc.holdAxis2D('move', { x: 0.5, y: 0.5 });
+        svc.commit();
+        w._inc();
+        expect(svc.vec2('move')).toMatchObject({ x: 0.5, y: 0.5 });
+
+        svc.holdAxis2D('move', { x: -0.8, y: 0.2 });
+        svc.commit();
+        w._inc();
+        expect(svc.vec2('move')).toMatchObject({ x: -0.8, y: 0.2 });
+    });
+
+    test('reset clears held vec2 values', () => {
+        const svc = new InputService();
+        const w = worldStub();
+        svc.attach(w);
+        svc.setBindings({
+            move: Axis2D({
+                x: { pos: Key('KeyD'), neg: Key('KeyA') },
+                y: { pos: Key('KeyW'), neg: Key('KeyS') },
+            }),
+        });
+
+        svc.holdAxis2D('move', { x: 1, y: 1 });
+        svc.commit();
+        w._inc();
+        expect(svc.vec2('move')).toMatchObject({ x: 1, y: 1 });
+
+        svc.reset();
+        svc.commit();
+        w._inc();
+        expect(svc.vec2('move')).toMatchObject({ x: 0, y: 0 });
+    });
+
     test('Axis1D opposing keys cancel and re-emit pressed on uncancel', () => {
         const svc = new InputService();
         const w = worldStub();

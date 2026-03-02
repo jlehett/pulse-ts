@@ -31,7 +31,8 @@ import { computeChordDownActions } from './internal/chords';
  * 8) Pointer snapshot finalized (delta, wheel, buttons, locked)
  * 9) Injected 1D axes applied and auto-released
  * 10) Derived vec2 from 1D composed
- * 11) Sequence pulses cleared
+ * 11) Held vec2 overrides applied (e.g., virtual joystick)
+ * 12) Sequence pulses cleared
  *
  * @example
  * ```ts
@@ -73,6 +74,9 @@ export class InputService extends Service {
         { index: number; lastFrame: number }
     >();
     private seqPulseFrame = new Set<string>();
+
+    // persistent vec2 overrides (e.g., virtual joystick hold values)
+    private vec2Holds = new Map<string, Vec>();
 
     // pointer state + per-frame accumulators
     private pointerSnapshot: PointerSnapshot = {
@@ -288,6 +292,52 @@ export class InputService extends Service {
     }
 
     /**
+     * Hold a persistent Axis2D value that overrides key-derived and injected
+     * vec2 values until released. Useful for virtual joysticks and other
+     * continuous analog inputs that persist across frames.
+     *
+     * Unlike {@link injectAxis2D} (which accumulates per-frame and clears),
+     * held values persist until explicitly released via {@link releaseAxis2D}.
+     *
+     * @param action Axis2D action name (e.g., `'p1Move'`).
+     * @param axes Vec2 value to hold (e.g., `{ x: 0.5, y: -0.3 }`).
+     *
+     * @example
+     * ```ts
+     * const svc = new InputService();
+     * svc.holdAxis2D('move', { x: 0.7, y: 0 });
+     * svc.commit();
+     * console.log(svc.vec2('move')); // { x: 0.7, y: 0 }
+     * svc.commit(); // still held
+     * console.log(svc.vec2('move')); // { x: 0.7, y: 0 }
+     * svc.releaseAxis2D('move');
+     * ```
+     */
+    holdAxis2D(action: string, axes: Vec): void {
+        this.vec2Holds.set(action, { ...axes });
+    }
+
+    /**
+     * Release a previously held Axis2D override.
+     * After release, the action reverts to key-derived or injected values.
+     *
+     * @param action Axis2D action name to release.
+     *
+     * @example
+     * ```ts
+     * const svc = new InputService();
+     * svc.holdAxis2D('move', { x: 1, y: 0 });
+     * svc.commit();
+     * svc.releaseAxis2D('move');
+     * svc.commit();
+     * console.log(svc.vec2('move')); // { x: 0, y: 0 } (reverts to default)
+     * ```
+     */
+    releaseAxis2D(action: string): void {
+        this.vec2Holds.delete(action);
+    }
+
+    /**
      * Inject a 1D axis value for this frame (virtual/testing input).
      * Subsequent calls in the same frame accumulate.
      * @param action Axis name.
@@ -317,6 +367,7 @@ export class InputService extends Service {
         this.commitPointerSnapshot();
         this.commitInjectedAxes1D(frameId);
         this.commitDerivedVec2();
+        this.applyVec2Holds();
         this.finalizeSequences();
     }
 
@@ -398,6 +449,7 @@ export class InputService extends Service {
         this.keysDown.clear();
         this.seqRuntime.clear();
         this.seqPulseFrame.clear();
+        this.vec2Holds.clear();
         this.pointerSnapshot.x = 0;
         this.pointerSnapshot.y = 0;
         this.pointerSnapshot.deltaX = 0;
@@ -561,6 +613,12 @@ export class InputService extends Service {
         for (const [name, def] of this.bindings.getVec2Defs()) {
             const obj = composeVec2From1D(def, this.actions);
             this.vec2State.set(name, obj);
+        }
+    }
+
+    private applyVec2Holds(): void {
+        for (const [name, v] of this.vec2Holds) {
+            this.vec2State.set(name, { ...v });
         }
     }
 
