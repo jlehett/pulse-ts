@@ -2,7 +2,7 @@
 id: TICKET-082
 epic: EPIC-013
 title: Instant replay system
-status: done
+status: in-progress
 branch: ticket-082-fix-replay-online-bugs
 priority: high
 created: 2026-03-02
@@ -55,3 +55,4 @@ players before proceeding with the normal next-round flow.
 - **2026-03-02**: Ticket created.
 - **2026-03-02**: Implementation complete — ring buffer recording, variable-speed playback, cinematic follow-cam with hit zoom, letterbox overlay, 167 tests passing.
 - **2026-03-02**: Polish rounds complete — velocity-proportional trails, self-KO bobbing text, hit impact burst, camera follows loser, particle clearing on replay entry. All 289 tests passing (105 effects + 184 arena).
+- **2026-03-02**: Reopened — two online-mode bugs: (1) remote player position stuttery during replay (InterpolationSystem fights with replay override), (2) local player indicator ring stays visible during replay.
