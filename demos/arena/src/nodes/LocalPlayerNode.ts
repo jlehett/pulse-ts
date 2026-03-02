@@ -26,7 +26,7 @@ import { useParticleBurst, useParticleEmitter } from '@pulse-ts/effects';
 import { useReplicateTransform, useChannel } from '@pulse-ts/network';
 import { PlayerTag } from '../components/PlayerTag';
 import { GameCtx } from '../contexts';
-import { SPAWN_POSITIONS, DEATH_PLANE_Y } from '../config/arena';
+import { SPAWN_POSITIONS, DEATH_PLANE_Y, PLAYER_COLORS } from '../config/arena';
 import { KnockoutChannel } from '../config/channels';
 import { triggerCameraShake } from './CameraRigNode';
 import { stagePlayerPosition, markHit, getReplayPosition } from '../replay';
@@ -72,9 +72,6 @@ interface KnockbackMsg {
     targetPlayerId: number;
     impulse: [number, number, number];
 }
-
-/** Player colors: P1 = teal, P2 = coral. */
-const PLAYER_COLORS = [0x48c9b0, 0xe74c3c] as const;
 
 /** Color of the online-mode "you" indicator ring (hex). */
 export const INDICATOR_RING_COLOR = 0xffee88;

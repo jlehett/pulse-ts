@@ -26,7 +26,7 @@ export const RESET_PAUSE_DURATION = 0.5;
 export const COUNTDOWN_DURATION = 4.0;
 
 /** Number of seconds of gameplay to record for instant replay. */
-export const REPLAY_BUFFER_SECONDS = 2;
+export const REPLAY_BUFFER_SECONDS = 4;
 
 /** Base playback speed as a fraction of real-time (0.4 = 40%). */
 export const REPLAY_NORMAL_SPEED = 0.4;
@@ -39,3 +39,9 @@ export const REPLAY_HIT_SPEED = 0.15;
  * At 60Hz, 15 frames ≈ 0.25 seconds of game time.
  */
 export const REPLAY_HIT_WINDOW_FRAMES = 15;
+
+/** Player colors: P1 = teal, P2 = coral. */
+export const PLAYER_COLORS = [0x48c9b0, 0xe74c3c] as const;
+
+/** Velocity magnitude threshold for detecting a dash in replay. */
+export const REPLAY_DASH_THRESHOLD = 15;

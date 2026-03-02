@@ -12,11 +12,8 @@ import { useReplicateTransform } from '@pulse-ts/network';
 import { PlayerTag } from '../components/PlayerTag';
 import { GameCtx } from '../contexts';
 import { PLAYER_RADIUS } from './LocalPlayerNode';
-import { SPAWN_POSITIONS, DEATH_PLANE_Y } from '../config/arena';
+import { SPAWN_POSITIONS, DEATH_PLANE_Y, PLAYER_COLORS } from '../config/arena';
 import { stagePlayerPosition, getReplayPosition } from '../replay';
-
-/** Player colors: P1 = teal, P2 = coral. */
-const PLAYER_COLORS = [0x48c9b0, 0xe74c3c] as const;
 
 export interface RemotePlayerNodeProps {
     remotePlayerId: number;

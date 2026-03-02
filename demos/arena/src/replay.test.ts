@@ -9,7 +9,10 @@ import {
     getReplayKnockedOut,
     getReplayHitProximity,
     getSpeedAtFrame,
+    getReplayVelocity,
+    getReplaySpeed,
     endReplay,
+    clearRecording,
     resetReplay,
 } from './replay';
 
@@ -42,15 +45,16 @@ describe('recordFrame + startReplay', () => {
     });
 
     it('ring buffer overwrites oldest frames', () => {
-        // Write 130 frames (buffer is 120 at 2s * 60Hz)
-        for (let i = 0; i < 130; i++) {
+        // Write 250 frames (buffer is 240 at 4s * 60Hz)
+        for (let i = 0; i < 250; i++) {
             recordFrame(i, 0, 0, -i, 0, 0);
         }
         startReplay(0);
 
-        // First available frame should be frame 10 (frames 0-9 were overwritten)
+        // First available frame should be frame 10 (frames 0-9 were overwritten by ring)
         const p0 = getReplayPosition(0);
         expect(p0).not.toBeNull();
+        // 250 - 240 = 10 overwritten, first available is frame 10
         expect(p0![0]).toBeCloseTo(10);
     });
 });
@@ -133,6 +137,73 @@ describe('getReplayHitProximity', () => {
         startReplay(1);
         // Cursor starts at 0, hit at frame 5 — within window
         expect(getReplayHitProximity()).toBeGreaterThan(0);
+    });
+});
+
+describe('getReplayVelocity', () => {
+    it('returns null when no replay is active', () => {
+        expect(getReplayVelocity(0)).toBeNull();
+    });
+
+    it('computes velocity from position deltas', () => {
+        // Frame 0: player 0 at x=0, Frame 1: player 0 at x=2
+        // Velocity = (2-0) * 60 = 120 units/sec
+        recordFrame(0, 0, 0, 0, 0, 0);
+        recordFrame(2, 0, 0, 0, 0, 0);
+        startReplay(1);
+
+        const vel = getReplayVelocity(0);
+        expect(vel).not.toBeNull();
+        expect(vel![0]).toBeCloseTo(120); // dx * FIXED_HZ
+        expect(vel![1]).toBeCloseTo(0);
+        expect(vel![2]).toBeCloseTo(0);
+    });
+
+    it('returns zero velocity at end of buffer', () => {
+        recordFrame(0, 0, 0, 0, 0, 0);
+        startReplay(1);
+        // Only 1 frame — can't compute deltas
+        const vel = getReplayVelocity(0);
+        expect(vel).toBeNull();
+    });
+});
+
+describe('getReplaySpeed', () => {
+    it('returns 0 when no replay is active', () => {
+        expect(getReplaySpeed()).toBe(0);
+    });
+
+    it('returns normal speed far from hit', () => {
+        // Record enough frames so cursor 0 is far from the fallback
+        // hitIndex (which defaults to near the end of the buffer)
+        for (let i = 0; i < 60; i++) {
+            recordFrame(i, 0, 0, 0, 0, 0);
+        }
+        startReplay(1);
+        // Cursor at 0, fallback hit at frame ~45 — distance exceeds window
+        expect(getReplaySpeed()).toBeCloseTo(0.4);
+    });
+});
+
+describe('clearRecording', () => {
+    it('clears recording buffer but not active playback', () => {
+        recordFrame(0, 0, 0, 0, 0, 0);
+        recordFrame(1, 0, 0, 0, 0, 0);
+        startReplay(1);
+        expect(isReplayActive()).toBe(true);
+
+        clearRecording();
+
+        // Playback still active — clearRecording only affects recording
+        expect(isReplayActive()).toBe(true);
+
+        // New replay after clearing has no frames
+        endReplay();
+        recordFrame(5, 0, 0, 0, 0, 0);
+        startReplay(0);
+        const p0 = getReplayPosition(0);
+        expect(p0).not.toBeNull();
+        expect(p0![0]).toBeCloseTo(5); // only the new frame
     });
 });
 

@@ -14,7 +14,13 @@ import {
     COUNTDOWN_DURATION,
 } from '../config/arena';
 import { KnockoutChannel } from '../config/channels';
-import { startReplay, isReplayActive, endReplay, commitFrame } from '../replay';
+import {
+    startReplay,
+    isReplayActive,
+    endReplay,
+    commitFrame,
+    clearRecording,
+} from '../replay';
 
 /**
  * Compute the countdown display value from the remaining countdown time.
@@ -138,6 +144,8 @@ export function GameManagerNode(props?: Readonly<GameManagerNodeProps>) {
                     gameState.phase = 'resetting';
                     resetPauseTimer.reset();
                     gameState.round++;
+                    // Clear recorded footage so next replay only shows the new round
+                    clearRecording();
                 }
                 break;
 

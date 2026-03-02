@@ -323,12 +323,91 @@ export function getReplayHitProximity(): number {
     return 1 - dist / REPLAY_HIT_WINDOW_FRAMES;
 }
 
+/**
+ * Get the velocity of a player at the current replay cursor, computed
+ * from position deltas between consecutive frames.
+ * Returns `null` when no replay is active.
+ *
+ * @param playerId - Player index (0 or 1).
+ * @returns `[vx, vy, vz]` velocity in units/second, or `null`.
+ *
+ * @example
+ * ```ts
+ * const vel = getReplayVelocity(0);
+ * if (vel) {
+ *     const speed = Math.sqrt(vel[0]**2 + vel[2]**2);
+ * }
+ * ```
+ */
+export function getReplayVelocity(
+    playerId: number,
+): [number, number, number] | null {
+    if (!active || playbackFrames.length < 2) return null;
+
+    const idx = Math.min(cursorPos, playbackFrames.length - 1);
+    const i0 = Math.floor(idx);
+    const i1 = Math.min(i0 + 1, playbackFrames.length - 1);
+    if (i0 === i1) return [0, 0, 0];
+
+    const f0 = playbackFrames[i0];
+    const f1 = playbackFrames[i1];
+
+    if (playerId === 0) {
+        return [
+            (f1.p0x - f0.p0x) * FIXED_HZ,
+            (f1.p0y - f0.p0y) * FIXED_HZ,
+            (f1.p0z - f0.p0z) * FIXED_HZ,
+        ];
+    }
+    return [
+        (f1.p1x - f0.p1x) * FIXED_HZ,
+        (f1.p1y - f0.p1y) * FIXED_HZ,
+        (f1.p1z - f0.p1z) * FIXED_HZ,
+    ];
+}
+
+/**
+ * Get the current replay playback speed as a fraction of real-time.
+ * Returns 0 when no replay is active.
+ *
+ * @returns Speed factor (e.g. 0.4 for normal, 0.15 at hit moment).
+ *
+ * @example
+ * ```ts
+ * const speed = getReplaySpeed(); // 0.4 or 0.15
+ * ```
+ */
+export function getReplaySpeed(): number {
+    if (!active || playbackFrames.length === 0) return 0;
+    const frameIdx = Math.floor(Math.min(cursorPos, playbackFrames.length - 1));
+    return getSpeedAtFrame(frameIdx);
+}
+
 /** End the replay and release the playback buffer. */
 export function endReplay(): void {
     active = false;
     playbackFrames = [];
     hitIndex = -1;
     cursorPos = 0;
+}
+
+/**
+ * Clear the recording buffer without affecting active playback.
+ * Call at the start of each round so the replay only contains
+ * footage from the current round.
+ *
+ * @example
+ * ```ts
+ * // In GameManagerNode when the round counter increments:
+ * clearRecording();
+ * ```
+ */
+export function clearRecording(): void {
+    buffer.length = 0;
+    writeCount = 0;
+    lastHitWriteCount = -1;
+    staged0x = staged0y = staged0z = 0;
+    staged1x = staged1y = staged1z = 0;
 }
 
 /**
