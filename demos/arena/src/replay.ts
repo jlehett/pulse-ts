@@ -324,6 +324,29 @@ export function getReplayHitProximity(): number {
 }
 
 /**
+ * How far past the hit moment the cursor is, as a 0–1 value.
+ * Returns 0 when the cursor is at or before the hit, and ramps to 1
+ * over `REPLAY_HIT_WINDOW_FRAMES` after the hit. Used by the camera
+ * to transition from follow-cam back to overhead after the impact.
+ *
+ * @returns 0 = at/before hit, 1 = far past hit.
+ *
+ * @example
+ * ```ts
+ * const pastHit = getReplayPastHit();
+ * const followFactor = 1 - pastHit; // 1 = full follow, 0 = overhead
+ * ```
+ */
+export function getReplayPastHit(): number {
+    if (hitIndex < 0 || playbackFrames.length === 0) return 0;
+    const idx = Math.min(cursorPos, playbackFrames.length - 1);
+    const dist = idx - hitIndex; // signed: negative = before hit
+    if (dist <= 0) return 0;
+    if (dist >= REPLAY_HIT_WINDOW_FRAMES) return 1;
+    return dist / REPLAY_HIT_WINDOW_FRAMES;
+}
+
+/**
  * Get the velocity of a player at the current replay cursor, computed
  * from position deltas between consecutive frames.
  * Returns `null` when no replay is active.

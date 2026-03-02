@@ -6,6 +6,7 @@ import {
     getReplayPosition,
     getReplayScorer,
     getReplayHitProximity,
+    getReplayPastHit,
 } from '../replay';
 
 /** Fixed camera height above the arena center. */
@@ -106,15 +107,23 @@ export function CameraRigNode() {
             const scorerId = getReplayScorer();
             const scorerPos = getReplayPosition(scorerId);
             const hitProx = getReplayHitProximity();
+            // 0 = at/before hit (full follow), 1 = far past hit (overhead)
+            const pastHit = getReplayPastHit();
+            const follow = 1 - pastHit;
 
             if (scorerPos) {
-                // Follow the scorer from behind and above
-                targetLookX = scorerPos[0];
-                targetLookY = scorerPos[1];
-                targetLookZ = scorerPos[2];
-                targetX = scorerPos[0];
-                targetY = REPLAY_CAMERA_HEIGHT - REPLAY_HIT_ZOOM * hitProx;
-                targetZ = scorerPos[2] + REPLAY_CAMERA_FOLLOW_DIST;
+                // Blend between follow-cam and overhead based on hit progress
+                const followX = scorerPos[0];
+                const followY =
+                    REPLAY_CAMERA_HEIGHT - REPLAY_HIT_ZOOM * hitProx;
+                const followZ = scorerPos[2] + REPLAY_CAMERA_FOLLOW_DIST;
+
+                targetX = followX * follow;
+                targetY = followY * follow + CAMERA_HEIGHT * pastHit;
+                targetZ = followZ * follow + CAMERA_Z_OFFSET * pastHit;
+                targetLookX = scorerPos[0] * follow;
+                targetLookY = scorerPos[1] * follow;
+                targetLookZ = scorerPos[2] * follow;
             }
         }
 

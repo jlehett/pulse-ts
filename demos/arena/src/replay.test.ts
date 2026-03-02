@@ -8,6 +8,7 @@ import {
     getReplayScorer,
     getReplayKnockedOut,
     getReplayHitProximity,
+    getReplayPastHit,
     getSpeedAtFrame,
     getReplayVelocity,
     getReplaySpeed,
@@ -182,6 +183,35 @@ describe('getReplaySpeed', () => {
         startReplay(1);
         // Cursor at 0, fallback hit at frame ~45 — distance exceeds window
         expect(getReplaySpeed()).toBeCloseTo(0.4);
+    });
+});
+
+describe('getReplayPastHit', () => {
+    it('returns 0 when no replay is active', () => {
+        expect(getReplayPastHit()).toBe(0);
+    });
+
+    it('returns 0 when cursor is before the hit', () => {
+        for (let i = 0; i < 40; i++) {
+            recordFrame(i, 0, 0, 0, 0, 0);
+            if (i === 30) markHit();
+        }
+        startReplay(1);
+        // Cursor at 0, hit at frame 30 — before hit
+        expect(getReplayPastHit()).toBe(0);
+    });
+
+    it('ramps toward 1 when cursor passes the hit', () => {
+        for (let i = 0; i < 60; i++) {
+            recordFrame(i, 0, 0, 0, 0, 0);
+            if (i === 10) markHit();
+        }
+        startReplay(1);
+        // Advance cursor well past the hit frame
+        // cursor += dt * speed * 60. At normal speed (0.4):
+        // cursor += 1.0 * 0.4 * 60 = 24 frames (past hit at 10)
+        advanceReplay(1.0);
+        expect(getReplayPastHit()).toBeGreaterThan(0);
     });
 });
 
