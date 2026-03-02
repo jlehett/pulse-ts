@@ -36,3 +36,4 @@ to an actual interaction like a touchstart or click.
 - **2026-03-02**: Ticket created.
 - **2026-03-02**: Starting implementation.
 - **2026-03-02**: Implementation complete. Created `autoFullscreen.ts` with `initAutoFullscreen()` — one-shot touchstart listener that requests fullscreen on first touch, gated to mobile devices. 6 new tests, all 110 pass, lint clean.
+- **2026-03-02**: Added PWA support for iOS Safari (which doesn't support the Fullscreen API). Created `manifest.json` with `display: fullscreen`, added iOS meta tags, and built `installPrompt.ts` showing a one-time "Add to Home Screen" banner. 8 more tests, all 118 pass, lint clean.
