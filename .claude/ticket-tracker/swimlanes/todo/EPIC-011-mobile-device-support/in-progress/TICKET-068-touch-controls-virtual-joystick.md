@@ -2,7 +2,7 @@
 id: TICKET-068
 epic: EPIC-011
 title: "Touch controls — virtual joystick and action buttons"
-status: todo
+status: in-progress
 priority: critical
 created: 2026-03-01
 updated: 2026-03-01
@@ -34,3 +34,4 @@ Key files: `packages/input/src/`, `demos/arena/src/config/bindings.ts`, new `Tou
 ## Notes
 
 - **2026-03-01**: Ticket created. This is the critical blocker — without it the game is unplayable on mobile.
+- **2026-03-01**: Starting implementation.
