@@ -334,6 +334,22 @@ export class ParticlesService extends Service {
     }
 
     /**
+     * Kill all alive particles across every pool and sync buffers so
+     * the cleared state is rendered immediately.
+     *
+     * @example
+     * ```ts
+     * service.clearAll(); // screen is now particle-free
+     * ```
+     */
+    clearAll(): void {
+        for (const managed of this._pools.values()) {
+            managed.pool.killAll();
+            syncBuffers(managed);
+        }
+    }
+
+    /**
      * Advance all pools by `dt` seconds and sync Three.js buffers.
      *
      * @param dt - Delta time in seconds.

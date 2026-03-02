@@ -1,6 +1,6 @@
 import { useFrameUpdate, useDestroy, useContext } from '@pulse-ts/core';
 import { useThreeContext } from '@pulse-ts/three';
-import { useParticleBurst } from '@pulse-ts/effects';
+import { useParticleBurst, useClearParticles } from '@pulse-ts/effects';
 import { GameCtx } from '../contexts';
 import {
     advanceReplay,
@@ -174,6 +174,9 @@ export function ReplayNode() {
     });
     const trailBursts = [trailBurst0, trailBurst1];
 
+    // Clear lingering gameplay particles when entering replay
+    const clearParticles = useClearParticles();
+
     // Transition state
     let wasReplay = false;
     let flashTimer = 0;
@@ -184,9 +187,10 @@ export function ReplayNode() {
     useFrameUpdate((dt) => {
         const isReplay = gameState.phase === 'replay' && isReplayActive();
 
-        // Detect transition into replay — trigger dark flash
+        // Detect transition into replay — trigger dark flash and clear particles
         if (isReplay && !wasReplay) {
             flashTimer = TRANSITION_FLASH_DURATION;
+            clearParticles();
         }
         // Detect transition out of replay — trigger exit flash
         if (!isReplay && wasReplay) {

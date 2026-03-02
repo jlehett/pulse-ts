@@ -325,6 +325,65 @@ describe('ParticlePool — continuous emission', () => {
 });
 
 // ---------------------------------------------------------------------------
+// killAll
+// ---------------------------------------------------------------------------
+
+describe('ParticlePool — killAll', () => {
+    test('killAll sets all alive particles to dead', () => {
+        const pool = new ParticlePool({
+            maxCount: 10,
+            init: (p) => {
+                p.lifetime = 5;
+            },
+        });
+
+        pool.burst(7);
+        expect(pool.aliveCount).toBe(7);
+
+        pool.killAll();
+        expect(pool.aliveCount).toBe(0);
+    });
+
+    test('killAll resets accumulator so partial emission is discarded', () => {
+        const pool = new ParticlePool({
+            maxCount: 100,
+            init: (p) => {
+                p.lifetime = 10;
+            },
+        });
+
+        pool.rate = 3; // 3/s → 0.3 per tick at 0.1s
+        pool.emitting = true;
+
+        // Build up fractional accumulator (0.3 × 2 = 0.6, not enough for 1)
+        pool.tick(0.1);
+        pool.tick(0.1);
+        expect(pool.aliveCount).toBe(0); // still accumulating
+
+        pool.killAll();
+
+        // One more 0.1s tick adds 0.3 — without reset this would be 0.9 → 0 spawn
+        // but more importantly, no stale accumulator carries over
+        pool.tick(0.1);
+        expect(pool.aliveCount).toBe(0); // fresh accumulator, only 0.3
+    });
+
+    test('particles can be respawned after killAll', () => {
+        const pool = new ParticlePool({
+            maxCount: 5,
+            init: (p) => {
+                p.lifetime = 5;
+            },
+        });
+
+        pool.burst(5);
+        pool.killAll();
+        pool.burst(3);
+        expect(pool.aliveCount).toBe(3);
+    });
+});
+
+// ---------------------------------------------------------------------------
 // Vec3Mut & ColorMut helpers
 // ---------------------------------------------------------------------------
 

@@ -8,6 +8,7 @@ export type {
 
 // High-level convenience hooks
 export { installParticles } from './installParticles';
+export { useClearParticles } from './useClearParticles';
 export { useParticleBurst } from './useParticleBurst';
 export type { ParticleBurstOptions, BurstFn } from './useParticleBurst';
 export { useParticleEmitter } from './useParticleEmitter';
