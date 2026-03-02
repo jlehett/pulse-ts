@@ -2,7 +2,8 @@
 id: TICKET-078
 epic: EPIC-012
 title: Arena visual polish (lighting, materials, platform texture)
-status: todo
+status: done
+branch: ticket-078-arena-visual-polish
 priority: medium
 created: 2026-03-02
 updated: 2026-03-02
@@ -28,12 +29,14 @@ on the bloom post-processing from TICKET-077 to make emissive elements glow.
 
 ## Acceptance Criteria
 
-- [ ] usePointLight hook available in @pulse-ts/three
-- [ ] Colored accent lights visible on platform surface
-- [ ] Platform grid texture subtle but visible under lighting
-- [ ] Player spheres have faint emissive glow under bloom
-- [ ] All tests pass
+- [x] usePointLight hook available in @pulse-ts/three
+- [x] Colored accent lights visible on platform surface
+- [x] Platform grid texture subtle but visible under lighting
+- [x] Player spheres have faint emissive glow under bloom
+- [x] All tests pass
 
 ## Notes
 
 - **2026-03-02**: Ticket created.
+- **2026-03-02**: Starting implementation.
+- **2026-03-02**: Done. Engine: added `usePointLight` hook with JSDoc + tests. Demo: teal/coral accent point lights, procedural grid normal map on platform, emissive player materials (0.15 intensity).

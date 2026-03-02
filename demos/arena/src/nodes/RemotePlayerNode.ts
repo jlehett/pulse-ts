@@ -54,12 +54,14 @@ export function RemotePlayerNode({
         restitution: 0.2,
     });
 
-    // Visual — same sphere mesh as the remote player's color
+    // Visual — same sphere mesh with subtle emissive glow (blooms under post-processing)
     useMesh('sphere', {
         radius: PLAYER_RADIUS,
         color: PLAYER_COLORS[remotePlayerId],
-        roughness: 0.4,
-        metalness: 0.3,
+        emissive: PLAYER_COLORS[remotePlayerId],
+        emissiveIntensity: 0.15,
+        roughness: 0.35,
+        metalness: 0.4,
         castShadow: true,
     });
 

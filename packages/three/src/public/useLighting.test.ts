@@ -1,7 +1,12 @@
 /** @jest-environment jsdom */
 import { World } from '@pulse-ts/core';
 import { ThreeService } from '../domain/services/Three';
-import { useAmbientLight, useDirectionalLight, useFog } from './useLighting';
+import {
+    useAmbientLight,
+    useDirectionalLight,
+    usePointLight,
+    useFog,
+} from './useLighting';
 import type * as THREE from 'three';
 
 // ---------------------------------------------------------------------------
@@ -135,6 +140,21 @@ jest.mock('three', () => {
             },
         };
     }
+    class PointLight extends Light {
+        _type = 'PointLight';
+        _distance: number | undefined;
+        _decay: number | undefined;
+        constructor(
+            color?: number,
+            intensity?: number,
+            distance?: number,
+            decay?: number,
+        ) {
+            super(color, intensity);
+            this._distance = distance;
+            this._decay = decay;
+        }
+    }
 
     // Fog stub
     class Fog {
@@ -162,6 +182,7 @@ jest.mock('three', () => {
         Light,
         AmbientLight,
         DirectionalLight,
+        PointLight,
         Fog,
     };
 });
@@ -285,6 +306,62 @@ describe('useDirectionalLight', () => {
         let light!: THREE.DirectionalLight;
         function FC() {
             light = useDirectionalLight();
+        }
+        const node = world.mount(FC);
+        expect(svc.scene.children).toContain(light);
+
+        node.destroy();
+        expect(svc.scene.children).not.toContain(light);
+    });
+});
+
+describe('usePointLight', () => {
+    let world: World;
+    let svc: ThreeService;
+
+    beforeEach(() => {
+        world = new World();
+        svc = world.provideService(
+            new ThreeService({ canvas: createCanvas(), enableCulling: false }),
+        );
+    });
+
+    test('adds a point light to the scene', () => {
+        let light!: THREE.PointLight;
+        function FC() {
+            light = usePointLight({
+                color: 0x48c9b0,
+                intensity: 0.5,
+                distance: 40,
+                decay: 2,
+            });
+        }
+        world.mount(FC);
+        expect(svc.scene.children).toContain(light);
+        expect((light as any)._type).toBe('PointLight');
+        expect((light as any)._color).toBe(0x48c9b0);
+        expect((light as any)._intensity).toBe(0.5);
+        expect((light as any)._distance).toBe(40);
+        expect((light as any)._decay).toBe(2);
+    });
+
+    test('sets position when provided', () => {
+        let light!: THREE.PointLight;
+        function FC() {
+            light = usePointLight({
+                position: [-10, -3, -10],
+            });
+        }
+        world.mount(FC);
+        expect(light.position.x).toBe(-10);
+        expect(light.position.y).toBe(-3);
+        expect(light.position.z).toBe(-10);
+    });
+
+    test('removes the light on node destroy', () => {
+        let light!: THREE.PointLight;
+        function FC() {
+            light = usePointLight();
         }
         const node = world.mount(FC);
         expect(svc.scene.children).toContain(light);
