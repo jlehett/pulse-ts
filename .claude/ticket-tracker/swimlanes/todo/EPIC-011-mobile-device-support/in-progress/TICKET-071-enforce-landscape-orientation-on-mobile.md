@@ -2,7 +2,7 @@
 id: TICKET-071
 epic: EPIC-011
 title: Enforce landscape orientation on mobile devices
-status: todo
+status: in-progress
 priority: high
 created: 2026-03-02
 updated: 2026-03-02
@@ -38,3 +38,4 @@ Pairs with TICKET-073 (auto-fullscreen), since orientation lock requires fullscr
 ## Notes
 
 - **2026-03-02**: Ticket created.
+- **2026-03-02**: Starting implementation.
