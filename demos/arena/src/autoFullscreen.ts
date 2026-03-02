@@ -1,3 +1,5 @@
+import { isMobileDevice } from './isMobileDevice';
+
 /**
  * Request fullscreen on the user's first touch interaction.
  *
@@ -20,8 +22,8 @@
  * ```
  */
 export function initAutoFullscreen(): () => void {
-    // Gate: only run on touch-capable (mobile) devices
-    if (typeof navigator === 'undefined' || navigator.maxTouchPoints <= 0) {
+    // Gate: only run on mobile/tablet devices
+    if (!isMobileDevice()) {
         return () => {};
     }
 

@@ -1,5 +1,6 @@
 import { useDestroy } from '@pulse-ts/core';
 import { useInput } from '@pulse-ts/input';
+import { isMobileDevice } from '../isMobileDevice';
 
 /** Default deadzone — inputs within this magnitude are zeroed. */
 const DEADZONE = 0.15;
@@ -92,16 +93,16 @@ export interface TouchControlsNodeProps {
  * On-screen touch controls for mobile devices: a virtual joystick (left)
  * for analog movement, a dash button (right), and a pause button (top-right).
  *
- * The controls only render when the device reports touch capability
- * (`navigator.maxTouchPoints > 0`). On desktop the node is a no-op.
+ * The controls only render on mobile/tablet devices (detected via the
+ * `pointer: coarse` media query). On desktop — including touch-enabled
+ * laptops — the node is a no-op.
  *
  * Multi-touch is supported — the player can move and dash simultaneously
  * by tracking separate touch identifiers per control.
  */
 export function TouchControlsNode(props?: Readonly<TouchControlsNodeProps>) {
-    // Gate: only show on touch-capable devices
-    if (typeof navigator === 'undefined' || navigator.maxTouchPoints <= 0)
-        return;
+    // Gate: only show on mobile/tablet devices (not touch-enabled laptops)
+    if (!isMobileDevice()) return;
 
     const input = useInput();
     const moveAction = props?.moveAction ?? 'p1Move';

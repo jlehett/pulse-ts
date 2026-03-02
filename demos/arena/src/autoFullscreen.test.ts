@@ -1,25 +1,18 @@
 import { initAutoFullscreen } from './autoFullscreen';
 
+function mockMobile(mobile: boolean) {
+    window.matchMedia = jest
+        .fn()
+        .mockReturnValue({ matches: mobile } as unknown as MediaQueryList);
+}
+
 describe('initAutoFullscreen', () => {
-    let originalMaxTouchPoints: number;
-
-    beforeEach(() => {
-        originalMaxTouchPoints = navigator.maxTouchPoints;
-    });
-
     afterEach(() => {
-        Object.defineProperty(navigator, 'maxTouchPoints', {
-            value: originalMaxTouchPoints,
-            configurable: true,
-        });
         jest.restoreAllMocks();
     });
 
-    it('returns a no-op cleanup on desktop (no touch)', () => {
-        Object.defineProperty(navigator, 'maxTouchPoints', {
-            value: 0,
-            configurable: true,
-        });
+    it('returns a no-op cleanup on desktop', () => {
+        mockMobile(false);
         const addSpy = jest.spyOn(document, 'addEventListener');
         const cleanup = initAutoFullscreen();
         expect(addSpy).not.toHaveBeenCalledWith(
@@ -31,10 +24,7 @@ describe('initAutoFullscreen', () => {
     });
 
     it('registers a touchstart listener on mobile devices', () => {
-        Object.defineProperty(navigator, 'maxTouchPoints', {
-            value: 1,
-            configurable: true,
-        });
+        mockMobile(true);
         const addSpy = jest.spyOn(document, 'addEventListener');
         const cleanup = initAutoFullscreen();
 
@@ -47,10 +37,7 @@ describe('initAutoFullscreen', () => {
     });
 
     it('requests fullscreen on first touch', () => {
-        Object.defineProperty(navigator, 'maxTouchPoints', {
-            value: 1,
-            configurable: true,
-        });
+        mockMobile(true);
         const requestFn = jest.fn().mockResolvedValue(undefined);
         document.documentElement.requestFullscreen = requestFn;
 
@@ -64,10 +51,7 @@ describe('initAutoFullscreen', () => {
     });
 
     it('only fires once (one-shot listener)', () => {
-        Object.defineProperty(navigator, 'maxTouchPoints', {
-            value: 1,
-            configurable: true,
-        });
+        mockMobile(true);
         const requestFn = jest.fn().mockResolvedValue(undefined);
         document.documentElement.requestFullscreen = requestFn;
 
@@ -81,10 +65,7 @@ describe('initAutoFullscreen', () => {
     });
 
     it('does not throw when requestFullscreen is unavailable', () => {
-        Object.defineProperty(navigator, 'maxTouchPoints', {
-            value: 1,
-            configurable: true,
-        });
+        mockMobile(true);
         // Remove requestFullscreen
         const original = document.documentElement.requestFullscreen;
         (document.documentElement as any).requestFullscreen = undefined;
@@ -100,10 +81,7 @@ describe('initAutoFullscreen', () => {
     });
 
     it('removes listener on cleanup before touch fires', () => {
-        Object.defineProperty(navigator, 'maxTouchPoints', {
-            value: 1,
-            configurable: true,
-        });
+        mockMobile(true);
         const requestFn = jest.fn().mockResolvedValue(undefined);
         document.documentElement.requestFullscreen = requestFn;
 

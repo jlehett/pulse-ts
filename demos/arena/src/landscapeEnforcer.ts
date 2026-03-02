@@ -1,3 +1,5 @@
+import { isMobileDevice } from './isMobileDevice';
+
 /**
  * Enforce landscape orientation on mobile devices.
  *
@@ -19,8 +21,8 @@
  * ```
  */
 export function initLandscapeEnforcer(): () => void {
-    // Gate: only run on touch-capable (mobile) devices
-    if (typeof navigator === 'undefined' || navigator.maxTouchPoints <= 0) {
+    // Gate: only run on mobile/tablet devices
+    if (!isMobileDevice()) {
         return () => {};
     }
 

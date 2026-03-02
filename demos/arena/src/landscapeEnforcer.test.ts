@@ -2,64 +2,62 @@ import { initLandscapeEnforcer } from './landscapeEnforcer';
 
 // ── Test helpers ──
 
-let changeHandler: (() => void) | null = null;
+let orientationChangeHandler: (() => void) | null = null;
 
-function installMatchMedia(portrait: boolean) {
-    const query = {
-        matches: portrait,
+/**
+ * Install a matchMedia mock that handles both `(pointer: coarse)` for
+ * isMobileDevice() and `(orientation: portrait)` for the enforcer.
+ */
+function installMatchMedia(opts: { mobile: boolean; portrait: boolean }) {
+    const orientationQuery = {
+        matches: opts.portrait,
         addEventListener: jest.fn((_event: string, handler: () => void) => {
-            changeHandler = handler;
+            orientationChangeHandler = handler;
         }),
         removeEventListener: jest.fn(),
-        media: '',
+        media: '(orientation: portrait)',
         onchange: null,
         addListener: jest.fn(),
         removeListener: jest.fn(),
         dispatchEvent: jest.fn(),
     } as unknown as MediaQueryList;
 
-    window.matchMedia = jest.fn().mockReturnValue(query);
-    return query;
+    const coarseQuery = {
+        matches: opts.mobile,
+    } as unknown as MediaQueryList;
+
+    window.matchMedia = jest.fn((query: string) => {
+        if (query === '(pointer: coarse)') return coarseQuery;
+        return orientationQuery;
+    });
+
+    return orientationQuery;
 }
 
 function setPortrait(query: MediaQueryList, val: boolean) {
     (query as unknown as { matches: boolean }).matches = val;
-    changeHandler?.();
+    orientationChangeHandler?.();
 }
 
 describe('initLandscapeEnforcer', () => {
-    let originalMaxTouchPoints: number;
-
     beforeEach(() => {
-        originalMaxTouchPoints = navigator.maxTouchPoints;
-        changeHandler = null;
+        orientationChangeHandler = null;
     });
 
     afterEach(() => {
-        Object.defineProperty(navigator, 'maxTouchPoints', {
-            value: originalMaxTouchPoints,
-            configurable: true,
-        });
         document.body.innerHTML = '';
         jest.restoreAllMocks();
     });
 
-    it('returns a no-op cleanup on desktop (no touch)', () => {
-        Object.defineProperty(navigator, 'maxTouchPoints', {
-            value: 0,
-            configurable: true,
-        });
+    it('returns a no-op cleanup on desktop', () => {
+        installMatchMedia({ mobile: false, portrait: false });
         const cleanup = initLandscapeEnforcer();
         expect(document.body.children.length).toBe(0);
         cleanup(); // should not throw
     });
 
-    it('creates the overlay on touch devices', () => {
-        Object.defineProperty(navigator, 'maxTouchPoints', {
-            value: 1,
-            configurable: true,
-        });
-        installMatchMedia(false);
+    it('creates the overlay on mobile devices', () => {
+        installMatchMedia({ mobile: true, portrait: false });
         const cleanup = initLandscapeEnforcer();
         const overlay = document.body.querySelector('div');
         expect(overlay).not.toBeNull();
@@ -67,11 +65,7 @@ describe('initLandscapeEnforcer', () => {
     });
 
     it('shows overlay when in portrait mode', () => {
-        Object.defineProperty(navigator, 'maxTouchPoints', {
-            value: 1,
-            configurable: true,
-        });
-        installMatchMedia(true);
+        installMatchMedia({ mobile: true, portrait: true });
         const cleanup = initLandscapeEnforcer();
         const overlay = document.body.querySelector('div') as HTMLElement;
         expect(overlay.style.display).toBe('flex');
@@ -79,11 +73,7 @@ describe('initLandscapeEnforcer', () => {
     });
 
     it('hides overlay when in landscape mode', () => {
-        Object.defineProperty(navigator, 'maxTouchPoints', {
-            value: 1,
-            configurable: true,
-        });
-        installMatchMedia(false);
+        installMatchMedia({ mobile: true, portrait: false });
         const cleanup = initLandscapeEnforcer();
         const overlay = document.body.querySelector('div') as HTMLElement;
         expect(overlay.style.display).toBe('none');
@@ -91,11 +81,7 @@ describe('initLandscapeEnforcer', () => {
     });
 
     it('reacts to orientation changes', () => {
-        Object.defineProperty(navigator, 'maxTouchPoints', {
-            value: 1,
-            configurable: true,
-        });
-        const query = installMatchMedia(false);
+        const query = installMatchMedia({ mobile: true, portrait: false });
         const cleanup = initLandscapeEnforcer();
         const overlay = document.body.querySelector('div') as HTMLElement;
 
@@ -113,11 +99,7 @@ describe('initLandscapeEnforcer', () => {
     });
 
     it('removes overlay and listeners on cleanup', () => {
-        Object.defineProperty(navigator, 'maxTouchPoints', {
-            value: 1,
-            configurable: true,
-        });
-        const query = installMatchMedia(false);
+        const query = installMatchMedia({ mobile: true, portrait: false });
         const cleanup = initLandscapeEnforcer();
 
         expect(document.body.querySelector('div')).not.toBeNull();
@@ -130,11 +112,7 @@ describe('initLandscapeEnforcer', () => {
     });
 
     it('attempts orientation lock on fullscreen change', () => {
-        Object.defineProperty(navigator, 'maxTouchPoints', {
-            value: 1,
-            configurable: true,
-        });
-        installMatchMedia(false);
+        installMatchMedia({ mobile: true, portrait: false });
 
         const lockFn = jest.fn().mockResolvedValue(undefined);
         Object.defineProperty(screen, 'orientation', {
@@ -162,11 +140,7 @@ describe('initLandscapeEnforcer', () => {
     });
 
     it('does not throw when orientation lock is unsupported', () => {
-        Object.defineProperty(navigator, 'maxTouchPoints', {
-            value: 1,
-            configurable: true,
-        });
-        installMatchMedia(false);
+        installMatchMedia({ mobile: true, portrait: false });
 
         Object.defineProperty(screen, 'orientation', {
             value: {},
