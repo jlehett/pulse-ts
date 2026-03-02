@@ -13,6 +13,7 @@ import { CountdownOverlayNode } from './CountdownOverlayNode';
 import { MatchOverOverlayNode } from './MatchOverOverlayNode';
 import { PauseMenuNode } from './PauseMenuNode';
 import { DisconnectOverlayNode } from './DisconnectOverlayNode';
+import { TouchControlsNode } from './TouchControlsNode';
 import { CameraRigNode } from './CameraRigNode';
 
 export interface ArenaNodeProps {
@@ -128,6 +129,9 @@ export function ArenaNode(props?: Readonly<ArenaNodeProps>) {
             onRequestMenu: props.onRequestMenu,
         });
     }
+
+    // Touch controls — self-gates on touch-capable devices
+    useChild(TouchControlsNode);
 
     // Camera rig — fixed overhead view
     useChild(CameraRigNode);
