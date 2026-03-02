@@ -2,7 +2,7 @@
 id: TICKET-072
 epic: EPIC-011
 title: Hide touch controls on non-mobile devices
-status: in-progress
+status: done
 priority: high
 created: 2026-03-02
 updated: 2026-03-02
@@ -26,12 +26,13 @@ screen dimensions, `pointer: coarse` media query, or user-agent heuristics.
 
 ## Acceptance Criteria
 
-- [ ] Touch controls (joystick, dash button, pause button) are hidden on desktop/laptop browsers
-- [ ] Touch controls still appear on phones and tablets
-- [ ] Touch-enabled laptops do not show touch controls
-- [ ] No regression for actual mobile devices
+- [x] Touch controls (joystick, dash button, pause button) are hidden on desktop/laptop browsers
+- [x] Touch controls still appear on phones and tablets
+- [x] Touch-enabled laptops do not show touch controls
+- [x] No regression for actual mobile devices
 
 ## Notes
 
 - **2026-03-02**: Ticket created.
 - **2026-03-02**: Starting implementation.
+- **2026-03-02**: Implementation complete. Extracted shared `isMobileDevice()` utility using `pointer: coarse` media query (falls back to `maxTouchPoints`). Replaced checks in TouchControlsNode, landscapeEnforcer, and autoFullscreen. 3 new tests for the utility, updated all related test suites. All 125 tests pass, lint clean.
