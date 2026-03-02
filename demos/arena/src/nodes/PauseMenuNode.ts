@@ -34,56 +34,65 @@ export function PauseMenuNode(props?: Readonly<PauseMenuNodeProps>) {
     } as Partial<CSSStyleDeclaration>);
     container.appendChild(backdrop);
 
-    // "PAUSED" title
-    const title = document.createElement('div');
-    Object.assign(title.style, {
+    // Content wrapper — flex column for title + buttons
+    const content = document.createElement('div');
+    Object.assign(content.style, {
         position: 'absolute',
-        top: '35%',
-        left: '50%',
-        transform: 'translate(-50%, -50%)',
+        inset: '0',
         zIndex: '4501',
-        font: 'bold clamp(28px, 8vw, 48px) monospace',
-        color: '#ffffff',
-        textShadow: '0 0 20px rgba(0,0,0,0.9)',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: '16px',
         transition: 'opacity 0.3s ease-in-out',
         opacity: '0',
         pointerEvents: 'none',
     } as Partial<CSSStyleDeclaration>);
+    container.appendChild(content);
+
+    // "PAUSED" title
+    const title = document.createElement('div');
+    Object.assign(title.style, {
+        font: 'bold clamp(28px, 8vw, 48px) monospace',
+        color: '#ffffff',
+        textShadow: '0 0 20px rgba(0,0,0,0.9)',
+        marginBottom: '16px',
+    } as Partial<CSSStyleDeclaration>);
     title.textContent = props?.online ? 'MENU' : 'PAUSED';
-    container.appendChild(title);
+    content.appendChild(title);
+
+    // Button row — flex column with controlled gap
+    const buttonRow = document.createElement('div');
+    Object.assign(buttonRow.style, {
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '12px',
+        alignItems: 'center',
+    } as Partial<CSSStyleDeclaration>);
+    content.appendChild(buttonRow);
 
     /**
      * Create a styled menu button.
      *
      * @param label - Button text.
      * @param color - Accent color for hover effects.
-     * @param top - CSS top position.
      * @returns The created button element.
      */
-    function createButton(
-        label: string,
-        color: string,
-        top: string,
-    ): HTMLButtonElement {
+    function createButton(label: string, color: string): HTMLButtonElement {
         const btn = document.createElement('button');
         btn.textContent = label;
         Object.assign(btn.style, {
-            position: 'absolute',
-            top,
-            left: '50%',
-            transform: 'translateX(-50%)',
-            zIndex: '4501',
             font: 'bold clamp(14px, 3.5vw, 18px) monospace',
             color: '#fff',
             backgroundColor: 'rgba(255,255,255,0.08)',
             border: '2px solid rgba(255,255,255,0.2)',
             borderRadius: '6px',
             padding: '12px 32px',
+            minWidth: 'min(200px, 70vw)',
             minHeight: '44px',
             cursor: 'pointer',
-            transition: 'all 0.2s ease, opacity 0.3s ease-in-out',
-            opacity: '0',
-            pointerEvents: 'none',
+            transition: 'all 0.2s ease',
         } as Partial<CSSStyleDeclaration>);
         btn.addEventListener('pointerdown', () => {
             btn.style.backgroundColor = 'rgba(255,255,255,0.15)';
@@ -100,7 +109,7 @@ export function PauseMenuNode(props?: Readonly<PauseMenuNodeProps>) {
             btn.style.borderColor = 'rgba(255,255,255,0.2)';
             btn.style.boxShadow = 'none';
         });
-        container.appendChild(btn);
+        buttonRow.appendChild(btn);
         return btn;
     }
 
@@ -108,7 +117,7 @@ export function PauseMenuNode(props?: Readonly<PauseMenuNodeProps>) {
     let showMenu = false;
 
     // Resume button (teal accent)
-    const resumeBtn = createButton('Resume', '#48c9b0', '50%');
+    const resumeBtn = createButton('Resume', '#48c9b0');
     resumeBtn.addEventListener('click', () => {
         if (props?.online) {
             showMenu = false;
@@ -118,7 +127,7 @@ export function PauseMenuNode(props?: Readonly<PauseMenuNodeProps>) {
     });
 
     // Exit Match button (coral accent)
-    const exitBtn = createButton('Exit Match', '#e74c3c', '60%');
+    const exitBtn = createButton('Exit Match', '#e74c3c');
     exitBtn.addEventListener('click', () => {
         if (props?.online) {
             showMenu = false;
@@ -144,18 +153,13 @@ export function PauseMenuNode(props?: Readonly<PauseMenuNodeProps>) {
 
         const visible = props?.online ? showMenu : gameState.paused;
         backdrop.style.opacity = visible ? '1' : '0';
-        title.style.opacity = visible ? '1' : '0';
-        resumeBtn.style.opacity = visible ? '1' : '0';
-        exitBtn.style.opacity = visible ? '1' : '0';
+        content.style.opacity = visible ? '1' : '0';
         backdrop.style.pointerEvents = visible ? 'auto' : 'none';
-        resumeBtn.style.pointerEvents = visible ? 'auto' : 'none';
-        exitBtn.style.pointerEvents = visible ? 'auto' : 'none';
+        content.style.pointerEvents = visible ? 'auto' : 'none';
     });
 
     useDestroy(() => {
         backdrop.remove();
-        title.remove();
-        resumeBtn.remove();
-        exitBtn.remove();
+        content.remove();
     });
 }

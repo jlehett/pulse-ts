@@ -291,7 +291,7 @@ export function TouchControlsNode(props?: Readonly<TouchControlsNodeProps>) {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        font: 'bold 18px monospace',
+        font: 'bold 18px sans-serif',
         color: 'rgba(255,255,255,0.6)',
         userSelect: 'none',
     } as Partial<CSSStyleDeclaration>);
