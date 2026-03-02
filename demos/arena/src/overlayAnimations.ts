@@ -25,14 +25,16 @@ export function applyEntrance(
     delay: number,
     translateY: number = 20,
 ): void {
+    // Preserve any existing transform (e.g. centering translate(-50%, -50%))
+    const base = el.style.transform || '';
     el.style.opacity = '0';
-    el.style.transform = `translateY(${translateY}px)`;
+    el.style.transform = `${base} translateY(${translateY}px)`.trim();
     el.style.transition = 'none';
 
     requestAnimationFrame(() => {
         el.style.transition = `opacity ${ANIM_DURATION}ms ${ANIM_EASING} ${delay}ms, transform ${ANIM_DURATION}ms ${ANIM_EASING} ${delay}ms`;
         el.style.opacity = '1';
-        el.style.transform = 'translateY(0)';
+        el.style.transform = base || 'translateY(0)';
     });
 }
 

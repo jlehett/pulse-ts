@@ -48,6 +48,23 @@ describe('applyEntrance', () => {
         applyEntrance(el, 0, 40);
         expect(el.style.transform).toBe('translateY(40px)');
     });
+
+    it('preserves existing transform (e.g. centering)', () => {
+        const el = createEl();
+        el.style.transform = 'translate(-50%, -50%)';
+        applyEntrance(el, 0);
+        // Final transform should restore the original centering
+        expect(el.style.transform).toBe('translate(-50%, -50%)');
+    });
+
+    it('composes existing transform with translateY offset', () => {
+        const el = createEl();
+        el.style.transform = 'translateX(-50%)';
+        jest.restoreAllMocks();
+        jest.spyOn(window, 'requestAnimationFrame').mockImplementation(() => 0);
+        applyEntrance(el, 0, 20);
+        expect(el.style.transform).toBe('translateX(-50%) translateY(20px)');
+    });
 });
 
 describe('applyStaggeredEntrance', () => {
