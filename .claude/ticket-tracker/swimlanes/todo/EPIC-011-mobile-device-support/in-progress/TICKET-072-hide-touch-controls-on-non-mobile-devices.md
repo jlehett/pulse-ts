@@ -2,7 +2,7 @@
 id: TICKET-072
 epic: EPIC-011
 title: Hide touch controls on non-mobile devices
-status: todo
+status: in-progress
 priority: high
 created: 2026-03-02
 updated: 2026-03-02
@@ -34,3 +34,4 @@ screen dimensions, `pointer: coarse` media query, or user-agent heuristics.
 ## Notes
 
 - **2026-03-02**: Ticket created.
+- **2026-03-02**: Starting implementation.
