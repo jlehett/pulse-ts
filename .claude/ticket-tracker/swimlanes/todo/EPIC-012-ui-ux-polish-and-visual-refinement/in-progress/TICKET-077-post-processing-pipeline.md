@@ -2,7 +2,7 @@
 id: TICKET-077
 epic: EPIC-012
 title: Post-processing pipeline (bloom, FXAA, tone mapping)
-status: todo
+status: in-progress
 branch: ticket-077-post-processing-pipeline
 priority: high
 created: 2026-03-02
@@ -43,3 +43,4 @@ color response, and OutputPass handles color space conversion.
 ## Notes
 
 - **2026-03-02**: Ticket created.
+- **2026-03-02**: Starting implementation.
