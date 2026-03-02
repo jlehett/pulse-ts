@@ -2,7 +2,8 @@
 id: TICKET-076
 epic: EPIC-011
 title: Reduce gap between pause menu buttons
-status: todo
+status: in-progress
+branch: ticket-074-075-076-pause-menu-ui-fixes
 priority: low
 created: 2026-03-02
 updated: 2026-03-02

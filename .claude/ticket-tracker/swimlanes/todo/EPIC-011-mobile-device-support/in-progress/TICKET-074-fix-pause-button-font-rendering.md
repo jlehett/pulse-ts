@@ -2,7 +2,8 @@
 id: TICKET-074
 epic: EPIC-011
 title: Fix pause button font rendering (monospace serifs)
-status: todo
+status: in-progress
+branch: ticket-074-075-076-pause-menu-ui-fixes
 priority: medium
 created: 2026-03-02
 updated: 2026-03-02

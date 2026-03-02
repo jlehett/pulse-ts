@@ -2,7 +2,8 @@
 id: TICKET-075
 epic: EPIC-011
 title: Match pause menu button widths (Resume / Exit Match)
-status: todo
+status: in-progress
+branch: ticket-074-075-076-pause-menu-ui-fixes
 priority: low
 created: 2026-03-02
 updated: 2026-03-02
