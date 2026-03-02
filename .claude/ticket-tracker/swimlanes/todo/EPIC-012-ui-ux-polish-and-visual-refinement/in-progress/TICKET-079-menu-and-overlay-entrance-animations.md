@@ -2,7 +2,7 @@
 id: TICKET-079
 epic: EPIC-012
 title: Menu and overlay entrance animations
-status: todo
+status: in-progress
 branch: ticket-079-menu-and-overlay-entrance-animations
 priority: medium
 created: 2026-03-02
@@ -47,3 +47,4 @@ tickets — this is pure DOM/CSS work.
 ## Notes
 
 - **2026-03-02**: Ticket created.
+- **2026-03-02**: Starting implementation.
