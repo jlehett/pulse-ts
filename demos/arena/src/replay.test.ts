@@ -12,6 +12,7 @@ import {
     getSpeedAtFrame,
     getReplayVelocity,
     getReplaySpeed,
+    hasReplayHit,
     endReplay,
     clearRecording,
     resetReplay,
@@ -90,10 +91,10 @@ describe('getReplayPosition interpolation', () => {
         startReplay(1);
 
         // Advance cursor to approximately midpoint
-        // Speed ~0.4, FIXED_HZ=60: need dt to advance cursor to ~0.5
-        // cursor += dt * 0.4 * 60 = dt * 24
-        // For cursor = 0.5: dt = 0.5/24 ≈ 0.0208
-        advanceReplay(0.0208);
+        // No markHit → hitIndex = -1 → speed = REPLAY_NORMAL_SPEED (0.8)
+        // cursor += dt * 0.8 * 60 = dt * 48
+        // For cursor ≈ 0.5: dt ≈ 0.5/48 ≈ 0.0104
+        advanceReplay(0.0104);
         const p0 = getReplayPosition(0);
         expect(p0).not.toBeNull();
         // Should be roughly between 0 and 10
@@ -105,8 +106,8 @@ describe('getReplayPosition interpolation', () => {
 describe('getSpeedAtFrame', () => {
     it('returns normal speed far from hit', () => {
         // No replay started, hitIndex = -1 → always normal
-        expect(getSpeedAtFrame(0)).toBeCloseTo(0.4);
-        expect(getSpeedAtFrame(100)).toBeCloseTo(0.4);
+        expect(getSpeedAtFrame(0)).toBeCloseTo(0.8);
+        expect(getSpeedAtFrame(100)).toBeCloseTo(0.8);
     });
 
     it('returns hit speed at the hit frame', () => {
@@ -118,8 +119,8 @@ describe('getSpeedAtFrame', () => {
         startReplay(1);
 
         // Advance cursor to near the hit frame (~5)
-        // cursor += dt * 0.4 * 60 = dt * 24; for cursor = 5: dt = 5/24 ≈ 0.208
-        advanceReplay(0.208);
+        // Speed varies near hit; a dt of ~0.15 should get close
+        advanceReplay(0.15);
         // Hit proximity should be high when cursor is near hitIndex
         expect(getReplayHitProximity()).toBeGreaterThan(0.5);
     });
@@ -174,15 +175,13 @@ describe('getReplaySpeed', () => {
         expect(getReplaySpeed()).toBe(0);
     });
 
-    it('returns normal speed far from hit', () => {
-        // Record enough frames so cursor 0 is far from the fallback
-        // hitIndex (which defaults to near the end of the buffer)
+    it('returns normal speed when no hit was recorded', () => {
+        // No markHit() call — self-KO, hitIndex = -1, always normal speed
         for (let i = 0; i < 60; i++) {
             recordFrame(i, 0, 0, 0, 0, 0);
         }
         startReplay(1);
-        // Cursor at 0, fallback hit at frame ~45 — distance exceeds window
-        expect(getReplaySpeed()).toBeCloseTo(0.4);
+        expect(getReplaySpeed()).toBeCloseTo(0.8);
     });
 });
 
@@ -208,8 +207,8 @@ describe('getReplayPastHit', () => {
         }
         startReplay(1);
         // Advance cursor well past the hit frame
-        // cursor += dt * speed * 60. At normal speed (0.4):
-        // cursor += 1.0 * 0.4 * 60 = 24 frames (past hit at 10)
+        // cursor += dt * speed * 60. At normal speed (0.8):
+        // cursor += 1.0 * ~0.8 * 60 ≈ 48 frames (well past hit at 10)
         advanceReplay(1.0);
         expect(getReplayPastHit()).toBeGreaterThan(0);
     });
@@ -234,6 +233,46 @@ describe('clearRecording', () => {
         const p0 = getReplayPosition(0);
         expect(p0).not.toBeNull();
         expect(p0![0]).toBeCloseTo(5); // only the new frame
+    });
+});
+
+describe('hasReplayHit', () => {
+    it('returns false when no hit was marked', () => {
+        recordFrame(0, 0, 0, 0, 0, 0);
+        recordFrame(1, 0, 0, 0, 0, 0);
+        startReplay(1);
+        expect(hasReplayHit()).toBe(false);
+    });
+
+    it('returns true when markHit was called before replay', () => {
+        recordFrame(0, 0, 0, 0, 0, 0);
+        markHit();
+        recordFrame(1, 0, 0, 0, 0, 0);
+        startReplay(1);
+        expect(hasReplayHit()).toBe(true);
+    });
+
+    it('returns false after endReplay', () => {
+        recordFrame(0, 0, 0, 0, 0, 0);
+        markHit();
+        recordFrame(1, 0, 0, 0, 0, 0);
+        startReplay(1);
+        expect(hasReplayHit()).toBe(true);
+        endReplay();
+        expect(hasReplayHit()).toBe(false);
+    });
+
+    it('self-KO has no slow-motion (normal speed throughout)', () => {
+        for (let i = 0; i < 20; i++) {
+            recordFrame(i, 0, 0, 0, 0, 0);
+        }
+        // No markHit() — self-KO
+        startReplay(1);
+        expect(hasReplayHit()).toBe(false);
+        // hitIndex = -1 → getSpeedAtFrame always returns normal speed
+        expect(getReplaySpeed()).toBeCloseTo(0.8);
+        // hitProximity should be 0 throughout (no hit to be near)
+        expect(getReplayHitProximity()).toBe(0);
     });
 });
 

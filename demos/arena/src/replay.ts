@@ -36,6 +36,7 @@ let lastHitWriteCount = -1;
 let active = false;
 let playbackFrames: ReplayFrame[] = [];
 let hitIndex = -1;
+let hadRealHit = false;
 let cursorPos = 0;
 let knockedOut = -1;
 let scorer = -1;
@@ -214,12 +215,11 @@ export function startReplay(knockedOutPlayerId: number): void {
     // Map the hit index into the playback frames array
     if (lastHitWriteCount >= startWrite && lastHitWriteCount < writeCount) {
         hitIndex = lastHitWriteCount - startWrite;
+        hadRealHit = true;
     } else {
-        // Fallback: assume hit was near the end
-        hitIndex = Math.max(
-            0,
-            playbackFrames.length - REPLAY_HIT_WINDOW_FRAMES,
-        );
+        // No hit recorded — self-KO (player fell on their own)
+        hitIndex = -1;
+        hadRealHit = false;
     }
 
     cursorPos = 0;
@@ -406,11 +406,27 @@ export function getReplaySpeed(): number {
     return getSpeedAtFrame(frameIdx);
 }
 
+/**
+ * Whether the current replay had a real collision hit (as opposed to a
+ * self-KO where the player fell on their own).
+ *
+ * @returns `true` if `markHit()` was called before the replay started.
+ *
+ * @example
+ * ```ts
+ * if (!hasReplayHit()) showSelfKoText();
+ * ```
+ */
+export function hasReplayHit(): boolean {
+    return hadRealHit;
+}
+
 /** End the replay and release the playback buffer. */
 export function endReplay(): void {
     active = false;
     playbackFrames = [];
     hitIndex = -1;
+    hadRealHit = false;
     cursorPos = 0;
 }
 

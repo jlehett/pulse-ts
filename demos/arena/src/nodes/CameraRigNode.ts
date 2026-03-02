@@ -5,8 +5,10 @@ import {
     isReplayActive,
     getReplayPosition,
     getReplayScorer,
+    getReplayKnockedOut,
     getReplayHitProximity,
     getReplayPastHit,
+    hasReplayHit,
 } from '../replay';
 
 /** Fixed camera height above the arena center. */
@@ -26,6 +28,12 @@ export const REPLAY_HIT_ZOOM = 4;
 
 /** Smoothing factor for replay camera position (lerp per second). */
 export const REPLAY_CAMERA_SMOOTH = 6;
+
+/** Y position below which the loser is considered to have "fallen" — camera starts zooming out. */
+export const REPLAY_LOSER_FALLEN_Y = -3;
+
+/** Y range over which the camera transitions from follow to overhead after loser falls. */
+export const REPLAY_FALL_ZOOM_RANGE = 7;
 
 // ---------------------------------------------------------------------------
 // Module-level shake state — shared across all callers
@@ -105,25 +113,44 @@ export function CameraRigNode() {
 
         if (isReplayActive()) {
             const scorerId = getReplayScorer();
-            const scorerPos = getReplayPosition(scorerId);
-            const hitProx = getReplayHitProximity();
-            // 0 = at/before hit (full follow), 1 = far past hit (overhead)
-            const pastHit = getReplayPastHit();
-            const follow = 1 - pastHit;
+            const knockedOutId = getReplayKnockedOut();
+            const hitProx = hasReplayHit() ? getReplayHitProximity() : 0;
+            const pastHit = hasReplayHit() ? getReplayPastHit() : 0;
 
-            if (scorerPos) {
-                // Blend between follow-cam and overhead based on hit progress
-                const followX = scorerPos[0];
+            // Determine follow target:
+            // - Self-KO (no hit): always follow the loser
+            // - Before hit: follow the scorer (winner)
+            // - After hit: transition to following the loser
+            let followId: number;
+            if (!hasReplayHit() || pastHit > 0) {
+                followId = knockedOutId;
+            } else {
+                followId = scorerId;
+            }
+
+            const followPos = getReplayPosition(followId);
+            const loserPos = getReplayPosition(knockedOutId);
+
+            // Zoom out to overhead once the loser has fallen off the platform
+            let zoomOut = 0;
+            if (loserPos && loserPos[1] < REPLAY_LOSER_FALLEN_Y) {
+                const fallDist = REPLAY_LOSER_FALLEN_Y - loserPos[1];
+                zoomOut = Math.min(fallDist / REPLAY_FALL_ZOOM_RANGE, 1);
+            }
+
+            if (followPos) {
+                const followX = followPos[0];
                 const followY =
                     REPLAY_CAMERA_HEIGHT - REPLAY_HIT_ZOOM * hitProx;
-                const followZ = scorerPos[2] + REPLAY_CAMERA_FOLLOW_DIST;
+                const followZ = followPos[2] + REPLAY_CAMERA_FOLLOW_DIST;
 
+                const follow = 1 - zoomOut;
                 targetX = followX * follow;
-                targetY = followY * follow + CAMERA_HEIGHT * pastHit;
-                targetZ = followZ * follow + CAMERA_Z_OFFSET * pastHit;
-                targetLookX = scorerPos[0] * follow;
-                targetLookY = scorerPos[1] * follow;
-                targetLookZ = scorerPos[2] * follow;
+                targetY = followY * follow + CAMERA_HEIGHT * zoomOut;
+                targetZ = followZ * follow + CAMERA_Z_OFFSET * zoomOut;
+                targetLookX = followPos[0] * follow;
+                targetLookY = followPos[1] * follow;
+                targetLookZ = followPos[2] * follow;
             }
         }
 

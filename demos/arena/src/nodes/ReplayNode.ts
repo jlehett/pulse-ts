@@ -8,14 +8,32 @@ import {
     getReplayPosition,
     getReplayVelocity,
     getReplaySpeed,
+    getReplayHitProximity,
+    hasReplayHit,
 } from '../replay';
-import { PLAYER_COLORS, REPLAY_DASH_THRESHOLD } from '../config/arena';
+import {
+    PLAYER_COLORS,
+    TRAIL_VELOCITY_THRESHOLD,
+    TRAIL_BASE_INTERVAL,
+} from '../config/arena';
 
 /** Height of each cinematic letterbox bar as a CSS value. */
 export const LETTERBOX_HEIGHT = '8%';
 
 /** Duration of the dark flash when entering/exiting replay (seconds). */
 export const TRANSITION_FLASH_DURATION = 0.4;
+
+/** Random messages displayed during a self-KO replay. */
+export const SELF_KO_MESSAGES = [
+    'Gravity wins!',
+    '...really?',
+    'Own goal!',
+    'Unforced error',
+    'Self-destruct!',
+    'Whoops!',
+    'Task failed successfully',
+    'No one to blame',
+];
 
 /**
  * DOM overlay that displays cinematic letterboxing, a "REPLAY" label,
@@ -90,7 +108,37 @@ export function ReplayNode() {
     label.textContent = 'REPLAY';
     container.appendChild(label);
 
-    // Dash trail particle bursts — one per player, speed scaled for slow-mo
+    // Self-KO text — displayed when no collision hit occurred
+    const selfKoText = document.createElement('div');
+    Object.assign(selfKoText.style, {
+        position: 'absolute',
+        bottom: '14%',
+        left: '50%',
+        transform: 'translateX(-50%)',
+        zIndex: '2012',
+        font: 'bold clamp(12px, 2.5vw, 20px) monospace',
+        color: 'rgba(255, 200, 100, 0.9)',
+        letterSpacing: '0.1em',
+        textShadow: '0 0 8px rgba(0,0,0,0.6)',
+        transition: 'opacity 0.3s ease-in-out',
+        opacity: '0',
+        pointerEvents: 'none',
+        whiteSpace: 'nowrap',
+    } as Partial<CSSStyleDeclaration>);
+    container.appendChild(selfKoText);
+
+    // Hit impact burst — white particles at the collision point
+    const hitImpactBurst = useParticleBurst({
+        count: 16,
+        lifetime: 0.4,
+        color: 0xffffff,
+        speed: [1, 3],
+        gravity: 6,
+        size: 0.3,
+        blending: 'additive',
+    });
+
+    // Velocity-proportional trail bursts — one per player
     const trailBurst0 = useParticleBurst({
         count: 3,
         lifetime: 0.5,
@@ -117,6 +165,8 @@ export function ReplayNode() {
     let wasReplay = false;
     let flashTimer = 0;
     let trailAccum = 0;
+    let hitBurstEmitted = false;
+    let selfKoMessagePicked = false;
 
     useFrameUpdate((dt) => {
         const isReplay = gameState.phase === 'replay' && isReplayActive();
@@ -149,17 +199,50 @@ export function ReplayNode() {
         if (isReplay) {
             advanceReplay(dt);
 
-            // Emit dash trail particles when a player is moving fast
+            // Self-KO text
+            if (!hasReplayHit()) {
+                if (!selfKoMessagePicked) {
+                    selfKoText.textContent =
+                        SELF_KO_MESSAGES[
+                            Math.floor(Math.random() * SELF_KO_MESSAGES.length)
+                        ];
+                    selfKoMessagePicked = true;
+                }
+                selfKoText.style.opacity = '1';
+            } else {
+                selfKoText.style.opacity = '0';
+            }
+
+            // Hit impact burst at the collision moment
+            if (
+                hasReplayHit() &&
+                !hitBurstEmitted &&
+                getReplayHitProximity() > 0.9
+            ) {
+                const p0 = getReplayPosition(0);
+                const p1 = getReplayPosition(1);
+                if (p0 && p1) {
+                    hitImpactBurst([
+                        (p0[0] + p1[0]) / 2,
+                        (p0[1] + p1[1]) / 2,
+                        (p0[2] + p1[2]) / 2,
+                    ]);
+                    hitBurstEmitted = true;
+                }
+            }
+
+            // Velocity-proportional trail particles
             trailAccum += dt;
             const speed = getReplaySpeed();
-            const trailInterval = speed > 0 ? 0.03 / speed : 0.1;
+            const trailInterval =
+                speed > 0 ? TRAIL_BASE_INTERVAL / speed : TRAIL_BASE_INTERVAL;
             if (trailAccum >= trailInterval) {
                 trailAccum = 0;
                 for (let pid = 0; pid < 2; pid++) {
                     const vel = getReplayVelocity(pid);
                     if (!vel) continue;
                     const vmag = Math.sqrt(vel[0] * vel[0] + vel[2] * vel[2]);
-                    if (vmag > REPLAY_DASH_THRESHOLD) {
+                    if (vmag > TRAIL_VELOCITY_THRESHOLD) {
                         const pos = getReplayPosition(pid);
                         if (pos) {
                             trailBursts[pid](pos);
@@ -168,7 +251,10 @@ export function ReplayNode() {
                 }
             }
         } else {
+            selfKoText.style.opacity = '0';
             trailAccum = 0;
+            hitBurstEmitted = false;
+            selfKoMessagePicked = false;
         }
     });
 
@@ -177,5 +263,6 @@ export function ReplayNode() {
         topBar.remove();
         bottomBar.remove();
         label.remove();
+        selfKoText.remove();
     });
 }

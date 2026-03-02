@@ -28,8 +28,8 @@ export const COUNTDOWN_DURATION = 4.0;
 /** Number of seconds of gameplay to record for instant replay. */
 export const REPLAY_BUFFER_SECONDS = 4;
 
-/** Base playback speed as a fraction of real-time (0.4 = 40%). */
-export const REPLAY_NORMAL_SPEED = 0.4;
+/** Base playback speed as a fraction of real-time (0.8 = 80%). */
+export const REPLAY_NORMAL_SPEED = 0.8;
 
 /** Playback speed at the hit moment (slowest point). */
 export const REPLAY_HIT_SPEED = 0.15;
@@ -43,5 +43,8 @@ export const REPLAY_HIT_WINDOW_FRAMES = 15;
 /** Player colors: P1 = teal, P2 = coral. */
 export const PLAYER_COLORS = [0x48c9b0, 0xe74c3c] as const;
 
-/** Velocity magnitude threshold for detecting a dash in replay. */
-export const REPLAY_DASH_THRESHOLD = 15;
+/** Minimum velocity magnitude for trail particles to appear (units/sec). */
+export const TRAIL_VELOCITY_THRESHOLD = 5;
+
+/** Base emission interval (seconds) at the threshold velocity. Faster movement = denser trail. */
+export const TRAIL_BASE_INTERVAL = 0.06;

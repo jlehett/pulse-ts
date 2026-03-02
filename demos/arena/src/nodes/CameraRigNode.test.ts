@@ -6,6 +6,8 @@ import {
     REPLAY_CAMERA_FOLLOW_DIST,
     REPLAY_HIT_ZOOM,
     REPLAY_CAMERA_SMOOTH,
+    REPLAY_LOSER_FALLEN_Y,
+    REPLAY_FALL_ZOOM_RANGE,
     triggerCameraShake,
     resetCameraShake,
 } from './CameraRigNode';
@@ -44,6 +46,14 @@ describe('CameraRigNode', () => {
 
     it('replay smoothing factor is positive', () => {
         expect(REPLAY_CAMERA_SMOOTH).toBeGreaterThan(0);
+    });
+
+    it('loser fallen threshold is below the platform', () => {
+        expect(REPLAY_LOSER_FALLEN_Y).toBeLessThan(0);
+    });
+
+    it('fall zoom range is positive', () => {
+        expect(REPLAY_FALL_ZOOM_RANGE).toBeGreaterThan(0);
     });
 });
 

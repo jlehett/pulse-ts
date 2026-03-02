@@ -8,11 +8,18 @@ import {
 } from '@pulse-ts/core';
 import { useRigidBody, useSphereCollider } from '@pulse-ts/physics';
 import { useMesh } from '@pulse-ts/three';
+import { useParticleBurst } from '@pulse-ts/effects';
 import { useReplicateTransform } from '@pulse-ts/network';
 import { PlayerTag } from '../components/PlayerTag';
 import { GameCtx } from '../contexts';
 import { PLAYER_RADIUS } from './LocalPlayerNode';
-import { SPAWN_POSITIONS, DEATH_PLANE_Y, PLAYER_COLORS } from '../config/arena';
+import {
+    SPAWN_POSITIONS,
+    DEATH_PLANE_Y,
+    PLAYER_COLORS,
+    TRAIL_VELOCITY_THRESHOLD,
+    TRAIL_BASE_INTERVAL,
+} from '../config/arena';
 import { stagePlayerPosition, getReplayPosition } from '../replay';
 
 export interface RemotePlayerNodeProps {
@@ -64,6 +71,21 @@ export function RemotePlayerNode({
         castShadow: true,
     });
 
+    // Velocity-proportional trail burst — emitted when moving fast
+    const trailBurst = useParticleBurst({
+        count: 3,
+        lifetime: 0.5,
+        color: PLAYER_COLORS[remotePlayerId],
+        speed: [0.2, 0.6],
+        gravity: 1,
+        size: 0.2,
+        blending: 'additive',
+        shrink: true,
+    });
+    let trailAccum = 0;
+    let prevTrailX = spawn[0];
+    let prevTrailZ = spawn[2];
+
     // Stage position for replay recording every fixed step, and drive
     // transform from replay buffer during playback so trsSync picks it up.
     useFixedUpdate(() => {
@@ -98,11 +120,38 @@ export function RemotePlayerNode({
         });
     }
 
-    // During replay, override mesh position from the replay buffer
-    useFrameUpdate(() => {
+    // During replay, override mesh position from the replay buffer.
+    // Also emit velocity-proportional trail particles during gameplay.
+    useFrameUpdate((dt) => {
         const replayPos = getReplayPosition(remotePlayerId);
         if (replayPos) {
             root.position.set(replayPos[0], replayPos[1], replayPos[2]);
+        }
+
+        // Velocity-proportional trail particles during gameplay
+        if (gameState.phase === 'playing' && dt > 0) {
+            const cx = root.position.x;
+            const cz = root.position.z;
+            const vx = (cx - prevTrailX) / dt;
+            const vz = (cz - prevTrailZ) / dt;
+            const vmag = Math.sqrt(vx * vx + vz * vz);
+            if (vmag > TRAIL_VELOCITY_THRESHOLD) {
+                trailAccum += dt;
+                const interval = Math.max(
+                    0.01,
+                    TRAIL_BASE_INTERVAL / (vmag / TRAIL_VELOCITY_THRESHOLD),
+                );
+                if (trailAccum >= interval) {
+                    trailAccum = 0;
+                    trailBurst([cx, root.position.y, cz]);
+                }
+            } else {
+                trailAccum = 0;
+            }
+            prevTrailX = cx;
+            prevTrailZ = cz;
+        } else {
+            trailAccum = 0;
         }
     });
 }
