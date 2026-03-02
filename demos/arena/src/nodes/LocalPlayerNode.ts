@@ -26,6 +26,7 @@ import { PlayerTag } from '../components/PlayerTag';
 import { GameCtx } from '../contexts';
 import { SPAWN_POSITIONS, DEATH_PLANE_Y } from '../config/arena';
 import { KnockoutChannel } from '../config/channels';
+import { triggerCameraShake } from './CameraRigNode';
 
 /** Sphere radius for the player ball. */
 export const PLAYER_RADIUS = 0.8;
@@ -364,6 +365,9 @@ export function LocalPlayerNode({
             (transform.localPosition.y + otherTransform.localPosition.y) / 2,
             (transform.localPosition.z + otherTransform.localPosition.z) / 2,
         ]);
+
+        // Small camera shake on collision
+        triggerCameraShake(0.3, 0.2);
     });
 
     useFixedUpdate(() => {

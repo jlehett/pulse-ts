@@ -20,6 +20,7 @@ import { PauseMenuNode } from './PauseMenuNode';
 import { DisconnectOverlayNode } from './DisconnectOverlayNode';
 import { TouchControlsNode } from './TouchControlsNode';
 import { CameraRigNode } from './CameraRigNode';
+import { VictoryEffectNode } from './VictoryEffectNode';
 
 export interface ArenaNodeProps {
     /** Local player ID for online mode (0 or 1). Omit for local 2-player. */
@@ -154,4 +155,7 @@ export function ArenaNode(props?: Readonly<ArenaNodeProps>) {
 
     // Camera rig — fixed overhead view
     useChild(CameraRigNode);
+
+    // Victory confetti — fires on match_over
+    useChild(VictoryEffectNode);
 }
