@@ -44,7 +44,7 @@ export const REPLAY_HIT_WINDOW_FRAMES = 15;
 export const PLAYER_COLORS = [0x48c9b0, 0xe74c3c] as const;
 
 /** Minimum velocity magnitude for trail particles to appear (units/sec). */
-export const TRAIL_VELOCITY_THRESHOLD = 5;
+export const TRAIL_VELOCITY_THRESHOLD = 3;
 
 /** Base emission interval (seconds) at the threshold velocity. Faster movement = denser trail. */
-export const TRAIL_BASE_INTERVAL = 0.06;
+export const TRAIL_BASE_INTERVAL = 0.03;

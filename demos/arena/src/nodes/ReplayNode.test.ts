@@ -3,6 +3,9 @@ import {
     LETTERBOX_HEIGHT,
     TRANSITION_FLASH_DURATION,
     SELF_KO_MESSAGES,
+    SELF_KO_BOB_PERIOD,
+    SELF_KO_BOB_STAGGER,
+    SELF_KO_BOB_DISTANCE,
 } from './ReplayNode';
 
 describe('ReplayNode', () => {
@@ -25,5 +28,11 @@ describe('ReplayNode', () => {
             expect(typeof msg).toBe('string');
             expect(msg.length).toBeGreaterThan(0);
         }
+    });
+
+    it('self-KO bob animation constants are positive', () => {
+        expect(SELF_KO_BOB_PERIOD).toBeGreaterThan(0);
+        expect(SELF_KO_BOB_STAGGER).toBeGreaterThan(0);
+        expect(SELF_KO_BOB_DISTANCE).toBeGreaterThan(0);
     });
 });

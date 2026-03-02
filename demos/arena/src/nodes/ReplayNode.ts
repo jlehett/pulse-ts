@@ -35,6 +35,15 @@ export const SELF_KO_MESSAGES = [
     'No one to blame',
 ];
 
+/** Per-letter bob animation period in seconds. */
+export const SELF_KO_BOB_PERIOD = 0.6;
+
+/** Delay between each letter's bob start in seconds. */
+export const SELF_KO_BOB_STAGGER = 0.05;
+
+/** Vertical bob distance in pixels. */
+export const SELF_KO_BOB_DISTANCE = 8;
+
 /**
  * DOM overlay that displays cinematic letterboxing, a "REPLAY" label,
  * and a dark flash transition during the replay phase. Drives replay
@@ -108,18 +117,26 @@ export function ReplayNode() {
     label.textContent = 'REPLAY';
     container.appendChild(label);
 
+    // Self-KO bob animation — injected as a <style> element
+    const selfKoStyle = document.createElement('style');
+    selfKoStyle.textContent = `
+        @keyframes selfKoBob {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-${SELF_KO_BOB_DISTANCE}px); }
+        }
+    `;
+    container.appendChild(selfKoStyle);
+
     // Self-KO text — displayed when no collision hit occurred
     const selfKoText = document.createElement('div');
     Object.assign(selfKoText.style, {
         position: 'absolute',
-        bottom: '14%',
-        left: '50%',
-        transform: 'translateX(-50%)',
+        top: '12%',
+        left: '4%',
         zIndex: '2012',
-        font: 'bold clamp(12px, 2.5vw, 20px) monospace',
+        font: 'bold clamp(16px, 4vw, 32px) monospace',
         color: 'rgba(255, 200, 100, 0.9)',
-        letterSpacing: '0.1em',
-        textShadow: '0 0 8px rgba(0,0,0,0.6)',
+        textShadow: '0 0 10px rgba(0,0,0,0.7)',
         transition: 'opacity 0.3s ease-in-out',
         opacity: '0',
         pointerEvents: 'none',
@@ -140,22 +157,22 @@ export function ReplayNode() {
 
     // Velocity-proportional trail bursts — one per player
     const trailBurst0 = useParticleBurst({
-        count: 3,
-        lifetime: 0.5,
+        count: 5,
+        lifetime: 0.8,
         color: PLAYER_COLORS[0],
-        speed: [0.2, 0.6],
+        speed: [0.2, 0.8],
         gravity: 1,
-        size: 0.2,
+        size: 0.4,
         blending: 'additive',
         shrink: true,
     });
     const trailBurst1 = useParticleBurst({
-        count: 3,
-        lifetime: 0.5,
+        count: 5,
+        lifetime: 0.8,
         color: PLAYER_COLORS[1],
-        speed: [0.2, 0.6],
+        speed: [0.2, 0.8],
         gravity: 1,
-        size: 0.2,
+        size: 0.4,
         blending: 'additive',
         shrink: true,
     });
@@ -199,13 +216,22 @@ export function ReplayNode() {
         if (isReplay) {
             advanceReplay(dt);
 
-            // Self-KO text
+            // Self-KO text — per-letter bobbing animation
             if (!hasReplayHit()) {
                 if (!selfKoMessagePicked) {
-                    selfKoText.textContent =
+                    const msg =
                         SELF_KO_MESSAGES[
                             Math.floor(Math.random() * SELF_KO_MESSAGES.length)
                         ];
+                    selfKoText.innerHTML = '';
+                    for (let i = 0; i < msg.length; i++) {
+                        const span = document.createElement('span');
+                        span.textContent = msg[i] === ' ' ? '\u00A0' : msg[i];
+                        span.style.display = 'inline-block';
+                        span.style.animation = `selfKoBob ${SELF_KO_BOB_PERIOD}s ease-in-out infinite`;
+                        span.style.animationDelay = `${i * SELF_KO_BOB_STAGGER}s`;
+                        selfKoText.appendChild(span);
+                    }
                     selfKoMessagePicked = true;
                 }
                 selfKoText.style.opacity = '1';
@@ -264,5 +290,6 @@ export function ReplayNode() {
         bottomBar.remove();
         label.remove();
         selfKoText.remove();
+        selfKoStyle.remove();
     });
 }
