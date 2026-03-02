@@ -1,7 +1,9 @@
 ---
 id: TICKET-086
+epic: EPIC-013
 title: Impact shockwave distortion effect
-status: todo
+status: in-progress
+branch: ticket-086-impact-shockwave-distortion-effect
 priority: normal
 labels: [effects, arena, rendering]
 created: 2026-03-02
@@ -36,3 +38,4 @@ Implement a screen-space or world-space shockwave distortion effect that plays a
 ## Notes
 
 - **2026-03-02**: Created — visual polish idea for impact feedback.
+- **2026-03-02**: Starting implementation.
