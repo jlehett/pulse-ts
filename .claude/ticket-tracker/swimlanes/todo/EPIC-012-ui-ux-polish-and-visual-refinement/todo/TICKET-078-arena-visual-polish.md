@@ -3,6 +3,7 @@ id: TICKET-078
 epic: EPIC-012
 title: Arena visual polish (lighting, materials, platform texture)
 status: todo
+branch: ticket-078-arena-visual-polish
 priority: medium
 created: 2026-03-02
 updated: 2026-03-02
