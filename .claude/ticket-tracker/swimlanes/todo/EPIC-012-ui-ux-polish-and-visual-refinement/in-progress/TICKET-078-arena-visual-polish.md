@@ -2,7 +2,7 @@
 id: TICKET-078
 epic: EPIC-012
 title: Arena visual polish (lighting, materials, platform texture)
-status: todo
+status: in-progress
 branch: ticket-078-arena-visual-polish
 priority: medium
 created: 2026-03-02
@@ -38,3 +38,4 @@ on the bloom post-processing from TICKET-077 to make emissive elements glow.
 ## Notes
 
 - **2026-03-02**: Ticket created.
+- **2026-03-02**: Starting implementation.
