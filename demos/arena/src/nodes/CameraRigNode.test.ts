@@ -2,6 +2,10 @@ import {
     CameraRigNode,
     CAMERA_HEIGHT,
     CAMERA_Z_OFFSET,
+    REPLAY_CAMERA_HEIGHT,
+    REPLAY_CAMERA_FOLLOW_DIST,
+    REPLAY_HIT_ZOOM,
+    REPLAY_CAMERA_SMOOTH,
     triggerCameraShake,
     resetCameraShake,
 } from './CameraRigNode';
@@ -22,6 +26,24 @@ describe('CameraRigNode', () => {
     it('camera has a small positive Z offset', () => {
         expect(CAMERA_Z_OFFSET).toBeGreaterThan(0);
         expect(CAMERA_Z_OFFSET).toBeLessThan(5);
+    });
+
+    it('replay camera is lower than the overhead camera', () => {
+        expect(REPLAY_CAMERA_HEIGHT).toBeLessThan(CAMERA_HEIGHT);
+        expect(REPLAY_CAMERA_HEIGHT).toBeGreaterThan(5);
+    });
+
+    it('replay camera follows from behind', () => {
+        expect(REPLAY_CAMERA_FOLLOW_DIST).toBeGreaterThan(0);
+    });
+
+    it('hit zoom subtracts from camera height', () => {
+        expect(REPLAY_HIT_ZOOM).toBeGreaterThan(0);
+        expect(REPLAY_CAMERA_HEIGHT - REPLAY_HIT_ZOOM).toBeGreaterThan(2);
+    });
+
+    it('replay smoothing factor is positive', () => {
+        expect(REPLAY_CAMERA_SMOOTH).toBeGreaterThan(0);
     });
 });
 

@@ -24,3 +24,18 @@ export const RESET_PAUSE_DURATION = 0.5;
 
 /** Total countdown duration in seconds (3-2-1-GO!). */
 export const COUNTDOWN_DURATION = 4.0;
+
+/** Number of seconds of gameplay to record for instant replay. */
+export const REPLAY_BUFFER_SECONDS = 2;
+
+/** Base playback speed as a fraction of real-time (0.4 = 40%). */
+export const REPLAY_NORMAL_SPEED = 0.4;
+
+/** Playback speed at the hit moment (slowest point). */
+export const REPLAY_HIT_SPEED = 0.15;
+
+/**
+ * Number of game frames around the hit moment that receive slow-motion.
+ * At 60Hz, 15 frames ≈ 0.25 seconds of game time.
+ */
+export const REPLAY_HIT_WINDOW_FRAMES = 15;

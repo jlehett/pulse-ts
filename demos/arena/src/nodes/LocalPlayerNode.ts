@@ -29,6 +29,7 @@ import { GameCtx } from '../contexts';
 import { SPAWN_POSITIONS, DEATH_PLANE_Y } from '../config/arena';
 import { KnockoutChannel } from '../config/channels';
 import { triggerCameraShake } from './CameraRigNode';
+import { stagePlayerPosition, markHit, getReplayPosition } from '../replay';
 
 /** Sphere radius for the player ball. */
 export const PLAYER_RADIUS = 0.8;
@@ -407,9 +408,20 @@ export function LocalPlayerNode({
 
         // Small camera shake on collision
         triggerCameraShake(0.3, 0.2);
+
+        // Mark this collision for instant replay hit detection
+        markHit();
     });
 
     useFixedUpdate(() => {
+        // Stage position for replay recording (before any movement)
+        stagePlayerPosition(
+            playerId,
+            transform.localPosition.x,
+            transform.localPosition.y,
+            transform.localPosition.z,
+        );
+
         // Round reset — teleport to spawn when GameManagerNode increments round
         if (gameState.round !== lastRound) {
             lastRound = gameState.round;
@@ -503,13 +515,19 @@ export function LocalPlayerNode({
 
     // Interpolate visual position for smooth rendering
     useFrameUpdate(() => {
-        const alpha = world.getAmbientAlpha();
-        const cur = transform.localPosition;
-        root.position.set(
-            prevX + (cur.x - prevX) * alpha,
-            prevY + (cur.y - prevY) * alpha,
-            prevZ + (cur.z - prevZ) * alpha,
-        );
+        // During replay, override mesh position from the replay buffer
+        const replayPos = getReplayPosition(playerId);
+        if (replayPos) {
+            root.position.set(replayPos[0], replayPos[1], replayPos[2]);
+        } else {
+            const alpha = world.getAmbientAlpha();
+            const cur = transform.localPosition;
+            root.position.set(
+                prevX + (cur.x - prevX) * alpha,
+                prevY + (cur.y - prevY) * alpha,
+                prevZ + (cur.z - prevZ) * alpha,
+            );
+        }
 
         // Update indicator ring screen position (online mode only)
         if (indicatorRing) {

@@ -3,6 +3,7 @@ import {
     useStableId,
     useContext,
     useFixedUpdate,
+    useFrameUpdate,
     Transform,
 } from '@pulse-ts/core';
 import { useRigidBody, useSphereCollider } from '@pulse-ts/physics';
@@ -12,6 +13,7 @@ import { PlayerTag } from '../components/PlayerTag';
 import { GameCtx } from '../contexts';
 import { PLAYER_RADIUS } from './LocalPlayerNode';
 import { SPAWN_POSITIONS, DEATH_PLANE_Y } from '../config/arena';
+import { stagePlayerPosition, getReplayPosition } from '../replay';
 
 /** Player colors: P1 = teal, P2 = coral. */
 const PLAYER_COLORS = [0x48c9b0, 0xe74c3c] as const;
@@ -55,7 +57,7 @@ export function RemotePlayerNode({
     });
 
     // Visual — same sphere mesh with subtle emissive glow (blooms under post-processing)
-    useMesh('sphere', {
+    const { root } = useMesh('sphere', {
         radius: PLAYER_RADIUS,
         color: PLAYER_COLORS[remotePlayerId],
         emissive: PLAYER_COLORS[remotePlayerId],
@@ -63,6 +65,16 @@ export function RemotePlayerNode({
         roughness: 0.35,
         metalness: 0.4,
         castShadow: true,
+    });
+
+    // Stage position for replay recording every fixed step
+    useFixedUpdate(() => {
+        stagePlayerPosition(
+            remotePlayerId,
+            transform.localPosition.x,
+            transform.localPosition.y,
+            transform.localPosition.z,
+        );
     });
 
     // Detect when the remote player falls off the arena (replicated position).
@@ -76,4 +88,12 @@ export function RemotePlayerNode({
             }
         });
     }
+
+    // During replay, override mesh position from the replay buffer
+    useFrameUpdate(() => {
+        const replayPos = getReplayPosition(remotePlayerId);
+        if (replayPos) {
+            root.position.set(replayPos[0], replayPos[1], replayPos[2]);
+        }
+    });
 }

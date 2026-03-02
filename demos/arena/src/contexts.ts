@@ -3,6 +3,7 @@ import { createContext } from '@pulse-ts/core';
 /** Current phase of the round lifecycle. */
 export type RoundPhase =
     | 'playing'
+    | 'replay'
     | 'ko_flash'
     | 'resetting'
     | 'countdown'
