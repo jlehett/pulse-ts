@@ -1,7 +1,7 @@
 ---
 id: EPIC-012
 title: UI/UX Polish and Visual Refinement
-status: todo
+status: done
 created: 2026-03-02
 updated: 2026-03-02
 ---
@@ -21,3 +21,4 @@ and victories are celebrated with confetti.
 ## Notes
 
 - **2026-03-02**: Epic created. Four tickets: post-processing, visual polish, overlay animations, gameplay feedback.
+- **2026-03-02**: Epic closed — all tickets complete.
