@@ -8,9 +8,12 @@ import { ArenaNode } from './nodes/ArenaNode';
 import { allBindings } from './config/bindings';
 import { showMainMenu } from './menu';
 import { showLobby, type LobbyResult } from './lobby';
+import { initLandscapeEnforcer } from './landscapeEnforcer';
 
 const canvas = document.getElementById('arena') as HTMLCanvasElement;
 const container = canvas.parentElement ?? document.body;
+
+initLandscapeEnforcer();
 
 function startLocalGame(): Promise<void> {
     return new Promise((resolve) => {
