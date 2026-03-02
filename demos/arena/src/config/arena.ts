@@ -47,4 +47,4 @@ export const PLAYER_COLORS = [0x48c9b0, 0xe74c3c] as const;
 export const TRAIL_VELOCITY_THRESHOLD = 3;
 
 /** Base emission interval (seconds) at the threshold velocity. Faster movement = denser trail. */
-export const TRAIL_BASE_INTERVAL = 0.03;
+export const TRAIL_BASE_INTERVAL = 0.015;

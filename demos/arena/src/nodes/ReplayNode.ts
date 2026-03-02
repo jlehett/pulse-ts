@@ -157,8 +157,8 @@ export function ReplayNode() {
 
     // Velocity-proportional trail bursts — one per player
     const trailBurst0 = useParticleBurst({
-        count: 5,
-        lifetime: 0.8,
+        count: 8,
+        lifetime: 1.0,
         color: PLAYER_COLORS[0],
         speed: [0.2, 0.8],
         gravity: 1,
@@ -167,8 +167,8 @@ export function ReplayNode() {
         shrink: true,
     });
     const trailBurst1 = useParticleBurst({
-        count: 5,
-        lifetime: 0.8,
+        count: 8,
+        lifetime: 1.0,
         color: PLAYER_COLORS[1],
         speed: [0.2, 0.8],
         gravity: 1,

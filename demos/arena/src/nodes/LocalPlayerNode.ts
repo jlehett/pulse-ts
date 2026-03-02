@@ -323,8 +323,8 @@ export function LocalPlayerNode({
 
     // Velocity-proportional trail burst — emitted when moving fast
     const trailBurst = useParticleBurst({
-        count: 5,
-        lifetime: 0.8,
+        count: 8,
+        lifetime: 1.0,
         color: PLAYER_COLORS[playerId],
         speed: [0.2, 0.8],
         gravity: 1,
