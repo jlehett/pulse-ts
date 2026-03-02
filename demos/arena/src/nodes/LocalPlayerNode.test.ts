@@ -9,6 +9,9 @@ import {
     IMPACT_COOLDOWN,
     KNOCKOUT_BURST_COUNT,
     DASH_TRAIL_RATE,
+    INDICATOR_RING_COLOR,
+    INDICATOR_RING_SCALE,
+    INDICATOR_RING_BORDER,
     computeDashDirection,
     computeKnockback,
 } from './LocalPlayerNode';
@@ -54,6 +57,27 @@ describe('LocalPlayerNode constants', () => {
 
     it('dash trail rate is positive', () => {
         expect(DASH_TRAIL_RATE).toBeGreaterThan(0);
+    });
+});
+
+describe('Indicator ring constants', () => {
+    it('ring color is a warm yellow', () => {
+        // Light yellow: R > 0xF0, G > 0xE0, B < 0xA0
+        const r = (INDICATOR_RING_COLOR >> 16) & 0xff;
+        const g = (INDICATOR_RING_COLOR >> 8) & 0xff;
+        const b = INDICATOR_RING_COLOR & 0xff;
+        expect(r).toBeGreaterThan(0xf0);
+        expect(g).toBeGreaterThan(0xe0);
+        expect(b).toBeLessThan(0xa0);
+    });
+
+    it('ring scale is larger than 1 (bigger than player)', () => {
+        expect(INDICATOR_RING_SCALE).toBeGreaterThan(1);
+    });
+
+    it('ring border is a small positive pixel value', () => {
+        expect(INDICATOR_RING_BORDER).toBeGreaterThan(0);
+        expect(INDICATOR_RING_BORDER).toBeLessThanOrEqual(4);
     });
 });
 

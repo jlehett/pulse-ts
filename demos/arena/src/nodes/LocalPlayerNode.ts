@@ -11,6 +11,7 @@ import {
     Transform,
     useTimer,
     useCooldown,
+    useDestroy,
 } from '@pulse-ts/core';
 import { useAxis2D, useAction } from '@pulse-ts/input';
 import {
@@ -18,7 +19,8 @@ import {
     useSphereCollider,
     useOnCollisionStart,
 } from '@pulse-ts/physics';
-import { useMesh } from '@pulse-ts/three';
+import { useMesh, useThreeContext } from '@pulse-ts/three';
+import * as THREE from 'three';
 import { useSound } from '@pulse-ts/audio';
 import { useParticleBurst, useParticleEmitter } from '@pulse-ts/effects';
 import { useReplicateTransform, useChannel } from '@pulse-ts/network';
@@ -72,6 +74,15 @@ interface KnockbackMsg {
 
 /** Player colors: P1 = teal, P2 = coral. */
 const PLAYER_COLORS = [0x48c9b0, 0xe74c3c] as const;
+
+/** Color of the online-mode "you" indicator ring (hex). */
+export const INDICATOR_RING_COLOR = 0xffee88;
+
+/** Screen-space scale multiplier vs projected player radius. */
+export const INDICATOR_RING_SCALE = 1.5;
+
+/** Border width of the indicator ring in pixels. */
+export const INDICATOR_RING_BORDER = 2;
 
 /**
  * Compute a knockback impulse vector from one position to another.
@@ -237,6 +248,34 @@ export function LocalPlayerNode({
         metalness: 0.4,
         castShadow: true,
     });
+
+    // Online mode indicator ring — screen-space CSS circle, always centered on the ball
+    const { renderer: threeRenderer, camera: threeCamera } = useThreeContext();
+    let indicatorRing: HTMLDivElement | null = null;
+    const projCenter = new THREE.Vector3();
+    const projEdge = new THREE.Vector3();
+
+    if (replicate) {
+        const container =
+            threeRenderer.domElement.parentElement ?? document.body;
+        indicatorRing = document.createElement('div');
+        const r = (INDICATOR_RING_COLOR >> 16) & 0xff;
+        const g = (INDICATOR_RING_COLOR >> 8) & 0xff;
+        const b = INDICATOR_RING_COLOR & 0xff;
+        const cssColor = `rgba(${r}, ${g}, ${b}, 0.7)`;
+        const glowColor = `rgba(${r}, ${g}, ${b}, 0.4)`;
+        Object.assign(indicatorRing.style, {
+            position: 'absolute',
+            borderRadius: '50%',
+            border: `${INDICATOR_RING_BORDER}px solid ${cssColor}`,
+            boxShadow: `0 0 8px ${glowColor}`,
+            pointerEvents: 'none',
+            zIndex: '999',
+        } as Partial<CSSStyleDeclaration>);
+        container.appendChild(indicatorRing);
+
+        useDestroy(() => indicatorRing!.remove());
+    }
 
     // Sound effects
     const dashSfx = useSound('noise', {
@@ -471,5 +510,35 @@ export function LocalPlayerNode({
             prevY + (cur.y - prevY) * alpha,
             prevZ + (cur.z - prevZ) * alpha,
         );
+
+        // Update indicator ring screen position (online mode only)
+        if (indicatorRing) {
+            const hw = threeRenderer.domElement.clientWidth / 2;
+            const hh = threeRenderer.domElement.clientHeight / 2;
+
+            // Project player center to screen
+            projCenter
+                .set(root.position.x, root.position.y, root.position.z)
+                .project(threeCamera);
+            const sx = projCenter.x * hw + hw;
+            const sy = -projCenter.y * hh + hh;
+
+            // Project edge point to get screen-space radius
+            projEdge
+                .set(
+                    root.position.x + PLAYER_RADIUS * INDICATOR_RING_SCALE,
+                    root.position.y,
+                    root.position.z,
+                )
+                .project(threeCamera);
+            const edgeSx = projEdge.x * hw + hw;
+            const radius = Math.abs(edgeSx - sx);
+            const size = radius * 2;
+
+            indicatorRing.style.width = `${size}px`;
+            indicatorRing.style.height = `${size}px`;
+            indicatorRing.style.left = `${sx - radius}px`;
+            indicatorRing.style.top = `${sy - radius}px`;
+        }
     });
 }
