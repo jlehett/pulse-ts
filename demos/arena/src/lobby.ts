@@ -177,6 +177,7 @@ function showHostWaiting(
         color: '#aaa',
         textAlign: 'center',
         lineHeight: '1.8',
+        wordBreak: 'break-all',
     } as Partial<CSSStyleDeclaration>);
     info.innerHTML = [
         'Share this page\u2019s URL with your opponent:',
@@ -390,6 +391,7 @@ function clearAndCreateContent(overlay: HTMLElement): HTMLDivElement {
         flexDirection: 'column',
         alignItems: 'center',
         gap: '16px',
+        padding: '0 20px',
     } as Partial<CSSStyleDeclaration>);
     overlay.appendChild(content);
     return content;
@@ -399,7 +401,7 @@ function createHeading(text: string): HTMLDivElement {
     const el = document.createElement('div');
     el.textContent = text;
     Object.assign(el.style, {
-        font: 'bold 32px monospace',
+        font: 'bold clamp(22px, 6vw, 32px) monospace',
         color: '#fff',
         textShadow: '0 0 16px rgba(72, 201, 176, 0.5)',
         letterSpacing: '3px',
@@ -424,23 +426,29 @@ function createButton(label: string, color: string): HTMLButtonElement {
     const btn = document.createElement('button');
     btn.textContent = label;
     Object.assign(btn.style, {
-        font: 'bold 18px monospace',
+        font: 'bold clamp(14px, 3.5vw, 18px) monospace',
         color: '#fff',
         backgroundColor: 'rgba(255,255,255,0.08)',
         border: '2px solid rgba(255,255,255,0.2)',
         borderRadius: '6px',
         padding: '12px 32px',
         cursor: 'pointer',
-        minWidth: '200px',
+        minWidth: 'min(200px, 70vw)',
+        minHeight: '44px',
         transition: 'all 0.2s ease',
     } as Partial<CSSStyleDeclaration>);
 
-    btn.addEventListener('mouseenter', () => {
+    btn.addEventListener('pointerdown', () => {
         btn.style.backgroundColor = 'rgba(255,255,255,0.15)';
         btn.style.borderColor = color;
         btn.style.boxShadow = `0 0 12px ${color}44`;
     });
-    btn.addEventListener('mouseleave', () => {
+    btn.addEventListener('pointerup', () => {
+        btn.style.backgroundColor = 'rgba(255,255,255,0.08)';
+        btn.style.borderColor = 'rgba(255,255,255,0.2)';
+        btn.style.boxShadow = 'none';
+    });
+    btn.addEventListener('pointerleave', () => {
         btn.style.backgroundColor = 'rgba(255,255,255,0.08)';
         btn.style.borderColor = 'rgba(255,255,255,0.2)';
         btn.style.boxShadow = 'none';
@@ -467,6 +475,8 @@ function createRow(...children: HTMLElement[]): HTMLDivElement {
         display: 'flex',
         gap: '12px',
         alignItems: 'center',
+        flexWrap: 'wrap',
+        justifyContent: 'center',
     } as Partial<CSSStyleDeclaration>);
     children.forEach((c) => row.appendChild(c));
     return row;

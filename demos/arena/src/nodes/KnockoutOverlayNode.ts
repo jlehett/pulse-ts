@@ -35,7 +35,7 @@ export function KnockoutOverlayNode() {
         left: '50%',
         transform: 'translate(-50%, -50%)',
         zIndex: '2001',
-        font: 'bold 28px monospace',
+        font: 'bold clamp(18px, 5vw, 28px) monospace',
         color: '#fff',
         textShadow: '0 0 8px rgba(0,0,0,0.8)',
         transition: 'opacity 0.3s ease-out',

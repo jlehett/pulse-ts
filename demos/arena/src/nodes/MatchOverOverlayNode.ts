@@ -46,7 +46,7 @@ export function MatchOverOverlayNode(
         left: '50%',
         transform: 'translate(-50%, -50%)',
         zIndex: '4001',
-        font: 'bold 48px monospace',
+        font: 'bold clamp(28px, 8vw, 48px) monospace',
         textShadow: '0 0 20px rgba(0,0,0,0.9)',
         transition: 'opacity 0.5s ease-in',
         opacity: '0',
@@ -63,23 +63,29 @@ export function MatchOverOverlayNode(
         left: '50%',
         transform: 'translateX(-50%)',
         zIndex: '4001',
-        font: 'bold 18px monospace',
+        font: 'bold clamp(14px, 3.5vw, 18px) monospace',
         color: '#fff',
         backgroundColor: 'rgba(255,255,255,0.08)',
         border: '2px solid rgba(255,255,255,0.2)',
         borderRadius: '6px',
         padding: '12px 32px',
+        minHeight: '44px',
         cursor: 'pointer',
         transition: 'all 0.2s ease, opacity 0.5s ease-in',
         opacity: '0',
         pointerEvents: 'none',
     } as Partial<CSSStyleDeclaration>);
-    menuBtn.addEventListener('mouseenter', () => {
+    menuBtn.addEventListener('pointerdown', () => {
         menuBtn.style.backgroundColor = 'rgba(255,255,255,0.15)';
         menuBtn.style.borderColor = '#48c9b0';
         menuBtn.style.boxShadow = '0 0 12px #48c9b044';
     });
-    menuBtn.addEventListener('mouseleave', () => {
+    menuBtn.addEventListener('pointerup', () => {
+        menuBtn.style.backgroundColor = 'rgba(255,255,255,0.08)';
+        menuBtn.style.borderColor = 'rgba(255,255,255,0.2)';
+        menuBtn.style.boxShadow = 'none';
+    });
+    menuBtn.addEventListener('pointerleave', () => {
         menuBtn.style.backgroundColor = 'rgba(255,255,255,0.08)';
         menuBtn.style.borderColor = 'rgba(255,255,255,0.2)';
         menuBtn.style.boxShadow = 'none';

@@ -35,7 +35,7 @@ export function CountdownOverlayNode() {
         left: '50%',
         transform: 'translate(-50%, -50%)',
         zIndex: '3000',
-        font: 'bold 72px monospace',
+        font: 'bold clamp(40px, 14vw, 72px) monospace',
         color: '#fff',
         textShadow: '0 0 16px rgba(0,0,0,0.8)',
         transition: 'opacity 0.2s ease-out',
