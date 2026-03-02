@@ -226,12 +226,14 @@ export function LocalPlayerNode({
         prevZ = transform.localPosition.z;
     });
 
-    // Visual — sphere mesh
+    // Visual — sphere mesh with subtle emissive glow (blooms under post-processing)
     const { root } = useMesh('sphere', {
         radius: PLAYER_RADIUS,
         color: PLAYER_COLORS[playerId],
-        roughness: 0.4,
-        metalness: 0.3,
+        emissive: PLAYER_COLORS[playerId],
+        emissiveIntensity: 0.15,
+        roughness: 0.35,
+        metalness: 0.4,
         castShadow: true,
     });
 

@@ -31,9 +31,11 @@ export {
 export {
     useAmbientLight,
     useDirectionalLight,
+    usePointLight,
     useFog,
     type AmbientLightOptions,
     type DirectionalLightOptions,
+    type PointLightOptions,
     type ShadowBounds,
     type FogOptions,
 } from './useLighting';

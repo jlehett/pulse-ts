@@ -139,6 +139,63 @@ export function useDirectionalLight(
 }
 
 // ---------------------------------------------------------------------------
+// usePointLight
+// ---------------------------------------------------------------------------
+
+/** Options for {@link usePointLight}. */
+export interface PointLightOptions {
+    /** Light color (hex). @default 0xffffff */
+    color?: number;
+    /** Light intensity. @default 1 */
+    intensity?: number;
+    /** Maximum range of the light. `0` means unlimited. @default 0 */
+    distance?: number;
+    /** Light falloff amount. @default 2 */
+    decay?: number;
+    /** World-space position as `[x, y, z]`. @default [0, 0, 0] */
+    position?: [number, number, number];
+}
+
+/**
+ * Creates a `PointLight` and adds it to the scene. The light is
+ * automatically removed when the node is destroyed.
+ *
+ * @param options - Color, intensity, distance, decay, and position.
+ * @returns The created `THREE.PointLight`.
+ *
+ * @example
+ * ```ts
+ * import { usePointLight } from '@pulse-ts/three';
+ *
+ * function SceneSetup() {
+ *   usePointLight({
+ *     color: 0x48c9b0,
+ *     intensity: 0.5,
+ *     distance: 40,
+ *     position: [-10, -3, -10],
+ *   });
+ * }
+ * ```
+ */
+export function usePointLight(
+    options: PointLightOptions = {},
+): THREE.PointLight {
+    const { scene } = useThreeContext();
+    const light = new THREE.PointLight(
+        options.color,
+        options.intensity,
+        options.distance,
+        options.decay,
+    );
+    if (options.position) {
+        light.position.set(...options.position);
+    }
+    scene.add(light);
+    useDestroy(() => scene.remove(light));
+    return light;
+}
+
+// ---------------------------------------------------------------------------
 // useFog
 // ---------------------------------------------------------------------------
 

@@ -1,5 +1,10 @@
 import { useProvideContext, useChild } from '@pulse-ts/core';
-import { useAmbientLight, useDirectionalLight, useFog } from '@pulse-ts/three';
+import {
+    useAmbientLight,
+    useDirectionalLight,
+    usePointLight,
+    useFog,
+} from '@pulse-ts/three';
 import { useWebSocket, useRoom } from '@pulse-ts/network';
 import { installParticles } from '@pulse-ts/effects';
 import { GameCtx, type GameState } from '../contexts';
@@ -60,6 +65,20 @@ export function ArenaNode(props?: Readonly<ArenaNodeProps>) {
             top: 20,
             bottom: -20,
         },
+    });
+
+    // Accent point lights — colored fill from below the arena
+    usePointLight({
+        color: 0x48c9b0,
+        intensity: 0.5,
+        distance: 40,
+        position: [-10, -3, -10],
+    });
+    usePointLight({
+        color: 0xe74c3c,
+        intensity: 0.3,
+        distance: 40,
+        position: [10, -3, 10],
     });
 
     // Fog for depth and atmosphere
