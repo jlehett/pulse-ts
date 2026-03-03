@@ -2,7 +2,7 @@
 id: TICKET-090
 epic: EPIC-013
 title: Tie state detection and authoritative scoring
-status: todo
+status: in-progress
 priority: high
 created: 2026-03-02
 updated: 2026-03-02
@@ -42,3 +42,4 @@ the other player.
 
 - **2026-03-02**: Ticket created.
 - Bug context: observed instances where each player's client registered a different winner for the same round.
+- **2026-03-02**: Starting implementation.
