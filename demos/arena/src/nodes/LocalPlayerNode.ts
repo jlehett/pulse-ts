@@ -37,6 +37,7 @@ import { KnockoutChannel } from '../config/channels';
 import { triggerCameraShake } from './CameraRigNode';
 import { stagePlayerPosition, markHit, getReplayPosition } from '../replay';
 import { triggerShockwave, worldToScreen } from '../shockwave';
+import { triggerHitImpact } from '../hitImpact';
 
 /** Sphere radius for the player ball. */
 export const PLAYER_RADIUS = 0.8;
@@ -372,6 +373,7 @@ export function LocalPlayerNode({
                     threeCamera,
                 );
                 triggerShockwave(su, sv);
+                triggerHitImpact(surfX, surfZ);
             }
             if (impactCD.ready) {
                 impactSfx.play();
@@ -433,6 +435,7 @@ export function LocalPlayerNode({
             (transform.localPosition.z + otherTransform.localPosition.z) / 2;
         const [su, sv] = worldToScreen(midX, midY, midZ, threeCamera);
         triggerShockwave(su, sv);
+        triggerHitImpact(midX, midZ);
 
         // Mark this collision for instant replay hit detection
         markHit();
