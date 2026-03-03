@@ -6,6 +6,7 @@ status: todo
 priority: high
 created: 2026-03-02
 updated: 2026-03-02
+branch: ticket-090-tie-state-and-authoritative-scoring
 labels:
   - gameplay
   - networking
