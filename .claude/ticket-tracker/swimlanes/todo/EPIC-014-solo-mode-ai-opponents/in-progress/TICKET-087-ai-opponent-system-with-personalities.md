@@ -2,7 +2,7 @@
 id: TICKET-087
 epic: EPIC-014
 title: AI opponent system with personalities
-status: todo
+status: in-progress
 priority: medium
 created: 2026-03-02
 updated: 2026-03-02
@@ -32,3 +32,4 @@ timing, and positioning strategy.
 ## Notes
 
 - **2026-03-02**: Ticket created.
+- **2026-03-02**: Starting implementation.
