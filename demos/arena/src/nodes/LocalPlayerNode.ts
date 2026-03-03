@@ -538,7 +538,13 @@ export function LocalPlayerNode({
                 transform.localPosition.z,
             ]);
             deathSfx.play();
-            gameState.pendingKnockout = playerId;
+            // Use pendingKnockout2 if the first slot is already occupied
+            // (two players falling in the same tie window)
+            if (gameState.pendingKnockout >= 0) {
+                gameState.pendingKnockout2 = playerId;
+            } else {
+                gameState.pendingKnockout = playerId;
+            }
             if (publishKnockout) publishKnockout(playerId);
             transform.localPosition.set(...spawn);
             body.setLinearVelocity(0, 0, 0);

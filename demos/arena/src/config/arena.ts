@@ -48,3 +48,10 @@ export const TRAIL_VELOCITY_REFERENCE = 3;
 
 /** Base emission interval (seconds) at the threshold velocity. Faster movement = denser trail. */
 export const TRAIL_BASE_INTERVAL = 0.015;
+
+/**
+ * Number of fixed-step frames to wait for a second knockout after the first.
+ * At 60 Hz, 10 frames ≈ 167 ms. If both players fall within this window,
+ * the round is declared a tie.
+ */
+export const TIE_WINDOW_FRAMES = 10;

@@ -9,6 +9,9 @@ const PLAYER_LABELS = ['P1', 'P2'];
 /** Player flash colors: P1 scores = teal, P2 scores = coral. */
 const FLASH_COLORS = ['rgba(72, 201, 176, 0.5)', 'rgba(231, 76, 60, 0.5)'];
 
+/** Neutral flash color for tie rounds. */
+const TIE_FLASH_COLOR = 'rgba(180, 180, 180, 0.5)';
+
 /**
  * DOM overlay that shows a player-colored flash and "P1 scored!" / "P2 scored!"
  * text during the `ko_flash` phase. Also shows a gentle dark fade during the
@@ -72,9 +75,14 @@ export function KnockoutOverlayNode() {
         text.style.opacity = isFlash ? '1' : '0';
 
         if (isFlash) {
-            const scorer = 1 - gameState.lastKnockedOut;
-            text.textContent = `${PLAYER_LABELS[scorer]} scored!`;
-            flash.style.backgroundColor = FLASH_COLORS[scorer];
+            if (gameState.isTie) {
+                text.textContent = 'Tie!';
+                flash.style.backgroundColor = TIE_FLASH_COLOR;
+            } else {
+                const scorer = 1 - gameState.lastKnockedOut;
+                text.textContent = `${PLAYER_LABELS[scorer]} scored!`;
+                flash.style.backgroundColor = FLASH_COLORS[scorer];
+            }
 
             if (!wasFlash) {
                 applyScalePop(text);

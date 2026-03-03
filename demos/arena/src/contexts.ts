@@ -23,6 +23,10 @@ export interface GameState {
     matchWinner: number;
     /** Pending knockout: player ID that just fell off (-1 = none). */
     pendingKnockout: number;
+    /** Second pending knockout slot for tie detection (-1 = none). */
+    pendingKnockout2: number;
+    /** Whether the current round ended in a tie (both players fell simultaneously). */
+    isTie: boolean;
     /** Whether the game is currently paused. */
     paused: boolean;
 }

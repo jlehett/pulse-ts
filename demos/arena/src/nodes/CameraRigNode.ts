@@ -35,6 +35,12 @@ export const REPLAY_LOSER_FALLEN_Y = -3;
 /** Y range over which the camera transitions from follow to overhead after loser falls. */
 export const REPLAY_FALL_ZOOM_RANGE = 7;
 
+/** XZ separation below which no extra camera height is needed during tie replay. */
+export const REPLAY_TIE_BASE_SEPARATION = 6;
+
+/** Extra camera height gained per unit of player separation beyond the base. */
+export const REPLAY_TIE_HEIGHT_PER_UNIT = 0.8;
+
 // ---------------------------------------------------------------------------
 // Module-level shake state — shared across all callers
 // ---------------------------------------------------------------------------
@@ -112,45 +118,90 @@ export function CameraRigNode() {
         let targetLookZ = 0;
 
         if (isReplayActive()) {
-            const scorerId = getReplayScorer();
-            const knockedOutId = getReplayKnockedOut();
             const hitProx = hasReplayHit() ? getReplayHitProximity() : 0;
-            const pastHit = hasReplayHit() ? getReplayPastHit() : 0;
 
-            // Determine follow target:
-            // - Self-KO (no hit): always follow the loser
-            // - Before hit: follow the scorer (winner)
-            // - After hit: transition to following the loser
-            let followId: number;
-            if (!hasReplayHit() || pastHit > 0) {
-                followId = knockedOutId;
+            if (gameState.isTie) {
+                // Tie replay: follow the midpoint between both players,
+                // dynamically adjusting height to keep both in frame.
+                const p0 = getReplayPosition(0);
+                const p1 = getReplayPosition(1);
+
+                if (p0 && p1) {
+                    const midX = (p0[0] + p1[0]) / 2;
+                    const midY = (p0[1] + p1[1]) / 2;
+                    const midZ = (p0[2] + p1[2]) / 2;
+
+                    // Dynamic height based on player separation
+                    const dx = p0[0] - p1[0];
+                    const dz = p0[2] - p1[2];
+                    const separation = Math.sqrt(dx * dx + dz * dz);
+                    const extraHeight =
+                        Math.max(0, separation - REPLAY_TIE_BASE_SEPARATION) *
+                        REPLAY_TIE_HEIGHT_PER_UNIT;
+
+                    const baseHeight =
+                        REPLAY_CAMERA_HEIGHT +
+                        extraHeight -
+                        REPLAY_HIT_ZOOM * hitProx;
+
+                    // Fall zoom-out: use the lower Y of the two players
+                    const lowestY = Math.min(p0[1], p1[1]);
+                    let zoomOut = 0;
+                    if (lowestY < REPLAY_LOSER_FALLEN_Y) {
+                        const fallDist = REPLAY_LOSER_FALLEN_Y - lowestY;
+                        zoomOut = Math.min(
+                            fallDist / REPLAY_FALL_ZOOM_RANGE,
+                            1,
+                        );
+                    }
+
+                    const follow = 1 - zoomOut;
+                    targetX = midX * follow;
+                    targetY = baseHeight * follow + CAMERA_HEIGHT * zoomOut;
+                    targetZ =
+                        (midZ + REPLAY_CAMERA_FOLLOW_DIST) * follow +
+                        CAMERA_Z_OFFSET * zoomOut;
+                    targetLookX = midX * follow;
+                    targetLookY = midY * follow;
+                    targetLookZ = midZ * follow;
+                }
             } else {
-                followId = scorerId;
-            }
+                // Normal replay: follow scorer before hit, loser after hit
+                const scorerId = getReplayScorer();
+                const knockedOutId = getReplayKnockedOut();
+                const pastHit = hasReplayHit() ? getReplayPastHit() : 0;
 
-            const followPos = getReplayPosition(followId);
-            const loserPos = getReplayPosition(knockedOutId);
+                let followId: number;
+                if (!hasReplayHit() || pastHit > 0) {
+                    followId = knockedOutId;
+                } else {
+                    followId = scorerId;
+                }
 
-            // Zoom out to overhead once the loser has fallen off the platform
-            let zoomOut = 0;
-            if (loserPos && loserPos[1] < REPLAY_LOSER_FALLEN_Y) {
-                const fallDist = REPLAY_LOSER_FALLEN_Y - loserPos[1];
-                zoomOut = Math.min(fallDist / REPLAY_FALL_ZOOM_RANGE, 1);
-            }
+                const followPos = getReplayPosition(followId);
+                const loserPos = getReplayPosition(knockedOutId);
 
-            if (followPos) {
-                const followX = followPos[0];
-                const followY =
-                    REPLAY_CAMERA_HEIGHT - REPLAY_HIT_ZOOM * hitProx;
-                const followZ = followPos[2] + REPLAY_CAMERA_FOLLOW_DIST;
+                // Zoom out to overhead once the loser has fallen off the platform
+                let zoomOut = 0;
+                if (loserPos && loserPos[1] < REPLAY_LOSER_FALLEN_Y) {
+                    const fallDist = REPLAY_LOSER_FALLEN_Y - loserPos[1];
+                    zoomOut = Math.min(fallDist / REPLAY_FALL_ZOOM_RANGE, 1);
+                }
 
-                const follow = 1 - zoomOut;
-                targetX = followX * follow;
-                targetY = followY * follow + CAMERA_HEIGHT * zoomOut;
-                targetZ = followZ * follow + CAMERA_Z_OFFSET * zoomOut;
-                targetLookX = followPos[0] * follow;
-                targetLookY = followPos[1] * follow;
-                targetLookZ = followPos[2] * follow;
+                if (followPos) {
+                    const followX = followPos[0];
+                    const followY =
+                        REPLAY_CAMERA_HEIGHT - REPLAY_HIT_ZOOM * hitProx;
+                    const followZ = followPos[2] + REPLAY_CAMERA_FOLLOW_DIST;
+
+                    const follow = 1 - zoomOut;
+                    targetX = followX * follow;
+                    targetY = followY * follow + CAMERA_HEIGHT * zoomOut;
+                    targetZ = followZ * follow + CAMERA_Z_OFFSET * zoomOut;
+                    targetLookX = followPos[0] * follow;
+                    targetLookY = followPos[1] * follow;
+                    targetLookZ = followPos[2] * follow;
+                }
             }
         }
 

@@ -12,8 +12,14 @@ import {
     KO_FLASH_DURATION,
     RESET_PAUSE_DURATION,
     COUNTDOWN_DURATION,
+    TIE_WINDOW_FRAMES,
 } from '../config/arena';
-import { KnockoutChannel, RoundResetChannel } from '../config/channels';
+import {
+    KnockoutChannel,
+    RoundResetChannel,
+    ScoringOutcomeChannel,
+    type ScoringOutcome,
+} from '../config/channels';
 import {
     startReplay,
     isReplayActive,
@@ -71,12 +77,23 @@ export function GameManagerNode(props?: Readonly<GameManagerNodeProps>) {
 
     // In online mode, receive knockout events from the remote machine
     // and synchronize countdown→playing transition via RoundResetChannel.
+    // The host also broadcasts authoritative scoring outcomes.
     let publishRoundReset: ((round: number) => void) | null = null;
+    let publishScoringOutcome: ((outcome: ScoringOutcome) => void) | null =
+        null;
     let hostCountdownDone = false;
+
+    /** Set by the non-host when receiving the host's authoritative scoring. */
+    let receivedOutcome: ScoringOutcome | null = null;
 
     if (props?.online) {
         useChannel(KnockoutChannel, (knockedOutPlayerId) => {
-            gameState.pendingKnockout = knockedOutPlayerId;
+            // Use pendingKnockout2 if the first slot is already occupied
+            if (gameState.pendingKnockout >= 0) {
+                gameState.pendingKnockout2 = knockedOutPlayerId;
+            } else {
+                gameState.pendingKnockout = knockedOutPlayerId;
+            }
         });
 
         const rc = useChannel(RoundResetChannel, () => {
@@ -84,6 +101,16 @@ export function GameManagerNode(props?: Readonly<GameManagerNodeProps>) {
             hostCountdownDone = true;
         });
         publishRoundReset = (round) => rc.publish(round);
+
+        // Scoring outcome channel — host publishes, non-host subscribes
+        const sc = useChannel(ScoringOutcomeChannel, (outcome) => {
+            if (!props?.isHost) {
+                receivedOutcome = outcome;
+            }
+        });
+        if (props?.isHost) {
+            publishScoringOutcome = (outcome) => sc.publish(outcome);
+        }
     }
 
     const koFlashTimer = useTimer(KO_FLASH_DURATION);
@@ -118,46 +145,138 @@ export function GameManagerNode(props?: Readonly<GameManagerNodeProps>) {
 
     let prevCountdown = -1;
 
+    /**
+     * Apply a scoring outcome — increment the scorer's score (if not a tie)
+     * and transition to `ko_flash` or `match_over`.
+     *
+     * @param scorer - Player ID who scored (0 or 1), or -1 for a tie.
+     * @param isTie - Whether the round ended in a tie.
+     */
+    function applyScoring(scorer: number, isTie: boolean): void {
+        if (!isTie && scorer >= 0) {
+            gameState.scores[scorer]++;
+
+            if (gameState.scores[scorer] >= WIN_COUNT) {
+                gameState.phase = 'match_over';
+                gameState.matchWinner = scorer;
+                matchFanfareSfx.play();
+                return;
+            }
+        }
+
+        gameState.phase = 'ko_flash';
+        koFlashTimer.reset();
+        koAnnounceSfx.play();
+    }
+
+    /** Countdown for the tie detection window (-1 = inactive). */
+    let tieWindowCounter = -1;
+
+    /** Player ID stored from the first knockout while the tie window is open. */
+    let firstKnockedOut = -1;
+
     useFixedUpdate(() => {
         // In online mode, pause is overlay-only — never freeze the state machine
         if (!props?.online && gameState.paused) return;
 
-        // Poll for knockout events from LocalPlayerNodes
+        // --- Tie window knockout detection ---
+        // When the first knockout arrives during 'playing', open a tie window
+        // instead of immediately starting the replay.
         if (gameState.pendingKnockout >= 0 && gameState.phase === 'playing') {
-            const knockedOutPlayerId = gameState.pendingKnockout;
-            gameState.pendingKnockout = -1;
-            gameState.lastKnockedOut = knockedOutPlayerId;
+            if (tieWindowCounter < 0) {
+                // First knockout — open the tie window
+                firstKnockedOut = gameState.pendingKnockout;
+                gameState.pendingKnockout = -1;
+                tieWindowCounter = TIE_WINDOW_FRAMES;
 
-            // Start instant replay — score is deferred until replay finishes
-            startReplay(knockedOutPlayerId);
-            gameState.phase = 'replay';
+                // Check if a second knockout already arrived in the same frame
+                if (gameState.pendingKnockout2 >= 0) {
+                    // Both fell in the same frame — immediate tie
+                    gameState.isTie = true;
+                    gameState.lastKnockedOut = firstKnockedOut;
+                    gameState.pendingKnockout2 = -1;
+                    tieWindowCounter = -1;
+                    startReplay(firstKnockedOut);
+                    gameState.phase = 'replay';
+                }
+            }
+        }
+
+        // Tick the tie window countdown
+        if (tieWindowCounter > 0 && gameState.phase === 'playing') {
+            tieWindowCounter--;
+
+            // Check for a second knockout arriving during the window
+            if (
+                gameState.pendingKnockout >= 0 ||
+                gameState.pendingKnockout2 >= 0
+            ) {
+                // Second knockout arrived — tie!
+                gameState.isTie = true;
+                gameState.lastKnockedOut = firstKnockedOut;
+                gameState.pendingKnockout = -1;
+                gameState.pendingKnockout2 = -1;
+                tieWindowCounter = -1;
+                startReplay(firstKnockedOut);
+                gameState.phase = 'replay';
+            } else if (tieWindowCounter === 0) {
+                // Window expired with only one knockout — normal scoring
+                gameState.isTie = false;
+                gameState.lastKnockedOut = firstKnockedOut;
+                tieWindowCounter = -1;
+                startReplay(firstKnockedOut);
+                gameState.phase = 'replay';
+            }
         }
 
         switch (gameState.phase) {
-            case 'replay':
+            case 'replay': {
                 if (!isReplayActive()) {
-                    endReplay();
-                    // Deferred score increment — happens after replay
-                    const scorer = 1 - gameState.lastKnockedOut;
-                    gameState.scores[scorer]++;
+                    const isNonHostOnline = props?.online && !props?.isHost;
 
-                    if (gameState.scores[scorer] >= WIN_COUNT) {
-                        gameState.phase = 'match_over';
-                        gameState.matchWinner = scorer;
-                        matchFanfareSfx.play();
+                    // Non-host: wait for the host's outcome before proceeding
+                    if (isNonHostOnline && !receivedOutcome) {
+                        break;
+                    }
+
+                    endReplay();
+
+                    if (isNonHostOnline && receivedOutcome) {
+                        // Apply the host's authoritative decision
+                        gameState.isTie = receivedOutcome.isTie;
+                        applyScoring(
+                            receivedOutcome.scorer,
+                            receivedOutcome.isTie,
+                        );
+                        receivedOutcome = null;
                     } else {
-                        gameState.phase = 'ko_flash';
-                        koFlashTimer.reset();
-                        koAnnounceSfx.play();
+                        // Local mode or host: compute scoring locally
+                        const scorer = gameState.isTie
+                            ? -1
+                            : 1 - gameState.lastKnockedOut;
+                        applyScoring(scorer, gameState.isTie);
+
+                        // Host: broadcast the outcome to non-host
+                        if (publishScoringOutcome) {
+                            publishScoringOutcome({
+                                scorer,
+                                isTie: gameState.isTie,
+                            });
+                        }
                     }
                 }
                 break;
+            }
 
             case 'ko_flash':
                 if (!koFlashTimer.active) {
                     gameState.phase = 'resetting';
                     resetPauseTimer.reset();
                     gameState.round++;
+                    // Reset tie state for the next round
+                    gameState.isTie = false;
+                    gameState.pendingKnockout2 = -1;
+                    firstKnockedOut = -1;
                     // Clear recorded footage so next replay only shows the new round
                     clearRecording();
                 }
