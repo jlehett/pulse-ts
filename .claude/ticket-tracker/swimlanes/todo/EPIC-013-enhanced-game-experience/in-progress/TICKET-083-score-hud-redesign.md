@@ -2,10 +2,11 @@
 id: TICKET-083
 epic: EPIC-013
 title: Score HUD redesign
-status: todo
+status: in-progress
 priority: medium
 created: 2026-03-02
 updated: 2026-03-02
+branch: ticket-083-score-hud-redesign
 labels:
   - ui
   - arena
