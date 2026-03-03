@@ -24,6 +24,11 @@ import { CameraRigNode } from './CameraRigNode';
 import { VictoryEffectNode } from './VictoryEffectNode';
 import { ReplayNode } from './ReplayNode';
 import { ShockwaveNode } from './ShockwaveNode';
+import { NebulaNode } from './NebulaNode';
+import { StarfieldNode } from './StarfieldNode';
+import { SupernovaNode } from './SupernovaNode';
+import { AtmosphericDustNode } from './AtmosphericDustNode';
+import { EnergyPillarsNode } from './EnergyPillarsNode';
 
 export interface ArenaNodeProps {
     /** Local player ID for online mode (0 or 1). Omit for local 2-player. */
@@ -104,10 +109,17 @@ export function ArenaNode(props?: Readonly<ArenaNodeProps>) {
     useProvideContext(GameCtx, gameState);
 
     // Particle effects pool
-    installParticles({ maxPerPool: 2048, defaultSize: 0.08 });
+    installParticles({ maxPerPool: 4096, defaultSize: 0.08 });
 
     // Arena platform
     useChild(PlatformNode);
+
+    // Environment atmosphere
+    useChild(NebulaNode);
+    useChild(StarfieldNode);
+    useChild(SupernovaNode);
+    useChild(AtmosphericDustNode);
+    useChild(EnergyPillarsNode);
 
     if (online) {
         // Online mode — one local player (producer) + one remote player (consumer)

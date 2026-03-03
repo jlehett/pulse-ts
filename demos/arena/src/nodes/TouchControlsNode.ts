@@ -1,6 +1,8 @@
-import { useDestroy } from '@pulse-ts/core';
+import { useDestroy, useContext, useFrameUpdate } from '@pulse-ts/core';
 import { useInput } from '@pulse-ts/input';
 import { isMobileDevice } from '../isMobileDevice';
+import { GameCtx } from '../contexts';
+import { isReplayActive } from '../replay';
 
 /** Default deadzone — inputs within this magnitude are zeroed. */
 const DEADZONE = 0.15;
@@ -324,6 +326,18 @@ export function TouchControlsNode(props?: Readonly<TouchControlsNodeProps>) {
     pauseBtn.addEventListener('touchend', onPauseTouchEnd, { passive: false });
     pauseBtn.addEventListener('touchcancel', onPauseTouchEnd, {
         passive: false,
+    });
+
+    // ── Hide during replay ──
+
+    const gameState = useContext(GameCtx);
+
+    useFrameUpdate(() => {
+        const inReplay = gameState.phase === 'replay' && isReplayActive();
+        const vis = inReplay ? 'hidden' : 'visible';
+        joystickBase.style.visibility = vis;
+        dashBtn.style.visibility = vis;
+        pauseBtn.style.visibility = vis;
     });
 
     // ── Cleanup ──

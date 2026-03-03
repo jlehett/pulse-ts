@@ -1,6 +1,7 @@
 import { useFrameUpdate, useDestroy, useContext } from '@pulse-ts/core';
 import { useThreeContext } from '@pulse-ts/three';
 import { GameCtx } from '../contexts';
+import { isReplayActive } from '../replay';
 import { ANIM_EASING } from '../overlayAnimations';
 
 /** Player colors: P1 = teal, P2 = coral. */
@@ -71,6 +72,10 @@ export function ScoreHudNode() {
     }
 
     useFrameUpdate(() => {
+        // Hide during replay
+        const inReplay = gameState.phase === 'replay' && isReplayActive();
+        el.style.opacity = inReplay ? '0' : '1';
+
         const s0 = gameState.scores[0];
         const s1 = gameState.scores[1];
 

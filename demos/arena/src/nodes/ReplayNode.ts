@@ -15,6 +15,7 @@ import {
 import { PLAYER_COLORS, TRAIL_BASE_INTERVAL } from '../config/arena';
 import { triggerCameraShake } from './CameraRigNode';
 import { triggerShockwave, worldToScreen } from '../shockwave';
+import { triggerHitImpact } from '../hitImpact';
 
 /** Height of each cinematic letterbox bar as a CSS value. */
 export const LETTERBOX_HEIGHT = '8%';
@@ -105,20 +106,25 @@ export function ReplayNode() {
         top: '12%',
         right: '4%',
         zIndex: '2011',
-        font: 'bold clamp(10px, 2vw, 16px) monospace',
-        color: 'rgba(255, 255, 255, 0.7)',
+        font: 'bold clamp(10px, 2.5vw, 32px) monospace',
+        color: 'rgba(255, 240, 140, 0.85)',
         letterSpacing: '0.2em',
         textShadow: '0 0 6px rgba(0,0,0,0.6)',
         transition: 'opacity 0.3s ease-in-out',
         opacity: '0',
         pointerEvents: 'none',
+        animation: 'replayBlink 1.2s step-end infinite',
     } as Partial<CSSStyleDeclaration>);
-    label.textContent = 'REPLAY';
+    label.textContent = '\u25B6 REPLAY';
     container.appendChild(label);
 
-    // Self-KO bob animation — injected as a <style> element
+    // Replay blink + Self-KO bob animations — injected as a <style> element
     const selfKoStyle = document.createElement('style');
     selfKoStyle.textContent = `
+        @keyframes replayBlink {
+            0%, 80% { visibility: visible; }
+            80.01%, 100% { visibility: hidden; }
+        }
         @keyframes selfKoBob {
             0%, 100% { transform: translateY(0); }
             50% { transform: translateY(-${SELF_KO_BOB_DISTANCE}px); }
@@ -258,6 +264,7 @@ export function ReplayNode() {
                         triggerCameraShake(0.4, 0.3);
                         const [su, sv] = worldToScreen(mx, my, mz, camera);
                         triggerShockwave(su, sv);
+                        triggerHitImpact(mx, mz);
                     }
                     hitBurstsEmitted.add(hitIdx);
                 }

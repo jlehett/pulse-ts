@@ -12,6 +12,7 @@ import { initLandscapeEnforcer } from './landscapeEnforcer';
 import { initAutoFullscreen } from './autoFullscreen';
 import { showInstallPrompt } from './installPrompt';
 import { setupPostProcessing } from './setupPostProcessing';
+import { isMobileDevice } from './isMobileDevice';
 
 const canvas = document.getElementById('arena') as HTMLCanvasElement;
 const container = canvas.parentElement ?? document.body;
@@ -29,13 +30,22 @@ function startLocalGame(): Promise<void> {
         installInput(world, { preventDefault: true, bindings: allBindings });
         installPhysics(world, { gravity: { x: 0, y: -20, z: 0 } });
 
+        const mobile = isMobileDevice();
         const three = installThree(world, {
             canvas,
-            clearColor: 0x0a0a1a,
+            clearColor: 0x050508,
         });
 
-        three.renderer.shadowMap.enabled = true;
-        three.renderer.shadowMap.type = 1; // THREE.PCFShadowMap
+        // Cap pixel ratio at 2 on mobile — prevents 3x DPR phones
+        // from rendering 9x the pixels for minimal visual difference.
+        if (mobile) {
+            three.renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+        }
+
+        if (!mobile) {
+            three.renderer.shadowMap.enabled = true;
+            three.renderer.shadowMap.type = 1; // THREE.PCFShadowMap
+        }
         const shockwavePass = setupPostProcessing(three);
 
         world.addSystem(new StatsOverlaySystem({ position: 'top-left' }));
@@ -66,17 +76,24 @@ async function startOnlineGame(lobby: LobbyResult): Promise<void> {
             });
             installPhysics(world, { gravity: { x: 0, y: -20, z: 0 } });
 
+            const mobile = isMobileDevice();
             const three = installThree(world, {
                 canvas,
-                clearColor: 0x0a0a1a,
+                clearColor: 0x050508,
             });
+
+            if (mobile) {
+                three.renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+            }
 
             await installNetwork(world, {
                 replication: { sendHz: 60 },
             });
 
-            three.renderer.shadowMap.enabled = true;
-            three.renderer.shadowMap.type = 1; // THREE.PCFShadowMap
+            if (!mobile) {
+                three.renderer.shadowMap.enabled = true;
+                three.renderer.shadowMap.type = 1; // THREE.PCFShadowMap
+            }
             const shockwavePass = setupPostProcessing(three);
 
             world.addSystem(new StatsOverlaySystem({ position: 'top-left' }));
