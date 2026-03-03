@@ -6,6 +6,7 @@ status: todo
 priority: medium
 created: 2026-03-02
 updated: 2026-03-02
+branch: ticket-084-arena-visual-enhancements
 labels:
   - rendering
   - arena
