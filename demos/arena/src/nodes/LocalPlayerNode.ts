@@ -286,6 +286,10 @@ export function LocalPlayerNode({
     // Track round number to detect round resets via shared state
     let lastRound = gameState.round;
 
+    // Tracks whether this player has been knocked out this round.
+    // While true the mesh is hidden and death-plane resets are suppressed.
+    let knockedOut = false;
+
     // Track phase to detect transition into 'playing' (fixed update + frame update)
     let lastPhase = gameState.phase;
     let lastFramePhase = gameState.phase;
@@ -545,6 +549,8 @@ export function LocalPlayerNode({
         // Round reset — teleport to spawn when GameManagerNode increments round.
         if (gameState.round !== lastRound) {
             lastRound = gameState.round;
+            knockedOut = false;
+            root.visible = true;
             transform.localPosition.set(...spawn);
             body.setLinearVelocity(0, 0, 0);
             dashTimer.cancel();
@@ -578,7 +584,7 @@ export function LocalPlayerNode({
             }
 
             // Still check death plane during freeze for safety
-            if (transform.localPosition.y < DEATH_PLANE_Y) {
+            if (!knockedOut && transform.localPosition.y < DEATH_PLANE_Y) {
                 transform.localPosition.set(...spawn);
                 body.setLinearVelocity(0, 0, 0);
             }
@@ -613,8 +619,8 @@ export function LocalPlayerNode({
             }
         }
 
-        // Death plane — respawn when falling off the arena
-        if (transform.localPosition.y < DEATH_PLANE_Y) {
+        // Death plane — hide mesh on knockout; actual respawn deferred to round reset
+        if (!knockedOut && transform.localPosition.y < DEATH_PLANE_Y) {
             knockoutBurst([
                 transform.localPosition.x,
                 transform.localPosition.y,
@@ -629,7 +635,8 @@ export function LocalPlayerNode({
                 gameState.pendingKnockout = playerId;
             }
             if (publishKnockout) publishKnockout(playerId);
-            transform.localPosition.set(...spawn);
+            knockedOut = true;
+            root.visible = false;
             body.setLinearVelocity(0, 0, 0);
             dashTimer.cancel();
             dashCD.reset();
@@ -652,11 +659,17 @@ export function LocalPlayerNode({
                   ? 1
                   : 1 - dashCD.remaining / DASH_COOLDOWN,
         );
-        // During replay, override mesh position from the replay buffer
+        // During replay, override mesh position from the replay buffer.
+        // When knocked out (between death and round reset), hide the mesh
+        // so there's no visible snap-to-spawn before the replay finishes.
         const replayPos = getReplayPosition(playerId);
         if (replayPos) {
+            root.visible = true;
             root.position.set(replayPos[0], replayPos[1], replayPos[2]);
+        } else if (knockedOut) {
+            root.visible = false;
         } else {
+            root.visible = true;
             const alpha = world.getAmbientAlpha();
             const cur = transform.localPosition;
             root.position.set(

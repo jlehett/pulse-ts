@@ -160,13 +160,14 @@ function showHostSetup(overlay: HTMLElement, finish: Finish) {
     const playerRow = createRow(btnP1, btnP2);
 
     const btnBack = createButton('Back', '#888');
+    const backCol = createColumn(btnBack);
 
     content.appendChild(heading);
     content.appendChild(subheading);
     content.appendChild(playerRow);
-    content.appendChild(btnBack);
+    content.appendChild(backCol);
 
-    applyStaggeredEntrance([heading, subheading, playerRow, btnBack], 100);
+    applyStaggeredEntrance([heading, subheading, playerRow, backCol], 100);
     applyButtonHoverScale(btnP1);
     applyButtonHoverScale(btnP2);
     applyButtonHoverScale(btnBack);
@@ -292,12 +293,13 @@ function showJoinSetup(overlay: HTMLElement, finish: Finish) {
 
     const status = createStatusIndicator();
     const btnBack = createButton('Back', '#888');
+    const backCol = createColumn(btnBack);
 
     content.appendChild(heading);
     content.appendChild(status.el);
-    content.appendChild(btnBack);
+    content.appendChild(backCol);
 
-    applyStaggeredEntrance([heading, status.el, btnBack], 100);
+    applyStaggeredEntrance([heading, status.el, backCol], 100);
     applyButtonHoverScale(btnBack);
 
     let ws: WebSocket | null = null;

@@ -178,7 +178,7 @@ export function PauseMenuNode(props?: Readonly<PauseMenuNodeProps>) {
         content.style.pointerEvents = visible ? 'auto' : 'none';
 
         if (visible && !wasVisible) {
-            applyStaggeredEntrance([title, resumeBtn, exitBtn], 100);
+            applyStaggeredEntrance([title, buttonRow], 100);
         }
         wasVisible = visible;
     });

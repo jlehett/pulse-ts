@@ -94,6 +94,14 @@ export function applyScalePop(el: HTMLElement): void {
  * ```
  */
 export function applyButtonHoverScale(btn: HTMLElement): void {
+    // Skip hover scaling on touch-only devices where pointerenter fires
+    // on tap but pointerleave doesn't reliably clear, causing sticky hover.
+    if (
+        typeof window.matchMedia === 'function' &&
+        !window.matchMedia('(hover: hover)').matches
+    ) {
+        return;
+    }
     const base = btn.style.transform || '';
     btn.addEventListener('pointerenter', () => {
         btn.style.transform = `${base} scale(1.05)`.trim();
