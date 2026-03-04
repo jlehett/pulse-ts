@@ -2,7 +2,7 @@
 id: TICKET-089
 epic: EPIC-013
 title: Rematch button for local and online play
-status: todo
+status: in-progress
 priority: medium
 branch: ticket-089-rematch-button
 created: 2026-03-02
@@ -31,3 +31,4 @@ restarting.
 ## Notes
 
 - **2026-03-02**: Ticket created.
+- **2026-03-03**: Starting implementation.
