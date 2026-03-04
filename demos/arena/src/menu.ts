@@ -35,6 +35,9 @@ export function showMainMenu(container: HTMLElement): Promise<MenuChoice> {
         rowButtons.push(btnOnline);
         const buttonRow = createButtonRow(...rowButtons);
 
+        // Inject title bump keyframes
+        const style = injectTitleBumpStyle();
+
         overlay.appendChild(title);
         overlay.appendChild(subtitle);
         overlay.appendChild(buttonRow);
@@ -53,6 +56,7 @@ export function showMainMenu(container: HTMLElement): Promise<MenuChoice> {
             overlay.style.opacity = '0';
             overlay.addEventListener('transitionend', () => {
                 overlay.remove();
+                style.remove();
                 resolve(choice);
             });
         }
@@ -75,7 +79,7 @@ function createOverlay(): HTMLDivElement {
         justifyContent: 'center',
         gap: '16px',
         padding: '0 20px',
-        backgroundColor: 'rgba(10, 10, 26, 0.92)',
+        backgroundColor: 'rgba(10, 10, 26, 0.65)',
         opacity: '0',
         transition: 'opacity 0.4s ease-in-out',
     } as Partial<CSSStyleDeclaration>);
@@ -84,13 +88,29 @@ function createOverlay(): HTMLDivElement {
 
 function createTitle(): HTMLDivElement {
     const el = document.createElement('div');
-    el.textContent = 'BUMPER BALLS';
     Object.assign(el.style, {
         font: 'bold clamp(28px, 8vw, 48px) monospace',
         color: '#fff',
         textShadow: '0 0 20px rgba(72, 201, 176, 0.6)',
         letterSpacing: 'clamp(1px, 0.5vw, 4px)',
     } as Partial<CSSStyleDeclaration>);
+
+    const bumper = document.createElement('span');
+    bumper.textContent = 'BUMPER';
+    Object.assign(bumper.style, {
+        display: 'inline-block',
+        animation: 'bumpLeft 2.5s ease-out infinite',
+    } as Partial<CSSStyleDeclaration>);
+
+    const balls = document.createElement('span');
+    balls.textContent = ' BALLS';
+    Object.assign(balls.style, {
+        display: 'inline-block',
+        animation: 'bumpRight 2.5s ease-out infinite',
+    } as Partial<CSSStyleDeclaration>);
+
+    el.appendChild(bumper);
+    el.appendChild(balls);
     return el;
 }
 
@@ -116,11 +136,16 @@ function createSubtitle(): HTMLDivElement {
 function createButton(label: string, color: string): HTMLButtonElement {
     const btn = document.createElement('button');
     btn.textContent = label;
+
+    const defaultBg =
+        'linear-gradient(180deg, rgba(255,255,255,0.12), rgba(255,255,255,0.04))';
+    const defaultBorder = 'rgba(255,255,255,0.2)';
+
     Object.assign(btn.style, {
         font: 'bold clamp(14px, 3.5vw, 18px) monospace',
         color: '#fff',
-        backgroundColor: 'rgba(255,255,255,0.08)',
-        border: '2px solid rgba(255,255,255,0.2)',
+        background: defaultBg,
+        border: `2px solid ${defaultBorder}`,
         borderRadius: '6px',
         padding: '12px 32px',
         cursor: 'pointer',
@@ -129,19 +154,24 @@ function createButton(label: string, color: string): HTMLButtonElement {
         transition: 'all 0.2s ease',
     } as Partial<CSSStyleDeclaration>);
 
-    btn.addEventListener('pointerdown', () => {
-        btn.style.backgroundColor = 'rgba(255,255,255,0.15)';
+    btn.addEventListener('pointerenter', () => {
         btn.style.borderColor = color;
-        btn.style.boxShadow = `0 0 12px ${color}44`;
+        btn.style.boxShadow = `0 0 15px ${color}44, inset 0 0 8px ${color}22`;
+    });
+    btn.addEventListener('pointerdown', () => {
+        btn.style.background =
+            'linear-gradient(180deg, rgba(255,255,255,0.18), rgba(255,255,255,0.08))';
+        btn.style.borderColor = color;
+        btn.style.boxShadow = `0 0 20px ${color}66, inset 0 0 12px ${color}33`;
     });
     btn.addEventListener('pointerup', () => {
-        btn.style.backgroundColor = 'rgba(255,255,255,0.08)';
-        btn.style.borderColor = 'rgba(255,255,255,0.2)';
-        btn.style.boxShadow = 'none';
+        btn.style.background = defaultBg;
+        btn.style.borderColor = color;
+        btn.style.boxShadow = `0 0 15px ${color}44, inset 0 0 8px ${color}22`;
     });
     btn.addEventListener('pointerleave', () => {
-        btn.style.backgroundColor = 'rgba(255,255,255,0.08)';
-        btn.style.borderColor = 'rgba(255,255,255,0.2)';
+        btn.style.background = defaultBg;
+        btn.style.borderColor = defaultBorder;
         btn.style.boxShadow = 'none';
     });
 
@@ -158,4 +188,31 @@ function createButtonRow(...buttons: HTMLElement[]): HTMLDivElement {
     } as Partial<CSSStyleDeclaration>);
     buttons.forEach((b) => row.appendChild(b));
     return row;
+}
+
+function injectTitleBumpStyle(): HTMLStyleElement {
+    const style = document.createElement('style');
+    style.textContent = `
+@keyframes bumpLeft {
+  0%       { transform: translateX(-16px) rotate(0deg); text-shadow: 0 0 20px rgba(72,201,176,0.6); }
+  4%       { transform: translateX(-16px) rotate(0deg); text-shadow: 0 0 20px rgba(72,201,176,0.6); }
+  8%       { transform: translateX(4px) scaleX(0.88) scaleY(1.06) rotate(0deg); text-shadow: 0 0 60px rgba(72,201,176,1), 0 0 120px rgba(72,201,176,0.5), 0 0 200px rgba(72,201,176,0.2); }
+  12%      { transform: translateX(-30px) rotate(-3deg); text-shadow: 0 0 30px rgba(72,201,176,0.7); }
+  16%      { transform: translateX(-30px) rotate(0deg); }
+  28%      { transform: translateX(-30px) rotate(0deg); }
+  40%      { transform: translateX(-16px) rotate(0deg); text-shadow: 0 0 20px rgba(72,201,176,0.6); }
+  100%     { transform: translateX(-16px) rotate(0deg); text-shadow: 0 0 20px rgba(72,201,176,0.6); }
+}
+@keyframes bumpRight {
+  0%       { transform: translateX(16px) rotate(0deg); text-shadow: 0 0 20px rgba(72,201,176,0.6); }
+  4%       { transform: translateX(16px) rotate(0deg); text-shadow: 0 0 20px rgba(72,201,176,0.6); }
+  8%       { transform: translateX(-4px) scaleX(0.88) scaleY(1.06) rotate(0deg); text-shadow: 0 0 60px rgba(72,201,176,1), 0 0 120px rgba(72,201,176,0.5), 0 0 200px rgba(72,201,176,0.2); }
+  12%      { transform: translateX(30px) rotate(3deg); text-shadow: 0 0 30px rgba(72,201,176,0.7); }
+  16%      { transform: translateX(30px) rotate(0deg); }
+  25%      { transform: translateX(30px) rotate(0deg); }
+  37%      { transform: translateX(16px) rotate(0deg); text-shadow: 0 0 20px rgba(72,201,176,0.6); }
+  100%     { transform: translateX(16px) rotate(0deg); text-shadow: 0 0 20px rgba(72,201,176,0.6); }
+}`;
+    document.head.appendChild(style);
+    return style;
 }

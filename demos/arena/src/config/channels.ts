@@ -17,3 +17,12 @@ export interface ScoringOutcome {
 /** Fired by the host to broadcast the authoritative scoring decision. */
 export const ScoringOutcomeChannel =
     defineChannel<ScoringOutcome>('scoring-outcome');
+
+/** Rematch negotiation message exchanged between players after a match. */
+export interface RematchMessage {
+    /** The type of rematch message. */
+    type: 'offer' | 'accept' | 'decline';
+}
+
+/** Channel for rematch offer/accept/decline negotiation in online mode. */
+export const RematchChannel = defineChannel<RematchMessage>('rematch');

@@ -2,7 +2,9 @@ import {
     KnockoutChannel,
     RoundResetChannel,
     ScoringOutcomeChannel,
+    RematchChannel,
     type ScoringOutcome,
+    type RematchMessage,
 } from './channels';
 
 describe('channels', () => {
@@ -28,5 +30,18 @@ describe('channels', () => {
         const outcome: ScoringOutcome = { scorer: -1, isTie: true };
         expect(outcome.scorer).toBe(-1);
         expect(outcome.isTie).toBe(true);
+    });
+
+    it('exports RematchChannel with name "rematch"', () => {
+        expect(RematchChannel.name).toBe('rematch');
+    });
+
+    it('RematchMessage interface accepts offer, accept, and decline types', () => {
+        const offer: RematchMessage = { type: 'offer' };
+        const accept: RematchMessage = { type: 'accept' };
+        const decline: RematchMessage = { type: 'decline' };
+        expect(offer.type).toBe('offer');
+        expect(accept.type).toBe('accept');
+        expect(decline.type).toBe('decline');
     });
 });
