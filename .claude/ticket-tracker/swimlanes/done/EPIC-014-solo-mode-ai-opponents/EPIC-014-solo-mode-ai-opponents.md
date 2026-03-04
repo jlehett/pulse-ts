@@ -1,9 +1,9 @@
 ---
 id: EPIC-014
 title: Solo mode with AI opponents
-status: todo
+status: done
 created: 2026-03-02
-updated: 2026-03-02
+updated: 2026-03-03
 ---
 
 ## Description
@@ -22,3 +22,4 @@ defensive, some erratic.
 ## Notes
 
 - **2026-03-02**: Epic created. Covers AI opponent system, personality behaviors, and menu/mode integration.
+- **2026-03-03**: Epic closed — all tickets complete.

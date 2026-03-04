@@ -1,4 +1,11 @@
+jest.mock('./isMobileDevice', () => ({
+    isMobileDevice: jest.fn(() => false),
+}));
+
 import { showMainMenu, type MenuChoice } from './menu';
+import { isMobileDevice } from './isMobileDevice';
+
+const mockIsMobile = isMobileDevice as jest.Mock;
 
 describe('showMainMenu', () => {
     let container: HTMLDivElement;
@@ -6,6 +13,7 @@ describe('showMainMenu', () => {
     beforeEach(() => {
         container = document.createElement('div');
         document.body.appendChild(container);
+        mockIsMobile.mockReturnValue(false);
     });
 
     afterEach(() => {
@@ -27,7 +35,7 @@ describe('showMainMenu', () => {
         expect(container.textContent).toContain('ARENA');
     });
 
-    it('displays Solo Play, Local Play, and Online Play buttons', () => {
+    it('displays Solo Play, Local Play, and Online Play buttons on desktop', () => {
         showMainMenu(container);
 
         const buttons = container.querySelectorAll('button');
@@ -35,6 +43,16 @@ describe('showMainMenu', () => {
         expect(buttons[0].textContent).toBe('Solo Play');
         expect(buttons[1].textContent).toBe('Local Play');
         expect(buttons[2].textContent).toBe('Online Play');
+    });
+
+    it('hides Local Play on mobile devices', () => {
+        mockIsMobile.mockReturnValue(true);
+        showMainMenu(container);
+
+        const buttons = container.querySelectorAll('button');
+        expect(buttons).toHaveLength(2);
+        expect(buttons[0].textContent).toBe('Solo Play');
+        expect(buttons[1].textContent).toBe('Online Play');
     });
 
     it('resolves with "solo" when Solo Play is clicked', async () => {
@@ -68,6 +86,21 @@ describe('showMainMenu', () => {
         const choicePromise = showMainMenu(container);
 
         const onlineBtn = container.querySelectorAll('button')[2];
+        onlineBtn.click();
+
+        const overlay = container.firstElementChild as HTMLElement;
+        overlay.dispatchEvent(new Event('transitionend'));
+
+        const choice: MenuChoice = await choicePromise;
+        expect(choice).toBe('online');
+    });
+
+    it('resolves with "online" on mobile (second button)', async () => {
+        mockIsMobile.mockReturnValue(true);
+        const choicePromise = showMainMenu(container);
+
+        // On mobile, Online is the second button (index 1)
+        const onlineBtn = container.querySelectorAll('button')[1];
         onlineBtn.click();
 
         const overlay = container.firstElementChild as HTMLElement;
