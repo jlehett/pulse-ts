@@ -45,6 +45,8 @@ export interface ArenaNodeProps {
     shockwavePass?: ShaderPass;
     /** Callback invoked when the player requests to return to the main menu. */
     onRequestMenu?: () => void;
+    /** Callback invoked when a rematch is confirmed. */
+    onRequestRematch?: () => void;
     /** AI personality for solo mode. When set, P2 is AI-controlled. */
     aiPersonality?: AiPersonality;
 }
@@ -190,7 +192,11 @@ export function ArenaNode(props?: Readonly<ArenaNodeProps>) {
     // Round lifecycle overlays
     useChild(KnockoutOverlayNode);
     useChild(CountdownOverlayNode);
-    useChild(MatchOverOverlayNode, { onRequestMenu: props?.onRequestMenu });
+    useChild(MatchOverOverlayNode, {
+        onRequestMenu: props?.onRequestMenu,
+        onRequestRematch: props?.onRequestRematch,
+        online,
+    });
     useChild(PauseMenuNode, { onRequestMenu: props?.onRequestMenu, online });
 
     // Disconnect overlay (online mode only)

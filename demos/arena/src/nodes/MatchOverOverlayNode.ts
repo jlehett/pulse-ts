@@ -1,7 +1,9 @@
 import { useFrameUpdate, useDestroy, useContext } from '@pulse-ts/core';
 import { useThreeContext } from '@pulse-ts/three';
 import { useSound } from '@pulse-ts/audio';
+import { useChannel } from '@pulse-ts/network';
 import { GameCtx } from '../contexts';
+import { RematchChannel, type RematchMessage } from '../config/channels';
 import {
     applyStaggeredEntrance,
     applyButtonHoverScale,
@@ -13,15 +15,22 @@ const PLAYER_COLORS = ['#48c9b0', '#e74c3c'];
 /** Player labels indexed by player ID. */
 const PLAYER_LABELS = ['P1', 'P2'];
 
+/** Rematch negotiation state for online mode. */
+type RematchState = 'idle' | 'waiting' | 'requested' | 'declined';
+
 export interface MatchOverOverlayNodeProps {
     /** Callback invoked when the player clicks "Main Menu". */
     onRequestMenu?: () => void;
+    /** Callback invoked when a rematch is confirmed (local/solo: immediate, online: mutual). */
+    onRequestRematch?: () => void;
+    /** Whether this is an online game (enables rematch negotiation protocol). */
+    online?: boolean;
 }
 
 /**
  * DOM overlay that shows "P1 WINS!" or "P2 WINS!" with a dark backdrop
- * during the `match_over` phase. Includes a "Main Menu" button to return
- * to the title screen.
+ * during the `match_over` phase. Includes a "Rematch" button and a
+ * "Main Menu" button to return to the title screen.
  */
 export function MatchOverOverlayNode(
     props?: Readonly<MatchOverOverlayNodeProps>,
@@ -59,48 +68,120 @@ export function MatchOverOverlayNode(
     } as Partial<CSSStyleDeclaration>);
     container.appendChild(text);
 
-    // Main Menu button
-    const menuBtn = document.createElement('button');
-    menuBtn.textContent = 'Main Menu';
-    Object.assign(menuBtn.style, {
+    // Button column container
+    const buttonCol = document.createElement('div');
+    Object.assign(buttonCol.style, {
         position: 'absolute',
-        top: '58%',
+        top: '55%',
         left: '50%',
         transform: 'translateX(-50%)',
         zIndex: '4001',
-        font: 'bold clamp(14px, 3.5vw, 18px) monospace',
-        color: '#fff',
-        backgroundColor: 'rgba(255,255,255,0.08)',
-        border: '2px solid rgba(255,255,255,0.2)',
-        borderRadius: '6px',
-        padding: '12px 32px',
-        minHeight: '44px',
-        cursor: 'pointer',
-        transition: 'all 0.2s ease, opacity 0.5s ease-in',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        gap: '12px',
+        transition: 'opacity 0.5s ease-in',
         opacity: '0',
         pointerEvents: 'none',
     } as Partial<CSSStyleDeclaration>);
-    menuBtn.addEventListener('pointerdown', () => {
-        menuBtn.style.backgroundColor = 'rgba(255,255,255,0.15)';
-        menuBtn.style.borderColor = '#48c9b0';
-        menuBtn.style.boxShadow = '0 0 12px #48c9b044';
-    });
-    menuBtn.addEventListener('pointerup', () => {
-        menuBtn.style.backgroundColor = 'rgba(255,255,255,0.08)';
-        menuBtn.style.borderColor = 'rgba(255,255,255,0.2)';
-        menuBtn.style.boxShadow = 'none';
-    });
-    menuBtn.addEventListener('pointerleave', () => {
-        menuBtn.style.backgroundColor = 'rgba(255,255,255,0.08)';
-        menuBtn.style.borderColor = 'rgba(255,255,255,0.2)';
-        menuBtn.style.boxShadow = 'none';
-    });
-    menuBtn.addEventListener('click', () => {
-        props?.onRequestMenu?.();
-    });
-    container.appendChild(menuBtn);
+    container.appendChild(buttonCol);
 
+    // Shared button style factory
+    const createButton = (label: string): HTMLButtonElement => {
+        const btn = document.createElement('button');
+        btn.textContent = label;
+        Object.assign(btn.style, {
+            font: 'bold clamp(14px, 3.5vw, 18px) monospace',
+            color: '#fff',
+            backgroundColor: 'rgba(255,255,255,0.08)',
+            border: '2px solid rgba(255,255,255,0.2)',
+            borderRadius: '6px',
+            padding: '12px 32px',
+            minHeight: '44px',
+            cursor: 'pointer',
+            transition: 'all 0.2s ease',
+        } as Partial<CSSStyleDeclaration>);
+
+        const addPressEffect = (b: HTMLButtonElement) => {
+            b.addEventListener('pointerdown', () => {
+                b.style.backgroundColor = 'rgba(255,255,255,0.15)';
+                b.style.borderColor = '#48c9b0';
+                b.style.boxShadow = '0 0 12px #48c9b044';
+            });
+            b.addEventListener('pointerup', () => {
+                b.style.backgroundColor = 'rgba(255,255,255,0.08)';
+                b.style.borderColor = 'rgba(255,255,255,0.2)';
+                b.style.boxShadow = 'none';
+            });
+            b.addEventListener('pointerleave', () => {
+                b.style.backgroundColor = 'rgba(255,255,255,0.08)';
+                b.style.borderColor = 'rgba(255,255,255,0.2)';
+                b.style.boxShadow = 'none';
+            });
+        };
+
+        addPressEffect(btn);
+        return btn;
+    };
+
+    // Rematch button
+    const rematchBtn = createButton('Rematch');
+    buttonCol.appendChild(rematchBtn);
+    applyButtonHoverScale(rematchBtn);
+
+    // Main Menu button
+    const menuBtn = createButton('Main Menu');
+    buttonCol.appendChild(menuBtn);
     applyButtonHoverScale(menuBtn);
+
+    // --- Online rematch protocol ---
+    let rematchState: RematchState = 'idle';
+
+    if (props?.online) {
+        const ch = useChannel(RematchChannel, (msg: RematchMessage) => {
+            if (msg.type === 'offer') {
+                if (rematchState === 'waiting') {
+                    // Mutual agreement — both offered
+                    props.onRequestRematch?.();
+                } else if (rematchState === 'idle') {
+                    rematchState = 'requested';
+                }
+            } else if (msg.type === 'accept') {
+                props.onRequestRematch?.();
+            } else if (msg.type === 'decline') {
+                rematchState = 'declined';
+                setTimeout(() => {
+                    props.onRequestMenu?.();
+                }, 1500);
+            }
+        });
+
+        rematchBtn.addEventListener('click', () => {
+            if (rematchState === 'idle') {
+                ch.publish({ type: 'offer' });
+                rematchState = 'waiting';
+            } else if (rematchState === 'requested') {
+                ch.publish({ type: 'accept' });
+                props.onRequestRematch?.();
+            }
+        });
+
+        menuBtn.addEventListener('click', () => {
+            if (rematchState === 'requested') {
+                ch.publish({ type: 'decline' });
+            }
+            props.onRequestMenu?.();
+        });
+    } else {
+        // Local/solo mode — immediate rematch
+        rematchBtn.addEventListener('click', () => {
+            props?.onRequestRematch?.();
+        });
+
+        menuBtn.addEventListener('click', () => {
+            props?.onRequestMenu?.();
+        });
+    }
 
     // Sad descending tone for solo-mode loss
     const lossSfx = useSound('tone', {
@@ -116,9 +197,35 @@ export function MatchOverOverlayNode(
         const visible = gameState.phase === 'match_over';
         backdrop.style.opacity = visible ? '1' : '0';
         text.style.opacity = visible ? '1' : '0';
-        menuBtn.style.opacity = visible ? '1' : '0';
+        buttonCol.style.opacity = visible ? '1' : '0';
         backdrop.style.pointerEvents = visible ? 'auto' : 'none';
-        menuBtn.style.pointerEvents = visible ? 'auto' : 'none';
+        buttonCol.style.pointerEvents = visible ? 'auto' : 'none';
+
+        // Update rematch button text/state for online mode
+        if (visible && props?.online) {
+            switch (rematchState) {
+                case 'idle':
+                    rematchBtn.textContent = 'Rematch';
+                    rematchBtn.style.pointerEvents = 'auto';
+                    rematchBtn.style.opacity = '1';
+                    break;
+                case 'waiting':
+                    rematchBtn.textContent = 'Waiting for opponent...';
+                    rematchBtn.style.pointerEvents = 'none';
+                    rematchBtn.style.opacity = '0.6';
+                    break;
+                case 'requested':
+                    rematchBtn.textContent = 'Accept Rematch';
+                    rematchBtn.style.pointerEvents = 'auto';
+                    rematchBtn.style.opacity = '1';
+                    break;
+                case 'declined':
+                    rematchBtn.textContent = 'Opponent declined';
+                    rematchBtn.style.pointerEvents = 'none';
+                    rematchBtn.style.opacity = '0.6';
+                    break;
+            }
+        }
 
         if (visible) {
             const winner = gameState.matchWinner;
@@ -138,7 +245,9 @@ export function MatchOverOverlayNode(
             }
 
             if (!wasVisible) {
-                applyStaggeredEntrance([text, menuBtn], 300);
+                // Reset rematch state on fresh match-over display
+                rematchState = 'idle';
+                applyStaggeredEntrance([text, buttonCol], 300);
             }
         }
         wasVisible = visible;
@@ -147,6 +256,6 @@ export function MatchOverOverlayNode(
     useDestroy(() => {
         backdrop.remove();
         text.remove();
-        menuBtn.remove();
+        buttonCol.remove();
     });
 }

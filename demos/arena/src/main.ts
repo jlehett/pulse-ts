@@ -2,7 +2,7 @@ import { World, installDefaults } from '@pulse-ts/core';
 import { installAudio } from '@pulse-ts/audio';
 import { installInput } from '@pulse-ts/input';
 import { installPhysics } from '@pulse-ts/physics';
-import { installThree, StatsOverlaySystem } from '@pulse-ts/three';
+import { installThree } from '@pulse-ts/three';
 import { installNetwork } from '@pulse-ts/network';
 import { ArenaNode } from './nodes/ArenaNode';
 import { MenuSceneNode } from './nodes/MenuSceneNode';
@@ -84,14 +84,20 @@ function startLocalGame(): Promise<void> {
         }
         const shockwavePass = setupPostProcessing(three);
 
-        world.addSystem(new StatsOverlaySystem({ position: 'top-left' }));
+        const cleanup = () => {
+            three.renderer.clear();
+            world.destroy();
+        };
 
         world.mount(ArenaNode, {
             shockwavePass,
             onRequestMenu: () => {
-                three.renderer.clear();
-                world.destroy();
+                cleanup();
                 resolve();
+            },
+            onRequestRematch: () => {
+                cleanup();
+                startLocalGame().then(resolve);
             },
         });
 
@@ -124,15 +130,21 @@ function startSoloGame(personality: AiPersonality): Promise<void> {
         }
         const shockwavePass = setupPostProcessing(three);
 
-        world.addSystem(new StatsOverlaySystem({ position: 'top-left' }));
+        const cleanup = () => {
+            three.renderer.clear();
+            world.destroy();
+        };
 
         world.mount(ArenaNode, {
             shockwavePass,
             aiPersonality: personality,
             onRequestMenu: () => {
-                three.renderer.clear();
-                world.destroy();
+                cleanup();
                 resolve();
+            },
+            onRequestRematch: () => {
+                cleanup();
+                startSoloGame(personality).then(resolve);
             },
         });
 
@@ -173,7 +185,10 @@ async function startOnlineGame(lobby: LobbyResult): Promise<void> {
             }
             const shockwavePass = setupPostProcessing(three);
 
-            world.addSystem(new StatsOverlaySystem({ position: 'top-left' }));
+            const cleanup = () => {
+                three.renderer.clear();
+                world.destroy();
+            };
 
             world.mount(ArenaNode, {
                 playerId: lobby.playerId,
@@ -181,9 +196,12 @@ async function startOnlineGame(lobby: LobbyResult): Promise<void> {
                 isHost: lobby.mode === 'host',
                 shockwavePass,
                 onRequestMenu: () => {
-                    three.renderer.clear();
-                    world.destroy();
+                    cleanup();
                     resolve();
+                },
+                onRequestRematch: () => {
+                    cleanup();
+                    startOnlineGame(lobby).then(resolve);
                 },
             });
 

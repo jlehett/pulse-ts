@@ -18,6 +18,8 @@ describe('showMainMenu', () => {
 
     afterEach(() => {
         container.remove();
+        // Clean up any injected <style> elements left by incomplete menu flows
+        document.head.querySelectorAll('style').forEach((s) => s.remove());
     });
 
     it('renders the menu overlay into the container', () => {
@@ -131,5 +133,49 @@ describe('showMainMenu', () => {
         soloBtn.click();
 
         expect(overlay.style.opacity).toBe('0');
+    });
+
+    it('applies bump animations to the title spans', () => {
+        showMainMenu(container);
+
+        const overlay = container.firstElementChild as HTMLElement;
+        const title = overlay.children[0] as HTMLElement;
+        const spans = title.querySelectorAll('span');
+        expect(spans).toHaveLength(2);
+        expect(spans[0].style.animation).toContain('bumpLeft');
+        expect(spans[1].style.animation).toContain('bumpRight');
+    });
+
+    it('injects and removes the title bump stylesheet', async () => {
+        const choicePromise = showMainMenu(container);
+
+        // Style element should be in <head>
+        const stylesBefore = document.head.querySelectorAll('style');
+        const bumpStyle = Array.from(stylesBefore).find((s) =>
+            s.textContent?.includes('bumpLeft'),
+        );
+        expect(bumpStyle).toBeTruthy();
+
+        // Complete the menu selection
+        const soloBtn = container.querySelectorAll('button')[0];
+        soloBtn.click();
+        const overlay = container.firstElementChild as HTMLElement;
+        overlay.dispatchEvent(new Event('transitionend'));
+        await choicePromise;
+
+        // Style element should be removed after overlay closes
+        const stylesAfter = document.head.querySelectorAll('style');
+        const remaining = Array.from(stylesAfter).find((s) =>
+            s.textContent?.includes('bumpLeft'),
+        );
+        expect(remaining).toBeFalsy();
+    });
+
+    it('applies hover glow on pointerenter', () => {
+        showMainMenu(container);
+
+        const btn = container.querySelector('button') as HTMLElement;
+        btn.dispatchEvent(new Event('pointerenter'));
+        expect(btn.style.boxShadow).toContain('0 0 15px');
     });
 });
