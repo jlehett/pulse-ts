@@ -10,9 +10,26 @@ import {
     getReplayPastHit,
     hasReplayHit,
 } from '../replay';
+import { SPAWN_POSITIONS } from '../config/arena';
 
 /** Fixed camera height above the arena center. */
 export const CAMERA_HEIGHT = 26;
+
+/** Camera height during intro cinematic. */
+export const INTRO_CAMERA_HEIGHT = 8;
+
+/** Camera orbit distance from the AI player during intro. */
+export const INTRO_CAMERA_DISTANCE = 6;
+
+/** Camera orbit speed during intro (radians per second). */
+export const INTRO_ORBIT_SPEED = 0.8;
+
+/**
+ * Vertical offset added to the lookAt target during intro.
+ * Positive = look above the player, pushing the sphere below screen center
+ * so it sits under the overlay banner.
+ */
+export const INTRO_LOOK_Y_OFFSET = 3;
 
 /** Small Z offset to avoid degenerate straight-down lookAt. */
 export const CAMERA_Z_OFFSET = 2;
@@ -88,13 +105,31 @@ export function CameraRigNode() {
 
     let lastPhase: RoundPhase = gameState.phase;
 
+    // Intro cinematic elapsed time
+    let introElapsed = 0;
+
     // Smooth camera state for replay transitions
-    let camX = 0;
-    let camY = CAMERA_HEIGHT;
-    let camZ = CAMERA_Z_OFFSET;
-    let lookX = 0;
-    let lookY = 0;
-    let lookZ = 0;
+    // If starting in intro phase, initialise the camera to the intro orbit
+    const p2Spawn = SPAWN_POSITIONS[1];
+    const introStartAngle = 0;
+    const initCamX =
+        gameState.phase === 'intro'
+            ? p2Spawn[0] + Math.cos(introStartAngle) * INTRO_CAMERA_DISTANCE
+            : 0;
+    const initCamY =
+        gameState.phase === 'intro' ? INTRO_CAMERA_HEIGHT : CAMERA_HEIGHT;
+    const initCamZ =
+        gameState.phase === 'intro'
+            ? p2Spawn[2] + Math.sin(introStartAngle) * INTRO_CAMERA_DISTANCE
+            : CAMERA_Z_OFFSET;
+
+    let camX = initCamX;
+    let camY = initCamY;
+    let camZ = initCamZ;
+    let lookX = gameState.phase === 'intro' ? p2Spawn[0] : 0;
+    let lookY =
+        gameState.phase === 'intro' ? p2Spawn[1] + INTRO_LOOK_Y_OFFSET : 0;
+    let lookZ = gameState.phase === 'intro' ? p2Spawn[2] : 0;
 
     useFrameUpdate((dt) => {
         // Auto-trigger big shake on ko_flash transition
@@ -111,7 +146,17 @@ export function CameraRigNode() {
         let targetLookY = 0;
         let targetLookZ = 0;
 
-        if (isReplayActive()) {
+        if (gameState.phase === 'intro') {
+            // Orbit around AI player (P2 spawn)
+            introElapsed += dt;
+            const angle = introElapsed * INTRO_ORBIT_SPEED;
+            targetX = p2Spawn[0] + Math.cos(angle) * INTRO_CAMERA_DISTANCE;
+            targetY = INTRO_CAMERA_HEIGHT;
+            targetZ = p2Spawn[2] + Math.sin(angle) * INTRO_CAMERA_DISTANCE;
+            targetLookX = p2Spawn[0];
+            targetLookY = p2Spawn[1] + INTRO_LOOK_Y_OFFSET;
+            targetLookZ = p2Spawn[2];
+        } else if (isReplayActive()) {
             const scorerId = getReplayScorer();
             const knockedOutId = getReplayKnockedOut();
             const hitProx = hasReplayHit() ? getReplayHitProximity() : 0;

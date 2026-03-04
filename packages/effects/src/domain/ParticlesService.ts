@@ -242,6 +242,16 @@ export class ParticlesService extends Service {
     readonly defaultSize: number;
 
     /**
+     * Multiplier applied to `dt` in {@link tick}. Set to `0` to freeze
+     * particles, or to a fractional value (e.g. `0.5`) for slow-motion.
+     * Composes with the engine's own `timeScale` — when the engine
+     * passes `dt = 0` (paused), particles freeze regardless of this value.
+     *
+     * @default 1
+     */
+    timeScale = 1;
+
+    /**
      * @param options - Optional service configuration.
      */
     constructor(options: ParticlesInstallOptions = {}) {
@@ -355,8 +365,9 @@ export class ParticlesService extends Service {
      * @param dt - Delta time in seconds.
      */
     tick(dt: number): void {
+        const scaledDt = dt * this.timeScale;
         for (const managed of this._pools.values()) {
-            managed.pool.tick(dt);
+            managed.pool.tick(scaledDt);
             syncBuffers(managed);
         }
     }

@@ -1,5 +1,6 @@
 import { useFrameUpdate, useDestroy, useContext } from '@pulse-ts/core';
 import { useThreeContext } from '@pulse-ts/three';
+import { useSound } from '@pulse-ts/audio';
 import { GameCtx } from '../contexts';
 import {
     applyStaggeredEntrance,
@@ -101,6 +102,14 @@ export function MatchOverOverlayNode(
 
     applyButtonHoverScale(menuBtn);
 
+    // Sad descending tone for solo-mode loss
+    const lossSfx = useSound('tone', {
+        wave: 'sine',
+        frequency: [400, 150],
+        duration: 0.6,
+        gain: 0.15,
+    });
+
     let wasVisible = false;
 
     useFrameUpdate(() => {
@@ -113,8 +122,20 @@ export function MatchOverOverlayNode(
 
         if (visible) {
             const winner = gameState.matchWinner;
-            text.textContent = `${PLAYER_LABELS[winner]} WINS!`;
-            text.style.color = PLAYER_COLORS[winner];
+            const labels = gameState.playerLabels;
+
+            if (labels) {
+                // Solo mode — Victory (teal) or Defeat (red)
+                const humanWon = winner === 0;
+                text.textContent = humanWon ? 'Victory' : 'Defeat';
+                text.style.color = humanWon ? '#48c9b0' : '#e74c3c';
+                if (!wasVisible && !humanWon) {
+                    lossSfx.play();
+                }
+            } else {
+                text.textContent = `${PLAYER_LABELS[winner]} WINS!`;
+                text.style.color = PLAYER_COLORS[winner];
+            }
 
             if (!wasVisible) {
                 applyStaggeredEntrance([text, menuBtn], 300);

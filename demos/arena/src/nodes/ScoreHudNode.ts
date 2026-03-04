@@ -95,6 +95,7 @@ export function ScoreHudNode() {
         backgroundColor: '#ffffff',
         clipPath: trapezoidClip(TAPER_PX, CORNER_R),
         transition: `opacity 200ms ${ANIM_EASING}`,
+        opacity: gameState.phase === 'intro' ? '0' : '1',
     } as Partial<CSSStyleDeclaration>);
     container.appendChild(border);
 
@@ -108,11 +109,15 @@ export function ScoreHudNode() {
     } as Partial<CSSStyleDeclaration>);
     border.appendChild(el);
 
+    // Use custom player colors when available (solo mode personality accent)
+    const p1Color = gameState.playerColors?.[0] ?? SCORE_COLORS[0];
+    const p2Color = gameState.playerColors?.[1] ?? SCORE_COLORS[1];
+
     // Left panel (P1)
     const p1Panel = document.createElement('div');
     Object.assign(p1Panel.style, {
         width: '64px',
-        backgroundColor: SCORE_COLORS[0],
+        backgroundColor: p1Color,
         padding: '8px 0',
         textAlign: 'center',
     } as Partial<CSSStyleDeclaration>);
@@ -129,7 +134,7 @@ export function ScoreHudNode() {
     const p2Panel = document.createElement('div');
     Object.assign(p2Panel.style, {
         width: '64px',
-        backgroundColor: SCORE_COLORS[1],
+        backgroundColor: p2Color,
         padding: '8px 0',
         textAlign: 'center',
     } as Partial<CSSStyleDeclaration>);
@@ -184,7 +189,8 @@ export function ScoreHudNode() {
 
     useFrameUpdate(() => {
         const inReplay = gameState.phase === 'replay' && isReplayActive();
-        border.style.opacity = inReplay ? '0' : '1';
+        const hidden = gameState.phase === 'intro' || inReplay;
+        border.style.opacity = hidden ? '0' : '1';
 
         // When exiting replay, defer score sync so the HUD fades in first
         if (wasInReplay && !inReplay) {
