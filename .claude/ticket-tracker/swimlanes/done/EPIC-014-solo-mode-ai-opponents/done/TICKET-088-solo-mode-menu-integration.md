@@ -2,10 +2,11 @@
 id: TICKET-088
 epic: EPIC-014
 title: Solo mode menu integration
-status: todo
+status: done
 priority: medium
 created: 2026-03-02
-updated: 2026-03-02
+updated: 2026-03-03
+branch: ticket-088-solo-mode-menu-integration
 labels:
   - ui
   - arena
@@ -21,13 +22,14 @@ should be available.
 
 ## Acceptance Criteria
 
-- [ ] "Solo" option available in the main menu on both desktop and mobile
-- [ ] "Local" option hidden on mobile devices
-- [ ] Solo mode launches a game with an AI opponent
-- [ ] Player can return to menu after a solo match
-- [ ] All tests pass
+- [x] "Solo" option available in the main menu on both desktop and mobile
+- [x] "Local" option hidden on mobile devices
+- [x] Solo mode launches a game with an AI opponent
+- [x] Player can return to menu after a solo match
+- [x] All tests pass
 
 ## Notes
 
 - **2026-03-02**: Ticket created.
 - Depends on TICKET-087 (AI opponent system).
+- **2026-03-03**: Complete. Solo menu and AI game flow were already implemented in TICKET-087. Added isMobileDevice() gate to hide "Local Play" button on mobile. All 488 tests pass, lint clean.

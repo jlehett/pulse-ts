@@ -2,6 +2,7 @@ import {
     applyStaggeredEntrance,
     applyButtonHoverScale,
 } from './overlayAnimations';
+import { isMobileDevice } from './isMobileDevice';
 
 /** The mode selected by the user from the main menu. */
 export type MenuChoice = 'local' | 'online' | 'solo';
@@ -25,10 +26,14 @@ export function showMainMenu(container: HTMLElement): Promise<MenuChoice> {
         const overlay = createOverlay();
         const title = createTitle();
         const subtitle = createSubtitle();
+        const mobile = isMobileDevice();
         const btnSolo = createButton('Solo Play', '#f1c40f');
-        const btnLocal = createButton('Local Play', '#48c9b0');
+        const btnLocal = mobile ? null : createButton('Local Play', '#48c9b0');
         const btnOnline = createButton('Online Play', '#e74c3c');
-        const buttonRow = createButtonRow(btnSolo, btnLocal, btnOnline);
+        const rowButtons: HTMLElement[] = [btnSolo];
+        if (btnLocal) rowButtons.push(btnLocal);
+        rowButtons.push(btnOnline);
+        const buttonRow = createButtonRow(...rowButtons);
 
         overlay.appendChild(title);
         overlay.appendChild(subtitle);
@@ -41,7 +46,7 @@ export function showMainMenu(container: HTMLElement): Promise<MenuChoice> {
         });
         applyStaggeredEntrance([title, subtitle, buttonRow], 200);
         applyButtonHoverScale(btnSolo);
-        applyButtonHoverScale(btnLocal);
+        if (btnLocal) applyButtonHoverScale(btnLocal);
         applyButtonHoverScale(btnOnline);
 
         function pick(choice: MenuChoice) {
@@ -53,7 +58,7 @@ export function showMainMenu(container: HTMLElement): Promise<MenuChoice> {
         }
 
         btnSolo.addEventListener('click', () => pick('solo'));
-        btnLocal.addEventListener('click', () => pick('local'));
+        if (btnLocal) btnLocal.addEventListener('click', () => pick('local'));
         btnOnline.addEventListener('click', () => pick('online'));
     });
 }
