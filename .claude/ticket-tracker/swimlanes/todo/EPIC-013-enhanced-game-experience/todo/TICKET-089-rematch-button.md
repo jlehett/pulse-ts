@@ -4,8 +4,9 @@ epic: EPIC-013
 title: Rematch button for local and online play
 status: todo
 priority: medium
+branch: ticket-089-rematch-button
 created: 2026-03-02
-updated: 2026-03-02
+updated: 2026-03-03
 labels:
   - ui
   - gameplay
