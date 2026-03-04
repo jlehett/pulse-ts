@@ -67,15 +67,24 @@ export function DisconnectOverlayNode(
         : 'Host ended the match';
     container.appendChild(text);
 
-    // Main Menu button
-    const menuBtn = document.createElement('button');
-    menuBtn.textContent = 'Main Menu';
-    Object.assign(menuBtn.style, {
+    // Wrapper for absolute positioning — entrance animates this, not the button
+    const menuWrap = document.createElement('div');
+    Object.assign(menuWrap.style, {
         position: 'absolute',
         top: '55%',
         left: '50%',
         transform: 'translateX(-50%)',
         zIndex: '5001',
+        transition: 'opacity 0.5s ease-in',
+        opacity: '0',
+        pointerEvents: 'none',
+    } as Partial<CSSStyleDeclaration>);
+    container.appendChild(menuWrap);
+
+    // Main Menu button (no positioning transform — clean for hover scale)
+    const menuBtn = document.createElement('button');
+    menuBtn.textContent = 'Main Menu';
+    Object.assign(menuBtn.style, {
         font: 'bold clamp(14px, 3.5vw, 18px) monospace',
         color: '#fff',
         backgroundColor: 'rgba(255,255,255,0.08)',
@@ -84,9 +93,7 @@ export function DisconnectOverlayNode(
         padding: '12px 32px',
         minHeight: '44px',
         cursor: 'pointer',
-        transition: 'all 0.2s ease, opacity 0.5s ease-in',
-        opacity: '0',
-        pointerEvents: 'none',
+        transition: 'all 0.2s ease',
     } as Partial<CSSStyleDeclaration>);
     menuBtn.addEventListener('pointerdown', () => {
         menuBtn.style.backgroundColor = 'rgba(255,255,255,0.15)';
@@ -106,7 +113,7 @@ export function DisconnectOverlayNode(
     menuBtn.addEventListener('click', () => {
         props.onRequestMenu?.();
     });
-    container.appendChild(menuBtn);
+    menuWrap.appendChild(menuBtn);
 
     applyButtonHoverScale(menuBtn);
 
@@ -115,12 +122,12 @@ export function DisconnectOverlayNode(
     useFrameUpdate(() => {
         backdrop.style.opacity = disconnected ? '1' : '0';
         text.style.opacity = disconnected ? '1' : '0';
-        menuBtn.style.opacity = disconnected ? '1' : '0';
+        menuWrap.style.opacity = disconnected ? '1' : '0';
         backdrop.style.pointerEvents = disconnected ? 'auto' : 'none';
-        menuBtn.style.pointerEvents = disconnected ? 'auto' : 'none';
+        menuWrap.style.pointerEvents = disconnected ? 'auto' : 'none';
 
         if (disconnected && !wasDisconnected) {
-            applyStaggeredEntrance([text, menuBtn], 300);
+            applyStaggeredEntrance([text, menuWrap], 300);
         }
         wasDisconnected = disconnected;
     });
@@ -128,6 +135,6 @@ export function DisconnectOverlayNode(
     useDestroy(() => {
         backdrop.remove();
         text.remove();
-        menuBtn.remove();
+        menuWrap.remove();
     });
 }
