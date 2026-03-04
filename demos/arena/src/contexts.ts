@@ -2,6 +2,7 @@ import { createContext } from '@pulse-ts/core';
 
 /** Current phase of the round lifecycle. */
 export type RoundPhase =
+    | 'intro'
     | 'playing'
     | 'replay'
     | 'ko_flash'
@@ -29,6 +30,12 @@ export interface GameState {
     isTie: boolean;
     /** Whether the game is currently paused. */
     paused: boolean;
+    /** Custom player labels (e.g. `['You', 'Brawler']` in solo mode). */
+    playerLabels?: [string, string];
+    /** Custom player CSS colors (e.g. personality accent for P2 in solo mode). */
+    playerColors?: [string, string];
+    /** Custom player hex colors for particle effects (e.g. `[0x48c9b0, 0xe74c3c]`). */
+    playerHexColors?: [number, number];
 }
 
 /** Shared game state context — read/written by GameManagerNode, read by HUD. */

@@ -80,8 +80,15 @@ export function KnockoutOverlayNode() {
                 flash.style.backgroundColor = TIE_FLASH_COLOR;
             } else {
                 const scorer = 1 - gameState.lastKnockedOut;
-                text.textContent = `${PLAYER_LABELS[scorer]} scored!`;
-                flash.style.backgroundColor = FLASH_COLORS[scorer];
+                const label =
+                    gameState.playerLabels?.[scorer] ?? PLAYER_LABELS[scorer];
+                text.textContent = `${label} scored!`;
+                const customColor = gameState.playerColors?.[scorer];
+                flash.style.backgroundColor = customColor
+                    ? customColor
+                          .replace('rgb(', 'rgba(')
+                          .replace(')', ', 0.5)')
+                    : FLASH_COLORS[scorer];
             }
 
             if (!wasFlash) {

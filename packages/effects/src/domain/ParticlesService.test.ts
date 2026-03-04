@@ -178,6 +178,47 @@ describe('ParticlesService', () => {
         expect(mockSetDrawRange).toHaveBeenCalledWith(0, 2);
     });
 
+    // --- TimeScale ---
+
+    test('timeScale defaults to 1', () => {
+        const service = new ParticlesService();
+        expect(service.timeScale).toBe(1);
+    });
+
+    test('timeScale = 0 freezes particles (no aging)', () => {
+        const service = new ParticlesService({ maxPerPool: 10 });
+        service.timeScale = 0;
+        const managed = service.getPool('normal');
+
+        managed.pool.init = (p) => {
+            p.lifetime = 0.5;
+        };
+        managed.pool.burst(2);
+
+        // Tick with positive dt but timeScale=0 → effective dt=0
+        service.tick(1.0);
+        expect(managed.pool.aliveCount).toBe(2);
+    });
+
+    test('timeScale = 0.5 halves particle aging', () => {
+        const service = new ParticlesService({ maxPerPool: 10 });
+        service.timeScale = 0.5;
+        const managed = service.getPool('normal');
+
+        managed.pool.init = (p) => {
+            p.lifetime = 1.0;
+        };
+        managed.pool.burst(1);
+
+        // Tick 1s at half speed → 0.5s effective → particle still alive
+        service.tick(1.0);
+        expect(managed.pool.aliveCount).toBe(1);
+
+        // Tick another 1.2s at half speed → 0.6s effective → total 1.1s > lifetime
+        service.tick(1.2);
+        expect(managed.pool.aliveCount).toBe(0);
+    });
+
     // --- Dispose ---
 
     test('dispose cleans up all Three.js resources', () => {

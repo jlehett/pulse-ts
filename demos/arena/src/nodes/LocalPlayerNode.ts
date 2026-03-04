@@ -18,6 +18,7 @@ import {
     useRigidBody,
     useSphereCollider,
     useOnCollisionStart,
+    RigidBody,
 } from '@pulse-ts/physics';
 import { useMesh, useThreeContext } from '@pulse-ts/three';
 import * as THREE from 'three';
@@ -38,6 +39,8 @@ import { triggerCameraShake } from './CameraRigNode';
 import { stagePlayerPosition, markHit, getReplayPosition } from '../replay';
 import { triggerShockwave, worldToScreen } from '../shockwave';
 import { triggerHitImpact } from '../hitImpact';
+import { setPlayerPosition } from '../ai/playerPositions';
+import { setDashCooldownProgress } from '../dashCooldown';
 
 /** Sphere radius for the player ball. */
 export const PLAYER_RADIUS = 0.8;
@@ -46,10 +49,10 @@ export const PLAYER_RADIUS = 0.8;
 export const MOVE_IMPULSE = 0.6;
 
 /** Linear damping — lower values mean longer coasting and harder to control. */
-export const LINEAR_DAMPING = 0.15;
+export const LINEAR_DAMPING = 0.25;
 
 /** Velocity applied during a dash. */
-export const DASH_SPEED = 30;
+export const DASH_SPEED = 24;
 
 /** Duration of a dash in seconds. */
 export const DASH_DURATION = 0.15;
@@ -57,8 +60,19 @@ export const DASH_DURATION = 0.15;
 /** Cooldown between dashes in seconds. */
 export const DASH_COOLDOWN = 1.0;
 
-/** Knockback impulse magnitude applied on player-player collision. */
-export const KNOCKBACK_FORCE = 20;
+/**
+ * Minimum knockback applied even when both players have zero closing speed.
+ * Ensures standing collisions still produce a visible bump.
+ */
+export const KNOCKBACK_BASE = 12;
+
+/**
+ * Knockback scaling factor per unit of the other player's approach speed.
+ * Only the opponent's velocity into you affects your knockback — your own
+ * speed does not amplify the hit you receive.
+ * Effective knockback: `KNOCKBACK_BASE + theirApproach * KNOCKBACK_VELOCITY_SCALE`
+ */
+export const KNOCKBACK_VELOCITY_SCALE = 0.8;
 
 /** Minimum seconds between collision impact sounds. */
 export const IMPACT_COOLDOWN = 0.4;
@@ -122,6 +136,48 @@ export function computeKnockback(
 }
 
 /**
+ * Compute how fast a body is moving **toward** a target position.
+ * Returns the component of the attacker's velocity along the direction
+ * from attacker to target (clamped to >= 0 — retreating gives 0).
+ *
+ * @param selfX - Target player X.
+ * @param selfZ - Target player Z.
+ * @param otherX - Attacker X.
+ * @param otherZ - Attacker Z.
+ * @param otherVx - Attacker velocity X.
+ * @param otherVz - Attacker velocity Z.
+ * @returns Approach speed (>= 0). Zero for glancing or retreating movement.
+ *
+ * @example
+ * ```ts
+ * // Attacker at (-5,0) moving at (10,0) toward target at (0,0)
+ * computeApproachSpeed(0, 0, -5, 0, 10, 0); // 10
+ *
+ * // Attacker moving perpendicular — glancing blow
+ * computeApproachSpeed(0, 0, -5, 0, 0, 10); // 0
+ * ```
+ */
+export function computeApproachSpeed(
+    selfX: number,
+    selfZ: number,
+    otherX: number,
+    otherZ: number,
+    otherVx: number,
+    otherVz: number,
+): number {
+    const dx = selfX - otherX;
+    const dz = selfZ - otherZ;
+    const len = Math.sqrt(dx * dx + dz * dz);
+    if (len < 0.01) {
+        // Overlapping — use full velocity magnitude as approach speed
+        return Math.sqrt(otherVx * otherVx + otherVz * otherVz);
+    }
+    // Dot product of velocity with direction toward self, clamped to >= 0
+    const dot = (otherVx * dx + otherVz * dz) / len;
+    return Math.max(0, dot);
+}
+
+/**
  * Compute the normalized dash direction from a movement input vector.
  * If the input is zero-length, defaults to forward (negative Z).
  *
@@ -156,6 +212,10 @@ export interface LocalPlayerNodeProps {
     dashAction: string;
     /** Enable network replication as producer (online mode). */
     replicate?: boolean;
+    /** Show the "you" indicator ring even when not replicating (e.g. solo mode). */
+    showIndicatorRing?: boolean;
+    /** Override the default player color (hex, e.g. `0xff0000`). */
+    customColor?: number;
 }
 
 /**
@@ -168,6 +228,8 @@ export function LocalPlayerNode({
     moveAction,
     dashAction,
     replicate,
+    showIndicatorRing,
+    customColor,
 }: Readonly<LocalPlayerNodeProps>) {
     const node = useNode();
     const gameState = useContext(GameCtx);
@@ -224,11 +286,9 @@ export function LocalPlayerNode({
     // Track round number to detect round resets via shared state
     let lastRound = gameState.round;
 
-    // Saved velocity for pause/unpause (prevents cheating by pausing after knockback)
-    let wasPaused = false;
-    let savedVx = 0;
-    let savedVy = 0;
-    let savedVz = 0;
+    // Track phase to detect transition into 'playing' (fixed update + frame update)
+    let lastPhase = gameState.phase;
+    let lastFramePhase = gameState.phase;
 
     // Previous physics position for frame interpolation
     let prevX = spawn[0];
@@ -242,10 +302,11 @@ export function LocalPlayerNode({
     });
 
     // Visual — sphere mesh with subtle emissive glow (blooms under post-processing)
+    const meshColor = customColor ?? PLAYER_COLORS[playerId];
     const { root } = useMesh('sphere', {
         radius: PLAYER_RADIUS,
-        color: PLAYER_COLORS[playerId],
-        emissive: PLAYER_COLORS[playerId],
+        color: meshColor,
+        emissive: meshColor,
         emissiveIntensity: 0.15,
         roughness: 0.35,
         metalness: 0.4,
@@ -258,7 +319,7 @@ export function LocalPlayerNode({
     const projCenter = new THREE.Vector3();
     const projEdge = new THREE.Vector3();
 
-    if (replicate) {
+    if (replicate || showIndicatorRing) {
         const container =
             threeRenderer.domElement.parentElement ?? document.body;
         indicatorRing = document.createElement('div');
@@ -315,7 +376,7 @@ export function LocalPlayerNode({
     const knockoutBurst = useParticleBurst({
         count: KNOCKOUT_BURST_COUNT,
         lifetime: 0.6,
-        color: PLAYER_COLORS[playerId],
+        color: meshColor,
         speed: [2, 6],
         gravity: 8,
         size: 0.4,
@@ -327,7 +388,7 @@ export function LocalPlayerNode({
     const trailBurst = useParticleBurst({
         count: 8,
         lifetime: 1.0,
-        color: PLAYER_COLORS[playerId],
+        color: meshColor,
         speed: [0.2, 0.8],
         gravity: 1,
         size: 0.4,
@@ -387,24 +448,49 @@ export function LocalPlayerNode({
     useOnCollisionStart(({ other }) => {
         if (other === node) return;
         if (!getComponent(other, PlayerTag)) return;
+        // Prevent double-hits from rapid re-collision (physics bounce)
+        if (!impactCD.ready) return;
 
         const otherTransform = getComponent(other, Transform);
         if (!otherTransform) return;
+
+        // Knockback is based solely on how fast the OTHER player was
+        // moving into us — our own velocity does not amplify the hit we
+        // receive. This makes standing still safe and dashing risky for
+        // the dasher (the other player's handler will knock *them* back
+        // based on our approach speed instead).
+        const otherBody = getComponent(other, RigidBody);
+        const theirApproach = otherBody
+            ? computeApproachSpeed(
+                  transform.localPosition.x,
+                  transform.localPosition.z,
+                  otherTransform.localPosition.x,
+                  otherTransform.localPosition.z,
+                  otherBody.linearVelocity.x,
+                  otherBody.linearVelocity.z,
+              )
+            : 0;
+        const effectiveForce =
+            KNOCKBACK_BASE + theirApproach * KNOCKBACK_VELOCITY_SCALE;
 
         const [ix, iy, iz] = computeKnockback(
             transform.localPosition.x,
             transform.localPosition.z,
             otherTransform.localPosition.x,
             otherTransform.localPosition.z,
-            KNOCKBACK_FORCE,
+            effectiveForce,
         );
         body.applyImpulse(ix, iy, iz);
         lastLocalKnockbackTime = Date.now();
 
-        if (impactCD.ready) {
-            impactSfx.play();
-            impactCD.trigger();
-        }
+        // Cancel any active dash and reset cooldown — prevents the "dash
+        // counterattack" exploit where a player immediately dashes back after
+        // being hit, and stops mid-dash players from pushing through.
+        dashTimer.cancel();
+        dashCD.trigger();
+
+        impactSfx.play();
+        impactCD.trigger();
 
         // Send inverse knockback to the remote player so they feel the
         // hit even if their machine didn't detect the collision locally
@@ -442,15 +528,21 @@ export function LocalPlayerNode({
     });
 
     useFixedUpdate(() => {
-        // Stage position for replay recording (before any movement)
+        // Stage position for replay recording and shared position store
         stagePlayerPosition(
             playerId,
             transform.localPosition.x,
             transform.localPosition.y,
             transform.localPosition.z,
         );
+        setPlayerPosition(
+            playerId,
+            transform.localPosition.x,
+            transform.localPosition.y,
+            transform.localPosition.z,
+        );
 
-        // Round reset — teleport to spawn when GameManagerNode increments round
+        // Round reset — teleport to spawn when GameManagerNode increments round.
         if (gameState.round !== lastRound) {
             lastRound = gameState.round;
             transform.localPosition.set(...spawn);
@@ -459,22 +551,13 @@ export function LocalPlayerNode({
             dashCD.reset();
         }
 
-        // Freeze while paused — save velocity on entry, restore on exit
-        if (gameState.paused) {
-            if (!wasPaused) {
-                savedVx = body.linearVelocity.x;
-                savedVy = body.linearVelocity.y;
-                savedVz = body.linearVelocity.z;
-                wasPaused = true;
-            }
-            body.setLinearVelocity(0, 0, 0);
-            dashTimer.cancel();
-            return;
+        // Trigger dash cooldown when the playing phase starts so the
+        // cooldown begins when the player actually gains control, not
+        // during the countdown when it would silently expire.
+        if (gameState.phase === 'playing' && lastPhase !== 'playing') {
+            dashCD.trigger();
         }
-        if (wasPaused) {
-            wasPaused = false;
-            body.setLinearVelocity(savedVx, savedVy, savedVz);
-        }
+        lastPhase = gameState.phase;
 
         // Freeze input during non-playing phases
         if (gameState.phase !== 'playing') {
@@ -555,6 +638,20 @@ export function LocalPlayerNode({
 
     // Interpolate visual position for smooth rendering
     useFrameUpdate((dt) => {
+        // Update dash cooldown progress for HUD indicators.
+        // On the frame 'playing' starts, force 0 — the fixed-step
+        // dashCD.trigger() hasn't fired yet so dashCD.ready is stale.
+        const enteringPlaying =
+            gameState.phase === 'playing' && lastFramePhase !== 'playing';
+        lastFramePhase = gameState.phase;
+        setDashCooldownProgress(
+            playerId,
+            enteringPlaying
+                ? 0
+                : dashCD.ready
+                  ? 1
+                  : 1 - dashCD.remaining / DASH_COOLDOWN,
+        );
         // During replay, override mesh position from the replay buffer
         const replayPos = getReplayPosition(playerId);
         if (replayPos) {
@@ -570,7 +667,7 @@ export function LocalPlayerNode({
         }
 
         // Velocity-proportional trail particles during gameplay
-        if (gameState.phase === 'playing' && !gameState.paused) {
+        if (gameState.phase === 'playing') {
             const vx = body.linearVelocity.x;
             const vz = body.linearVelocity.z;
             const vmag = Math.sqrt(vx * vx + vz * vz);
@@ -595,8 +692,8 @@ export function LocalPlayerNode({
             trailAccum = 0;
         }
 
-        // Update indicator ring screen position (online mode only)
-        // Hidden during non-playing phases (replay, ko_flash, etc.)
+        // Update indicator ring screen position
+        // Visible during playing and intro phases; hidden otherwise
         if (indicatorRing) {
             if (gameState.phase !== 'playing') {
                 indicatorRing.style.display = 'none';
