@@ -113,7 +113,7 @@ export function RemotePlayerNode({
     // knockout channel from the dying machine, so skip this check.
     if (!online) {
         useFixedUpdate(() => {
-            if (gameState.phase !== 'playing' || gameState.paused) return;
+            if (gameState.phase !== 'playing') return;
             if (transform.localPosition.y < DEATH_PLANE_Y) {
                 gameState.pendingKnockout = remotePlayerId;
             }

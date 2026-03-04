@@ -36,9 +36,13 @@ export function VictoryEffectNode() {
 
     useFrameUpdate(() => {
         if (gameState.phase === 'match_over' && lastPhase !== 'match_over') {
-            // Fire all color bursts from the arena center
-            for (const burst of bursts) {
-                burst(SPAWN_POSITION);
+            // In solo mode, only fire confetti when the human wins
+            const soloLoss =
+                gameState.playerLabels && gameState.matchWinner !== 0;
+            if (!soloLoss) {
+                for (const burst of bursts) {
+                    burst(SPAWN_POSITION);
+                }
             }
         }
         lastPhase = gameState.phase;

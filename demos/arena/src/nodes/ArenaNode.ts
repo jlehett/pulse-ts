@@ -29,6 +29,10 @@ import { StarfieldNode } from './StarfieldNode';
 import { SupernovaNode } from './SupernovaNode';
 import { AtmosphericDustNode } from './AtmosphericDustNode';
 import { EnergyPillarsNode } from './EnergyPillarsNode';
+import { AiPlayerNode } from './AiPlayerNode';
+import { IntroOverlayNode, hexToCss } from './IntroOverlayNode';
+import { DashCooldownHudNode } from './DashCooldownHudNode';
+import type { AiPersonality } from '../ai/personalities';
 
 export interface ArenaNodeProps {
     /** Local player ID for online mode (0 or 1). Omit for local 2-player. */
@@ -41,6 +45,8 @@ export interface ArenaNodeProps {
     shockwavePass?: ShaderPass;
     /** Callback invoked when the player requests to return to the main menu. */
     onRequestMenu?: () => void;
+    /** AI personality for solo mode. When set, P2 is AI-controlled. */
+    aiPersonality?: AiPersonality;
 }
 
 /**
@@ -95,16 +101,25 @@ export function ArenaNode(props?: Readonly<ArenaNodeProps>) {
     // Fog for depth and atmosphere
     useFog({ color: 0x0a0a1a, near: 30, far: 60 });
 
-    // Shared game state
+    // Shared game state — solo mode starts in 'intro' for the cinematic
     const gameState: GameState = {
         scores: [0, 0],
         round: 1,
-        phase: 'playing',
+        phase: props?.aiPersonality ? 'intro' : 'playing',
         lastKnockedOut: -1,
         countdownValue: -1,
         matchWinner: -1,
         pendingKnockout: -1,
         paused: false,
+        playerLabels: props?.aiPersonality
+            ? ['You', props.aiPersonality.name]
+            : undefined,
+        playerColors: props?.aiPersonality
+            ? [hexToCss(0x48c9b0), hexToCss(props.aiPersonality.color)]
+            : undefined,
+        playerHexColors: props?.aiPersonality
+            ? [0x48c9b0, props.aiPersonality.color]
+            : undefined,
     };
     useProvideContext(GameCtx, gameState);
 
@@ -133,6 +148,20 @@ export function ArenaNode(props?: Readonly<ArenaNodeProps>) {
             replicate: true,
         });
         useChild(RemotePlayerNode, { remotePlayerId: remoteId, online: true });
+    } else if (props?.aiPersonality) {
+        // Solo mode — human P1 vs AI P2
+        useChild(LocalPlayerNode, {
+            playerId: 0,
+            moveAction: 'p1Move',
+            dashAction: 'p1Dash',
+            showIndicatorRing: true,
+        });
+        useChild(AiPlayerNode, {
+            playerId: 1,
+            moveAction: 'p2Move',
+            dashAction: 'p2Dash',
+            personality: props.aiPersonality,
+        });
     } else {
         // Local mode — both players on shared input
         useChild(LocalPlayerNode, {
@@ -170,8 +199,16 @@ export function ArenaNode(props?: Readonly<ArenaNodeProps>) {
         });
     }
 
+    // Intro cinematic overlay (solo mode only)
+    if (props?.aiPersonality) {
+        useChild(IntroOverlayNode, { personality: props.aiPersonality });
+    }
+
     // Touch controls — self-gates on touch-capable devices
     useChild(TouchControlsNode);
+
+    // Dash cooldown HUD bar — desktop only (mobile uses dash button fill)
+    useChild(DashCooldownHudNode);
 
     // Camera rig — fixed overhead view
     useChild(CameraRigNode);

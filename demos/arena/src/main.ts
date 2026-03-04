@@ -8,6 +8,7 @@ import { ArenaNode } from './nodes/ArenaNode';
 import { allBindings } from './config/bindings';
 import { showMainMenu } from './menu';
 import { showLobby, type LobbyResult } from './lobby';
+import { AI_PERSONALITIES, type AiPersonality } from './ai/personalities';
 import { initLandscapeEnforcer } from './landscapeEnforcer';
 import { initAutoFullscreen } from './autoFullscreen';
 import { showInstallPrompt } from './installPrompt';
@@ -52,6 +53,47 @@ function startLocalGame(): Promise<void> {
 
         world.mount(ArenaNode, {
             shockwavePass,
+            onRequestMenu: () => {
+                three.renderer.clear();
+                world.destroy();
+                resolve();
+            },
+        });
+
+        world.start();
+    });
+}
+
+function startSoloGame(personality: AiPersonality): Promise<void> {
+    return new Promise((resolve) => {
+        const world = new World();
+
+        installDefaults(world);
+        installAudio(world);
+        installInput(world, { preventDefault: true, bindings: allBindings });
+        installPhysics(world, { gravity: { x: 0, y: -20, z: 0 } });
+
+        const mobile = isMobileDevice();
+        const three = installThree(world, {
+            canvas,
+            clearColor: 0x050508,
+        });
+
+        if (mobile) {
+            three.renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+        }
+
+        if (!mobile) {
+            three.renderer.shadowMap.enabled = true;
+            three.renderer.shadowMap.type = 1; // THREE.PCFShadowMap
+        }
+        const shockwavePass = setupPostProcessing(three);
+
+        world.addSystem(new StatsOverlaySystem({ position: 'top-left' }));
+
+        world.mount(ArenaNode, {
+            shockwavePass,
+            aiPersonality: personality,
             onRequestMenu: () => {
                 three.renderer.clear();
                 world.destroy();
@@ -119,7 +161,13 @@ async function startOnlineGame(lobby: LobbyResult): Promise<void> {
 async function start() {
     const choice = await showMainMenu(container);
 
-    if (choice === 'local') {
+    if (choice === 'solo') {
+        const personality =
+            AI_PERSONALITIES[
+                Math.floor(Math.random() * AI_PERSONALITIES.length)
+            ];
+        await startSoloGame(personality);
+    } else if (choice === 'local') {
         await startLocalGame();
     } else {
         const lobby = await showLobby(container);

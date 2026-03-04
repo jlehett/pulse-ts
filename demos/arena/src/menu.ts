@@ -4,7 +4,7 @@ import {
 } from './overlayAnimations';
 
 /** The mode selected by the user from the main menu. */
-export type MenuChoice = 'local' | 'online';
+export type MenuChoice = 'local' | 'online' | 'solo';
 
 /**
  * Display the main menu overlay and wait for the user to pick a mode.
@@ -12,7 +12,7 @@ export type MenuChoice = 'local' | 'online';
  * once a selection is made.
  *
  * @param container - The DOM element to mount the overlay into.
- * @returns A promise that resolves with `'local'` or `'online'`.
+ * @returns A promise that resolves with `'local'`, `'online'`, or `'solo'`.
  *
  * @example
  * ```ts
@@ -25,9 +25,10 @@ export function showMainMenu(container: HTMLElement): Promise<MenuChoice> {
         const overlay = createOverlay();
         const title = createTitle();
         const subtitle = createSubtitle();
+        const btnSolo = createButton('Solo Play', '#f1c40f');
         const btnLocal = createButton('Local Play', '#48c9b0');
         const btnOnline = createButton('Online Play', '#e74c3c');
-        const buttonRow = createButtonRow(btnLocal, btnOnline);
+        const buttonRow = createButtonRow(btnSolo, btnLocal, btnOnline);
 
         overlay.appendChild(title);
         overlay.appendChild(subtitle);
@@ -39,6 +40,7 @@ export function showMainMenu(container: HTMLElement): Promise<MenuChoice> {
             overlay.style.opacity = '1';
         });
         applyStaggeredEntrance([title, subtitle, buttonRow], 200);
+        applyButtonHoverScale(btnSolo);
         applyButtonHoverScale(btnLocal);
         applyButtonHoverScale(btnOnline);
 
@@ -50,6 +52,7 @@ export function showMainMenu(container: HTMLElement): Promise<MenuChoice> {
             });
         }
 
+        btnSolo.addEventListener('click', () => pick('solo'));
         btnLocal.addEventListener('click', () => pick('local'));
         btnOnline.addEventListener('click', () => pick('online'));
     });

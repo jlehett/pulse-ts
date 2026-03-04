@@ -69,6 +69,10 @@ export interface GameManagerNodeProps {
 export function GameManagerNode(props?: Readonly<GameManagerNodeProps>) {
     const gameState = useContext(GameCtx);
 
+    // Clear stale replay data from any previous game session.
+    // Between-round clearing is handled at ko_flash → resetting.
+    clearRecording();
+
     // In online mode, receive knockout events from the remote machine
     // and synchronize countdown→playing transition via RoundResetChannel.
     let publishRoundReset: ((round: number) => void) | null = null;
@@ -119,9 +123,6 @@ export function GameManagerNode(props?: Readonly<GameManagerNodeProps>) {
     let prevCountdown = -1;
 
     useFixedUpdate(() => {
-        // In online mode, pause is overlay-only — never freeze the state machine
-        if (!props?.online && gameState.paused) return;
-
         // Poll for knockout events from LocalPlayerNodes
         if (gameState.pendingKnockout >= 0 && gameState.phase === 'playing') {
             const knockedOutPlayerId = gameState.pendingKnockout;
@@ -172,6 +173,13 @@ export function GameManagerNode(props?: Readonly<GameManagerNodeProps>) {
                 break;
 
             case 'countdown': {
+                // If entering countdown from intro (solo mode), initialise
+                // the timer and value — normally 'resetting' does this.
+                if (!countdownTimer.active && gameState.countdownValue < 0) {
+                    countdownTimer.reset();
+                    gameState.countdownValue = 3;
+                }
+
                 const isNonHost = props?.online && !props?.isHost;
 
                 // Check if we should transition to playing:

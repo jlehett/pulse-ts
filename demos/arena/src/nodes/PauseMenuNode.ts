@@ -1,4 +1,9 @@
-import { useFrameUpdate, useDestroy, useContext } from '@pulse-ts/core';
+import {
+    useFrameUpdate,
+    useDestroy,
+    useContext,
+    useWorld,
+} from '@pulse-ts/core';
 import { useAction } from '@pulse-ts/input';
 import { useThreeContext } from '@pulse-ts/three';
 import { GameCtx } from '../contexts';
@@ -21,6 +26,7 @@ export interface PauseMenuNodeProps {
  */
 export function PauseMenuNode(props?: Readonly<PauseMenuNodeProps>) {
     const gameState = useContext(GameCtx);
+    const world = useWorld();
     const { renderer } = useThreeContext();
     const container = renderer.domElement.parentElement ?? document.body;
     const getPause = useAction('pause');
@@ -127,6 +133,7 @@ export function PauseMenuNode(props?: Readonly<PauseMenuNodeProps>) {
             showMenu = false;
         } else {
             gameState.paused = false;
+            world.setTimeScale(1);
         }
     });
 
@@ -139,6 +146,7 @@ export function PauseMenuNode(props?: Readonly<PauseMenuNodeProps>) {
             showMenu = false;
         } else {
             gameState.paused = false;
+            world.setTimeScale(1);
         }
         props?.onRequestMenu?.();
     });
@@ -156,8 +164,10 @@ export function PauseMenuNode(props?: Readonly<PauseMenuNodeProps>) {
                 showMenu = !showMenu;
             } else if (gameState.paused) {
                 gameState.paused = false;
+                world.setTimeScale(1);
             } else if (gameState.phase === 'playing') {
                 gameState.paused = true;
+                world.setTimeScale(0);
             }
         }
 

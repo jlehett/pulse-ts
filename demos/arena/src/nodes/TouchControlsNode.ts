@@ -3,6 +3,7 @@ import { useInput } from '@pulse-ts/input';
 import { isMobileDevice } from '../isMobileDevice';
 import { GameCtx } from '../contexts';
 import { isReplayActive } from '../replay';
+import { getDashCooldownProgress } from '../dashCooldown';
 
 /** Default deadzone — inputs within this magnitude are zeroed. */
 const DEADZONE = 0.15;
@@ -333,11 +334,24 @@ export function TouchControlsNode(props?: Readonly<TouchControlsNodeProps>) {
     const gameState = useContext(GameCtx);
 
     useFrameUpdate(() => {
-        const inReplay = gameState.phase === 'replay' && isReplayActive();
-        const vis = inReplay ? 'hidden' : 'visible';
+        const hidden =
+            gameState.phase === 'intro' ||
+            (gameState.phase === 'replay' && isReplayActive());
+        const vis = hidden ? 'hidden' : 'visible';
         joystickBase.style.visibility = vis;
         dashBtn.style.visibility = vis;
         pauseBtn.style.visibility = vis;
+
+        // Dash cooldown fill — fills from bottom to top as cooldown recovers
+        if (!hidden) {
+            const progress = getDashCooldownProgress(0);
+            if (progress >= 1) {
+                dashBtn.style.background = 'rgba(72,201,176,0.25)';
+            } else {
+                const pct = Math.round(progress * 100);
+                dashBtn.style.background = `linear-gradient(to top, rgba(72,201,176,0.25) ${pct}%, rgba(72,201,176,0.08) ${pct}%)`;
+            }
+        }
     });
 
     // ── Cleanup ──

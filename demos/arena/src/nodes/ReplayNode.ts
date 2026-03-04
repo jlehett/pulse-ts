@@ -1,6 +1,16 @@
-import { useFrameUpdate, useDestroy, useContext } from '@pulse-ts/core';
+import {
+    useFrameUpdate,
+    useDestroy,
+    useContext,
+    useWorld,
+} from '@pulse-ts/core';
 import { useThreeContext } from '@pulse-ts/three';
-import { useParticleBurst, useClearParticles } from '@pulse-ts/effects';
+import {
+    useParticleBurst,
+    useClearParticles,
+    ParticlesService,
+} from '@pulse-ts/effects';
+import { useSound } from '@pulse-ts/audio';
 import { GameCtx } from '../contexts';
 import {
     advanceReplay,
@@ -161,10 +171,12 @@ export function ReplayNode() {
     });
 
     // Velocity-proportional trail bursts — one per player
+    const p0Color = gameState.playerHexColors?.[0] ?? PLAYER_COLORS[0];
+    const p1Color = gameState.playerHexColors?.[1] ?? PLAYER_COLORS[1];
     const trailBurst0 = useParticleBurst({
         count: 8,
         lifetime: 1.0,
-        color: PLAYER_COLORS[0],
+        color: p0Color,
         speed: [0.2, 0.8],
         gravity: 1,
         size: 0.4,
@@ -174,7 +186,7 @@ export function ReplayNode() {
     const trailBurst1 = useParticleBurst({
         count: 8,
         lifetime: 1.0,
-        color: PLAYER_COLORS[1],
+        color: p1Color,
         speed: [0.2, 0.8],
         gravity: 1,
         size: 0.4,
@@ -182,6 +194,18 @@ export function ReplayNode() {
         shrink: true,
     });
     const trailBursts = [trailBurst0, trailBurst1];
+
+    // Impact sound — matches the live collision sound from LocalPlayerNode
+    const impactSfx = useSound('tone', {
+        wave: 'square',
+        frequency: [300, 100],
+        duration: 0.1,
+        gain: 0.15,
+    });
+
+    // Scale particle time to match replay speed (slow-motion)
+    const world = useWorld();
+    const particleService = world.getService(ParticlesService);
 
     // Clear lingering gameplay particles when entering replay
     const clearParticles = useClearParticles();
@@ -220,6 +244,11 @@ export function ReplayNode() {
         topBar.style.opacity = isReplay ? '1' : '0';
         bottomBar.style.opacity = isReplay ? '1' : '0';
         label.style.opacity = isReplay ? '1' : '0';
+
+        // Scale particle aging to match replay speed
+        if (particleService) {
+            particleService.timeScale = isReplay ? getReplaySpeed() : 1;
+        }
 
         // Drive replay playback
         if (isReplay) {
@@ -265,6 +294,7 @@ export function ReplayNode() {
                         const [su, sv] = worldToScreen(mx, my, mz, camera);
                         triggerShockwave(su, sv);
                         triggerHitImpact(mx, mz);
+                        impactSfx.play();
                     }
                     hitBurstsEmitted.add(hitIdx);
                 }

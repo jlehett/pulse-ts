@@ -9,7 +9,8 @@ import {
     DASH_SPEED,
     DASH_DURATION,
     DASH_COOLDOWN,
-    KNOCKBACK_FORCE,
+    KNOCKBACK_BASE,
+    KNOCKBACK_VELOCITY_SCALE,
     IMPACT_COOLDOWN,
     KNOCKOUT_BURST_COUNT,
     INDICATOR_RING_COLOR,
@@ -17,6 +18,7 @@ import {
     INDICATOR_RING_BORDER,
     computeDashDirection,
     computeKnockback,
+    computeApproachSpeed,
 } from './LocalPlayerNode';
 
 describe('LocalPlayerNode constants', () => {
@@ -45,8 +47,12 @@ describe('LocalPlayerNode constants', () => {
         expect(DASH_COOLDOWN).toBeGreaterThan(DASH_DURATION);
     });
 
-    it('knockback force is positive', () => {
-        expect(KNOCKBACK_FORCE).toBeGreaterThan(0);
+    it('knockback base is positive', () => {
+        expect(KNOCKBACK_BASE).toBeGreaterThan(0);
+    });
+
+    it('knockback velocity scale is positive', () => {
+        expect(KNOCKBACK_VELOCITY_SCALE).toBeGreaterThan(0);
     });
 
     it('impact cooldown prevents sound spam', () => {
@@ -155,5 +161,42 @@ describe('computeKnockback', () => {
         const [x1] = computeKnockback(5, 0, 0, 0, 5);
         const [x2] = computeKnockback(5, 0, 0, 0, 10);
         expect(x2).toBeCloseTo(x1 * 2);
+    });
+});
+
+describe('computeApproachSpeed', () => {
+    it('returns full speed when moving directly toward target', () => {
+        // Attacker at (-5,0) moving at (10,0) toward target at (0,0)
+        const speed = computeApproachSpeed(0, 0, -5, 0, 10, 0);
+        expect(speed).toBeCloseTo(10);
+    });
+
+    it('returns zero for perpendicular (glancing) movement', () => {
+        // Attacker at (-5,0) moving at (0,10) — perpendicular to target
+        const speed = computeApproachSpeed(0, 0, -5, 0, 0, 10);
+        expect(speed).toBeCloseTo(0);
+    });
+
+    it('returns zero when moving away from target', () => {
+        // Attacker at (-5,0) moving at (-10,0) — away from target
+        const speed = computeApproachSpeed(0, 0, -5, 0, -10, 0);
+        expect(speed).toBe(0);
+    });
+
+    it('returns partial speed for diagonal approach', () => {
+        // Attacker at (-5,0) moving at (10,10) — 45 degrees off axis
+        const speed = computeApproachSpeed(0, 0, -5, 0, 10, 10);
+        // Only the X component contributes (direction is purely +X)
+        expect(speed).toBeCloseTo(10);
+    });
+
+    it('returns velocity magnitude when positions overlap', () => {
+        const speed = computeApproachSpeed(3, 3, 3, 3, 6, 8);
+        expect(speed).toBeCloseTo(10); // sqrt(36 + 64) = 10
+    });
+
+    it('handles zero velocity', () => {
+        const speed = computeApproachSpeed(0, 0, -5, 0, 0, 0);
+        expect(speed).toBe(0);
     });
 });
