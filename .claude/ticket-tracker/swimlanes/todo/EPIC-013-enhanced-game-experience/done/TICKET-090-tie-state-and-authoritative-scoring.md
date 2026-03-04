@@ -2,10 +2,11 @@
 id: TICKET-090
 epic: EPIC-013
 title: Tie state detection and authoritative scoring
-status: todo
+status: done
 priority: high
 created: 2026-03-02
 updated: 2026-03-02
+branch: ticket-090-tie-state-and-authoritative-scoring
 labels:
   - gameplay
   - networking
@@ -29,15 +30,17 @@ the other player.
 
 ## Acceptance Criteria
 
-- [ ] Simultaneous knockouts within a defined time window result in a "Tie"
-- [ ] Tie rounds award no points to either player
-- [ ] Visual feedback for tie state (e.g., "Tie!" overlay)
-- [ ] One player (host) is authoritative for scoring decisions in online mode
-- [ ] Non-host player accepts and displays the host's scoring outcome
-- [ ] Score disagreements between clients are no longer possible
-- [ ] All tests pass
+- [x] Simultaneous knockouts within a defined time window result in a "Tie"
+- [x] Tie rounds award no points to either player
+- [x] Visual feedback for tie state (e.g., "Tie!" overlay)
+- [x] One player (host) is authoritative for scoring decisions in online mode
+- [x] Non-host player accepts and displays the host's scoring outcome
+- [x] Score disagreements between clients are no longer possible
+- [x] All tests pass
 
 ## Notes
 
 - **2026-03-02**: Ticket created.
 - Bug context: observed instances where each player's client registered a different winner for the same round.
+- **2026-03-02**: Starting implementation.
+- **2026-03-02**: Implementation complete. Tie window detection (10 frames/~167ms), authoritative scoring via ScoringOutcomeChannel, "Tie!" overlay, midpoint camera follow during tie replays. All 356 tests pass, lint clean.

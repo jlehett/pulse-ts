@@ -8,6 +8,8 @@ import {
     REPLAY_CAMERA_SMOOTH,
     REPLAY_LOSER_FALLEN_Y,
     REPLAY_FALL_ZOOM_RANGE,
+    REPLAY_TIE_BASE_SEPARATION,
+    REPLAY_TIE_HEIGHT_PER_UNIT,
     triggerCameraShake,
     resetCameraShake,
 } from './CameraRigNode';
@@ -54,6 +56,14 @@ describe('CameraRigNode', () => {
 
     it('fall zoom range is positive', () => {
         expect(REPLAY_FALL_ZOOM_RANGE).toBeGreaterThan(0);
+    });
+
+    it('tie base separation is positive', () => {
+        expect(REPLAY_TIE_BASE_SEPARATION).toBeGreaterThan(0);
+    });
+
+    it('tie height per unit is positive', () => {
+        expect(REPLAY_TIE_HEIGHT_PER_UNIT).toBeGreaterThan(0);
     });
 });
 

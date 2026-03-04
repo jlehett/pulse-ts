@@ -110,6 +110,8 @@ export function ArenaNode(props?: Readonly<ArenaNodeProps>) {
         countdownValue: -1,
         matchWinner: -1,
         pendingKnockout: -1,
+        pendingKnockout2: -1,
+        isTie: false,
         paused: false,
         playerLabels: props?.aiPersonality
             ? ['You', props.aiPersonality.name]

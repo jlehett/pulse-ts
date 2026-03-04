@@ -3,6 +3,7 @@ import {
     computeCountdownValue,
     type GameManagerNodeProps,
 } from './GameManagerNode';
+import { TIE_WINDOW_FRAMES } from '../config/arena';
 
 describe('GameManagerNode', () => {
     it('exports the node function', () => {
@@ -43,5 +44,16 @@ describe('computeCountdownValue', () => {
         expect(computeCountdownValue(1.0)).toBe(0);
         expect(computeCountdownValue(0.5)).toBe(0);
         expect(computeCountdownValue(0)).toBe(0);
+    });
+});
+
+describe('TIE_WINDOW_FRAMES', () => {
+    it('is a positive integer', () => {
+        expect(TIE_WINDOW_FRAMES).toBeGreaterThan(0);
+        expect(Number.isInteger(TIE_WINDOW_FRAMES)).toBe(true);
+    });
+
+    it('is 10 frames (~167ms at 60Hz)', () => {
+        expect(TIE_WINDOW_FRAMES).toBe(10);
     });
 });
