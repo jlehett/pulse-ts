@@ -5,6 +5,7 @@ import { installPhysics } from '@pulse-ts/physics';
 import { installThree, StatsOverlaySystem } from '@pulse-ts/three';
 import { installNetwork } from '@pulse-ts/network';
 import { ArenaNode } from './nodes/ArenaNode';
+import { MenuSceneNode } from './nodes/MenuSceneNode';
 import { allBindings } from './config/bindings';
 import { showMainMenu } from './menu';
 import { showLobby, type LobbyResult } from './lobby';
@@ -21,6 +22,40 @@ const container = canvas.parentElement ?? document.body;
 initLandscapeEnforcer();
 initAutoFullscreen();
 showInstallPrompt();
+
+function createMenuWorld(): { world: World; destroy: () => void } {
+    const world = new World();
+
+    installDefaults(world);
+    installPhysics(world, { gravity: { x: 0, y: -20, z: 0 } });
+
+    const mobile = isMobileDevice();
+    const three = installThree(world, {
+        canvas,
+        clearColor: 0x050508,
+    });
+
+    if (mobile) {
+        three.renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+    }
+
+    if (!mobile) {
+        three.renderer.shadowMap.enabled = true;
+        three.renderer.shadowMap.type = 1; // THREE.PCFShadowMap
+    }
+
+    setupPostProcessing(three);
+
+    world.mount(MenuSceneNode);
+
+    return {
+        world,
+        destroy() {
+            three.renderer.clear();
+            world.destroy();
+        },
+    };
+}
 
 function startLocalGame(): Promise<void> {
     return new Promise((resolve) => {
@@ -159,26 +194,39 @@ async function startOnlineGame(lobby: LobbyResult): Promise<void> {
 }
 
 async function start() {
-    const choice = await showMainMenu(container);
+    const menuWorld = createMenuWorld();
+    menuWorld.world.start();
 
-    if (choice === 'solo') {
-        const personality =
-            AI_PERSONALITIES[
-                Math.floor(Math.random() * AI_PERSONALITIES.length)
-            ];
-        await startSoloGame(personality);
-    } else if (choice === 'local') {
-        await startLocalGame();
-    } else {
-        const lobby = await showLobby(container);
-        if (lobby === 'back') {
-            // Fall through to restart
+    // Loop within the menu flow so the 3D background stays alive
+    // when navigating back from sub-menus (e.g. lobby → main menu).
+    let picked = false;
+    while (!picked) {
+        const choice = await showMainMenu(container);
+
+        if (choice === 'solo') {
+            const personality =
+                AI_PERSONALITIES[
+                    Math.floor(Math.random() * AI_PERSONALITIES.length)
+                ];
+            menuWorld.destroy();
+            await startSoloGame(personality);
+            picked = true;
+        } else if (choice === 'local') {
+            menuWorld.destroy();
+            await startLocalGame();
+            picked = true;
         } else {
+            const lobby = await showLobby(container);
+            if (lobby === 'back') {
+                continue;
+            }
+            menuWorld.destroy();
             await startOnlineGame(lobby);
+            picked = true;
         }
     }
 
-    // Loop back to main menu
+    // Loop back to main menu after game ends
     start();
 }
 

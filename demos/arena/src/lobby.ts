@@ -398,7 +398,7 @@ function createOverlay(): HTMLDivElement {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        backgroundColor: 'rgba(10, 10, 26, 0.92)',
+        backgroundColor: 'rgba(10, 10, 26, 0.65)',
         opacity: '0',
         transition: 'opacity 0.4s ease-in-out',
     } as Partial<CSSStyleDeclaration>);
