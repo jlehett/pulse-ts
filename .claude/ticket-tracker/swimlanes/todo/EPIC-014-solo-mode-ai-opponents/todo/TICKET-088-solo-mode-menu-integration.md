@@ -5,7 +5,8 @@ title: Solo mode menu integration
 status: todo
 priority: medium
 created: 2026-03-02
-updated: 2026-03-02
+updated: 2026-03-03
+branch: ticket-088-solo-mode-menu-integration
 labels:
   - ui
   - arena
