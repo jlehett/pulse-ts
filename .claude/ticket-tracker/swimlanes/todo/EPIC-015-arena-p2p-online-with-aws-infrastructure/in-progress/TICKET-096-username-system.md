@@ -2,7 +2,7 @@
 id: TICKET-096
 epic: EPIC-015
 title: Username system
-status: todo
+status: in-progress
 priority: medium
 created: 2026-03-04
 updated: 2026-03-04
@@ -31,3 +31,4 @@ change their name.
 ## Notes
 
 - **2026-03-04**: Ticket created.
+- **2026-03-04**: Starting implementation.
