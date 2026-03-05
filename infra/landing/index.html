@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>pulse-ts</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: monospace;
+      background: #0a0a1a;
+      color: #fff;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .container {
+      text-align: center;
+      padding: 40px 20px;
+    }
+    h1 {
+      font-size: clamp(32px, 8vw, 56px);
+      letter-spacing: 4px;
+      margin-bottom: 8px;
+      background: linear-gradient(135deg, #48c9b0, #3498db);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .subtitle {
+      font-size: 14px;
+      color: #888;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      margin-bottom: 48px;
+    }
+    .links {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      align-items: center;
+    }
+    a {
+      font: bold 16px monospace;
+      color: #fff;
+      text-decoration: none;
+      padding: 14px 36px;
+      border: 2px solid rgba(255,255,255,0.2);
+      border-radius: 6px;
+      background: rgba(255,255,255,0.05);
+      transition: all 0.2s ease;
+      min-width: 240px;
+    }
+    a:hover {
+      border-color: #48c9b0;
+      background: rgba(255,255,255,0.1);
+      box-shadow: 0 0 16px rgba(72, 201, 176, 0.2);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>PULSE-TS</h1>
+    <div class="subtitle">Modular TypeScript Game Engine</div>
+    <div class="links">
+      <a href="/demos/arena/">Arena Demo</a>
+    </div>
+  </div>
+</body>
+</html>
