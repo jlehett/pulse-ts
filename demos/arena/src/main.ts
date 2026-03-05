@@ -192,7 +192,7 @@ async function startOnlineGame(lobby: LobbyResult): Promise<void> {
 
             world.mount(ArenaNode, {
                 playerId: lobby.playerId,
-                wsUrl: lobby.wsUrl,
+                transport: lobby.transport,
                 isHost: lobby.mode === 'host',
                 shockwavePass,
                 onRequestMenu: () => {

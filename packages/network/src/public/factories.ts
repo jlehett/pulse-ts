@@ -4,6 +4,7 @@ import { MemoryTransport } from '../infra/transports/memory';
 import type { MemoryHub } from '../infra/transports/memory';
 import { WebRtcMeshTransport } from '../infra/transports/webrtc';
 import type { WebRtcMeshOptions } from '../infra/transports/webrtc/transport';
+import { DataChannelTransport } from '../infra/transports/datachannel';
 
 /**
  * Creates a WebSocket transport.
@@ -59,4 +60,29 @@ export function createWebRtcMeshTransport(
     opts: Omit<WebRtcMeshOptions, 'selfId'>,
 ): Transport {
     return new WebRtcMeshTransport({ selfId, ...opts });
+}
+
+/**
+ * Creates a DataChannel transport wrapping an existing RTCDataChannel.
+ *
+ * Use this for 1v1 P2P connections where the WebRTC handshake has already
+ * been completed (e.g., during a lobby/signaling phase).
+ *
+ * @param dc - An RTCDataChannel (open or connecting).
+ * @param pc - The owning RTCPeerConnection, closed on disconnect.
+ * @param peerId - Stable identifier for the remote peer.
+ * @returns A `Transport` instance backed by a single DataChannel.
+ *
+ * @example
+ * ```ts
+ * const transport = createDataChannelTransport(dataChannel, peerConnection, 'opponent');
+ * useConnection(transport);
+ * ```
+ */
+export function createDataChannelTransport(
+    dc: RTCDataChannel,
+    pc: RTCPeerConnection,
+    peerId?: string,
+): Transport {
+    return new DataChannelTransport(dc, pc, peerId);
 }

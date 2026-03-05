@@ -24,7 +24,6 @@ class MockWebSocket {
 
     constructor(url: string) {
         this.url = url;
-        // Track instance for test access
         mockWsInstances.push(this);
     }
 
@@ -74,17 +73,91 @@ class MockWebSocket {
 
 let mockWsInstances: MockWebSocket[] = [];
 
+// ---------------------------------------------------------------------------
+// RTCPeerConnection / RTCDataChannel mocks
+// ---------------------------------------------------------------------------
+
+class MockRTCDataChannel {
+    readyState: RTCDataChannelState = 'connecting';
+    binaryType = 'arraybuffer';
+    onopen: ((ev: Event) => void) | null = null;
+    onclose: ((ev: Event) => void) | null = null;
+    onerror: ((ev: Event) => void) | null = null;
+    onmessage: ((ev: MessageEvent) => void) | null = null;
+    send = jest.fn();
+    close = jest.fn();
+
+    simulateOpen() {
+        this.readyState = 'open';
+        this.onopen?.({} as Event);
+    }
+}
+
+let mockDataChannels: MockRTCDataChannel[] = [];
+
+class MockRTCPeerConnection {
+    connectionState = 'connected';
+    localDescription: any = { type: 'offer', sdp: 'mock-sdp' };
+    onicecandidate: ((ev: any) => void) | null = null;
+    ondatachannel: ((ev: any) => void) | null = null;
+    onconnectionstatechange: ((ev: Event) => void) | null = null;
+
+    createDataChannel() {
+        const dc = new MockRTCDataChannel();
+        mockDataChannels.push(dc);
+        return dc;
+    }
+
+    async createOffer() {
+        return { type: 'offer', sdp: 'mock-offer-sdp' };
+    }
+
+    async createAnswer() {
+        return { type: 'answer', sdp: 'mock-answer-sdp' };
+    }
+
+    async setLocalDescription(desc: any) {
+        this.localDescription = desc;
+    }
+
+    async setRemoteDescription() {}
+    async addIceCandidate() {}
+    close = jest.fn();
+}
+
+class MockRTCSessionDescription {
+    type: string;
+    sdp: string;
+    constructor(init: any) {
+        this.type = init.type;
+        this.sdp = init.sdp;
+    }
+}
+
+class MockRTCIceCandidate {
+    candidate: string;
+    constructor(init: any) {
+        this.candidate = init.candidate;
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Global setup
+// ---------------------------------------------------------------------------
+
 beforeAll(() => {
     (globalThis as any).WebSocket = MockWebSocket;
+    (globalThis as any).RTCPeerConnection = MockRTCPeerConnection;
+    (globalThis as any).RTCSessionDescription = MockRTCSessionDescription;
+    (globalThis as any).RTCIceCandidate = MockRTCIceCandidate;
 });
 
 afterAll(() => {
     delete (globalThis as any).WebSocket;
+    delete (globalThis as any).RTCPeerConnection;
+    delete (globalThis as any).RTCSessionDescription;
+    delete (globalThis as any).RTCIceCandidate;
 });
-
-// ---------------------------------------------------------------------------
-// window.location mock — lobby derives relay URLs from the current page.
-// ---------------------------------------------------------------------------
 
 const locationBackup = window.location;
 
@@ -107,6 +180,10 @@ afterAll(() => {
     });
 });
 
+// ---------------------------------------------------------------------------
+// Tests
+// ---------------------------------------------------------------------------
+
 describe('showLobby', () => {
     let container: HTMLDivElement;
 
@@ -114,12 +191,11 @@ describe('showLobby', () => {
         container = document.createElement('div');
         document.body.appendChild(container);
         mockWsInstances = [];
-        jest.useFakeTimers();
+        mockDataChannels = [];
     });
 
     afterEach(() => {
         container.remove();
-        jest.useRealTimers();
     });
 
     function overlay(): HTMLElement {
@@ -180,12 +256,9 @@ describe('showLobby', () => {
         clickButton('Host Game');
         clickButton('Player 1');
         expect(container.textContent).toContain('HOSTING');
-        expect(container.textContent).toContain(
-            'Share this page\u2019s URL with your opponent',
-        );
     });
 
-    it('connects WebSocket when host enters waiting screen', () => {
+    it('connects WebSocket to signaling server when host enters waiting', () => {
         showLobby(container);
         clickButton('Host Game');
         clickButton('Player 1');
@@ -193,29 +266,42 @@ describe('showLobby', () => {
         expect(latestWs().url).toBe('ws://localhost:5173');
     });
 
-    it('shows waiting status after host WebSocket opens', () => {
+    it('sends create-lobby after signaling WebSocket opens', () => {
         showLobby(container);
         clickButton('Host Game');
         clickButton('Player 1');
         latestWs().simulateOpen();
+        const createMsg = latestWs().sent.find((s) =>
+            s.includes('create-lobby'),
+        );
+        expect(createMsg).toBeTruthy();
+    });
+
+    it('shows waiting status after lobby is created', () => {
+        showLobby(container);
+        clickButton('Host Game');
+        clickButton('Player 1');
+        latestWs().simulateOpen();
+        latestWs().simulateMessage({ type: 'lobby-created', lobbyId: 'L1' });
         expect(container.textContent).toContain('Waiting for opponent');
     });
 
-    it('shows error when host cannot connect to relay server', () => {
+    it('shows error when host cannot connect to signaling server', () => {
         showLobby(container);
         clickButton('Host Game');
         clickButton('Player 1');
         latestWs().simulateError();
         expect(container.textContent).toContain(
-            'Could not connect to relay server',
+            'Could not connect to signaling server',
         );
     });
 
-    it('Start Game button is hidden until opponent connects', () => {
+    it('Start Game button is hidden until joiner connects', () => {
         showLobby(container);
         clickButton('Host Game');
         clickButton('Player 1');
         latestWs().simulateOpen();
+        latestWs().simulateMessage({ type: 'lobby-created', lobbyId: 'L1' });
         const startBtn = Array.from(container.querySelectorAll('button')).find(
             (b) => b.textContent === 'Start Game',
         );
@@ -223,99 +309,95 @@ describe('showLobby', () => {
         expect(startBtn!.style.display).toBe('none');
     });
 
-    it('Start Game button appears when opponent sends join-request', () => {
+    it('Start Game button appears when joiner connects', () => {
         showLobby(container);
         clickButton('Host Game');
         clickButton('Player 1');
         latestWs().simulateOpen();
+        latestWs().simulateMessage({ type: 'lobby-created', lobbyId: 'L1' });
         latestWs().simulateMessage({
-            channel: 'lobby',
-            data: { type: 'join-request' },
+            type: 'joiner-connected',
+            joinerConnectionId: 'joiner-1',
+            username: 'Bob',
         });
-        expect(container.textContent).toContain('Opponent connected');
+        expect(container.textContent).toContain('Bob joined');
         const startBtn = Array.from(container.querySelectorAll('button')).find(
             (b) => b.textContent === 'Start Game',
         );
         expect(startBtn!.style.display).not.toBe('none');
     });
 
-    it('host sends host-accept when joiner connects', () => {
-        showLobby(container);
-        clickButton('Host Game');
-        clickButton('Player 1');
-        const ws = latestWs();
-        ws.simulateOpen();
-        ws.simulateMessage({
-            channel: 'lobby',
-            data: { type: 'join-request' },
-        });
-        const acceptMsg = ws.sent.find((s) => s.includes('host-accept'));
-        expect(acceptMsg).toBeTruthy();
-        const parsed = JSON.parse(acceptMsg!);
-        expect(parsed.data.joinerPlayerId).toBe(1);
-    });
-
-    it('host sends lobby-full for second join-request', () => {
-        showLobby(container);
-        clickButton('Host Game');
-        clickButton('Player 1');
-        const ws = latestWs();
-        ws.simulateOpen();
-        ws.simulateMessage({
-            channel: 'lobby',
-            data: { type: 'join-request' },
-        });
-        ws.simulateMessage({
-            channel: 'lobby',
-            data: { type: 'join-request' },
-        });
-        const fullMsg = ws.sent.find((s) => s.includes('lobby-full'));
-        expect(fullMsg).toBeTruthy();
-    });
-
-    it('resolves with host result when Start Game is clicked', async () => {
+    it('resolves with host result after WebRTC handshake', async () => {
         const promise = showLobby(container);
         clickButton('Host Game');
         clickButton('Player 1');
-        const ws = latestWs();
-        ws.simulateOpen();
-        ws.simulateMessage({
-            channel: 'lobby',
-            data: { type: 'join-request' },
+        latestWs().simulateOpen();
+        latestWs().simulateMessage({ type: 'lobby-created', lobbyId: 'L1' });
+        latestWs().simulateMessage({
+            type: 'joiner-connected',
+            joinerConnectionId: 'joiner-1',
+            username: 'Bob',
         });
         clickButton('Start Game');
-        fireTransitionEnd();
 
-        const result = (await promise) as LobbyResult;
-        expect(result).toEqual({
-            mode: 'host',
-            playerId: 0,
-            wsUrl: 'ws://localhost:5173',
+        // Wait for async operations (createOffer, setLocalDescription)
+        await new Promise((r) => setTimeout(r, 0));
+
+        // Simulate the answer from the joiner arriving
+        latestWs().simulateMessage({
+            type: 'signal',
+            data: { type: 'answer', sdp: 'mock-answer-sdp' },
+            from: 'joiner-1',
         });
+
+        // DataChannel opens
+        expect(mockDataChannels).toHaveLength(1);
+        mockDataChannels[0].simulateOpen();
+
+        // Wait for resolution
+        await new Promise((r) => setTimeout(r, 0));
+
+        fireTransitionEnd();
+        const result = (await promise) as LobbyResult;
+        expect(result.mode).toBe('host');
+        expect(result.playerId).toBe(0);
+        expect(result.transport).toBeTruthy();
     });
 
-    it('host sends game-start before resolving', () => {
+    it('host sends game-start and signal offer when Start is clicked', async () => {
         showLobby(container);
         clickButton('Host Game');
         clickButton('Player 2');
-        const ws = latestWs();
-        ws.simulateOpen();
-        ws.simulateMessage({
-            channel: 'lobby',
-            data: { type: 'join-request' },
+        latestWs().simulateOpen();
+        latestWs().simulateMessage({ type: 'lobby-created', lobbyId: 'L1' });
+        latestWs().simulateMessage({
+            type: 'joiner-connected',
+            joinerConnectionId: 'joiner-1',
+            username: 'Bob',
         });
         clickButton('Start Game');
-        const startMsg = ws.sent.find((s) => s.includes('game-start'));
+
+        await new Promise((r) => setTimeout(r, 0));
+
+        const startMsg = latestWs().sent.find((s) =>
+            s.includes('game-start'),
+        );
         expect(startMsg).toBeTruthy();
+
+        const signalMsg = latestWs().sent.find((s) => s.includes('signal'));
+        expect(signalMsg).toBeTruthy();
     });
 
-    it('host Back from waiting returns to host setup and closes WebSocket', () => {
+    it('host Back from waiting sends leave-lobby and returns to setup', () => {
         showLobby(container);
         clickButton('Host Game');
         clickButton('Player 1');
         const ws = latestWs();
+        ws.simulateOpen();
         clickButton('Back');
         expect(container.textContent).toContain('HOST GAME');
+        const leaveMsg = ws.sent.find((s) => s.includes('leave-lobby'));
+        expect(leaveMsg).toBeTruthy();
         expect(ws.readyState).toBe(MockWebSocket.CLOSED);
     });
 
@@ -329,90 +411,87 @@ describe('showLobby', () => {
 
     // --- Join flow ---
 
-    it('navigates to join screen and auto-connects when Join Game is clicked', () => {
+    it('navigates to join browser when Join Game is clicked', () => {
         showLobby(container);
         clickButton('Join Game');
         expect(container.textContent).toContain('JOIN GAME');
-        // No IP input — connection happens automatically
-        expect(container.querySelector('input')).toBeNull();
         expect(mockWsInstances).toHaveLength(1);
-        expect(latestWs().url).toBe('ws://localhost:5173');
     });
 
-    it('shows connecting status immediately after joining', () => {
+    it('requests lobby list after connecting', () => {
         showLobby(container);
         clickButton('Join Game');
-        expect(container.textContent).toContain('Connecting');
+        latestWs().simulateOpen();
+        const listMsg = latestWs().sent.find((s) =>
+            s.includes('list-lobbies'),
+        );
+        expect(listMsg).toBeTruthy();
     });
 
-    it('shows error when WebSocket connection fails', () => {
+    it('shows error when signaling connection fails', () => {
         showLobby(container);
         clickButton('Join Game');
         latestWs().simulateError();
-        expect(container.textContent).toContain('Could not connect to server');
+        expect(container.textContent).toContain(
+            'Could not connect to signaling server',
+        );
     });
 
-    it('sends join-request after WebSocket opens', () => {
+    it('shows message when no lobbies available', () => {
         showLobby(container);
         clickButton('Join Game');
         latestWs().simulateOpen();
-        const joinMsg = latestWs().sent.find((s) => s.includes('join-request'));
+        latestWs().simulateMessage({ type: 'lobby-list', lobbies: [] });
+        expect(container.textContent).toContain('No lobbies available');
+    });
+
+    it('renders lobby buttons from lobby list', () => {
+        showLobby(container);
+        clickButton('Join Game');
+        latestWs().simulateOpen();
+        latestWs().simulateMessage({
+            type: 'lobby-list',
+            lobbies: [
+                { lobbyId: 'L1', hostUsername: 'Alice' },
+                { lobbyId: 'L2', hostUsername: 'Bob' },
+            ],
+        });
+        expect(container.textContent).toContain("Alice's Game");
+        expect(container.textContent).toContain("Bob's Game");
+    });
+
+    it('sends join-lobby when a lobby is clicked', () => {
+        showLobby(container);
+        clickButton('Join Game');
+        latestWs().simulateOpen();
+        latestWs().simulateMessage({
+            type: 'lobby-list',
+            lobbies: [{ lobbyId: 'L1', hostUsername: 'Alice' }],
+        });
+        clickButton("Alice's Game");
+        const joinMsg = latestWs().sent.find((s) => s.includes('join-lobby'));
         expect(joinMsg).toBeTruthy();
+        const parsed = JSON.parse(joinMsg!);
+        expect(parsed.lobbyId).toBe('L1');
     });
 
-    it('shows error on timeout if host does not respond', () => {
-        showLobby(container);
-        clickButton('Join Game');
-        latestWs().simulateOpen();
-        jest.advanceTimersByTime(5000);
-        expect(container.textContent).toContain('No host found in lobby');
-    });
-
-    it('shows waiting status after host-accept', () => {
+    it('shows join-failed error', () => {
         showLobby(container);
         clickButton('Join Game');
         latestWs().simulateOpen();
         latestWs().simulateMessage({
-            channel: 'lobby',
-            data: { type: 'host-accept', joinerPlayerId: 1 },
+            type: 'lobby-list',
+            lobbies: [{ lobbyId: 'L1', hostUsername: 'Alice' }],
         });
-        expect(container.textContent).toContain('Waiting for host to start');
+        clickButton("Alice's Game");
+        latestWs().simulateMessage({
+            type: 'join-failed',
+            reason: 'Lobby is no longer available',
+        });
+        expect(container.textContent).toContain('Lobby is no longer available');
     });
 
-    it('shows error when lobby is full', () => {
-        showLobby(container);
-        clickButton('Join Game');
-        latestWs().simulateOpen();
-        latestWs().simulateMessage({
-            channel: 'lobby',
-            data: { type: 'lobby-full' },
-        });
-        expect(container.textContent).toContain('Lobby is full');
-    });
-
-    it('resolves with join result on game-start', async () => {
-        const promise = showLobby(container);
-        clickButton('Join Game');
-        latestWs().simulateOpen();
-        latestWs().simulateMessage({
-            channel: 'lobby',
-            data: { type: 'host-accept', joinerPlayerId: 1 },
-        });
-        latestWs().simulateMessage({
-            channel: 'lobby',
-            data: { type: 'game-start' },
-        });
-        fireTransitionEnd();
-
-        const result = (await promise) as LobbyResult;
-        expect(result).toEqual({
-            mode: 'join',
-            playerId: 1,
-            wsUrl: 'ws://localhost:5173',
-        });
-    });
-
-    it('join Back returns to lobby menu and closes WebSocket', () => {
+    it('join Back returns to lobby menu', () => {
         showLobby(container);
         clickButton('Join Game');
         const ws = latestWs();
