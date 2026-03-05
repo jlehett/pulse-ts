@@ -226,25 +226,123 @@ function establishP2P(
 type Finish = (result: LobbyResult | 'back') => void;
 
 function showLobbyMenu(overlay: HTMLElement, finish: Finish) {
+    // Gate: require a username before proceeding
+    if (!hasUsername()) {
+        showUsernamePrompt(overlay, finish, false);
+        return;
+    }
+
     const content = clearAndCreateContent(overlay);
 
     const heading = createHeading('ONLINE PLAY');
+
+    // Display current username
+    const nameLabel = createSubheading(`Playing as: ${getUsername()}`);
+
     const btnHost = createButton('Host Game', '#48c9b0');
     const btnJoin = createButton('Join Game', '#e74c3c');
+    const btnChangeName = createButton('Change Name', '#f1c40f');
     const btnBack = createButton('Back', '#888');
-    const buttons = createColumn(btnHost, btnJoin, btnBack);
+    const buttons = createColumn(btnHost, btnJoin, btnChangeName, btnBack);
 
     content.appendChild(heading);
+    content.appendChild(nameLabel);
     content.appendChild(buttons);
 
-    applyStaggeredEntrance([heading, buttons], 100);
+    applyStaggeredEntrance([heading, nameLabel, buttons], 100);
     applyButtonHoverScale(btnHost);
     applyButtonHoverScale(btnJoin);
+    applyButtonHoverScale(btnChangeName);
     applyButtonHoverScale(btnBack);
 
     btnHost.addEventListener('click', () => showHostSetup(overlay, finish));
     btnJoin.addEventListener('click', () => showJoinBrowser(overlay, finish));
+    btnChangeName.addEventListener('click', () =>
+        showUsernamePrompt(overlay, finish, true),
+    );
     btnBack.addEventListener('click', () => finish('back'));
+}
+
+function showUsernamePrompt(
+    overlay: HTMLElement,
+    finish: Finish,
+    isEdit: boolean,
+) {
+    const content = clearAndCreateContent(overlay);
+
+    const heading = createHeading(isEdit ? 'CHANGE NAME' : 'ENTER YOUR NAME');
+
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.maxLength = USERNAME_MAX_LENGTH;
+    input.value = getUsername();
+    input.placeholder = 'Your name...';
+    Object.assign(input.style, {
+        font: 'bold 18px monospace',
+        color: '#fff',
+        backgroundColor: 'rgba(255,255,255,0.08)',
+        border: '2px solid rgba(255,255,255,0.3)',
+        borderRadius: '6px',
+        padding: '12px 16px',
+        textAlign: 'center',
+        outline: 'none',
+        minWidth: 'min(240px, 70vw)',
+        minHeight: '44px',
+        transition: 'border-color 0.2s ease',
+    } as Partial<CSSStyleDeclaration>);
+    input.addEventListener('focus', () => {
+        input.style.borderColor = '#48c9b0';
+    });
+    input.addEventListener('blur', () => {
+        input.style.borderColor = 'rgba(255,255,255,0.3)';
+    });
+
+    const errorMsg = document.createElement('div');
+    Object.assign(errorMsg.style, {
+        font: '13px monospace',
+        color: '#e74c3c',
+        minHeight: '18px',
+        textAlign: 'center',
+    } as Partial<CSSStyleDeclaration>);
+
+    const btnConfirm = createButton(isEdit ? 'Save' : 'Continue', '#48c9b0');
+    const btnBack = createButton('Back', '#888');
+    const buttons = createColumn(btnConfirm, btnBack);
+
+    content.appendChild(heading);
+    content.appendChild(input);
+    content.appendChild(errorMsg);
+    content.appendChild(buttons);
+
+    applyStaggeredEntrance([heading, input, buttons], 100);
+    applyButtonHoverScale(btnConfirm);
+    applyButtonHoverScale(btnBack);
+
+    // Auto-focus the input
+    requestAnimationFrame(() => input.focus());
+
+    function tryConfirm() {
+        const name = input.value.trim();
+        if (name.length === 0) {
+            errorMsg.textContent = 'Name cannot be empty';
+            return;
+        }
+        setUsername(name);
+        showLobbyMenu(overlay, finish);
+    }
+
+    btnConfirm.addEventListener('click', tryConfirm);
+    input.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') tryConfirm();
+    });
+
+    btnBack.addEventListener('click', () => {
+        if (isEdit) {
+            showLobbyMenu(overlay, finish);
+        } else {
+            finish('back');
+        }
+    });
 }
 
 function showHostSetup(overlay: HTMLElement, finish: Finish) {
@@ -595,12 +693,26 @@ function showJoinWaiting(
 // ---------------------------------------------------------------------------
 
 const USERNAME_KEY = 'pulse-arena-username';
+const USERNAME_MAX_LENGTH = 24;
 
 function getUsername(): string {
     try {
-        return localStorage.getItem(USERNAME_KEY) || 'Player';
+        return localStorage.getItem(USERNAME_KEY) || '';
     } catch {
-        return 'Player';
+        return '';
+    }
+}
+
+function hasUsername(): boolean {
+    return getUsername().length > 0;
+}
+
+function setUsername(name: string): void {
+    const validated = name.trim().slice(0, USERNAME_MAX_LENGTH);
+    try {
+        localStorage.setItem(USERNAME_KEY, validated);
+    } catch {
+        /* localStorage unavailable */
     }
 }
 
