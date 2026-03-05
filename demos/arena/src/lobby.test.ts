@@ -192,10 +192,13 @@ describe('showLobby', () => {
         document.body.appendChild(container);
         mockWsInstances = [];
         mockDataChannels = [];
+        // Most tests assume a username is already saved
+        localStorage.setItem('pulse-arena-username', 'TestUser');
     });
 
     afterEach(() => {
         container.remove();
+        localStorage.removeItem('pulse-arena-username');
     });
 
     function overlay(): HTMLElement {
@@ -379,9 +382,7 @@ describe('showLobby', () => {
 
         await new Promise((r) => setTimeout(r, 0));
 
-        const startMsg = latestWs().sent.find((s) =>
-            s.includes('game-start'),
-        );
+        const startMsg = latestWs().sent.find((s) => s.includes('game-start'));
         expect(startMsg).toBeTruthy();
 
         const signalMsg = latestWs().sent.find((s) => s.includes('signal'));
@@ -422,9 +423,7 @@ describe('showLobby', () => {
         showLobby(container);
         clickButton('Join Game');
         latestWs().simulateOpen();
-        const listMsg = latestWs().sent.find((s) =>
-            s.includes('list-lobbies'),
-        );
+        const listMsg = latestWs().sent.find((s) => s.includes('list-lobbies'));
         expect(listMsg).toBeTruthy();
     });
 
@@ -515,5 +514,129 @@ describe('showLobby', () => {
         showLobby(container);
         clickButton('Back');
         expect(overlay().style.opacity).toBe('0');
+    });
+
+    // --- Username system ---
+
+    it('shows username prompt when no username is saved', () => {
+        localStorage.removeItem('pulse-arena-username');
+        showLobby(container);
+        expect(container.textContent).toContain('ENTER YOUR NAME');
+        expect(container.querySelector('input')).toBeTruthy();
+    });
+
+    it('goes to lobby menu after entering username', () => {
+        localStorage.removeItem('pulse-arena-username');
+        showLobby(container);
+
+        const input = container.querySelector('input')!;
+        input.value = 'Alice';
+        clickButton('Continue');
+
+        expect(localStorage.getItem('pulse-arena-username')).toBe('Alice');
+        expect(container.textContent).toContain('ONLINE PLAY');
+        expect(container.textContent).toContain('Playing as: Alice');
+    });
+
+    it('shows error when trying to confirm empty username', () => {
+        localStorage.removeItem('pulse-arena-username');
+        showLobby(container);
+
+        const input = container.querySelector('input')!;
+        input.value = '';
+        clickButton('Continue');
+
+        expect(container.textContent).toContain('Name cannot be empty');
+        // Should still be on the prompt screen
+        expect(container.textContent).toContain('ENTER YOUR NAME');
+    });
+
+    it('resolves with back from username prompt when Back is clicked', async () => {
+        localStorage.removeItem('pulse-arena-username');
+        const promise = showLobby(container);
+        clickButton('Back');
+        fireTransitionEnd();
+        expect(await promise).toBe('back');
+    });
+
+    it('displays current username in lobby menu', () => {
+        localStorage.setItem('pulse-arena-username', 'Bob');
+        showLobby(container);
+        expect(container.textContent).toContain('Playing as: Bob');
+    });
+
+    it('shows Change Name button in lobby menu', () => {
+        showLobby(container);
+        const buttons = container.querySelectorAll('button');
+        const labels = Array.from(buttons).map((b) => b.textContent);
+        expect(labels).toContain('Change Name');
+    });
+
+    it('navigates to name edit screen when Change Name is clicked', () => {
+        showLobby(container);
+        clickButton('Change Name');
+        expect(container.textContent).toContain('CHANGE NAME');
+        const input = container.querySelector('input')!;
+        expect(input.value).toBe('TestUser');
+    });
+
+    it('updates username and returns to lobby menu after saving', () => {
+        showLobby(container);
+        clickButton('Change Name');
+
+        const input = container.querySelector('input')!;
+        input.value = 'NewName';
+        clickButton('Save');
+
+        expect(localStorage.getItem('pulse-arena-username')).toBe('NewName');
+        expect(container.textContent).toContain('Playing as: NewName');
+        expect(container.textContent).toContain('ONLINE PLAY');
+    });
+
+    it('returns to lobby menu from name edit via Back without changing name', () => {
+        showLobby(container);
+        clickButton('Change Name');
+        clickButton('Back');
+        expect(container.textContent).toContain('ONLINE PLAY');
+        expect(localStorage.getItem('pulse-arena-username')).toBe('TestUser');
+    });
+
+    it('trims and limits username to 24 characters', () => {
+        localStorage.removeItem('pulse-arena-username');
+        showLobby(container);
+
+        const input = container.querySelector('input')!;
+        input.value = '  ' + 'A'.repeat(30) + '  ';
+        clickButton('Continue');
+
+        const saved = localStorage.getItem('pulse-arena-username')!;
+        expect(saved.length).toBeLessThanOrEqual(24);
+        expect(saved).not.toMatch(/^\s|\s$/);
+    });
+
+    it('submits username on Enter key', () => {
+        localStorage.removeItem('pulse-arena-username');
+        showLobby(container);
+
+        const input = container.querySelector('input')!;
+        input.value = 'EnterUser';
+        input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter' }));
+
+        expect(localStorage.getItem('pulse-arena-username')).toBe('EnterUser');
+        expect(container.textContent).toContain('ONLINE PLAY');
+    });
+
+    it('sends username in create-lobby message', () => {
+        localStorage.setItem('pulse-arena-username', 'HostPlayer');
+        showLobby(container);
+        clickButton('Host Game');
+        clickButton('Player 1');
+        latestWs().simulateOpen();
+        const createMsg = latestWs().sent.find((s) =>
+            s.includes('create-lobby'),
+        );
+        expect(createMsg).toBeTruthy();
+        const parsed = JSON.parse(createMsg!);
+        expect(parsed.username).toBe('HostPlayer');
     });
 });
