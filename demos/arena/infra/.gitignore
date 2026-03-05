@@ -20,3 +20,7 @@ override.tf
 override.tf.json
 *_override.tf
 *_override.tf.json
+
+# Lambda dependencies (installed for tests, not deployed — AWS runtime includes them)
+lambda/node_modules/
+lambda/package-lock.json
