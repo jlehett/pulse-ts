@@ -51,7 +51,11 @@ export class DataChannelTransport implements Transport {
      * If the channel is already open, fires immediately.
      */
     async connect(): Promise<void> {
-        if (this.status === 'open') return;
+        if (this.status === 'open') {
+            // Already connected — notify any newly attached handlers
+            for (const cb of this.peerJoinHandlers) cb(this.peerId);
+            return;
+        }
         this.setStatus('connecting');
 
         this.dc.binaryType = 'arraybuffer';

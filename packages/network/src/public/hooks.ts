@@ -47,13 +47,27 @@ export type TransportInit = Transport | (() => Transport);
  * @param init Transport instance or factory.
  * @returns Helpers for status and disconnecting.
  *
+ * @param opts Optional connection options.
+ * @param opts.disconnectOnCleanup When `false`, the transport is NOT
+ *   disconnected when the node unmounts. Use this when the transport
+ *   lifecycle is managed externally (e.g., a P2P channel that survives
+ *   world teardown for rematch). Defaults to `true`.
+ *
  * @example
  * // Browser: connect via WebSocket
  * const { getStatus } = useConnection(() => new WebSocketTransport('ws://localhost:8080'))
+ *
+ * @example
+ * // P2P transport with external lifecycle (survives rematch)
+ * const { getStatus, disconnect } = useConnection(transport, { disconnectOnCleanup: false })
  */
-export function useConnection(init: TransportInit) {
+export function useConnection(
+    init: TransportInit,
+    opts?: { disconnectOnCleanup?: boolean },
+) {
     const world = useWorld();
     let svc!: TransportService;
+    const shouldDisconnect = opts?.disconnectOnCleanup !== false;
 
     /**
      * Initialize the connection to the network.
@@ -64,7 +78,11 @@ export function useConnection(init: TransportInit) {
         svc.setTransport(transport);
         svc.connect();
         return () => {
-            svc?.disconnect();
+            if (shouldDisconnect) {
+                svc?.disconnect();
+            } else {
+                svc?.detach();
+            }
         };
     });
 
