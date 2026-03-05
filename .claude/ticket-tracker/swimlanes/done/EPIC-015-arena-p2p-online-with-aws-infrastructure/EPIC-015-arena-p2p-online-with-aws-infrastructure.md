@@ -3,7 +3,7 @@ id: EPIC-015
 title: Arena P2P online with AWS infrastructure
 status: done
 created: 2026-03-04
-updated: 2026-03-04
+updated: 2026-03-05
 ---
 
 ## Description
@@ -25,3 +25,5 @@ defined in Terraform with no secrets committed to the repo.
 
 - **2026-03-04**: Epic created. Replaces the current WebSocket server approach with P2P + Lambda signaling.
 - **2026-03-04**: Epic closed — all tickets complete.
+- **2026-03-05**: Epic reopened — adding TURN relay support for restrictive NAT traversal.
+- **2026-03-05**: Epic closed — all tickets complete.

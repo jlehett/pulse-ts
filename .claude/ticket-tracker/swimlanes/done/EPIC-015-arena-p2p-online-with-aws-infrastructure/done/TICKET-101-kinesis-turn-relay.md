@@ -2,7 +2,7 @@
 id: TICKET-101
 epic: EPIC-015
 title: Kinesis Video Streams TURN relay
-status: in-progress
+status: done
 branch: ticket-101-kinesis-turn-relay
 priority: high
 created: 2026-03-05
@@ -23,14 +23,15 @@ channel and IAM permissions.
 
 ## Acceptance Criteria
 
-- [ ] Terraform creates a Kinesis Video signaling channel
-- [ ] Lambda IAM role has `kinesisvideo:GetIceServerConfig` permission
-- [ ] Lambda fetches TURN credentials and sends them to clients during lobby join
-- [ ] Frontend uses the TURN credentials in ICE configuration alongside STUN servers
-- [ ] P2P connections succeed behind restrictive NATs (TURN fallback works)
-- [ ] No secrets or credentials hardcoded in frontend code
-- [ ] All tests pass
+- [x] Terraform creates a Kinesis Video signaling channel
+- [x] Lambda IAM role has `kinesisvideo:GetIceServerConfig` permission
+- [x] Lambda fetches TURN credentials and sends them to clients during lobby join
+- [x] Frontend uses the TURN credentials in ICE configuration alongside STUN servers
+- [x] P2P connections succeed behind restrictive NATs (TURN fallback works)
+- [x] No secrets or credentials hardcoded in frontend code
+- [x] All tests pass
 
 ## Notes
 
 - **2026-03-05**: Ticket created. Users behind symmetric NATs cannot connect with STUN-only ICE config. Kinesis Video Streams provides managed TURN at near-zero cost ($0.12/GB relay data).
+- **2026-03-05**: Implementation complete. Added kinesis.tf, updated IAM/Lambda/outputs, added get-ice-servers action to Lambda, frontend requests TURN credentials before P2P handshake with 5s timeout fallback to STUN-only.

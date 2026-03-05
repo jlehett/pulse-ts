@@ -50,6 +50,26 @@ resource "aws_iam_role_policy" "lambda_dynamodb" {
   })
 }
 
+# Kinesis Video Streams — fetch TURN relay credentials
+resource "aws_iam_role_policy" "lambda_kinesis_turn" {
+  name = "kinesis-turn-credentials"
+  role = aws_iam_role.lambda_signaling.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "kinesisvideo:GetSignalingChannelEndpoint",
+          "kinesisvideo:GetIceServerConfig"
+        ]
+        Resource = aws_kinesis_video_stream.turn.arn
+      }
+    ]
+  })
+}
+
 # API Gateway management API (for sending messages back to WebSocket clients)
 resource "aws_iam_role_policy" "lambda_apigw_manage" {
   name = "apigw-manage-connections"

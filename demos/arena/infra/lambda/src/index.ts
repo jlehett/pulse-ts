@@ -19,6 +19,16 @@ import {
     ApiGatewayManagementApiClient,
     PostToConnectionCommand,
 } from '@aws-sdk/client-apigatewaymanagementapi';
+import {
+    KinesisVideoClient,
+    GetSignalingChannelEndpointCommand,
+    ChannelProtocol,
+    SingleMasterChannelEndpointConfiguration,
+} from '@aws-sdk/client-kinesis-video';
+import {
+    KinesisVideoSignalingClient,
+    GetIceServerConfigCommand,
+} from '@aws-sdk/client-kinesis-video-signaling';
 
 import type {
     WebSocketEvent,
@@ -34,6 +44,7 @@ const dynamo = new DynamoDBClient({});
 
 const LOBBIES_TABLE = process.env.LOBBIES_TABLE!;
 const CONNECTIONS_TABLE = process.env.CONNECTIONS_TABLE!;
+const KVS_CHANNEL_ARN = process.env.KVS_CHANNEL_ARN!;
 
 /** TTL for lobbies and connections: 1 hour. */
 const TTL_SECONDS = 3600;
@@ -266,6 +277,72 @@ async function revertLobbyToWaiting(lobby: LobbyRecord): Promise<void> {
 }
 
 // ---------------------------------------------------------------------------
+// ICE server credentials (TURN relay via Kinesis Video Streams)
+// ---------------------------------------------------------------------------
+
+const kinesisVideo = new KinesisVideoClient({});
+
+/**
+ * Fetch temporary TURN relay credentials from Kinesis Video Streams.
+ *
+ * 1. GetSignalingChannelEndpoint to discover the HTTPS endpoint.
+ * 2. GetIceServerConfig to obtain time-limited TURN credentials.
+ *
+ * @returns An array of RTCIceServer-compatible entries (STUN + TURN).
+ */
+async function getIceServers(): Promise<
+    Array<{ urls: string | string[]; username?: string; credential?: string }>
+> {
+    // Step 1: Get the HTTPS endpoint for the signaling channel
+    const endpointRes = await kinesisVideo.send(
+        new GetSignalingChannelEndpointCommand({
+            ChannelARN: KVS_CHANNEL_ARN,
+            SingleMasterChannelEndpointConfiguration: {
+                Protocols: [ChannelProtocol.HTTPS],
+                Role: 'MASTER',
+            } as SingleMasterChannelEndpointConfiguration,
+        }),
+    );
+
+    const httpsEndpoint = endpointRes.ResourceEndpointList?.find(
+        (e) => e.Protocol === 'HTTPS',
+    )?.ResourceEndpoint;
+
+    if (!httpsEndpoint) {
+        throw new Error('No HTTPS endpoint returned for KVS signaling channel');
+    }
+
+    // Step 2: Fetch ICE server config (TURN credentials)
+    const signalingClient = new KinesisVideoSignalingClient({
+        endpoint: httpsEndpoint,
+    });
+
+    const iceRes = await signalingClient.send(
+        new GetIceServerConfigCommand({
+            ChannelARN: KVS_CHANNEL_ARN,
+        }),
+    );
+
+    const servers: Array<{
+        urls: string | string[];
+        username?: string;
+        credential?: string;
+    }> = [];
+
+    for (const entry of iceRes.IceServerList ?? []) {
+        if (entry.Uris && entry.Uris.length > 0) {
+            servers.push({
+                urls: entry.Uris,
+                username: entry.Username,
+                credential: entry.Password,
+            });
+        }
+    }
+
+    return servers;
+}
+
+// ---------------------------------------------------------------------------
 // Route handlers
 // ---------------------------------------------------------------------------
 
@@ -312,9 +389,7 @@ async function handleDisconnect(
     return { statusCode: 200, body: 'Disconnected' };
 }
 
-async function handleDefault(
-    event: WebSocketEvent,
-): Promise<LambdaResponse> {
+async function handleDefault(event: WebSocketEvent): Promise<LambdaResponse> {
     const connectionId = event.requestContext.connectionId;
     const apigw = getApigwClient(event);
 
@@ -452,6 +527,23 @@ async function handleDefault(
             await send(apigw, lobby.joinerConnectionId, {
                 type: 'game-start',
             });
+            break;
+        }
+
+        case 'get-ice-servers': {
+            try {
+                const iceServers = await getIceServers();
+                await send(apigw, connectionId, {
+                    type: 'ice-servers',
+                    iceServers,
+                });
+            } catch (err) {
+                console.error('Failed to fetch ICE servers:', err);
+                await send(apigw, connectionId, {
+                    type: 'error',
+                    message: 'Failed to fetch ICE server credentials',
+                });
+            }
             break;
         }
 

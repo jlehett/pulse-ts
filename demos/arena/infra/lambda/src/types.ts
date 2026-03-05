@@ -59,13 +59,18 @@ export interface GameStartMessage {
     action: 'game-start';
 }
 
+export interface GetIceServersMessage {
+    action: 'get-ice-servers';
+}
+
 export type ClientMessage =
     | CreateLobbyMessage
     | ListLobbiesMessage
     | JoinLobbyMessage
     | LeaveLobbyMessage
     | SignalMessage
-    | GameStartMessage;
+    | GameStartMessage
+    | GetIceServersMessage;
 
 // ---------------------------------------------------------------------------
 // Server → Client messages
@@ -117,6 +122,15 @@ export interface PeerDisconnectedResponse {
     type: 'peer-disconnected';
 }
 
+export interface IceServersResponse {
+    type: 'ice-servers';
+    iceServers: Array<{
+        urls: string | string[];
+        username?: string;
+        credential?: string;
+    }>;
+}
+
 export interface ErrorResponse {
     type: 'error';
     message: string;
@@ -131,6 +145,7 @@ export type ServerMessage =
     | SignalRelayResponse
     | GameStartResponse
     | PeerDisconnectedResponse
+    | IceServersResponse
     | ErrorResponse;
 
 // ---------------------------------------------------------------------------

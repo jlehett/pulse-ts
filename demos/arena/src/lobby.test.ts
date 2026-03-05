@@ -343,6 +343,19 @@ describe('showLobby', () => {
         });
         clickButton('Start Game');
 
+        // Simulate ICE servers response (TURN credentials)
+        await new Promise((r) => setTimeout(r, 0));
+        latestWs().simulateMessage({
+            type: 'ice-servers',
+            iceServers: [
+                {
+                    urls: ['turn:relay.example.com:443'],
+                    username: 'u',
+                    credential: 'p',
+                },
+            ],
+        });
+
         // Wait for async operations (createOffer, setLocalDescription)
         await new Promise((r) => setTimeout(r, 0));
 
@@ -379,6 +392,13 @@ describe('showLobby', () => {
             username: 'Bob',
         });
         clickButton('Start Game');
+
+        // Simulate ICE servers response
+        await new Promise((r) => setTimeout(r, 0));
+        latestWs().simulateMessage({
+            type: 'ice-servers',
+            iceServers: [],
+        });
 
         await new Promise((r) => setTimeout(r, 0));
 

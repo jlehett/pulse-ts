@@ -24,6 +24,7 @@ resource "aws_lambda_function" "signaling" {
       CONNECTIONS_TABLE = aws_dynamodb_table.connections.name
       WEBSOCKET_API_ID  = aws_apigatewayv2_api.signaling.id
       STAGE_NAME        = aws_apigatewayv2_stage.signaling.name
+      KVS_CHANNEL_ARN   = aws_kinesis_video_stream.turn.arn
     }
   }
 }
