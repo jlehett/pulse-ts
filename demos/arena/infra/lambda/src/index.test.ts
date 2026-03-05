@@ -56,9 +56,40 @@ jest.mock('@aws-sdk/client-apigatewaymanagementapi', () => ({
         })),
 }));
 
+const mockKvsSend = jest.fn();
+const mockKvsSignalingSend = jest.fn();
+
+jest.mock('@aws-sdk/client-kinesis-video', () => ({
+    KinesisVideoClient: jest.fn().mockImplementation(() => ({
+        send: mockKvsSend,
+    })),
+    GetSignalingChannelEndpointCommand: jest
+        .fn()
+        .mockImplementation((params: unknown) => ({
+            _type: 'GetSignalingChannelEndpoint',
+            ...(params as object),
+        })),
+    ChannelProtocol: { HTTPS: 'HTTPS' },
+}));
+
+jest.mock('@aws-sdk/client-kinesis-video-signaling', () => ({
+    KinesisVideoSignalingClient: jest
+        .fn()
+        .mockImplementation(() => ({
+            send: mockKvsSignalingSend,
+        })),
+    GetIceServerConfigCommand: jest
+        .fn()
+        .mockImplementation((params: unknown) => ({
+            _type: 'GetIceServerConfig',
+            ...(params as object),
+        })),
+}));
+
 // Set environment variables before importing handler
 process.env.LOBBIES_TABLE = 'test-lobbies';
 process.env.CONNECTIONS_TABLE = 'test-connections';
+process.env.KVS_CHANNEL_ARN = 'arn:aws:kinesisvideo:us-east-1:123456789:channel/test-turn/1234';
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const { handler } = require('./index') as {
@@ -105,6 +136,8 @@ function getSentMessages(connectionId: string): Record<string, unknown>[] {
 beforeEach(() => {
     mockDynamoSend.mockReset();
     mockApigwSend.mockReset();
+    mockKvsSend.mockReset();
+    mockKvsSignalingSend.mockReset();
     mockDynamoSend.mockResolvedValue({});
 });
 
@@ -405,6 +438,62 @@ describe('game-start', () => {
         expect(joinerMsgs).toEqual(
             expect.arrayContaining([
                 expect.objectContaining({ type: 'game-start' }),
+            ]),
+        );
+    });
+});
+
+describe('get-ice-servers', () => {
+    it('returns TURN credentials from Kinesis Video Streams', async () => {
+        mockKvsSend.mockResolvedValueOnce({
+            ResourceEndpointList: [
+                {
+                    Protocol: 'HTTPS',
+                    ResourceEndpoint: 'https://kvs.us-east-1.amazonaws.com',
+                },
+            ],
+        });
+
+        mockKvsSignalingSend.mockResolvedValueOnce({
+            IceServerList: [
+                {
+                    Uris: ['turn:relay.example.com:443?transport=udp'],
+                    Username: 'turn-user',
+                    Password: 'turn-pass',
+                },
+            ],
+        });
+
+        await handler(
+            makeEvent('$default', 'conn-1', { action: 'get-ice-servers' }),
+        );
+
+        const messages = getSentMessages('conn-1');
+        expect(messages).toHaveLength(1);
+        expect(messages[0].type).toBe('ice-servers');
+        expect(messages[0].iceServers).toEqual([
+            {
+                urls: ['turn:relay.example.com:443?transport=udp'],
+                username: 'turn-user',
+                credential: 'turn-pass',
+            },
+        ]);
+    });
+
+    it('returns error when KVS fails', async () => {
+        mockKvsSend.mockRejectedValueOnce(new Error('KVS unavailable'));
+
+        await handler(
+            makeEvent('$default', 'conn-1', { action: 'get-ice-servers' }),
+        );
+
+        const messages = getSentMessages('conn-1');
+        expect(messages).toEqual(
+            expect.arrayContaining([
+                expect.objectContaining({
+                    type: 'error',
+                    message: 'Failed to fetch ICE server credentials',
+                }),
             ]),
         );
     });

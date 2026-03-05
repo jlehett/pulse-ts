@@ -6,16 +6,19 @@ import { DataChannelTransport } from '@pulse-ts/network/transports/datachannel';
 import type { Transport } from '@pulse-ts/network';
 
 /**
- * ICE servers for WebRTC peer connection establishment.
- * Google's public STUN server is sufficient for most NAT traversal.
+ * Fallback ICE servers (STUN only) used when TURN credentials
+ * are unavailable or the signaling server doesn't support them.
  */
-const ICE_SERVERS: RTCIceServer[] = [
+const FALLBACK_ICE_SERVERS: RTCIceServer[] = [
     { urls: 'stun:stun.l.google.com:19302' },
     { urls: 'stun:stun1.l.google.com:19302' },
 ];
 
 /** Timeout (ms) waiting for WebRTC DataChannel to open. */
 const WEBRTC_TIMEOUT = 15000;
+
+/** Timeout (ms) waiting for ICE server credentials from signaling server. */
+const ICE_SERVERS_TIMEOUT = 5000;
 
 /**
  * Build the Lambda signaling WebSocket URL.
@@ -99,20 +102,64 @@ export function showLobby(
 // ---------------------------------------------------------------------------
 
 /**
+ * Request TURN relay credentials from the signaling server via the
+ * `get-ice-servers` action. Falls back to STUN-only if unavailable.
+ *
+ * @param ws - Open WebSocket to the signaling server.
+ * @returns ICE server configuration including TURN credentials.
+ */
+function requestIceServers(ws: WebSocket): Promise<RTCIceServer[]> {
+    return new Promise((resolve) => {
+        const timeout = setTimeout(() => {
+            ws.removeEventListener('message', onMessage);
+            resolve(FALLBACK_ICE_SERVERS);
+        }, ICE_SERVERS_TIMEOUT);
+
+        function onMessage(event: MessageEvent) {
+            let msg: any;
+            try {
+                msg = JSON.parse(
+                    typeof event.data === 'string'
+                        ? event.data
+                        : new TextDecoder().decode(event.data),
+                );
+            } catch {
+                return;
+            }
+            if (msg.type !== 'ice-servers') return;
+
+            clearTimeout(timeout);
+            ws.removeEventListener('message', onMessage);
+
+            const servers: RTCIceServer[] = [
+                ...FALLBACK_ICE_SERVERS,
+                ...(msg.iceServers ?? []),
+            ];
+            resolve(servers);
+        }
+
+        ws.addEventListener('message', onMessage);
+        ws.send(JSON.stringify({ action: 'get-ice-servers' }));
+    });
+}
+
+/**
  * Establish a WebRTC P2P connection via the Lambda signaling server.
  *
  * @param signalingWs - Open WebSocket to the signaling server.
  * @param isHost - Whether this peer is the offerer (host creates DataChannel).
  * @param peerConnectionId - The signaling connectionId of the remote peer.
+ * @param iceServers - ICE server configuration (STUN + TURN).
  * @returns Promise resolving with the DataChannelTransport once the DataChannel opens.
  */
 function establishP2P(
     signalingWs: WebSocket,
     isHost: boolean,
     peerConnectionId: string,
+    iceServers: RTCIceServer[],
 ): Promise<DataChannelTransport> {
     return new Promise((resolve, reject) => {
-        const pc = new RTCPeerConnection({ iceServers: ICE_SERVERS });
+        const pc = new RTCPeerConnection({ iceServers });
         let dc: RTCDataChannel | null = null;
         let resolved = false;
 
@@ -458,13 +505,23 @@ function showHostWaiting(
     btnStart.addEventListener('click', async () => {
         if (!ws || !joinerConnectionId) return;
         btnStart.style.display = 'none';
+        status.set('connecting', 'Fetching relay credentials...');
+
+        // Fetch TURN credentials before starting P2P handshake
+        const iceServers = await requestIceServers(ws);
+
         status.set('connecting', 'Establishing P2P connection...');
 
         // Tell the joiner the game is starting
         ws.send(JSON.stringify({ action: 'game-start' }));
 
         try {
-            const transport = await establishP2P(ws, true, joinerConnectionId);
+            const transport = await establishP2P(
+                ws,
+                true,
+                joinerConnectionId,
+                iceServers,
+            );
             cleanup();
             finish({ mode: 'host', playerId, transport });
         } catch {
@@ -658,6 +715,9 @@ function showJoinWaiting(
         } else if (msg.type === 'game-start' && hostConnectionId) {
             cleanup();
             ws.removeEventListener('message', onMessage);
+            status.set('connecting', 'Fetching relay credentials...');
+
+            const iceServers = await requestIceServers(ws);
             status.set('connecting', 'Establishing P2P connection...');
 
             try {
@@ -665,6 +725,7 @@ function showJoinWaiting(
                     ws,
                     false,
                     hostConnectionId,
+                    iceServers,
                 );
                 parentCleanup();
                 finish({ mode: 'join', playerId: 1, transport });
