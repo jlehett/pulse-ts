@@ -9,3 +9,10 @@ tsconfig.tsbuildinfo
 .github/instructions/nx.instructions.md
 
 *.local.*
+
+# Terraform
+*.tfstate
+*.tfstate.backup
+*.tfvars
+.terraform/
+.terraform.lock.hcl

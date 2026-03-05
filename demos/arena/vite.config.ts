@@ -8,6 +8,14 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 export default defineConfig({
     root: '.',
     plugins: [arenaRelayPlugin()],
+    define: {
+        // Inject signaling URL at build time for deployed frontend.
+        // Set VITE_SIGNALING_URL env var before building (e.g., from Terraform output).
+        // Falls back to undefined so the runtime fallback in lobby.ts kicks in.
+        'window.__SIGNALING_URL__': process.env.VITE_SIGNALING_URL
+            ? JSON.stringify(process.env.VITE_SIGNALING_URL)
+            : 'undefined',
+    },
     server: {
         open: true,
         host: true,
