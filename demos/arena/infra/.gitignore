@@ -24,3 +24,6 @@ override.tf.json
 # Lambda dependencies (installed for tests, not deployed — AWS runtime includes them)
 lambda/node_modules/
 lambda/package-lock.json
+
+# Lambda compiled output (built from src/ via tsc)
+lambda/dist/

@@ -6,6 +6,6 @@ export default {
     },
     setupFiles: ['<rootDir>/setupTests.ts'],
     testMatch: ['**/*.test.ts', '**/*.test.tsx'],
-    testPathIgnorePatterns: ['<rootDir>/*/node_modules/', '<rootDir>/*/dist/'],
+    testPathIgnorePatterns: ['<rootDir>/*/node_modules/', '<rootDir>/*/dist/', '<rootDir>/infra/'],
     watchman: false,
 };
