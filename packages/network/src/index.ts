@@ -29,6 +29,7 @@ export {
     createWebSocketTransport,
     createMemoryTransport,
     createWebRtcMeshTransport,
+    createDataChannelTransport,
 } from './public/factories';
 
 // Lightweight channel helper

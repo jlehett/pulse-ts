@@ -2,17 +2,35 @@ import {
     applyStaggeredEntrance,
     applyButtonHoverScale,
 } from './overlayAnimations';
-
-/** Timeout (ms) waiting for host acknowledgement after join-request. */
-const JOIN_TIMEOUT = 5000;
+import { DataChannelTransport } from '@pulse-ts/network/transports/datachannel';
+import type { Transport } from '@pulse-ts/network';
 
 /**
- * Build the WebSocket relay URL from the current page location.
- * Works for localhost, LAN IPs, and external tunnel URLs (e.g. ngrok).
- *
- * @returns A `ws://` or `wss://` URL pointing at the current host.
+ * ICE servers for WebRTC peer connection establishment.
+ * Google's public STUN server is sufficient for most NAT traversal.
  */
-function getRelayUrl(): string {
+const ICE_SERVERS: RTCIceServer[] = [
+    { urls: 'stun:stun.l.google.com:19302' },
+    { urls: 'stun:stun1.l.google.com:19302' },
+];
+
+/** Timeout (ms) waiting for WebRTC DataChannel to open. */
+const WEBRTC_TIMEOUT = 15000;
+
+/**
+ * Build the Lambda signaling WebSocket URL.
+ * In production, this comes from the Terraform output (API Gateway WebSocket endpoint).
+ * For local development, falls back to localhost.
+ */
+function getSignalingUrl(): string {
+    // Check for environment variable set at build time
+    const envUrl =
+        typeof (window as any).__SIGNALING_URL__ === 'string'
+            ? (window as any).__SIGNALING_URL__
+            : undefined;
+    if (envUrl) return envUrl;
+
+    // Fallback: assume signaling server is co-located
     const proto = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
     return `${proto}//${window.location.host}`;
 }
@@ -22,8 +40,8 @@ export interface HostResult {
     mode: 'host';
     /** Player ID chosen by the host (0 or 1). */
     playerId: number;
-    /** WebSocket URL to connect to (localhost). */
-    wsUrl: string;
+    /** P2P transport wrapping the established DataChannel. */
+    transport: Transport;
 }
 
 /** Result returned when a joiner completes the lobby. */
@@ -31,8 +49,8 @@ export interface JoinResult {
     mode: 'join';
     /** Player ID assigned to the joiner by the host. */
     playerId: number;
-    /** WebSocket URL to the host's relay server. */
-    wsUrl: string;
+    /** P2P transport wrapping the established DataChannel. */
+    transport: Transport;
 }
 
 /** The outcome of the lobby flow. */
@@ -50,7 +68,7 @@ export type LobbyResult = HostResult | JoinResult;
  * ```ts
  * const result = await showLobby(document.body);
  * if (result === 'back') return;
- * console.log(result.wsUrl);
+ * // result.transport is ready for game networking
  * ```
  */
 export function showLobby(
@@ -77,48 +95,128 @@ export function showLobby(
 }
 
 // ---------------------------------------------------------------------------
-// Lobby wire protocol
+// WebRTC Handshake
 // ---------------------------------------------------------------------------
 
-/** Lobby message types exchanged through the relay server. */
-interface LobbyMessage {
-    type: 'join-request' | 'host-accept' | 'lobby-full' | 'game-start';
-    joinerPlayerId?: number;
-}
-
 /**
- * Send a lobby message through a WebSocket connection.
- * Messages are JSON-encoded packets on the `'lobby'` channel,
- * which the relay server broadcasts to other peers in the room.
+ * Establish a WebRTC P2P connection via the Lambda signaling server.
  *
- * @param ws - The WebSocket connection.
- * @param msg - The lobby message to send.
+ * @param signalingWs - Open WebSocket to the signaling server.
+ * @param isHost - Whether this peer is the offerer (host creates DataChannel).
+ * @param peerConnectionId - The signaling connectionId of the remote peer.
+ * @returns Promise resolving with the DataChannelTransport once the DataChannel opens.
  */
-function sendLobbyMessage(ws: WebSocket, msg: LobbyMessage): void {
-    ws.send(JSON.stringify({ channel: 'lobby', data: msg }));
-}
+function establishP2P(
+    signalingWs: WebSocket,
+    isHost: boolean,
+    peerConnectionId: string,
+): Promise<DataChannelTransport> {
+    return new Promise((resolve, reject) => {
+        const pc = new RTCPeerConnection({ iceServers: ICE_SERVERS });
+        let dc: RTCDataChannel | null = null;
+        let resolved = false;
 
-/**
- * Parse an incoming WebSocket message as a lobby message.
- * Returns `null` if the message is not a lobby-channel packet.
- *
- * @param event - The WebSocket MessageEvent.
- * @returns The parsed lobby message, or `null`.
- */
-function parseLobbyMessage(event: MessageEvent): LobbyMessage | null {
-    try {
-        const pkt = JSON.parse(
-            typeof event.data === 'string'
-                ? event.data
-                : new TextDecoder().decode(event.data),
-        );
-        if (pkt?.channel === 'lobby' && pkt.data?.type) {
-            return pkt.data as LobbyMessage;
+        const timeout = setTimeout(() => {
+            if (!resolved) {
+                resolved = true;
+                try {
+                    pc.close();
+                } catch {}
+                reject(new Error('WebRTC connection timed out'));
+            }
+        }, WEBRTC_TIMEOUT);
+
+        function done(channel: RTCDataChannel) {
+            if (resolved) return;
+            resolved = true;
+            clearTimeout(timeout);
+            resolve(new DataChannelTransport(channel, pc, peerConnectionId));
         }
-    } catch {
-        /* ignore non-JSON frames */
-    }
-    return null;
+
+        // Send ICE candidates to peer via signaling
+        pc.onicecandidate = (ev) => {
+            if (ev.candidate) {
+                signalingWs.send(
+                    JSON.stringify({
+                        action: 'signal',
+                        data: { type: 'ice', candidate: ev.candidate },
+                    }),
+                );
+            }
+        };
+
+        // Listen for signaling messages from the peer
+        const onSignal = (event: MessageEvent) => {
+            let msg: any;
+            try {
+                msg = JSON.parse(
+                    typeof event.data === 'string'
+                        ? event.data
+                        : new TextDecoder().decode(event.data),
+                );
+            } catch {
+                return;
+            }
+
+            if (msg.type !== 'signal') return;
+            const signal = msg.data;
+
+            if (signal.type === 'offer' && signal.sdp) {
+                pc.setRemoteDescription(new RTCSessionDescription(signal))
+                    .then(() => pc.createAnswer())
+                    .then((answer) => pc.setLocalDescription(answer))
+                    .then(() => {
+                        signalingWs.send(
+                            JSON.stringify({
+                                action: 'signal',
+                                data: pc.localDescription,
+                            }),
+                        );
+                    })
+                    .catch(() => {});
+            } else if (signal.type === 'answer' && signal.sdp) {
+                pc.setRemoteDescription(
+                    new RTCSessionDescription(signal),
+                ).catch(() => {});
+            } else if (signal.type === 'ice' && signal.candidate) {
+                pc.addIceCandidate(new RTCIceCandidate(signal.candidate)).catch(
+                    () => {},
+                );
+            }
+        };
+
+        signalingWs.addEventListener('message', onSignal);
+
+        if (isHost) {
+            // Host creates the DataChannel and sends the offer
+            dc = pc.createDataChannel('game', { ordered: false });
+            dc.binaryType = 'arraybuffer';
+            dc.onopen = () => done(dc!);
+
+            pc.createOffer()
+                .then((offer) => pc.setLocalDescription(offer))
+                .then(() => {
+                    signalingWs.send(
+                        JSON.stringify({
+                            action: 'signal',
+                            data: pc.localDescription,
+                        }),
+                    );
+                })
+                .catch(() => {});
+        } else {
+            // Joiner waits for the DataChannel from the host
+            pc.ondatachannel = (ev) => {
+                dc = ev.channel;
+                dc.binaryType = 'arraybuffer';
+                if (dc.readyState === 'open') {
+                    done(dc);
+                } else {
+                    dc.onopen = () => done(dc!);
+                }
+            };
+        }
+    });
 }
 
 // ---------------------------------------------------------------------------
@@ -145,7 +243,7 @@ function showLobbyMenu(overlay: HTMLElement, finish: Finish) {
     applyButtonHoverScale(btnBack);
 
     btnHost.addEventListener('click', () => showHostSetup(overlay, finish));
-    btnJoin.addEventListener('click', () => showJoinSetup(overlay, finish));
+    btnJoin.addEventListener('click', () => showJoinBrowser(overlay, finish));
     btnBack.addEventListener('click', () => finish('back'));
 }
 
@@ -183,23 +281,9 @@ function showHostWaiting(
     playerId: number,
 ) {
     const content = clearAndCreateContent(overlay);
-    const wsUrl = getRelayUrl();
+    const sigUrl = getSignalingUrl();
 
     const heading = createHeading('HOSTING');
-
-    const info = document.createElement('div');
-    Object.assign(info.style, {
-        font: '14px monospace',
-        color: '#aaa',
-        textAlign: 'center',
-        lineHeight: '1.8',
-        wordBreak: 'break-all',
-    } as Partial<CSSStyleDeclaration>);
-    info.innerHTML = [
-        'Share this page\u2019s URL with your opponent:',
-        `<span style="color:#48c9b0">${window.location.href}</span>`,
-    ].join('<br>');
-
     const status = createStatusIndicator();
     const btnStart = createButton('Start Game', '#48c9b0');
     btnStart.style.display = 'none';
@@ -207,90 +291,229 @@ function showHostWaiting(
     const buttons = createColumn(btnStart, btnBack);
 
     content.appendChild(heading);
-    content.appendChild(info);
     content.appendChild(status.el);
     content.appendChild(buttons);
 
-    applyStaggeredEntrance([heading, info, status.el, buttons], 100);
+    applyStaggeredEntrance([heading, status.el, buttons], 100);
     applyButtonHoverScale(btnStart);
     applyButtonHoverScale(btnBack);
 
-    // Track connection state for cleanup
     let ws: WebSocket | null = null;
-    let hasJoiner = false;
+    let joinerConnectionId: string | null = null;
     let cleaned = false;
 
     function cleanup() {
         if (cleaned) return;
         cleaned = true;
-        if (ws && ws.readyState <= WebSocket.OPEN) {
-            ws.close();
-        }
+        if (ws && ws.readyState <= WebSocket.OPEN) ws.close();
         ws = null;
     }
 
-    // Connect to the relay server
-    status.set('connecting', 'Connecting to relay server...');
-    ws = new WebSocket(wsUrl);
+    // Connect to signaling server
+    status.set('connecting', 'Connecting to signaling server...');
+    ws = new WebSocket(sigUrl);
 
     ws.addEventListener('open', () => {
         if (cleaned) return;
-        status.set('connected', 'Waiting for opponent...');
+        // Create a lobby
+        ws!.send(
+            JSON.stringify({
+                action: 'create-lobby',
+                username: getUsername(),
+            }),
+        );
     });
 
     ws.addEventListener('error', () => {
         if (cleaned) return;
-        status.set(
-            'error',
-            'Could not connect to relay server. Is it running?',
-        );
+        status.set('error', 'Could not connect to signaling server');
     });
 
     ws.addEventListener('close', () => {
         if (cleaned) return;
-        if (!hasJoiner) {
-            status.set('error', 'Connection to relay server lost');
+        if (!joinerConnectionId) {
+            status.set('error', 'Connection to signaling server lost');
         }
     });
 
     ws.addEventListener('message', (event) => {
         if (cleaned) return;
-        const msg = parseLobbyMessage(event);
-        if (!msg) return;
+        let msg: any;
+        try {
+            msg = JSON.parse(event.data);
+        } catch {
+            return;
+        }
 
-        if (msg.type === 'join-request' && !hasJoiner) {
-            hasJoiner = true;
-            const joinerPlayerId = 1 - playerId;
-            sendLobbyMessage(ws!, {
-                type: 'host-accept',
-                joinerPlayerId,
-            });
-            status.set('connected', 'Opponent connected!');
+        if (msg.type === 'lobby-created') {
+            status.set('connected', 'Waiting for opponent...');
+        } else if (msg.type === 'joiner-connected') {
+            joinerConnectionId = msg.joinerConnectionId;
+            const joinerName = msg.username || 'Opponent';
+            status.set('connected', `${joinerName} joined!`);
             btnStart.style.display = '';
-        } else if (msg.type === 'join-request' && hasJoiner) {
-            sendLobbyMessage(ws!, { type: 'lobby-full' });
+        } else if (msg.type === 'error') {
+            status.set('error', msg.message || 'Unknown error');
         }
     });
 
-    btnStart.addEventListener('click', () => {
-        if (!ws || !hasJoiner) return;
-        sendLobbyMessage(ws, { type: 'game-start' });
-        cleanup();
-        finish({ mode: 'host', playerId, wsUrl });
+    btnStart.addEventListener('click', async () => {
+        if (!ws || !joinerConnectionId) return;
+        btnStart.style.display = 'none';
+        status.set('connecting', 'Establishing P2P connection...');
+
+        // Tell the joiner the game is starting
+        ws.send(JSON.stringify({ action: 'game-start' }));
+
+        try {
+            const transport = await establishP2P(ws, true, joinerConnectionId);
+            cleanup();
+            finish({ mode: 'host', playerId, transport });
+        } catch {
+            status.set('error', 'Failed to establish P2P connection');
+            btnStart.style.display = '';
+        }
     });
 
     btnBack.addEventListener('click', () => {
+        if (ws && ws.readyState === WebSocket.OPEN) {
+            ws.send(JSON.stringify({ action: 'leave-lobby' }));
+        }
         cleanup();
         showHostSetup(overlay, finish);
     });
 }
 
-function showJoinSetup(overlay: HTMLElement, finish: Finish) {
+function showJoinBrowser(overlay: HTMLElement, finish: Finish) {
     const content = clearAndCreateContent(overlay);
-    const wsUrl = getRelayUrl();
+    const sigUrl = getSignalingUrl();
 
     const heading = createHeading('JOIN GAME');
+    const status = createStatusIndicator();
+    const lobbyList = document.createElement('div');
+    Object.assign(lobbyList.style, {
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '8px',
+        alignItems: 'center',
+        minHeight: '60px',
+        maxHeight: '240px',
+        overflowY: 'auto',
+        width: '100%',
+        maxWidth: '320px',
+    } as Partial<CSSStyleDeclaration>);
 
+    const btnRefresh = createButton('Refresh', '#48c9b0');
+    const btnBack = createButton('Back', '#888');
+    const buttons = createColumn(btnRefresh, btnBack);
+
+    content.appendChild(heading);
+    content.appendChild(status.el);
+    content.appendChild(lobbyList);
+    content.appendChild(buttons);
+
+    applyStaggeredEntrance([heading, status.el, lobbyList, buttons], 100);
+    applyButtonHoverScale(btnRefresh);
+    applyButtonHoverScale(btnBack);
+
+    let ws: WebSocket | null = null;
+    let cleaned = false;
+
+    function cleanup() {
+        if (cleaned) return;
+        cleaned = true;
+        if (ws && ws.readyState <= WebSocket.OPEN) ws.close();
+        ws = null;
+    }
+
+    function requestLobbies() {
+        if (ws && ws.readyState === WebSocket.OPEN) {
+            ws.send(JSON.stringify({ action: 'list-lobbies' }));
+        }
+    }
+
+    // Connect to signaling server
+    status.set('connecting', 'Connecting...');
+    ws = new WebSocket(sigUrl);
+
+    ws.addEventListener('open', () => {
+        if (cleaned) return;
+        status.set('connected', 'Looking for lobbies...');
+        requestLobbies();
+    });
+
+    ws.addEventListener('error', () => {
+        if (cleaned) return;
+        status.set('error', 'Could not connect to signaling server');
+    });
+
+    ws.addEventListener('close', () => {
+        if (cleaned) return;
+        status.set('error', 'Connection lost');
+    });
+
+    ws.addEventListener('message', (event) => {
+        if (cleaned) return;
+        let msg: any;
+        try {
+            msg = JSON.parse(event.data);
+        } catch {
+            return;
+        }
+
+        if (msg.type === 'lobby-list') {
+            renderLobbies(lobbyList, msg.lobbies ?? [], (lobbyId: string) => {
+                showJoinWaiting(overlay, finish, ws!, lobbyId, cleanup);
+            });
+            if (msg.lobbies?.length === 0) {
+                status.set('connected', 'No lobbies available');
+            } else {
+                status.set(
+                    'connected',
+                    `${msg.lobbies.length} ${msg.lobbies.length === 1 ? 'lobby' : 'lobbies'} found`,
+                );
+            }
+        } else if (msg.type === 'error') {
+            status.set('error', msg.message || 'Unknown error');
+        }
+    });
+
+    btnRefresh.addEventListener('click', () => {
+        status.set('connecting', 'Refreshing...');
+        requestLobbies();
+    });
+
+    btnBack.addEventListener('click', () => {
+        cleanup();
+        showLobbyMenu(overlay, finish);
+    });
+}
+
+function renderLobbies(
+    container: HTMLElement,
+    lobbies: Array<{ lobbyId: string; hostUsername: string }>,
+    onJoin: (lobbyId: string) => void,
+) {
+    container.innerHTML = '';
+    for (const lobby of lobbies) {
+        const btn = createButton(`${lobby.hostUsername}'s Game`, '#48c9b0');
+        btn.style.minWidth = 'min(280px, 70vw)';
+        applyButtonHoverScale(btn);
+        btn.addEventListener('click', () => onJoin(lobby.lobbyId));
+        container.appendChild(btn);
+    }
+}
+
+function showJoinWaiting(
+    overlay: HTMLElement,
+    finish: Finish,
+    ws: WebSocket,
+    lobbyId: string,
+    parentCleanup: () => void,
+) {
+    const content = clearAndCreateContent(overlay);
+
+    const heading = createHeading('JOINING');
     const status = createStatusIndicator();
     const btnBack = createButton('Back', '#888');
     const backCol = createColumn(btnBack);
@@ -302,89 +525,83 @@ function showJoinSetup(overlay: HTMLElement, finish: Finish) {
     applyStaggeredEntrance([heading, status.el, backCol], 100);
     applyButtonHoverScale(btnBack);
 
-    let ws: WebSocket | null = null;
-    let joinTimeout: ReturnType<typeof setTimeout> | null = null;
     let cleaned = false;
+    let hostConnectionId: string | null = null;
 
     function cleanup() {
         if (cleaned) return;
         cleaned = true;
-        if (joinTimeout) {
-            clearTimeout(joinTimeout);
-            joinTimeout = null;
-        }
-        if (ws && ws.readyState <= WebSocket.OPEN) {
-            ws.close();
-        }
-        ws = null;
     }
 
-    // Auto-connect immediately — the relay lives on the same host.
-    status.set('connecting', 'Connecting...');
-    ws = new WebSocket(wsUrl);
+    status.set('connecting', 'Joining lobby...');
+    ws.send(
+        JSON.stringify({
+            action: 'join-lobby',
+            lobbyId,
+            username: getUsername(),
+        }),
+    );
 
-    ws.addEventListener('open', () => {
+    const onMessage = async (event: MessageEvent) => {
         if (cleaned) return;
-        status.set('connecting', 'Connected. Looking for host...');
-        sendLobbyMessage(ws!, { type: 'join-request' });
-
-        // Timeout if host doesn't respond
-        joinTimeout = setTimeout(() => {
-            if (cleaned) return;
-            status.set('error', 'No host found in lobby');
-        }, JOIN_TIMEOUT);
-    });
-
-    ws.addEventListener('error', () => {
-        if (cleaned) return;
-        status.set('error', 'Could not connect to server');
-    });
-
-    ws.addEventListener('close', () => {
-        if (cleaned) return;
-        status.set('error', 'Connection lost');
-    });
-
-    ws.addEventListener('message', (event) => {
-        if (cleaned) return;
-        const msg = parseLobbyMessage(event);
-        if (!msg) return;
-
-        if (msg.type === 'host-accept') {
-            if (joinTimeout) {
-                clearTimeout(joinTimeout);
-                joinTimeout = null;
-            }
-            const joinerPlayerId = msg.joinerPlayerId ?? 1;
-            status.set('connected', 'Waiting for host to start...');
-
-            // Now listen for game-start
-            const onGameStart = (e: MessageEvent) => {
-                const m = parseLobbyMessage(e);
-                if (m?.type === 'game-start') {
-                    ws!.removeEventListener('message', onGameStart);
-                    cleanup();
-                    finish({
-                        mode: 'join',
-                        playerId: joinerPlayerId,
-                        wsUrl,
-                    });
-                }
-            };
-            ws!.addEventListener('message', onGameStart);
-        } else if (msg.type === 'lobby-full') {
-            if (joinTimeout) {
-                clearTimeout(joinTimeout);
-                joinTimeout = null;
-            }
-            status.set('error', 'Lobby is full');
+        let msg: any;
+        try {
+            msg = JSON.parse(event.data);
+        } catch {
+            return;
         }
-    });
+
+        if (msg.type === 'join-failed') {
+            status.set('error', msg.reason || 'Could not join lobby');
+        } else if (msg.type === 'join-accepted') {
+            hostConnectionId = msg.hostConnectionId;
+            status.set('connected', `Joined ${msg.hostUsername}'s game`);
+            status.set('connecting', 'Waiting for host to start...');
+        } else if (msg.type === 'game-start' && hostConnectionId) {
+            cleanup();
+            ws.removeEventListener('message', onMessage);
+            status.set('connecting', 'Establishing P2P connection...');
+
+            try {
+                const transport = await establishP2P(
+                    ws,
+                    false,
+                    hostConnectionId,
+                );
+                parentCleanup();
+                finish({ mode: 'join', playerId: 1, transport });
+            } catch {
+                status.set('error', 'Failed to establish P2P connection');
+            }
+        } else if (msg.type === 'peer-disconnected') {
+            status.set('error', 'Host disconnected');
+        } else if (msg.type === 'error') {
+            status.set('error', msg.message || 'Unknown error');
+        }
+    };
+
+    ws.addEventListener('message', onMessage);
 
     btnBack.addEventListener('click', () => {
         cleanup();
-        showLobbyMenu(overlay, finish);
+        ws.removeEventListener('message', onMessage);
+        ws.send(JSON.stringify({ action: 'leave-lobby' }));
+        showJoinBrowser(overlay, finish);
     });
+}
+
+// ---------------------------------------------------------------------------
+// Username management
+// ---------------------------------------------------------------------------
+
+const USERNAME_KEY = 'pulse-arena-username';
+
+function getUsername(): string {
+    try {
+        return localStorage.getItem(USERNAME_KEY) || 'Player';
+    } catch {
+        return 'Player';
+    }
 }
 
 // ---------------------------------------------------------------------------

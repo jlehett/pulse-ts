@@ -5,7 +5,8 @@ import {
     usePointLight,
     useFog,
 } from '@pulse-ts/three';
-import { useWebSocket, useRoom } from '@pulse-ts/network';
+import { useConnection } from '@pulse-ts/network';
+import type { Transport } from '@pulse-ts/network';
 import { installParticles } from '@pulse-ts/effects';
 import type { ShaderPass } from 'three/examples/jsm/postprocessing/ShaderPass.js';
 import { GameCtx, type GameState } from '../contexts';
@@ -37,8 +38,8 @@ import type { AiPersonality } from '../ai/personalities';
 export interface ArenaNodeProps {
     /** Local player ID for online mode (0 or 1). Omit for local 2-player. */
     playerId?: number;
-    /** WebSocket URL for online mode. Omit for local 2-player. */
-    wsUrl?: string;
+    /** P2P transport for online mode (DataChannel). Omit for local 2-player. */
+    transport?: Transport;
     /** Whether the local player is the host (online mode). */
     isHost?: boolean;
     /** The shockwave ShaderPass from `setupPostProcessing`. */
@@ -60,12 +61,11 @@ export interface ArenaNodeProps {
  * one local player (producer) and one remote player (consumer).
  */
 export function ArenaNode(props?: Readonly<ArenaNodeProps>) {
-    const online = props?.wsUrl != null && props?.playerId != null;
+    const online = props?.transport != null && props?.playerId != null;
 
-    // Network setup (online mode only)
+    // Network setup (online mode only) — P2P transport from lobby handshake
     if (online) {
-        useWebSocket(props.wsUrl!, { autoReconnect: true });
-        useRoom('arena');
+        useConnection(props.transport!);
     }
 
     // Lighting — overhead sun with shadows covering the circular arena

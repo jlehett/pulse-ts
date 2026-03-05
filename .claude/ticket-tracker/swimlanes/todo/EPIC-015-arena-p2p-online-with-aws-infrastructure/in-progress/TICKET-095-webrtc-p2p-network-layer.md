@@ -2,10 +2,11 @@
 id: TICKET-095
 epic: EPIC-015
 title: WebRTC P2P network layer
-status: todo
+status: in-progress
 priority: high
 created: 2026-03-04
 updated: 2026-03-04
+branch: ticket-095-webrtc-p2p-network-layer
 labels:
   - networking
   - webrtc
@@ -32,3 +33,4 @@ data flows directly between browsers over the DataChannel.
 ## Notes
 
 - **2026-03-04**: Ticket created. May need to adapt or replace the `packages/network` WebSocket transport with a DataChannel transport.
+- **2026-03-04**: Starting implementation.
