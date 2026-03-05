@@ -6,6 +6,7 @@ status: todo
 priority: medium
 created: 2026-03-04
 updated: 2026-03-04
+branch: ticket-096-username-system
 labels:
   - ui
   - arena
