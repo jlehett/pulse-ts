@@ -4,7 +4,7 @@
 
 data "archive_file" "signaling_lambda" {
   type        = "zip"
-  source_dir  = "${path.module}/lambda"
+  source_dir  = "${path.module}/lambda/dist"
   output_path = "${path.module}/.build/signaling-lambda.zip"
 }
 

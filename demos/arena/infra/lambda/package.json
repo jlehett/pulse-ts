@@ -1,9 +1,9 @@
 {
   "name": "pulse-arena-signaling-lambda",
   "private": true,
-  "type": "module",
   "scripts": {
-    "test": "NODE_OPTIONS='--experimental-vm-modules --localstorage-file=' npx jest --config jest.config.mjs"
+    "build": "tsc",
+    "test": "npx jest --config jest.config.mjs"
   },
   "devDependencies": {
     "@aws-sdk/client-apigatewaymanagementapi": "^3.1002.0",
