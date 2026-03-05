@@ -196,6 +196,7 @@ async function startOnlineGame(lobby: LobbyResult): Promise<void> {
                 isHost: lobby.mode === 'host',
                 shockwavePass,
                 onRequestMenu: () => {
+                    lobby.transport.disconnect();
                     cleanup();
                     resolve();
                 },

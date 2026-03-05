@@ -63,9 +63,11 @@ export interface ArenaNodeProps {
 export function ArenaNode(props?: Readonly<ArenaNodeProps>) {
     const online = props?.transport != null && props?.playerId != null;
 
-    // Network setup (online mode only) — P2P transport from lobby handshake
+    // Network setup (online mode only) — P2P transport from lobby handshake.
+    // disconnectOnCleanup: false keeps the DataChannel alive across rematches;
+    // the transport is manually disconnected in onRequestMenu (main.ts).
     if (online) {
-        useConnection(props.transport!);
+        useConnection(props.transport!, { disconnectOnCleanup: false });
     }
 
     // Lighting — overhead sun with shadows covering the circular arena

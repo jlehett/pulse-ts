@@ -162,4 +162,48 @@ describe('TransportService', () => {
 
         expect(left).toEqual(['a']);
     });
+
+    it('detach() unsubscribes handlers without disconnecting the transport', async () => {
+        const hub = createMemoryHub();
+        const aT = new MemoryTransport(hub, 'a');
+        const bT = new MemoryTransport(hub, 'b');
+
+        const a = new TransportService({ selfId: 'a' });
+        const b = new TransportService({ selfId: 'b' });
+        a.setTransport(aT);
+        b.setTransport(bT);
+        await a.connect();
+        await b.connect();
+
+        const received: any[] = [];
+        b.subscribe<string>('chat', (msg) => received.push(msg));
+
+        // Detach b — should NOT close the transport
+        b.detach();
+        expect(b.getStatus()).toBe('idle');
+        // Transport itself should still be open
+        expect(bT.getStatus()).toBe('open');
+
+        // Messages sent after detach should NOT reach b's old handlers
+        a.publish('chat', 'after-detach');
+        a.flushOutgoing();
+        b.dispatchIncoming();
+        expect(received).toEqual([]);
+
+        // A new TransportService can reuse the transport
+        const b2 = new TransportService({ selfId: 'b' });
+        b2.setTransport(bT);
+        await b2.connect();
+
+        const received2: any[] = [];
+        b2.subscribe<string>('chat', (msg) => received2.push(msg));
+
+        a.publish('chat', 'after-reattach');
+        a.flushOutgoing();
+        b2.dispatchIncoming();
+        expect(received2).toEqual(['after-reattach']);
+
+        await a.disconnect();
+        await b2.disconnect();
+    });
 });

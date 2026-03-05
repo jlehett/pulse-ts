@@ -81,7 +81,7 @@ export class TransportService extends Service {
      * @param t Transport implementation.
      */
     setTransport(t: Transport) {
-        if (this.transport) this.detachTransport();
+        if (this.transport) this.detach();
         this.transport = t;
         this.status = t.getStatus();
         const offMsg = t.onMessage((bytes, meta) => {
@@ -122,8 +122,13 @@ export class TransportService extends Service {
         };
     }
 
-    /** Detach the current transport and clear status to 'idle'. */
-    private detachTransport() {
+    /**
+     * Detach the current transport without disconnecting it.
+     * Unsubscribes all internal handlers and clears the transport reference.
+     * Useful when the transport lifecycle is managed externally (e.g.,
+     * a P2P DataChannel that survives world teardown for rematch).
+     */
+    detach() {
         (this as any)._offT?.();
         (this as any)._offT = undefined;
         this.transport = null;

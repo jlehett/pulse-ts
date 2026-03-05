@@ -204,4 +204,35 @@ describe('DataChannelTransport', () => {
         expect(t.getStatus()).toBe('closed');
         expect(leaveSpy).toHaveBeenCalledWith('opponent');
     });
+
+    it('fires peerJoin on re-connect when already open', async () => {
+        const t = new DataChannelTransport(dc, pc, 'opponent');
+        await t.connect();
+        expect(t.getStatus()).toBe('open');
+
+        // Attach a new peerJoin handler (simulates new TransportService)
+        const joinSpy = jest.fn();
+        t.onPeerJoin!(joinSpy);
+
+        // Re-connect — should fire peerJoin for newly attached handlers
+        await t.connect();
+        expect(joinSpy).toHaveBeenCalledWith('opponent');
+        expect(t.getStatus()).toBe('open');
+    });
+
+    it('messages still dispatch after re-connect', async () => {
+        const t = new DataChannelTransport(dc, pc, 'opponent');
+        await t.connect();
+
+        // Remove old handler, add new one (simulates world teardown + new world)
+        const newMsgSpy = jest.fn();
+        t.onMessage(newMsgSpy);
+
+        // Re-connect (no-op for status, but fires peerJoin)
+        await t.connect();
+
+        // Send a message — should reach new handler
+        dc.onmessage!({ data: new Uint8Array([42]).buffer } as MessageEvent);
+        expect(newMsgSpy).toHaveBeenCalledTimes(1);
+    });
 });
