@@ -7,6 +7,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 export default defineConfig({
     root: '.',
+    base: '/demos/arena/',
     plugins: [arenaRelayPlugin()],
     define: {
         // Inject signaling URL at build time for deployed frontend.
