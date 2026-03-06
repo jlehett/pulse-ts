@@ -2,8 +2,9 @@
 id: TICKET-105
 epic: EPIC-017
 title: Same-version enforcement on connect
-status: todo
+status: in-progress
 priority: high
+branch: ticket-105-same-version-enforcement-on-connect
 created: 2026-03-05
 updated: 2026-03-05
 labels:
@@ -49,3 +50,4 @@ mismatched client code.
 ## Notes
 
 - **2026-03-05**: Ticket created.
+- **2026-03-05**: Starting implementation.
