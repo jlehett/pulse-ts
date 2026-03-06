@@ -64,7 +64,7 @@ export const DASH_COOLDOWN = 1.0;
  * Minimum knockback applied even when both players have zero closing speed.
  * Ensures standing collisions still produce a visible bump.
  */
-export const KNOCKBACK_BASE = 12;
+export const KNOCKBACK_BASE = 15;
 
 /**
  * Knockback scaling factor per unit of the other player's approach speed.
@@ -72,7 +72,7 @@ export const KNOCKBACK_BASE = 12;
  * speed does not amplify the hit you receive.
  * Effective knockback: `KNOCKBACK_BASE + theirApproach * KNOCKBACK_VELOCITY_SCALE`
  */
-export const KNOCKBACK_VELOCITY_SCALE = 0.8;
+export const KNOCKBACK_VELOCITY_SCALE = 0.3;
 
 /** Minimum seconds between collision impact sounds. */
 export const IMPACT_COOLDOWN = 0.4;
