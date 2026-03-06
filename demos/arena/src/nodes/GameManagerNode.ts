@@ -16,7 +16,8 @@ import {
 } from '../config/arena';
 import {
     KnockoutChannel,
-    RoundResetChannel,
+    CountdownStartChannel,
+    CountdownAckChannel,
     ScoringOutcomeChannel,
     type ScoringOutcome,
 } from '../config/channels';
@@ -27,6 +28,11 @@ import {
     commitFrame,
     clearRecording,
 } from '../replay';
+import { resetDashCooldownProgress } from '../dashCooldown';
+import { resetHitImpacts } from '../hitImpact';
+import { resetPlayerPositions } from '../ai/playerPositions';
+import { resetCameraShake } from './CameraRigNode';
+import { resetPlayerVelocity } from '../playerVelocity';
 
 /**
  * Compute the countdown display value from the remaining countdown time.
@@ -75,17 +81,36 @@ export interface GameManagerNodeProps {
 export function GameManagerNode(props?: Readonly<GameManagerNodeProps>) {
     const gameState = useContext(GameCtx);
 
-    // Clear stale replay data from any previous game session.
-    // Between-round clearing is handled at ko_flash → resetting.
+    // Clear all module-level state from any previous game session.
+    // world.destroy() only tears down ECS — module singletons persist.
     clearRecording();
+    endReplay();
+    resetDashCooldownProgress();
+    resetHitImpacts();
+    resetPlayerPositions();
+    resetCameraShake();
+    resetPlayerVelocity();
 
     // In online mode, receive knockout events from the remote machine
-    // and synchronize countdown→playing transition via RoundResetChannel.
-    // The host also broadcasts authoritative scoring outcomes.
-    let publishRoundReset: ((round: number) => void) | null = null;
+    // and synchronize countdown start via a RTT-compensated handshake:
+    //   1. Host sends countdown-start, records timestamp
+    //   2. Non-host receives it, starts its timer, sends countdown-ack
+    //   3. Host receives ack, measures RTT, starts its timer fast-forwarded
+    //      by RTT/2 so both timers expire at the same absolute moment
+    let publishCountdownStart: ((round: number) => void) | null = null;
+    let publishCountdownAck: ((round: number) => void) | null = null;
     let publishScoringOutcome: ((outcome: ScoringOutcome) => void) | null =
         null;
-    let hostCountdownDone = false;
+
+    /** Non-host: set when the host signals to start the countdown timer. */
+    let hostCountdownStarted = false;
+
+    /** Host: timestamp when countdown-start was sent (for RTT measurement). */
+    let countdownStartSentAt = 0;
+
+    /** Host: set when the ack arrives; holds the RTT/2 fast-forward amount. */
+    let countdownFastForward = 0;
+    let hostAckReceived = false;
 
     /** Set by the non-host when receiving the host's authoritative scoring. */
     let receivedOutcome: ScoringOutcome | null = null;
@@ -100,11 +125,26 @@ export function GameManagerNode(props?: Readonly<GameManagerNodeProps>) {
             }
         });
 
-        const rc = useChannel(RoundResetChannel, () => {
-            // Non-host: the host says "go" — we can transition to playing
-            hostCountdownDone = true;
+        // Countdown sync channels
+        const cs = useChannel(CountdownStartChannel, (round) => {
+            // Non-host: start timer immediately and ack
+            if (!props?.isHost) {
+                hostCountdownStarted = true;
+                publishCountdownAck!(round);
+            }
         });
-        publishRoundReset = (round) => rc.publish(round);
+        publishCountdownStart = (round) => cs.publish(round);
+
+        const ca = useChannel(CountdownAckChannel, () => {
+            // Host: ack received — measure RTT and compute fast-forward
+            if (props?.isHost && countdownStartSentAt > 0) {
+                const rtt = performance.now() - countdownStartSentAt;
+                countdownFastForward = rtt / 2 / 1000; // convert ms to seconds
+                hostAckReceived = true;
+                countdownStartSentAt = 0;
+            }
+        });
+        publishCountdownAck = (round) => ca.publish(round);
 
         // Scoring outcome channel — host publishes, non-host subscribes
         const sc = useChannel(ScoringOutcomeChannel, (outcome) => {
@@ -242,6 +282,11 @@ export function GameManagerNode(props?: Readonly<GameManagerNodeProps>) {
 
                     endReplay();
 
+                    // Increment round immediately so both players respawn
+                    // at their spawn positions right when the replay ends,
+                    // before the KO flash / scoring overlay appears.
+                    gameState.round++;
+
                     if (isNonHostOnline && receivedOutcome) {
                         // Apply the host's authoritative decision
                         gameState.isTie = receivedOutcome.isTie;
@@ -273,7 +318,6 @@ export function GameManagerNode(props?: Readonly<GameManagerNodeProps>) {
                 if (!koFlashTimer.active) {
                     gameState.phase = 'resetting';
                     resetPauseTimer.reset();
-                    gameState.round++;
                     // Reset tie state for the next round
                     gameState.isTie = false;
                     gameState.pendingKnockout2 = -1;
@@ -286,50 +330,73 @@ export function GameManagerNode(props?: Readonly<GameManagerNodeProps>) {
             case 'resetting':
                 if (!resetPauseTimer.active) {
                     gameState.phase = 'countdown';
-                    countdownTimer.reset();
-                    gameState.countdownValue = 3;
+                    // Timer and countdownValue are initialised in the
+                    // countdown case — non-host defers until the host's
+                    // countdown-start signal arrives.
                 }
                 break;
 
             case 'countdown': {
-                // If entering countdown from intro (solo mode), initialise
-                // the timer and value — normally 'resetting' does this.
+                const isNonHost = props?.online && !props?.isHost;
+                const isHost = props?.online && props?.isHost;
+
+                // Countdown timer initialization:
+                // - Local: start timer immediately.
+                // - Host: send countdown-start signal, then WAIT for the
+                //   non-host's ack. On ack, start timer fast-forwarded by
+                //   RTT/2 so both timers expire at the same absolute moment.
+                // - Non-host: wait for the host's countdown-start signal,
+                //   then start timer immediately and send ack back.
                 if (!countdownTimer.active && gameState.countdownValue < 0) {
-                    countdownTimer.reset();
-                    gameState.countdownValue = 3;
+                    if (isNonHost) {
+                        // Non-host: defer until host signal arrives
+                        if (hostCountdownStarted) {
+                            countdownTimer.reset();
+                            gameState.countdownValue = 3;
+                            hostCountdownStarted = false;
+                        }
+                    } else if (isHost) {
+                        // Host: send signal and wait for ack
+                        if (countdownStartSentAt === 0 && !hostAckReceived) {
+                            // First entry — send countdown-start, record time
+                            countdownStartSentAt = performance.now();
+                            publishCountdownStart!(gameState.round);
+                        } else if (hostAckReceived) {
+                            // Ack received — start timer with RTT/2 offset
+                            countdownTimer.reset();
+                            gameState.countdownValue = 3;
+                            hostAckReceived = false;
+                        }
+                    } else {
+                        // Local: start immediately
+                        countdownTimer.reset();
+                        gameState.countdownValue = 3;
+                    }
                 }
 
-                const isNonHost = props?.online && !props?.isHost;
+                // Only tick the countdown display when the timer is running
+                if (countdownTimer.active || gameState.countdownValue >= 0) {
+                    // Effective remaining accounts for RTT/2 fast-forward
+                    // on the host so its timer expires earlier to match
+                    // the non-host's timer that started RTT/2 ago.
+                    const effectiveRemaining =
+                        countdownTimer.remaining - countdownFastForward;
 
-                // Check if we should transition to playing:
-                // - Local mode or host: when local countdown expires
-                // - Non-host: when local countdown expires AND host signal received
-                //   OR when host signal arrives before local countdown (snap to playing)
-                const localDone = !countdownTimer.active;
-                const canTransition = localDone
-                    ? !isNonHost || hostCountdownDone
-                    : isNonHost && hostCountdownDone;
-
-                if (canTransition) {
-                    gameState.phase = 'playing';
-                    gameState.countdownValue = -1;
-                    prevCountdown = -1;
-                    hostCountdownDone = false;
-
-                    // Host: broadcast "go" signal so non-host can transition
-                    if (props?.online && props?.isHost) {
-                        publishRoundReset!(gameState.round);
+                    if (!countdownTimer.active || effectiveRemaining <= 0) {
+                        // Timer expired — transition to playing
+                        gameState.phase = 'playing';
+                        gameState.countdownValue = -1;
+                        prevCountdown = -1;
+                        countdownFastForward = 0;
+                    } else {
+                        const value = computeCountdownValue(effectiveRemaining);
+                        if (value !== prevCountdown) {
+                            if (value > 0) countdownBeepSfx.play();
+                            else countdownGoSfx.play();
+                            prevCountdown = value;
+                        }
+                        gameState.countdownValue = value;
                     }
-                } else {
-                    const value = localDone
-                        ? 0 // non-host waiting for host — hold on "GO!"
-                        : computeCountdownValue(countdownTimer.remaining);
-                    if (value !== prevCountdown) {
-                        if (value > 0) countdownBeepSfx.play();
-                        else countdownGoSfx.play();
-                        prevCountdown = value;
-                    }
-                    gameState.countdownValue = value;
                 }
                 break;
             }

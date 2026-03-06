@@ -18,7 +18,6 @@ import {
     useRigidBody,
     useSphereCollider,
     useOnCollisionStart,
-    RigidBody,
 } from '@pulse-ts/physics';
 import { useMesh, useThreeContext } from '@pulse-ts/three';
 import * as THREE from 'three';
@@ -41,6 +40,7 @@ import { triggerShockwave, worldToScreen } from '../shockwave';
 import { triggerHitImpact } from '../hitImpact';
 import { setPlayerPosition } from '../ai/playerPositions';
 import { setDashCooldownProgress } from '../dashCooldown';
+import { updatePlayerVelocity, getPlayerVelocity } from '../playerVelocity';
 
 /** Sphere radius for the player ball. */
 export const PLAYER_RADIUS = 0.8;
@@ -79,18 +79,6 @@ export const IMPACT_COOLDOWN = 0.4;
 
 /** Number of particles in the knockout mega-burst. */
 export const KNOCKOUT_BURST_COUNT = 80;
-
-/**
- * Window (ms) to ignore network knockback after a local collision.
- * Prevents double-knockback when both machines detect the same collision.
- */
-const KNOCKBACK_DEDUP_WINDOW = 150;
-
-/** Knockback message sent over the network to the other player. */
-interface KnockbackMsg {
-    targetPlayerId: number;
-    impulse: [number, number, number];
-}
 
 /** Color of the online-mode "you" indicator ring (hex). */
 export const INDICATOR_RING_COLOR = 0xffee88;
@@ -253,9 +241,9 @@ export function LocalPlayerNode({
 
     // Replicate after body is created so we can include velocity for
     // dead-reckoning on the consumer side.
-    let publishKnockback: ((msg: KnockbackMsg) => void) | null = null;
-    let lastLocalKnockbackTime = -Infinity;
     let publishKnockout: ((id: number) => void) | null = null;
+    let publishKnockback: ((impulse: [number, number, number]) => void) | null =
+        null;
 
     if (replicate) {
         useReplicateTransform({
@@ -299,10 +287,22 @@ export function LocalPlayerNode({
     let prevY = spawn[1];
     let prevZ = spawn[2];
 
+    // Snapshot position for frame interpolation, and velocity before
+    // the physics solver runs. In online mode, the solver applies a bounce
+    // against the kinematic remote player that's stronger than the local-play
+    // bounce (100% vs 50/50 split). We capture pre-solver velocity so the
+    // collision handler can undo the physics bounce and apply only our
+    // controlled knockback impulse.
+    let prePhysVx = 0;
+    let prePhysVz = 0;
     useFixedEarly(() => {
         prevX = transform.localPosition.x;
         prevY = transform.localPosition.y;
         prevZ = transform.localPosition.z;
+        if (replicate) {
+            prePhysVx = body.linearVelocity.x;
+            prePhysVz = body.linearVelocity.z;
+        }
     });
 
     // Visual — sphere mesh with subtle emissive glow (blooms under post-processing)
@@ -401,54 +401,101 @@ export function LocalPlayerNode({
     });
     let trailAccum = 0;
 
-    // Knockback channel — in online mode, receive impulses from the remote
-    // player's collision detection and apply them to our local body, with
-    // impact effects so the defender sees and hears the hit.
+    // --- Shared knockback application helper ---
+    // Used by both the local collision handler and the remote knockback
+    // channel handler to apply impulse + VFX in one place.
+    const applyKnockbackEffects = (impulse: [number, number, number]): void => {
+        body.applyImpulse(impulse[0], impulse[1], impulse[2]);
+
+        // Cancel any active dash and reset cooldown
+        dashTimer.cancel();
+        dashCD.trigger();
+
+        impactSfx.play();
+        impactCD.trigger();
+
+        // Particle burst — at the surface facing the hit direction
+        const hx = -impulse[0];
+        const hz = -impulse[2];
+        const hLen = Math.sqrt(hx * hx + hz * hz);
+        if (hLen > 0) {
+            const surfX =
+                transform.localPosition.x + (hx / hLen) * PLAYER_RADIUS;
+            const surfY = transform.localPosition.y;
+            const surfZ =
+                transform.localPosition.z + (hz / hLen) * PLAYER_RADIUS;
+            impactBurst([surfX, surfY, surfZ]);
+
+            const [su, sv] = worldToScreen(surfX, surfY, surfZ, threeCamera);
+            triggerShockwave(su, sv);
+            triggerHitImpact(surfX, surfZ);
+        }
+
+        triggerCameraShake(0.3, 0.2);
+        markHit();
+    };
+
+    // --- Bidirectional knockback channel (online mode) ---
+    // Both players send the OTHER player's computed impulse on collision.
+    // If the receiver already handled the collision locally (impactCD active),
+    // the message is ignored (dedup). If only the sender detected the
+    // collision, the receiver applies the impulse from the message.
     if (replicate) {
-        const kb = useChannel<KnockbackMsg>('knockback', (msg) => {
-            if (msg.targetPlayerId !== playerId) return;
-            // Dedup: skip if we already detected this collision locally.
-            if (Date.now() - lastLocalKnockbackTime < KNOCKBACK_DEDUP_WINDOW)
-                return;
-            body.applyImpulse(msg.impulse[0], msg.impulse[1], msg.impulse[2]);
+        const kb = useChannel<[number, number, number]>(
+            'knockback',
+            (impulse) => {
+                if (gameState.phase !== 'playing') return;
+                // Dedup: if we already handled a collision locally, skip.
+                // impactCD is triggered in the collision handler and stays
+                // active for IMPACT_COOLDOWN (0.4s), well beyond any message
+                // delivery time.
+                if (!impactCD.ready) return;
 
-            // Mark hit for replay — the remote machine detected the collision,
-            // so this machine should also show the proper KO replay (not "self KO").
-            markHit();
-
-            // Impact feedback — particles + sound so the defender sees the hit.
-            // Spawn particles on the local player's surface in the direction
-            // the hit came from (opposite of the impulse direction).
-            const hx = -msg.impulse[0];
-            const hz = -msg.impulse[2];
-            const hLen = Math.sqrt(hx * hx + hz * hz);
-            if (hLen > 0) {
-                const surfX =
-                    transform.localPosition.x + (hx / hLen) * PLAYER_RADIUS;
-                const surfY = transform.localPosition.y;
-                const surfZ =
-                    transform.localPosition.z + (hz / hLen) * PLAYER_RADIUS;
-                impactBurst([surfX, surfY, surfZ]);
-
-                // Screen-space shockwave at the impact surface point
-                const [su, sv] = worldToScreen(
-                    surfX,
-                    surfY,
-                    surfZ,
-                    threeCamera,
+                // This side didn't detect the collision — no solver ran, so
+                // we still have our full approach velocity. In local play the
+                // solver would stop us first (v: -24 → ~0), then knockback
+                // pushes us away (+31). Without correction, the impulse
+                // fights the approach velocity (-24 + 31 = +7 instead of +31).
+                //
+                // Fix: strip velocity component toward the opponent (inferred
+                // from the impulse direction, which points AWAY from them).
+                const imag = Math.sqrt(
+                    impulse[0] * impulse[0] + impulse[2] * impulse[2],
                 );
-                triggerShockwave(su, sv);
-                triggerHitImpact(surfX, surfZ);
-            }
-            if (impactCD.ready) {
-                impactSfx.play();
-                impactCD.trigger();
-            }
-        });
-        publishKnockback = (msg) => kb.publish(msg);
+                if (imag > 0.01) {
+                    // Normal pointing away from opponent (same as impulse dir)
+                    const awayX = impulse[0] / imag;
+                    const awayZ = impulse[2] / imag;
+                    // Our velocity component toward the opponent (negative of
+                    // away direction)
+                    const towardComponent =
+                        body.linearVelocity.x * -awayX +
+                        body.linearVelocity.z * -awayZ;
+                    // Only strip if we're moving toward them (positive value)
+                    if (towardComponent > 0) {
+                        body.linearVelocity.x += towardComponent * awayX;
+                        body.linearVelocity.z += towardComponent * awayZ;
+                    }
+                }
+
+                applyKnockbackEffects(impulse);
+            },
+        );
+        publishKnockback = (impulse) => kb.publish(impulse);
     }
 
-    // Knockback on collision with another player
+    // Knockback on collision with another player.
+    //
+    // TIMING: useOnCollisionStart fires AFTER the physics solver has resolved
+    // the contact. In online mode, the solver applies a bounce against the
+    // kinematic remote body that's stronger than local play (100% vs 50/50).
+    // We halve the solver's velocity change to match local-play physics.
+    //
+    // In online mode, both players compute knockback locally AND send the
+    // other player's impulse via the knockback channel. If only one side
+    // detects the collision, the other side receives and applies the impulse.
+    // The impactCD cooldown deduplicates — if both detect, the channel
+    // message is ignored.
     useOnCollisionStart(({ other }) => {
         if (other === node) return;
         if (!getComponent(other, PlayerTag)) return;
@@ -458,25 +505,62 @@ export function LocalPlayerNode({
         const otherTransform = getComponent(other, Transform);
         if (!otherTransform) return;
 
-        // Knockback is based solely on how fast the OTHER player was
-        // moving into us — our own velocity does not amplify the hit we
-        // receive. This makes standing still safe and dashing risky for
-        // the dasher (the other player's handler will knock *them* back
-        // based on our approach speed instead).
-        const otherBody = getComponent(other, RigidBody);
-        const theirApproach = otherBody
-            ? computeApproachSpeed(
-                  transform.localPosition.x,
-                  transform.localPosition.z,
-                  otherTransform.localPosition.x,
-                  otherTransform.localPosition.z,
-                  otherBody.linearVelocity.x,
-                  otherBody.linearVelocity.z,
-              )
-            : 0;
-        const effectiveForce =
-            KNOCKBACK_BASE + theirApproach * KNOCKBACK_VELOCITY_SCALE;
+        // In online mode, correct the physics solver's velocity bounce.
+        // The solver treated the kinematic remote body as an immovable wall
+        // with zero velocity. The simple halving trick works when the remote
+        // player is stationary, but when BOTH players are moving toward each
+        // other the residual velocity pointing at the opponent can exceed the
+        // knockback impulse, causing the players to "stick."
+        //
+        // Fix: replace the solver's result with the proper equal-mass elastic
+        // collision formula using the remote player's known velocity. Only
+        // the normal (along collision axis) component is corrected; tangential
+        // velocity (glancing blows) is preserved from the solver.
+        const otherPlayerId = 1 - playerId;
+        const [otherVx, otherVz] = getPlayerVelocity(otherPlayerId);
 
+        if (replicate) {
+            const cdx =
+                otherTransform.localPosition.x - transform.localPosition.x;
+            const cdz =
+                otherTransform.localPosition.z - transform.localPosition.z;
+            const clen = Math.sqrt(cdx * cdx + cdz * cdz);
+            if (clen > 0.01) {
+                const nx = cdx / clen;
+                const nz = cdz / clen;
+                // Our pre-solver normal velocity (toward opponent)
+                const myNormal = prePhysVx * nx + prePhysVz * nz;
+                // Other player's normal velocity (toward us, from their perspective)
+                const otherNormal = otherVx * nx + otherVz * nz;
+                // Equal-mass collision: exchange normal components (e=0.2)
+                const e = 0.2;
+                const correctedNormal =
+                    ((1 - e) / 2) * myNormal + ((1 + e) / 2) * otherNormal;
+                // Strip the solver's normal velocity and replace with ours
+                const solverNormal =
+                    body.linearVelocity.x * nx + body.linearVelocity.z * nz;
+                body.linearVelocity.x +=
+                    (correctedNormal - solverNormal) * nx;
+                body.linearVelocity.z +=
+                    (correctedNormal - solverNormal) * nz;
+            } else {
+                // Overlapping — just zero out horizontal velocity
+                body.linearVelocity.x = 0;
+                body.linearVelocity.z = 0;
+            }
+        }
+        const approachSpeed = computeApproachSpeed(
+            transform.localPosition.x,
+            transform.localPosition.z,
+            otherTransform.localPosition.x,
+            otherTransform.localPosition.z,
+            otherVx,
+            otherVz,
+        );
+        const effectiveForce =
+            KNOCKBACK_BASE + approachSpeed * KNOCKBACK_VELOCITY_SCALE;
+
+        // Impulse applied to US (pushed away from the other player)
         const [ix, iy, iz] = computeKnockback(
             transform.localPosition.x,
             transform.localPosition.z,
@@ -484,54 +568,37 @@ export function LocalPlayerNode({
             otherTransform.localPosition.z,
             effectiveForce,
         );
-        body.applyImpulse(ix, iy, iz);
-        lastLocalKnockbackTime = Date.now();
 
-        // Cancel any active dash and reset cooldown — prevents the "dash
-        // counterattack" exploit where a player immediately dashes back after
-        // being hit, and stops mid-dash players from pushing through.
-        dashTimer.cancel();
-        dashCD.trigger();
+        applyKnockbackEffects([ix, iy, iz]);
 
-        impactSfx.play();
-        impactCD.trigger();
-
-        // Send inverse knockback to the remote player so they feel the
-        // hit even if their machine didn't detect the collision locally
-        // (remote positions lag due to network latency).
+        // In online mode, also compute and send the OTHER player's knockback
+        // so they can apply it if their physics didn't detect the collision.
         if (publishKnockback) {
-            publishKnockback({
-                targetPlayerId: 1 - playerId,
-                impulse: [-ix, -iy, -iz],
-            });
+            const [myVx, myVz] = getPlayerVelocity(playerId);
+            const myApproach = computeApproachSpeed(
+                otherTransform.localPosition.x,
+                otherTransform.localPosition.z,
+                transform.localPosition.x,
+                transform.localPosition.z,
+                myVx,
+                myVz,
+            );
+            const otherForce =
+                KNOCKBACK_BASE + myApproach * KNOCKBACK_VELOCITY_SCALE;
+
+            const [ox, oy, oz] = computeKnockback(
+                otherTransform.localPosition.x,
+                otherTransform.localPosition.z,
+                transform.localPosition.x,
+                transform.localPosition.z,
+                otherForce,
+            );
+
+            publishKnockback([ox, oy, oz]);
         }
-
-        // Particle burst at the midpoint between the two players
-        impactBurst([
-            (transform.localPosition.x + otherTransform.localPosition.x) / 2,
-            (transform.localPosition.y + otherTransform.localPosition.y) / 2,
-            (transform.localPosition.z + otherTransform.localPosition.z) / 2,
-        ]);
-
-        // Small camera shake on collision
-        triggerCameraShake(0.3, 0.2);
-
-        // Screen-space shockwave at the midpoint
-        const midX =
-            (transform.localPosition.x + otherTransform.localPosition.x) / 2;
-        const midY =
-            (transform.localPosition.y + otherTransform.localPosition.y) / 2;
-        const midZ =
-            (transform.localPosition.z + otherTransform.localPosition.z) / 2;
-        const [su, sv] = worldToScreen(midX, midY, midZ, threeCamera);
-        triggerShockwave(su, sv);
-        triggerHitImpact(midX, midZ);
-
-        // Mark this collision for instant replay hit detection
-        markHit();
     });
 
-    useFixedUpdate(() => {
+    useFixedUpdate((dt) => {
         // Stage position for replay recording and shared position store
         stagePlayerPosition(
             playerId,
@@ -544,6 +611,12 @@ export function LocalPlayerNode({
             transform.localPosition.x,
             transform.localPosition.y,
             transform.localPosition.z,
+        );
+        updatePlayerVelocity(
+            playerId,
+            transform.localPosition.x,
+            transform.localPosition.z,
+            dt,
         );
 
         // Round reset — teleport to spawn when GameManagerNode increments round.

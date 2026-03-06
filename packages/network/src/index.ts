@@ -24,6 +24,9 @@ export {
     useClockSync,
 } from './public/hooks';
 export { useReplicateTransform } from './public/transform';
+// Service classes for direct world.getService() access
+export { TransportService } from './domain/services/TransportService';
+export { InterpolationService } from './domain/services/InterpolationService';
 // Factory helpers (function-first public API)
 export {
     createWebSocketTransport,

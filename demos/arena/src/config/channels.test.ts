@@ -1,6 +1,7 @@
 import {
     KnockoutChannel,
-    RoundResetChannel,
+    CountdownStartChannel,
+    CountdownAckChannel,
     ScoringOutcomeChannel,
     RematchChannel,
     type ScoringOutcome,
@@ -12,8 +13,12 @@ describe('channels', () => {
         expect(KnockoutChannel.name).toBe('knockout');
     });
 
-    it('exports RoundResetChannel with name "round-reset"', () => {
-        expect(RoundResetChannel.name).toBe('round-reset');
+    it('exports CountdownStartChannel with name "countdown-start"', () => {
+        expect(CountdownStartChannel.name).toBe('countdown-start');
+    });
+
+    it('exports CountdownAckChannel with name "countdown-ack"', () => {
+        expect(CountdownAckChannel.name).toBe('countdown-ack');
     });
 
     it('exports ScoringOutcomeChannel with name "scoring-outcome"', () => {

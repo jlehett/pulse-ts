@@ -64,7 +64,7 @@ resource "aws_iam_role_policy" "lambda_kinesis_turn" {
           "kinesisvideo:GetSignalingChannelEndpoint",
           "kinesisvideo:GetIceServerConfig"
         ]
-        Resource = aws_kinesis_video_stream.turn.arn
+        Resource = local.kvs_channel_arn
       }
     ]
   })
