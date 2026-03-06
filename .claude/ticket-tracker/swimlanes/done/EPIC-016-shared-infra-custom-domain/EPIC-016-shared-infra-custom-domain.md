@@ -1,7 +1,7 @@
 ---
 id: EPIC-016
 title: Shared infrastructure and custom domain
-status: todo
+status: done
 created: 2026-03-05
 updated: 2026-03-05
 ---
@@ -22,3 +22,4 @@ a new app requires only a new S3 bucket and CloudFront cache behavior.
 ## Notes
 
 - **2026-03-05**: Epic created. Domain pulse-ts.com registration in progress.
+- **2026-03-05**: Epic closed — all tickets complete.

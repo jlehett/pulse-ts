@@ -2,10 +2,10 @@
 id: TICKET-085
 epic: EPIC-013
 title: Main menu 3D visual overhaul
-status: todo
+status: done
 priority: medium
 created: 2026-03-02
-updated: 2026-03-02
+updated: 2026-03-05
 labels:
   - ui
   - arena
@@ -25,13 +25,14 @@ get gradient fills and glow on hover.
 
 ## Acceptance Criteria
 
-- [ ] 3D arena visible behind menu text
-- [ ] Arena slowly rotates or has animated elements
-- [ ] Title has glow/pulse animation
-- [ ] Buttons have gradient fills and glow on hover
-- [ ] Transition from menu to game is smooth
-- [ ] All tests pass
+- [x] 3D arena visible behind menu text
+- [x] Arena slowly rotates or has animated elements
+- [x] Title has glow/pulse animation
+- [x] Buttons have gradient fills and glow on hover
+- [x] Transition from menu to game is smooth
+- [x] All tests pass
 
 ## Notes
 
 - **2026-03-02**: Ticket created.
+- **2026-03-05**: Marked done — already implemented and merged to main.

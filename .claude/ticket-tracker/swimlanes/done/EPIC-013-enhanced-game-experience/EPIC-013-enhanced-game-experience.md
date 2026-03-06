@@ -1,9 +1,9 @@
 ---
 id: EPIC-013
 title: Enhanced Game Experience
-status: todo
+status: done
 created: 2026-03-02
-updated: 2026-03-02
+updated: 2026-03-05
 ---
 
 ## Description
@@ -23,3 +23,4 @@ online players can easily identify their character.
 ## Notes
 
 - **2026-03-02**: Epic created. Five tickets: online player indicator, instant replay, score HUD, arena visuals, main menu.
+- **2026-03-05**: Epic closed — all tickets complete.
