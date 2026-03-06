@@ -34,6 +34,7 @@ export interface LambdaResponse {
 export interface CreateLobbyMessage {
     action: 'create-lobby';
     username: string;
+    version?: string;
 }
 
 export interface ListLobbiesMessage {
@@ -44,6 +45,7 @@ export interface JoinLobbyMessage {
     action: 'join-lobby';
     lobbyId: string;
     username: string;
+    version?: string;
 }
 
 export interface LeaveLobbyMessage {
@@ -95,12 +97,14 @@ export interface JoinerConnectedResponse {
     type: 'joiner-connected';
     joinerConnectionId: string;
     username: string;
+    version?: string;
 }
 
 export interface JoinAcceptedResponse {
     type: 'join-accepted';
     hostConnectionId: string;
     hostUsername: string;
+    version?: string;
 }
 
 export interface JoinFailedResponse {
@@ -165,6 +169,7 @@ export interface LobbyRecord {
     lobbyId: string;
     hostConnectionId: string;
     hostUsername: string;
+    hostVersion: string;
     joinerConnectionId: string;
     joinerUsername: string;
     status: 'waiting' | 'paired';

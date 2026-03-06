@@ -1,3 +1,11 @@
+const mockGetAppVersion = jest.fn(() => 'test-abc');
+const mockIsUpdateAvailable = jest.fn(() => false);
+
+jest.mock('./versionCheck', () => ({
+    getAppVersion: () => mockGetAppVersion(),
+    isUpdateAvailable: () => mockIsUpdateAvailable(),
+}));
+
 import { showLobby, type LobbyResult } from './lobby';
 
 // ---------------------------------------------------------------------------
@@ -658,5 +666,129 @@ describe('showLobby', () => {
         expect(createMsg).toBeTruthy();
         const parsed = JSON.parse(createMsg!);
         expect(parsed.username).toBe('HostPlayer');
+    });
+
+    // --- Version enforcement ---
+
+    it('sends version in create-lobby message', () => {
+        showLobby(container);
+        clickButton('Host Game');
+        clickButton('Player 1');
+        latestWs().simulateOpen();
+        const createMsg = latestWs().sent.find((s) =>
+            s.includes('create-lobby'),
+        );
+        const parsed = JSON.parse(createMsg!);
+        expect(parsed.version).toBe('test-abc');
+    });
+
+    it('sends version in join-lobby message', () => {
+        showLobby(container);
+        clickButton('Join Game');
+        latestWs().simulateOpen();
+        latestWs().simulateMessage({
+            type: 'lobby-list',
+            lobbies: [{ lobbyId: 'L1', hostUsername: 'Alice' }],
+        });
+        clickButton("Alice's Game");
+        const joinMsg = latestWs().sent.find((s) => s.includes('join-lobby'));
+        const parsed = JSON.parse(joinMsg!);
+        expect(parsed.version).toBe('test-abc');
+    });
+
+    it('shows version mismatch screen when host detects joiner has different version', () => {
+        showLobby(container);
+        clickButton('Host Game');
+        clickButton('Player 1');
+        latestWs().simulateOpen();
+        latestWs().simulateMessage({ type: 'lobby-created', lobbyId: 'L1' });
+        latestWs().simulateMessage({
+            type: 'joiner-connected',
+            joinerConnectionId: 'joiner-1',
+            username: 'Bob',
+            version: 'different-version',
+        });
+        expect(container.textContent).toContain('VERSION MISMATCH');
+    });
+
+    it('shows version mismatch screen when joiner detects host has different version', () => {
+        showLobby(container);
+        clickButton('Join Game');
+        latestWs().simulateOpen();
+        latestWs().simulateMessage({
+            type: 'lobby-list',
+            lobbies: [{ lobbyId: 'L1', hostUsername: 'Alice' }],
+        });
+        clickButton("Alice's Game");
+        latestWs().simulateMessage({
+            type: 'join-accepted',
+            hostConnectionId: 'host-1',
+            hostUsername: 'Alice',
+            version: 'different-version',
+        });
+        expect(container.textContent).toContain('VERSION MISMATCH');
+    });
+
+    it('allows connection when versions match', () => {
+        showLobby(container);
+        clickButton('Host Game');
+        clickButton('Player 1');
+        latestWs().simulateOpen();
+        latestWs().simulateMessage({ type: 'lobby-created', lobbyId: 'L1' });
+        latestWs().simulateMessage({
+            type: 'joiner-connected',
+            joinerConnectionId: 'joiner-1',
+            username: 'Bob',
+            version: 'test-abc',
+        });
+        expect(container.textContent).not.toContain('VERSION MISMATCH');
+        expect(container.textContent).toContain('Bob joined');
+    });
+
+    it('allows connection when peer has no version (old client)', () => {
+        showLobby(container);
+        clickButton('Host Game');
+        clickButton('Player 1');
+        latestWs().simulateOpen();
+        latestWs().simulateMessage({ type: 'lobby-created', lobbyId: 'L1' });
+        latestWs().simulateMessage({
+            type: 'joiner-connected',
+            joinerConnectionId: 'joiner-1',
+            username: 'Bob',
+        });
+        expect(container.textContent).not.toContain('VERSION MISMATCH');
+        expect(container.textContent).toContain('Bob joined');
+    });
+
+    it('shows reload message when local client is stale', () => {
+        mockIsUpdateAvailable.mockReturnValueOnce(true);
+        showLobby(container);
+        clickButton('Host Game');
+        clickButton('Player 1');
+        latestWs().simulateOpen();
+        latestWs().simulateMessage({ type: 'lobby-created', lobbyId: 'L1' });
+        latestWs().simulateMessage({
+            type: 'joiner-connected',
+            joinerConnectionId: 'joiner-1',
+            username: 'Bob',
+            version: 'newer-version',
+        });
+        expect(container.textContent).toContain('out of date');
+    });
+
+    it('shows opponent outdated message when local client is fresh', () => {
+        mockIsUpdateAvailable.mockReturnValueOnce(false);
+        showLobby(container);
+        clickButton('Host Game');
+        clickButton('Player 1');
+        latestWs().simulateOpen();
+        latestWs().simulateMessage({ type: 'lobby-created', lobbyId: 'L1' });
+        latestWs().simulateMessage({
+            type: 'joiner-connected',
+            joinerConnectionId: 'joiner-1',
+            username: 'Bob',
+            version: 'older-version',
+        });
+        expect(container.textContent).toContain('different version');
     });
 });

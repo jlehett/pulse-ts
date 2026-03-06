@@ -166,6 +166,7 @@ async function removeConnection(connectionId: string): Promise<void> {
 async function createLobby(
     connectionId: string,
     username: string,
+    version: string,
 ): Promise<string> {
     const lobbyId = `lobby-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
     await dynamo.send(
@@ -175,6 +176,7 @@ async function createLobby(
                 lobbyId: { S: lobbyId },
                 hostConnectionId: { S: connectionId },
                 hostUsername: { S: username },
+                hostVersion: { S: version },
                 joinerConnectionId: { S: '' },
                 joinerUsername: { S: '' },
                 status: { S: 'waiting' },
@@ -198,6 +200,7 @@ async function getLobby(lobbyId: string): Promise<LobbyRecord | null> {
         lobbyId: res.Item.lobbyId.S!,
         hostConnectionId: res.Item.hostConnectionId.S!,
         hostUsername: res.Item.hostUsername?.S || '',
+        hostVersion: res.Item.hostVersion?.S || '',
         joinerConnectionId: res.Item.joinerConnectionId?.S || '',
         joinerUsername: res.Item.joinerUsername?.S || '',
         status: (res.Item.status?.S || 'waiting') as LobbyRecord['status'],
@@ -266,6 +269,7 @@ async function joinLobby(
                 lobbyId: { S: lobbyId },
                 hostConnectionId: { S: lobby.hostConnectionId },
                 hostUsername: { S: lobby.hostUsername },
+                hostVersion: { S: lobby.hostVersion },
                 joinerConnectionId: { S: joinerConnectionId },
                 joinerUsername: { S: joinerUsername },
                 status: { S: 'paired' },
@@ -297,6 +301,7 @@ async function revertLobbyToWaiting(lobby: LobbyRecord): Promise<void> {
                 lobbyId: { S: lobby.lobbyId },
                 hostConnectionId: { S: lobby.hostConnectionId },
                 hostUsername: { S: lobby.hostUsername },
+                hostVersion: { S: lobby.hostVersion },
                 joinerConnectionId: { S: '' },
                 joinerUsername: { S: '' },
                 status: { S: 'waiting' },
@@ -443,7 +448,8 @@ async function handleDefault(event: WebSocketEvent): Promise<LambdaResponse> {
     switch (action) {
         case 'create-lobby': {
             const username = String(body.username || 'Unknown').slice(0, 24);
-            const lobbyId = await createLobby(connectionId, username);
+            const version = String(body.version || '');
+            const lobbyId = await createLobby(connectionId, username, version);
             await send(apigw, connectionId, {
                 type: 'lobby-created',
                 lobbyId,
@@ -459,6 +465,7 @@ async function handleDefault(event: WebSocketEvent): Promise<LambdaResponse> {
 
         case 'join-lobby': {
             const username = String(body.username || 'Unknown').slice(0, 24);
+            const joinerVersion = String(body.version || '');
             const result = await joinLobby(
                 body.lobbyId as string,
                 connectionId,
@@ -477,11 +484,13 @@ async function handleDefault(event: WebSocketEvent): Promise<LambdaResponse> {
                 type: 'joiner-connected',
                 joinerConnectionId: connectionId,
                 username,
+                version: joinerVersion || undefined,
             });
             await send(apigw, connectionId, {
                 type: 'join-accepted',
                 hostConnectionId: lobby.hostConnectionId,
                 hostUsername: lobby.hostUsername,
+                version: lobby.hostVersion || undefined,
             });
             break;
         }

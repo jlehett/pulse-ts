@@ -4,6 +4,8 @@ import {
 } from './overlayAnimations';
 import { DataChannelTransport } from '@pulse-ts/network/transports/datachannel';
 import type { Transport } from '@pulse-ts/network';
+import { getAppVersion, isUpdateAvailable } from './versionCheck';
+import { versionsMatch } from './versionMatch';
 
 /**
  * Fallback ICE servers (STUN only) used when TURN credentials
@@ -499,6 +501,7 @@ function showHostWaiting(
 
     let ws: WebSocket | null = null;
     let joinerConnectionId: string | null = null;
+    let joinerVersion: string | null = null;
     let cleaned = false;
 
     function cleanup() {
@@ -519,6 +522,7 @@ function showHostWaiting(
             JSON.stringify({
                 action: 'create-lobby',
                 username: getUsername(),
+                version: getAppVersion(),
             }),
         );
     });
@@ -548,7 +552,14 @@ function showHostWaiting(
             status.set('connected', 'Waiting for opponent...');
         } else if (msg.type === 'joiner-connected') {
             joinerConnectionId = msg.joinerConnectionId;
+            joinerVersion = msg.version ?? null;
             const joinerName = msg.username || 'Opponent';
+
+            if (!versionsMatch(getAppVersion(), joinerVersion ?? '')) {
+                showVersionMismatch(overlay, finish, cleanup);
+                return;
+            }
+
             status.set('connected', `${joinerName} joined!`);
             btnStart.style.display = '';
         } else if (msg.type === 'error') {
@@ -763,6 +774,7 @@ function showJoinWaiting(
             action: 'join-lobby',
             lobbyId,
             username: getUsername(),
+            version: getAppVersion(),
         }),
     );
 
@@ -778,6 +790,16 @@ function showJoinWaiting(
         if (msg.type === 'join-failed') {
             status.set('error', msg.reason || 'Could not join lobby');
         } else if (msg.type === 'join-accepted') {
+            const hostVersion: string = msg.version ?? '';
+
+            if (!versionsMatch(getAppVersion(), hostVersion)) {
+                ws.removeEventListener('message', onMessage);
+                cleanup();
+                parentCleanup();
+                showVersionMismatch(overlay, finish);
+                return;
+            }
+
             hostConnectionId = msg.hostConnectionId;
             status.set('connected', `Joined ${msg.hostUsername}'s game`);
             status.set('connecting', 'Waiting for host to start...');
@@ -820,6 +842,64 @@ function showJoinWaiting(
         ws.send(JSON.stringify({ action: 'leave-lobby' }));
         showJoinBrowser(overlay, finish);
     });
+}
+
+// ---------------------------------------------------------------------------
+// Version mismatch screen
+// ---------------------------------------------------------------------------
+
+/** Auto-reload delay when the local client is the stale one (ms). */
+const VERSION_MISMATCH_RELOAD_DELAY = 3000;
+
+function showVersionMismatch(
+    overlay: HTMLElement,
+    finish: Finish,
+    cleanupFn?: () => void,
+) {
+    const content = clearAndCreateContent(overlay);
+
+    const heading = createHeading('VERSION MISMATCH');
+
+    const stale = isUpdateAvailable();
+    const message = document.createElement('div');
+    Object.assign(message.style, {
+        font: '14px monospace',
+        color: '#ccc',
+        textAlign: 'center',
+        maxWidth: '320px',
+        lineHeight: '1.6',
+    } as Partial<CSSStyleDeclaration>);
+
+    if (stale) {
+        message.textContent =
+            'Your game is out of date. Refreshing to get the latest version...';
+    } else {
+        message.textContent =
+            'Your opponent is running a different version. Returning to lobby...';
+    }
+
+    const status = createStatusIndicator();
+    status.set(stale ? 'error' : 'connecting', stale ? 'Refreshing...' : '');
+
+    content.appendChild(heading);
+    content.appendChild(message);
+    content.appendChild(status.el);
+
+    applyStaggeredEntrance([heading, message, status.el], 100);
+
+    if (stale) {
+        setTimeout(() => {
+            location.reload();
+        }, VERSION_MISMATCH_RELOAD_DELAY);
+    } else {
+        const btnBack = createButton('Back to Lobby', '#888');
+        content.appendChild(btnBack);
+        applyButtonHoverScale(btnBack);
+        btnBack.addEventListener('click', () => {
+            if (cleanupFn) cleanupFn();
+            showLobbyMenu(overlay, finish);
+        });
+    }
 }
 
 // ---------------------------------------------------------------------------

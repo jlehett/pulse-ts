@@ -282,6 +282,7 @@ describe('join-lobby', () => {
                 lobbyId: { S: 'lobby-1' },
                 hostConnectionId: { S: 'host-1' },
                 hostUsername: { S: 'Alice' },
+                hostVersion: { S: 'v1' },
                 joinerConnectionId: { S: '' },
                 joinerUsername: { S: '' },
                 status: { S: 'waiting' },
@@ -293,6 +294,7 @@ describe('join-lobby', () => {
                 action: 'join-lobby',
                 lobbyId: 'lobby-1',
                 username: 'Bob',
+                version: 'v1',
             }),
         );
 
@@ -302,6 +304,7 @@ describe('join-lobby', () => {
                 expect.objectContaining({
                     type: 'joiner-connected',
                     username: 'Bob',
+                    version: 'v1',
                 }),
             ]),
         );
@@ -312,6 +315,7 @@ describe('join-lobby', () => {
                 expect.objectContaining({
                     type: 'join-accepted',
                     hostUsername: 'Alice',
+                    version: 'v1',
                 }),
             ]),
         );
