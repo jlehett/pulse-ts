@@ -1,6 +1,8 @@
+---
+paths:
+  - "demos/arena/src/nodes/**/*.ts"
+---
 # DOM Animation Forced Reflow in Game Loop
-
-**Paths:** `demos/arena/src/nodes/**/*.ts`
 
 ## Problem
 

@@ -1,6 +1,11 @@
+---
+paths:
+  - "demos/arena/src/isMobileDevice.ts"
+  - "demos/arena/src/nodes/TouchControlsNode.ts"
+  - "demos/arena/src/landscapeEnforcer.ts"
+  - "demos/arena/src/autoFullscreen.ts"
+---
 # Arena Mobile Device Detection Pattern
-
-**Paths:** `demos/arena/src/isMobileDevice.ts`, `demos/arena/src/nodes/TouchControlsNode.ts`, `demos/arena/src/landscapeEnforcer.ts`, `demos/arena/src/autoFullscreen.ts`
 
 ## Detection Rule
 

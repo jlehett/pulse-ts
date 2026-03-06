@@ -1,6 +1,8 @@
+---
+paths:
+  - "demos/arena/src/nodes/ScoreHudNode.ts"
+---
 # Deferred HUD Animation After Replay
-
-**Paths:** `demos/arena/src/nodes/ScoreHudNode.ts`
 
 ## Problem
 

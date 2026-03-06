@@ -1,6 +1,10 @@
+---
+paths:
+  - "demos/arena/src/overlayAnimations.ts"
+  - "demos/arena/src/**/*Menu*.ts"
+  - "demos/arena/src/menu.ts"
+---
 # Entrance Animation + Hover Scale Conflict
-
-**Paths:** `demos/arena/src/overlayAnimations.ts`, `demos/arena/src/**/*Menu*.ts`, `demos/arena/src/menu.ts`
 
 ## The Problem
 

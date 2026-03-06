@@ -1,6 +1,9 @@
+---
+paths:
+  - "demos/arena/src/ai/AiService.ts"
+  - "demos/arena/src/nodes/RemotePlayerNode.ts"
+---
 # Arena AI Behavior: Edge Safety & Advanced Mechanics
-
-**Paths:** `demos/arena/src/ai/AiService.ts`, `demos/arena/src/nodes/RemotePlayerNode.ts`
 
 ## Spin: Overlay vs Rotation
 

@@ -1,6 +1,12 @@
+---
+paths:
+  - "demos/arena/src/replay.ts"
+  - "demos/arena/src/dashCooldown.ts"
+  - "demos/arena/src/ai/playerPositions.ts"
+  - "demos/arena/src/hitImpact.ts"
+  - "demos/arena/src/nodes/GameManagerNode.ts"
+---
 # Module-Level State Persistence Across Game Sessions
-
-**Paths:** `demos/arena/src/replay.ts`, `demos/arena/src/dashCooldown.ts`, `demos/arena/src/ai/playerPositions.ts`, `demos/arena/src/hitImpact.ts`, `demos/arena/src/nodes/GameManagerNode.ts`
 
 ## Critical Issue
 

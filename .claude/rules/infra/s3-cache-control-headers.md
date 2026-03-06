@@ -1,6 +1,8 @@
+---
+paths:
+  - "infra/deploy.sh"
+---
 # S3 Cache-Control Headers for CloudFront-Served HTML
-
-**Paths:** `infra/deploy.sh`
 
 ## Problem
 

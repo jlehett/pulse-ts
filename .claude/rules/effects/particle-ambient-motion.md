@@ -1,6 +1,9 @@
+---
+paths:
+  - "packages/effects/src/**/*"
+  - "demos/arena/src/nodes/**/*"
+---
 # Particle Ambient Motion: Position vs Velocity
-
-**Paths:** `packages/effects/src/**/*`, `demos/arena/src/nodes/**/*`
 
 ## Position-Based Ambient Motion (Preferred)
 

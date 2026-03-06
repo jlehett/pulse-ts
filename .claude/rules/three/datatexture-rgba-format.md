@@ -1,6 +1,9 @@
+---
+paths:
+  - "packages/three/**"
+  - "demos/arena/src/nodes/PlatformNode.ts"
+---
 # DataTexture Must Use RGBAFormat (Not RGBFormat)
-
-**Paths:** `packages/three/**`, `demos/arena/src/nodes/PlatformNode.ts`
 
 ## The Problem
 

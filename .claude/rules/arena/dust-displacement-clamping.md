@@ -1,6 +1,8 @@
+---
+paths:
+  - "demos/arena/src/nodes/AtmosphericDustNode.ts"
+---
 # Atmospheric Dust Displacement Clamping
-
-**Paths:** `demos/arena/src/nodes/AtmosphericDustNode.ts`
 
 ## Problem
 

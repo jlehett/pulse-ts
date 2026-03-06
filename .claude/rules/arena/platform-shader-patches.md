@@ -1,6 +1,8 @@
+---
+paths:
+  - "demos/arena/src/nodes/PlatformNode.ts"
+---
 # Platform Shader Patches for Grid Effects
-
-**Paths:** `demos/arena/src/nodes/PlatformNode.ts`
 
 ## Pattern
 

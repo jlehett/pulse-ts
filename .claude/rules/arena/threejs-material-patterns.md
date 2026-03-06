@@ -1,6 +1,9 @@
+---
+paths:
+  - "demos/arena/src/nodes/PlatformNode.ts"
+  - "demos/arena/src/nodes/EnergyPillarsNode.ts"
+---
 # Three.js Material Patterns for Arena
-
-**Paths:** `demos/arena/src/nodes/PlatformNode.ts`, `demos/arena/src/nodes/EnergyPillarsNode.ts`
 
 ## Emissive-Only Materials for Uniform Glow
 

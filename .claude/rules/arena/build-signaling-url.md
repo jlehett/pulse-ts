@@ -1,6 +1,10 @@
+---
+paths:
+  - "demos/arena/vite.config.ts"
+  - "demos/arena/src/lobby.ts"
+  - "infra/deploy.sh"
+---
 # Arena Build: VITE_SIGNALING_URL Required for Online Play
-
-**Paths:** `demos/arena/vite.config.ts`, `demos/arena/src/lobby.ts`, `infra/deploy.sh`
 
 ## Requirement
 

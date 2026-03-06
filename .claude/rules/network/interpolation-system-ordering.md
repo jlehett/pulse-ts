@@ -1,6 +1,8 @@
+---
+paths:
+  - "packages/network/src/domain/systems/InterpolationSystem.ts"
+---
 # InterpolationSystem Ordering
-
-**Paths:** `packages/network/src/domain/systems/InterpolationSystem.ts`
 
 ## Key Fact
 

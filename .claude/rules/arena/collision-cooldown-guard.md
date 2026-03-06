@@ -1,6 +1,8 @@
+---
+paths:
+  - "demos/arena/src/nodes/LocalPlayerNode.ts"
+---
 # Collision Cooldown Guard Pattern
-
-**Paths:** `demos/arena/src/nodes/LocalPlayerNode.ts`
 
 ## Problem
 

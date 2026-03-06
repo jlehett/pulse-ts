@@ -1,6 +1,9 @@
+---
+paths:
+  - "demos/arena/src/nodes/LocalPlayerNode.ts"
+  - "demos/arena/src/nodes/AiPlayerNode.ts"
+---
 # Cooldown Phase Timing: Defer Triggers to 'playing' Phase
-
-**Paths:** `demos/arena/src/nodes/LocalPlayerNode.ts`, `demos/arena/src/nodes/AiPlayerNode.ts`
 
 ## Problem
 

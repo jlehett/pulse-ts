@@ -1,6 +1,9 @@
+---
+paths:
+  - "packages/effects/**/*"
+  - "demos/arena/src/nodes/**/*.ts"
+---
 # Global Particle Clear Behavior
-
-**Paths:** `packages/effects/**/*`, `demos/arena/src/nodes/**/*.ts`
 
 ## Critical Constraint
 

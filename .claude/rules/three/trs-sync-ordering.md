@@ -1,6 +1,8 @@
+---
+paths:
+  - "packages/three/src/domain/systems/trsSync.ts"
+---
 # ThreeTRSSyncSystem Ordering
-
-**Paths:** `packages/three/src/domain/systems/trsSync.ts`
 
 ## Key Fact
 

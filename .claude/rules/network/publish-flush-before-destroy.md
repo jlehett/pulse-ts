@@ -1,6 +1,9 @@
+---
+paths:
+  - "packages/network/src/domain/services/TransportService.ts"
+  - "demos/arena/src/nodes/MatchOverOverlayNode.ts"
+---
 # Flush Network Outbox Before World Destruction
-
-**Paths:** `packages/network/src/domain/services/TransportService.ts`, `demos/arena/src/nodes/MatchOverOverlayNode.ts`
 
 ## The Problem
 

@@ -1,6 +1,9 @@
+---
+paths:
+  - "packages/effects/src/domain/ParticlesService.ts"
+  - "demos/arena/src/nodes/ArenaNode.ts"
+---
 # Particle Pool Sizing: Shared Capacity Per Blending Mode
-
-**Paths:** `packages/effects/src/domain/ParticlesService.ts`, `demos/arena/src/nodes/ArenaNode.ts`
 
 ## Critical Constraint
 
