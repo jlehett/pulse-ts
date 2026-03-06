@@ -2,7 +2,7 @@
 id: TICKET-104
 epic: EPIC-017
 title: Update prompt and auto-reload between matches
-status: todo
+status: in-progress
 priority: high
 created: 2026-03-05
 updated: 2026-03-05

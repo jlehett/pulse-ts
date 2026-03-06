@@ -15,6 +15,7 @@ import { initAutoFullscreen } from './autoFullscreen';
 import { showInstallPrompt } from './installPrompt';
 import { setupPostProcessing } from './setupPostProcessing';
 import { isMobileDevice } from './isMobileDevice';
+import { startVersionPolling, isUpdateAvailable } from './versionCheck';
 
 const canvas = document.getElementById('arena') as HTMLCanvasElement;
 const container = canvas.parentElement ?? document.body;
@@ -22,6 +23,7 @@ const container = canvas.parentElement ?? document.body;
 initLandscapeEnforcer();
 initAutoFullscreen();
 showInstallPrompt();
+startVersionPolling();
 
 function createMenuWorld(): { world: World; destroy: () => void } {
     const world = new World();
@@ -243,6 +245,12 @@ async function start() {
             await startOnlineGame(lobby);
             picked = true;
         }
+    }
+
+    // If a new version was deployed while playing, reload now
+    if (isUpdateAvailable()) {
+        location.reload();
+        return;
     }
 
     // Loop back to main menu after game ends
