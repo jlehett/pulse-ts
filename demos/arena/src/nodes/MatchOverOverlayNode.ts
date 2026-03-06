@@ -13,6 +13,8 @@ import {
     applyStaggeredEntrance,
     applyButtonHoverScale,
 } from '../overlayAnimations';
+import { isUpdateAvailable } from '../versionCheck';
+import { createAutoReloader } from '../updateAutoReload';
 
 /** Player colors: P1 = teal, P2 = coral. */
 const PLAYER_COLORS = ['#48c9b0', '#e74c3c'];
@@ -139,6 +141,32 @@ export function MatchOverOverlayNode(
     buttonCol.appendChild(menuBtn);
     applyButtonHoverScale(menuBtn);
 
+    // Update banner — shown between matches when a new version is available
+    const updateBanner = document.createElement('div');
+    updateBanner.textContent = 'New version available \u2014 updating\u2026';
+    Object.assign(updateBanner.style, {
+        position: 'absolute',
+        top: '8px',
+        left: '50%',
+        transform: 'translateX(-50%)',
+        zIndex: '4002',
+        font: 'bold clamp(12px, 2.5vw, 16px) monospace',
+        color: '#48c9b0',
+        backgroundColor: 'rgba(0,0,0,0.75)',
+        border: '1px solid rgba(72,201,176,0.4)',
+        borderRadius: '6px',
+        padding: '8px 20px',
+        opacity: '0',
+        pointerEvents: 'none',
+        transition: 'opacity 0.4s ease',
+    } as Partial<CSSStyleDeclaration>);
+    container.appendChild(updateBanner);
+
+    const reloader = createAutoReloader();
+
+    /** Whether the update banner has been shown for the current match-over. */
+    let updateBannerShown = false;
+
     // --- Online rematch protocol ---
     let rematchState: RematchState = 'idle';
     const world = useWorld();
@@ -155,11 +183,13 @@ export function MatchOverOverlayNode(
             if (msg.type === 'offer') {
                 if (rematchState === 'waiting') {
                     // Mutual agreement — both offered
+                    reloader.cancel();
                     props.onRequestRematch?.();
                 } else if (rematchState === 'idle') {
                     rematchState = 'requested';
                 }
             } else if (msg.type === 'accept') {
+                reloader.cancel();
                 props.onRequestRematch?.();
             } else if (msg.type === 'decline') {
                 rematchState = 'declined';
@@ -175,6 +205,7 @@ export function MatchOverOverlayNode(
                 flushNet();
                 rematchState = 'waiting';
             } else if (rematchState === 'requested') {
+                reloader.cancel();
                 ch.publish({ type: 'accept' });
                 flushNet();
                 props.onRequestRematch?.();
@@ -182,6 +213,7 @@ export function MatchOverOverlayNode(
         });
 
         menuBtn.addEventListener('click', () => {
+            reloader.cancel();
             if (rematchState === 'requested') {
                 ch.publish({ type: 'decline' });
                 flushNet();
@@ -191,10 +223,12 @@ export function MatchOverOverlayNode(
     } else {
         // Local/solo mode — immediate rematch
         rematchBtn.addEventListener('click', () => {
+            reloader.cancel();
             props?.onRequestRematch?.();
         });
 
         menuBtn.addEventListener('click', () => {
+            reloader.cancel();
             props?.onRequestMenu?.();
         });
     }
@@ -264,14 +298,23 @@ export function MatchOverOverlayNode(
                 // Reset rematch state on fresh match-over display
                 rematchState = 'idle';
                 applyStaggeredEntrance([text, buttonCol], 300);
+
+                // Show update banner and schedule reload if a new version landed
+                if (isUpdateAvailable() && !updateBannerShown) {
+                    updateBannerShown = true;
+                    updateBanner.style.opacity = '1';
+                    reloader.schedule();
+                }
             }
         }
         wasVisible = visible;
     });
 
     useDestroy(() => {
+        reloader.dispose();
         backdrop.remove();
         text.remove();
         buttonCol.remove();
+        updateBanner.remove();
     });
 }
