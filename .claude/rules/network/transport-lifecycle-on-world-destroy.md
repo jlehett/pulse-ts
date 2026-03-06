@@ -1,6 +1,9 @@
+---
+paths:
+  - "packages/network/src/public/hooks.ts"
+  - "packages/network/src/domain/services/TransportService.ts"
+---
 # Transport Lifecycle on World Destroy
-
-**Paths:** `packages/network/src/public/hooks.ts`, `packages/network/src/domain/services/TransportService.ts`
 
 ## Implicit Contract
 

@@ -1,6 +1,9 @@
+---
+paths:
+  - "demos/arena/src/nodes/LocalPlayerNode.ts"
+  - "demos/arena/src/playerVelocity.ts"
+---
 # Knockback: Other Player's Velocity + Bidirectional Online Sync
-
-**Paths:** `demos/arena/src/nodes/LocalPlayerNode.ts`, `demos/arena/src/playerVelocity.ts`
 
 ## Design Contract
 

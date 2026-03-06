@@ -1,6 +1,8 @@
+---
+paths:
+  - "packages/input/src/domain/services/Input.ts"
+---
 # InputService Commit Pipeline Ordering
-
-**Paths:** `packages/input/src/domain/services/Input.ts`
 
 ## Critical Ordering Constraint
 

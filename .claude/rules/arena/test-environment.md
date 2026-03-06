@@ -1,6 +1,8 @@
+---
+paths:
+  - "demos/arena/**/*.test.ts"
+---
 # Arena Demo Test Environment
-
-**Paths:** `demos/arena/**/*.test.ts`
 
 ## Test Runner & Transform
 

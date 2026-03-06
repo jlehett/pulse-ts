@@ -1,6 +1,9 @@
+---
+paths:
+  - "demos/arena/src/setupPostProcessing.ts"
+  - "demos/arena/src/nodes/**/*.ts"
+---
 # Bloom + ACES Tonemapping Interaction
-
-**Paths:** `demos/arena/src/setupPostProcessing.ts`, `demos/arena/src/nodes/**/*.ts`
 
 ## The Problem
 

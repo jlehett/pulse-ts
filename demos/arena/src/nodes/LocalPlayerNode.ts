@@ -539,10 +539,8 @@ export function LocalPlayerNode({
                 // Strip the solver's normal velocity and replace with ours
                 const solverNormal =
                     body.linearVelocity.x * nx + body.linearVelocity.z * nz;
-                body.linearVelocity.x +=
-                    (correctedNormal - solverNormal) * nx;
-                body.linearVelocity.z +=
-                    (correctedNormal - solverNormal) * nz;
+                body.linearVelocity.x += (correctedNormal - solverNormal) * nx;
+                body.linearVelocity.z += (correctedNormal - solverNormal) * nz;
             } else {
                 // Overlapping — just zero out horizontal velocity
                 body.linearVelocity.x = 0;

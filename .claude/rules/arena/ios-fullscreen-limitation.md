@@ -1,6 +1,8 @@
+---
+paths:
+  - "demos/arena/src/**/*"
+---
 # iOS Safari Fullscreen API Limitation
-
-**Paths:** `demos/arena/src/**/*`
 
 ## The Problem
 

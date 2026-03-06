@@ -1,6 +1,9 @@
+---
+paths:
+  - "demos/arena/src/lobby.ts"
+  - "demos/arena/infra/lambda/src/index.ts"
+---
 # Lambda WebSocket Message Ordering Is NOT Guaranteed
-
-**Paths:** `demos/arena/src/lobby.ts`, `demos/arena/infra/lambda/src/index.ts`
 
 ## Problem
 

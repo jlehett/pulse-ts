@@ -1,6 +1,8 @@
+---
+paths:
+  - "demos/arena/src/**/*"
+---
 # Screen-Space Indicators for 3D Objects
-
-**Paths:** `demos/arena/src/**/*`
 
 ## Pattern
 

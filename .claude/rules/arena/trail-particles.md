@@ -1,6 +1,8 @@
+---
+paths:
+  - "demos/arena/src/**/*.ts"
+---
 # Trail Particles Visibility
-
-**Paths:** `demos/arena/src/**/*.ts`
 
 ## Requirement
 

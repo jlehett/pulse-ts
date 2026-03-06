@@ -1,6 +1,8 @@
+---
+paths:
+  - "demos/arena/src/**/*"
+---
 # Arena Scene Graph Structure
-
-**Paths:** `demos/arena/src/**/*`
 
 ## Hierarchy
 

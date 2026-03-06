@@ -1,6 +1,10 @@
+---
+paths:
+  - "packages/physics/src/domain/engine/solver/solver.ts"
+  - "packages/physics/src/domain/services/PhysicsService.ts"
+  - "demos/arena/src/nodes/LocalPlayerNode.ts"
+---
 # Kinematic Bodies Absorb Zero Collision Response
-
-**Paths:** `packages/physics/src/domain/engine/solver/solver.ts`, `packages/physics/src/domain/services/PhysicsService.ts`, `demos/arena/src/nodes/LocalPlayerNode.ts`
 
 ## The Problem
 

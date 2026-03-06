@@ -1,6 +1,9 @@
+---
+paths:
+  - "demos/arena/src/**/*OverlayNode.ts"
+  - "demos/arena/src/overlayAnimations.ts"
+---
 # Overlay Transform Preservation Convention
-
-**Paths:** `demos/arena/src/**/*OverlayNode.ts`, `demos/arena/src/overlayAnimations.ts`
 
 ## Problem
 

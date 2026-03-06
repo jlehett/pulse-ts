@@ -7,5 +7,8 @@ export default {
     setupFiles: ['<rootDir>/setupTests.ts'],
     testMatch: ['**/*.test.ts', '**/*.test.tsx'],
     testPathIgnorePatterns: ['<rootDir>/*/node_modules/', '<rootDir>/*/dist/', '<rootDir>/infra/'],
+    globals: {
+        __APP_VERSION__: 'test-abc',
+    },
     watchman: false,
 };

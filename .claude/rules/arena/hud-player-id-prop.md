@@ -1,6 +1,9 @@
+---
+paths:
+  - "demos/arena/src/nodes/*HudNode.ts"
+  - "demos/arena/src/nodes/TouchControlsNode.ts"
+---
 # HUD Nodes Must Accept playerId Prop
-
-**Paths:** `demos/arena/src/nodes/*HudNode.ts`, `demos/arena/src/nodes/TouchControlsNode.ts`
 
 ## Problem
 

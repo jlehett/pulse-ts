@@ -1,6 +1,9 @@
+---
+paths:
+  - "packages/network/src/public/transform.ts"
+  - "packages/network/src/domain/replication/protocol.ts"
+---
 # Replication Snapshots: Clone Mutable References
-
-**Paths:** `packages/network/src/public/transform.ts`, `packages/network/src/domain/replication/protocol.ts`
 
 ## The Problem
 

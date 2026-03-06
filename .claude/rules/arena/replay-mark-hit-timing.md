@@ -1,6 +1,10 @@
+---
+paths:
+  - "demos/arena/src/replay.ts"
+  - "demos/arena/src/nodes/LocalPlayerNode.ts"
+  - "demos/arena/src/nodes/GameManagerNode.ts"
+---
 # Replay Mark Hit Timing Constraint
-
-**Paths:** `demos/arena/src/replay.ts`, `demos/arena/src/nodes/LocalPlayerNode.ts`, `demos/arena/src/nodes/GameManagerNode.ts`
 
 ## Critical Timing Requirement
 

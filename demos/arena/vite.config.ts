@@ -16,6 +16,12 @@ export default defineConfig({
         'window.__SIGNALING_URL__': process.env.VITE_SIGNALING_URL
             ? JSON.stringify(process.env.VITE_SIGNALING_URL)
             : 'undefined',
+        // Inject app version at build time for version checking.
+        // Set VITE_APP_VERSION env var before building (deploy.sh uses git SHA).
+        // Falls back to 'dev' for local development.
+        '__APP_VERSION__': JSON.stringify(
+            process.env.VITE_APP_VERSION || 'dev',
+        ),
     },
     server: {
         open: true,

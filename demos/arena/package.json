@@ -19,7 +19,8 @@
                 }
             ],
             "@babel/preset-typescript"
-        ]
+        ],
+        "plugins": []
     },
     "dependencies": {
         "@pulse-ts/audio": "*",

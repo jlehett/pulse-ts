@@ -1,6 +1,8 @@
+---
+paths:
+  - "demos/arena/src/nodes/**/*Node.ts"
+---
 # DOM Overlay Initial Visibility Flash
-
-**Paths:** `demos/arena/src/nodes/**/*Node.ts`
 
 ## Problem
 

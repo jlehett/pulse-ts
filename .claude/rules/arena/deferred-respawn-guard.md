@@ -1,6 +1,9 @@
+---
+paths:
+  - "demos/arena/src/nodes/LocalPlayerNode.ts"
+  - "demos/arena/src/nodes/RemotePlayerNode.ts"
+---
 # Deferred Respawn Guard: Guard All Condition Paths
-
-**Paths:** `demos/arena/src/nodes/LocalPlayerNode.ts`, `demos/arena/src/nodes/RemotePlayerNode.ts`
 
 ## Problem
 
