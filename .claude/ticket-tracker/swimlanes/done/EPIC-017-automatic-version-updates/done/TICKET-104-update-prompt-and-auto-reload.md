@@ -2,7 +2,9 @@
 id: TICKET-104
 epic: EPIC-017
 title: Update prompt and auto-reload between matches
-status: in-progress
+status: done
+branch: ticket-104/update-prompt-auto-reload
+pr: 106
 priority: high
 created: 2026-03-05
 updated: 2026-03-05
@@ -34,11 +36,11 @@ and reload at an appropriate time so active gameplay is never interrupted.
 
 ## Acceptance Criteria
 
-- [ ] No reload or interruption during active gameplay
-- [ ] Banner appears between matches when an update is available
-- [ ] Page reloads automatically after banner is shown
-- [ ] If a new match starts before reload, update is deferred
-- [ ] Banner is visually clear but unobtrusive
+- [x] No reload or interruption during active gameplay
+- [x] Banner appears between matches when an update is available
+- [x] Page reloads automatically after banner is shown
+- [x] If a new match starts before reload, update is deferred
+- [x] Banner is visually clear but unobtrusive
 
 ## Notes
 
