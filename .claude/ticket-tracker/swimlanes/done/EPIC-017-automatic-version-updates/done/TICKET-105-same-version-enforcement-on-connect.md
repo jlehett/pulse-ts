@@ -2,7 +2,7 @@
 id: TICKET-105
 epic: EPIC-017
 title: Same-version enforcement on connect
-status: in-progress
+status: done
 priority: high
 branch: ticket-105-same-version-enforcement-on-connect
 created: 2026-03-05
@@ -40,14 +40,20 @@ mismatched client code.
 
 ## Acceptance Criteria
 
-- [ ] Version is exchanged between peers before match start
-- [ ] Mismatched versions prevent match from starting
-- [ ] Stale client is prompted to refresh with a clear message
-- [ ] Fresh client returns to lobby or shows a waiting state
-- [ ] Same-version clients connect and play normally (no regression)
-- [ ] Tests cover version comparison logic
+- [x] Version is exchanged between peers before match start
+- [x] Mismatched versions prevent match from starting
+- [x] Stale client is prompted to refresh with a clear message
+- [x] Fresh client returns to lobby or shows a waiting state
+- [x] Same-version clients connect and play normally (no regression)
+- [x] Tests cover version comparison logic
 
 ## Notes
 
 - **2026-03-05**: Ticket created.
 - **2026-03-05**: Starting implementation.
+- **2026-03-05**: Implementation complete. Version exchanged via lobby signaling
+  (create-lobby/join-lobby). Both host and joiner compare versions on
+  joiner-connected/join-accepted. Mismatch screen shows reload for stale client
+  or back-to-lobby for fresh client. Added `versionMatch.ts` with comparison
+  logic and full test coverage (8 tests). Updated Lambda to store/forward
+  hostVersion. Added 8 lobby tests for version enforcement flows.

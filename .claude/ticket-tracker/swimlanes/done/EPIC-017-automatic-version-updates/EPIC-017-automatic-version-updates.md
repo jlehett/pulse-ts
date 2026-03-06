@@ -1,7 +1,7 @@
 ---
 id: EPIC-017
 title: Automatic version updates
-status: todo
+status: done
 created: 2026-03-05
 updated: 2026-03-05
 ---
@@ -34,3 +34,4 @@ mismatches between online players are detected and handled gracefully.
 ## Notes
 
 - **2026-03-05**: Epic created. Scope and approach TBD.
+- **2026-03-05**: Epic closed — all tickets complete.
