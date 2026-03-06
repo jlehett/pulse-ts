@@ -39,15 +39,21 @@ deploy_arena() {
     echo ""
     echo "==> Building arena demo..."
     cd "$REPO_DIR/demos/arena"
-    VITE_SIGNALING_URL="$WS_ENDPOINT" npm run build
+    APP_VERSION=$(git -C "$REPO_DIR" rev-parse --short HEAD)
+    echo "    Version:        $APP_VERSION"
+    VITE_APP_VERSION="$APP_VERSION" VITE_SIGNALING_URL="$WS_ENDPOINT" npm run build
+
+    # Write version manifest for client-side update detection
+    echo "{\"version\":\"$APP_VERSION\"}" > dist/version.json
 
     echo "==> Uploading arena to S3..."
-    # HTML: no-cache so browsers always revalidate (prevents stale-page bugs)
+    # Hashed assets: long cache (Vite content-hashed filenames)
     aws s3 sync dist/ "s3://$ARENA_BUCKET/demos/arena/" --delete \
-      --exclude "*.html" \
+      --exclude "*.html" --exclude "version.json" \
       --cache-control "max-age=31536000, immutable"
+    # HTML + version.json: no-cache so browsers always revalidate
     aws s3 sync dist/ "s3://$ARENA_BUCKET/demos/arena/" \
-      --exclude "*" --include "*.html" \
+      --exclude "*" --include "*.html" --include "version.json" \
       --cache-control "no-cache"
 }
 

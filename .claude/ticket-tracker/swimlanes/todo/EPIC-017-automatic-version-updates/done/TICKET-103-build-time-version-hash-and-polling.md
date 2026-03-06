@@ -2,7 +2,7 @@
 id: TICKET-103
 epic: EPIC-017
 title: Build-time version hash and version polling
-status: todo
+status: done
 branch: ticket-103-build-time-version-hash-and-polling
 priority: high
 created: 2026-03-05
@@ -38,13 +38,16 @@ running client to detect when a newer version has been deployed.
 
 ## Acceptance Criteria
 
-- [ ] `__APP_VERSION__` is available at runtime and matches the deployed hash
-- [ ] `version.json` is written to S3 on every deploy
-- [ ] `version.json` is served with appropriate cache headers (no stale reads)
-- [ ] Polling detects a version mismatch within ~60 seconds of deploy
-- [ ] `isUpdateAvailable()` or equivalent API returns true when mismatch detected
-- [ ] Tests cover version comparison logic
+- [x] `__APP_VERSION__` is available at runtime and matches the deployed hash
+- [x] `version.json` is written to S3 on every deploy
+- [x] `version.json` is served with appropriate cache headers (no stale reads)
+- [x] Polling detects a version mismatch within ~60 seconds of deploy
+- [x] `isUpdateAvailable()` or equivalent API returns true when mismatch detected
+- [x] Tests cover version comparison logic
 
 ## Notes
 
 - **2026-03-05**: Ticket created.
+- **2026-03-05**: Implementation complete. Added `__APP_VERSION__` injection via
+  Vite define, `version.json` generation in deploy.sh with no-cache headers,
+  and `versionCheck.ts` polling module with 16 tests covering all APIs.
