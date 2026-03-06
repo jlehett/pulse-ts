@@ -93,7 +93,12 @@ export function useReplicateTransform(
                           },
                       };
                       if (readVelocity) {
-                          data.v = readVelocity();
+                          const rv = readVelocity();
+                          // Clone to a plain object so shallowDelta sees a
+                          // new reference each snapshot. Returning the same
+                          // Vec3 instance would cause `a !== b` to be false,
+                          // suppressing velocity updates after the first snapshot.
+                          data.v = { x: rv.x, y: rv.y, z: rv.z };
                       }
                       return data;
                   }

@@ -15,12 +15,11 @@ resource "aws_cloudfront_function" "arena_rewrite" {
       var request = event.request;
       var uri = request.uri;
 
-      // Strip /demos/arena prefix
-      uri = uri.replace(/^\/demos\/arena/, '');
-
-      // Default to index.html for directory requests
-      if (uri === '' || uri === '/') {
-        uri = '/index.html';
+      // Rewrite bare directory requests to index.html.
+      // Files are stored in S3 under the demos/arena/ prefix so
+      // no path stripping is needed — only the directory fallback.
+      if (uri === '/demos/arena' || uri === '/demos/arena/') {
+        uri = '/demos/arena/index.html';
       }
 
       request.uri = uri;

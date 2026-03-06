@@ -1,18 +1,3 @@
-output "cloudfront_distribution_domain" {
-  description = "CloudFront distribution domain name for the frontend"
-  value       = aws_cloudfront_distribution.frontend.domain_name
-}
-
-output "cloudfront_distribution_id" {
-  description = "CloudFront distribution ID (needed for cache invalidation on deploy)"
-  value       = aws_cloudfront_distribution.frontend.id
-}
-
-output "s3_bucket_name" {
-  description = "S3 bucket name for frontend assets"
-  value       = aws_s3_bucket.frontend.id
-}
-
 output "websocket_api_endpoint" {
   description = "WebSocket API endpoint URL for the signaling server"
   value       = aws_apigatewayv2_stage.signaling.invoke_url
@@ -25,5 +10,5 @@ output "dynamodb_table_name" {
 
 output "kvs_channel_arn" {
   description = "Kinesis Video Streams channel ARN for TURN relay"
-  value       = aws_kinesis_video_stream.turn.arn
+  value       = local.kvs_channel_arn
 }

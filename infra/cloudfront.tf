@@ -34,6 +34,31 @@ resource "aws_cloudfront_distribution" "main" {
 
   # --- Cache behaviors ---
 
+  # Arena demo: exact /demos/arena (no trailing slash)
+  ordered_cache_behavior {
+    path_pattern           = "/demos/arena"
+    allowed_methods        = ["GET", "HEAD", "OPTIONS"]
+    cached_methods         = ["GET", "HEAD"]
+    target_origin_id       = "s3-arena"
+    viewer_protocol_policy = "redirect-to-https"
+
+    forwarded_values {
+      query_string = false
+      cookies {
+        forward = "none"
+      }
+    }
+
+    function_association {
+      event_type   = "viewer-request"
+      function_arn = aws_cloudfront_function.arena_rewrite.arn
+    }
+
+    min_ttl     = 0
+    default_ttl = 0
+    max_ttl     = 0
+  }
+
   # Arena demo: /demos/arena/*
   ordered_cache_behavior {
     path_pattern           = "/demos/arena/*"
@@ -55,8 +80,8 @@ resource "aws_cloudfront_distribution" "main" {
     }
 
     min_ttl     = 0
-    default_ttl = 3600
-    max_ttl     = 86400
+    default_ttl = 0
+    max_ttl     = 0
   }
 
   # Default: landing page
@@ -78,20 +103,10 @@ resource "aws_cloudfront_distribution" "main" {
     max_ttl     = 86400
   }
 
-  # SPA fallback for arena (serve index.html for client-side routes)
-  custom_error_response {
-    error_code            = 403
-    response_code         = 200
-    response_page_path    = "/index.html"
-    error_caching_min_ttl = 10
-  }
-
-  custom_error_response {
-    error_code            = 404
-    response_code         = 200
-    response_page_path    = "/index.html"
-    error_caching_min_ttl = 10
-  }
+  # NOTE: Do NOT add custom_error_response here. In a multi-origin setup,
+  # response_page_path always serves from the DEFAULT origin (landing),
+  # which poisons arena requests with the landing page. SPA fallback is
+  # handled per-origin via CloudFront Functions instead.
 
   restrictions {
     geo_restriction {

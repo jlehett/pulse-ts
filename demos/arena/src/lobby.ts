@@ -157,9 +157,17 @@ function establishP2P(
     isHost: boolean,
     peerConnectionId: string,
     iceServers: RTCIceServer[],
+    bufferedMessages: MessageEvent[] = [],
 ): Promise<DataChannelTransport> {
+    const role = isHost ? 'HOST' : 'JOINER';
     return new Promise((resolve, reject) => {
-        const pc = new RTCPeerConnection({ iceServers });
+        let pc: RTCPeerConnection;
+        try {
+            pc = new RTCPeerConnection({ iceServers });
+        } catch (e: any) {
+            reject(e);
+            return;
+        }
         let dc: RTCDataChannel | null = null;
         let resolved = false;
 
@@ -192,6 +200,24 @@ function establishP2P(
             }
         };
 
+        // Queue ICE candidates that arrive before the offer/answer sets the
+        // remote description. Flushed once setRemoteDescription succeeds.
+        const pendingIceCandidates: RTCIceCandidate[] = [];
+        let remoteDescriptionSet = false;
+
+        function flushIceCandidates() {
+            remoteDescriptionSet = true;
+            for (const c of pendingIceCandidates) {
+                pc.addIceCandidate(c).catch((err) =>
+                    console.error(
+                        `[P2P ${role}] Error adding queued ICE candidate:`,
+                        err,
+                    ),
+                );
+            }
+            pendingIceCandidates.length = 0;
+        }
+
         // Listen for signaling messages from the peer
         const onSignal = (event: MessageEvent) => {
             let msg: any;
@@ -210,7 +236,10 @@ function establishP2P(
 
             if (signal.type === 'offer' && signal.sdp) {
                 pc.setRemoteDescription(new RTCSessionDescription(signal))
-                    .then(() => pc.createAnswer())
+                    .then(() => {
+                        flushIceCandidates();
+                        return pc.createAnswer();
+                    })
                     .then((answer) => pc.setLocalDescription(answer))
                     .then(() => {
                         signalingWs.send(
@@ -220,19 +249,42 @@ function establishP2P(
                             }),
                         );
                     })
-                    .catch(() => {});
+                    .catch((err) =>
+                        console.error(
+                            `[P2P ${role}] Error handling offer:`,
+                            err,
+                        ),
+                    );
             } else if (signal.type === 'answer' && signal.sdp) {
-                pc.setRemoteDescription(
-                    new RTCSessionDescription(signal),
-                ).catch(() => {});
+                pc.setRemoteDescription(new RTCSessionDescription(signal))
+                    .then(() => flushIceCandidates())
+                    .catch((err) =>
+                        console.error(
+                            `[P2P ${role}] Error handling answer:`,
+                            err,
+                        ),
+                    );
             } else if (signal.type === 'ice' && signal.candidate) {
-                pc.addIceCandidate(new RTCIceCandidate(signal.candidate)).catch(
-                    () => {},
-                );
+                const candidate = new RTCIceCandidate(signal.candidate);
+                if (remoteDescriptionSet) {
+                    pc.addIceCandidate(candidate).catch((err) =>
+                        console.error(
+                            `[P2P ${role}] Error adding ICE candidate:`,
+                            err,
+                        ),
+                    );
+                } else {
+                    pendingIceCandidates.push(candidate);
+                }
             }
         };
 
         signalingWs.addEventListener('message', onSignal);
+
+        // Replay any messages buffered during ICE credential fetch
+        for (const msg of bufferedMessages) {
+            onSignal(msg);
+        }
 
         if (isHost) {
             // Host creates the DataChannel and sends the offer
@@ -250,7 +302,9 @@ function establishP2P(
                         }),
                     );
                 })
-                .catch(() => {});
+                .catch((err) => {
+                    console.error(`[P2P ${role}] Error creating offer:`, err);
+                });
         } else {
             // Joiner waits for the DataChannel from the host
             pc.ondatachannel = (ev) => {
@@ -683,9 +737,24 @@ function showJoinWaiting(
     let cleaned = false;
     let hostConnectionId: string | null = null;
 
+    // Buffer signal messages from the moment we join. Lambda processes
+    // game-start and offer as concurrent invocations, so the offer can
+    // arrive BEFORE game-start. Buffering early ensures we never lose it.
+    const signalBuffer: MessageEvent[] = [];
+    const signalBufferHandler = (ev: MessageEvent) => {
+        try {
+            const m = JSON.parse(ev.data);
+            if (m.type === 'signal') signalBuffer.push(ev);
+        } catch {
+            /* ignore non-JSON */
+        }
+    };
+    ws.addEventListener('message', signalBufferHandler);
+
     function cleanup() {
         if (cleaned) return;
         cleaned = true;
+        ws.removeEventListener('message', signalBufferHandler);
     }
 
     status.set('connecting', 'Joining lobby...');
@@ -713,11 +782,13 @@ function showJoinWaiting(
             status.set('connected', `Joined ${msg.hostUsername}'s game`);
             status.set('connecting', 'Waiting for host to start...');
         } else if (msg.type === 'game-start' && hostConnectionId) {
-            cleanup();
             ws.removeEventListener('message', onMessage);
             status.set('connecting', 'Fetching relay credentials...');
 
             const iceServers = await requestIceServers(ws);
+
+            // Stop buffering and hand everything to establishP2P
+            ws.removeEventListener('message', signalBufferHandler);
             status.set('connecting', 'Establishing P2P connection...');
 
             try {
@@ -726,7 +797,9 @@ function showJoinWaiting(
                     false,
                     hostConnectionId,
                     iceServers,
+                    signalBuffer,
                 );
+                cleanup();
                 parentCleanup();
                 finish({ mode: 'join', playerId: 1, transport });
             } catch {

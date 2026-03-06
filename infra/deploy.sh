@@ -42,13 +42,20 @@ deploy_arena() {
     VITE_SIGNALING_URL="$WS_ENDPOINT" npm run build
 
     echo "==> Uploading arena to S3..."
-    aws s3 sync dist/ "s3://$ARENA_BUCKET" --delete
+    # HTML: no-cache so browsers always revalidate (prevents stale-page bugs)
+    aws s3 sync dist/ "s3://$ARENA_BUCKET/demos/arena/" --delete \
+      --exclude "*.html" \
+      --cache-control "max-age=31536000, immutable"
+    aws s3 sync dist/ "s3://$ARENA_BUCKET/demos/arena/" \
+      --exclude "*" --include "*.html" \
+      --cache-control "no-cache"
 }
 
 deploy_landing() {
     echo ""
     echo "==> Uploading landing page to S3..."
-    aws s3 sync "$INFRA_DIR/landing/" "s3://$LANDING_BUCKET" --delete
+    aws s3 sync "$INFRA_DIR/landing/" "s3://$LANDING_BUCKET" --delete \
+      --cache-control "no-cache"
 }
 
 case "$TARGET" in

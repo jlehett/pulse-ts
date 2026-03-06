@@ -213,10 +213,40 @@ async function listOpenLobbies(): Promise<LobbyListEntry[]> {
             ExpressionAttributeValues: { ':waiting': { S: 'waiting' } },
         }),
     );
-    return (res.Items || []).map((item) => ({
-        lobbyId: item.lobbyId.S!,
-        hostUsername: item.hostUsername?.S || 'Unknown',
-    }));
+    const items = res.Items || [];
+
+    // Validate host connections still exist; clean up stale lobbies lazily.
+    const results: LobbyListEntry[] = [];
+    for (const item of items) {
+        const hostConnId = item.hostConnectionId?.S || '';
+        const conn = hostConnId ? await getConnection(hostConnId) : null;
+        if (conn) {
+            results.push({
+                lobbyId: item.lobbyId.S!,
+                hostUsername: item.hostUsername?.S || 'Unknown',
+            });
+        } else {
+            // Host connection gone — remove orphaned lobby
+            await removeLobby(item.lobbyId.S!);
+        }
+    }
+    return results;
+}
+
+/** Remove any lobbies owned by a connection that is disconnecting. */
+async function cleanupLobbiesForConnection(
+    connectionId: string,
+): Promise<void> {
+    const res = await dynamo.send(
+        new ScanCommand({
+            TableName: LOBBIES_TABLE,
+            FilterExpression: 'hostConnectionId = :cid',
+            ExpressionAttributeValues: { ':cid': { S: connectionId } },
+        }),
+    );
+    for (const item of res.Items || []) {
+        await removeLobby(item.lobbyId.S!);
+    }
 }
 
 async function joinLobby(
@@ -383,6 +413,10 @@ async function handleDisconnect(
                 await revertLobbyToWaiting(lobby);
             }
         }
+    } else {
+        // Connection record already gone (TTL or 410 cleanup) — scan for
+        // orphaned lobbies owned by this connection and remove them.
+        await cleanupLobbiesForConnection(connectionId);
     }
 
     await removeConnection(connectionId);
@@ -519,10 +553,14 @@ async function handleDefault(event: WebSocketEvent): Promise<LambdaResponse> {
 
         case 'game-start': {
             const conn = await getConnection(connectionId);
-            if (!conn || !conn.lobbyId || conn.role !== 'host') break;
+            if (!conn || !conn.lobbyId || conn.role !== 'host') {
+                break;
+            }
 
             const lobby = await getLobby(conn.lobbyId);
-            if (!lobby || !lobby.joinerConnectionId) break;
+            if (!lobby || !lobby.joinerConnectionId) {
+                break;
+            }
 
             await send(apigw, lobby.joinerConnectionId, {
                 type: 'game-start',
@@ -538,7 +576,7 @@ async function handleDefault(event: WebSocketEvent): Promise<LambdaResponse> {
                     iceServers,
                 });
             } catch (err) {
-                console.error('Failed to fetch ICE servers:', err);
+                console.error('[ICE] Failed to fetch ICE servers:', err);
                 await send(apigw, connectionId, {
                     type: 'error',
                     message: 'Failed to fetch ICE server credentials',

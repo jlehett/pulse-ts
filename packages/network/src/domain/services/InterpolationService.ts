@@ -71,6 +71,24 @@ export class InterpolationService extends Service {
         e.target = { ...e.target, ...patch };
     }
 
+    /**
+     * Returns the most recent replicated velocity for an entity, or `null`
+     * if no velocity data has been received.
+     *
+     * @param id - The stable entity identifier.
+     * @returns The velocity `{x, y, z}` from the latest snapshot, or `null`.
+     *
+     * @example
+     * ```ts
+     * const v = interp.getTargetVelocity('player-1');
+     * if (v) console.log(v.x, v.y, v.z);
+     * ```
+     */
+    getTargetVelocity(id: string): { x: number; y: number; z: number } | null {
+        const e = this.m.get(id);
+        return e?.target.v ?? null;
+    }
+
     /** Steps interpolation toward targets for all registered entities.
      * @param dt Delta time in seconds. */
     tick(dt: number) {

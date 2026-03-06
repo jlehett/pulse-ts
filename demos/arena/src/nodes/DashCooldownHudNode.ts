@@ -5,6 +5,11 @@ import { GameCtx } from '../contexts';
 import { getDashCooldownProgress } from '../dashCooldown';
 import { isReplayActive } from '../replay';
 
+export interface DashCooldownHudNodeProps {
+    /** Local player ID for reading dash cooldown progress. @defaultValue `0` */
+    playerId?: number;
+}
+
 /**
  * Small HUD element showing dash cooldown progress for desktop (non-mobile)
  * players. Positioned at the bottom-left corner with a "DASH COOLDOWN" label.
@@ -12,7 +17,9 @@ import { isReplayActive } from '../replay';
  * cooldown recovers. Hidden on mobile devices (where the dash button shows its
  * own fill effect), during intro cinematics, and during replays.
  */
-export function DashCooldownHudNode() {
+export function DashCooldownHudNode(
+    props?: Readonly<DashCooldownHudNodeProps>,
+) {
     // Only render on desktop — mobile uses the dash button fill
     if (isMobileDevice()) return;
 
@@ -80,7 +87,7 @@ export function DashCooldownHudNode() {
         wrapper.style.opacity = hidden ? '0' : '1';
 
         if (!hidden) {
-            const progress = getDashCooldownProgress(0);
+            const progress = getDashCooldownProgress(props?.playerId ?? 0);
             const pct = Math.min(100, Math.round(progress * 100));
             fill.style.width = `${pct}%`;
 

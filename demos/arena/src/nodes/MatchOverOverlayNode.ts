@@ -1,7 +1,12 @@
-import { useFrameUpdate, useDestroy, useContext } from '@pulse-ts/core';
+import {
+    useFrameUpdate,
+    useDestroy,
+    useContext,
+    useWorld,
+} from '@pulse-ts/core';
 import { useThreeContext } from '@pulse-ts/three';
 import { useSound } from '@pulse-ts/audio';
-import { useChannel } from '@pulse-ts/network';
+import { useChannel, TransportService } from '@pulse-ts/network';
 import { GameCtx } from '../contexts';
 import { RematchChannel, type RematchMessage } from '../config/channels';
 import {
@@ -136,6 +141,14 @@ export function MatchOverOverlayNode(
 
     // --- Online rematch protocol ---
     let rematchState: RematchState = 'idle';
+    const world = useWorld();
+
+    /** Flush the network outbox so any just-published channel message
+     *  is sent over the wire before the world is torn down. Without
+     *  this, `publish()` queues to an outbox that `NetworkTick` flushes
+     *  on the next tick — but `onRequestRematch`/`onRequestMenu` destroy
+     *  the world synchronously, so the tick never runs. */
+    const flushNet = () => world.getService(TransportService)?.flushOutgoing();
 
     if (props?.online) {
         const ch = useChannel(RematchChannel, (msg: RematchMessage) => {
@@ -159,9 +172,11 @@ export function MatchOverOverlayNode(
         rematchBtn.addEventListener('click', () => {
             if (rematchState === 'idle') {
                 ch.publish({ type: 'offer' });
+                flushNet();
                 rematchState = 'waiting';
             } else if (rematchState === 'requested') {
                 ch.publish({ type: 'accept' });
+                flushNet();
                 props.onRequestRematch?.();
             }
         });
@@ -169,6 +184,7 @@ export function MatchOverOverlayNode(
         menuBtn.addEventListener('click', () => {
             if (rematchState === 'requested') {
                 ch.publish({ type: 'decline' });
+                flushNet();
             }
             props.onRequestMenu?.();
         });

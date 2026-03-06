@@ -4,12 +4,13 @@ import {
     useContext,
     useFixedUpdate,
     useFrameUpdate,
+    useWorld,
     Transform,
 } from '@pulse-ts/core';
 import { useRigidBody, useSphereCollider } from '@pulse-ts/physics';
 import { useMesh } from '@pulse-ts/three';
 import { useParticleBurst } from '@pulse-ts/effects';
-import { useReplicateTransform } from '@pulse-ts/network';
+import { useReplicateTransform, InterpolationService } from '@pulse-ts/network';
 import { PlayerTag } from '../components/PlayerTag';
 import { GameCtx } from '../contexts';
 import { PLAYER_RADIUS } from './LocalPlayerNode';
@@ -21,6 +22,7 @@ import {
     TRAIL_BASE_INTERVAL,
 } from '../config/arena';
 import { stagePlayerPosition, getReplayPosition } from '../replay';
+import { setPlayerVelocity } from '../playerVelocity';
 
 export interface RemotePlayerNodeProps {
     remotePlayerId: number;
@@ -41,8 +43,11 @@ export function RemotePlayerNode({
     const gameState = useContext(GameCtx);
     const spawn = SPAWN_POSITIONS[remotePlayerId];
 
+    const world = useWorld();
+
     // Network identity — matches the producer's StableId in the other world
-    useStableId(`player-${remotePlayerId}`);
+    const stableId = `player-${remotePlayerId}`;
+    useStableId(stableId);
     // Higher lambda = snappier tracking. Default 12 is too sluggish for a
     // fast-paced arena — remote players visually lag behind their true position,
     // making collisions appear to trigger at a distance ("forcefield" effect).
@@ -53,11 +58,15 @@ export function RemotePlayerNode({
     const transform = useComponent(Transform);
     transform.localPosition.set(...spawn);
 
-    // Kinematic body — position is driven by replication, not physics
+    // Kinematic body — position is driven by replication, not physics.
+    // Restitution set to 0 to minimize the physics bounce on the local
+    // dynamic body (kinematic gets invMass=0, so 100% of the collision
+    // response hits the local player). The knockback system handles all
+    // intentional impulses; the solver only provides position correction.
     useRigidBody({ type: 'kinematic' });
     useSphereCollider(PLAYER_RADIUS, {
-        friction: 0.3,
-        restitution: 0.2,
+        friction: 0,
+        restitution: 0,
     });
 
     // Visual — same sphere mesh with subtle emissive glow (blooms under post-processing)
@@ -86,15 +95,41 @@ export function RemotePlayerNode({
     let prevTrailX = spawn[0];
     let prevTrailZ = spawn[2];
 
+    // Track round number to detect round resets — snap to spawn immediately
+    // so the remote player doesn't linger at their post-knockout position
+    // while waiting for replicated position updates from the other machine.
+    let lastRound = gameState.round;
+
     // Stage position for replay recording every fixed step, and drive
     // transform from replay buffer during playback so trsSync picks it up.
+    // Use the replicated velocity from the InterpolationService (source-
+    // authoritative, sent by the producer in each snapshot) rather than
+    // deriving it from interpolated position deltas, which lag during
+    // sudden speed changes (dashes).
     useFixedUpdate(() => {
+        // Round reset — snap to spawn so the remote player doesn't linger
+        // at their post-knockout position during ko_flash/countdown.
+        if (gameState.round !== lastRound) {
+            lastRound = gameState.round;
+            transform.localPosition.set(...spawn);
+            root.visible = true;
+        }
+
         stagePlayerPosition(
             remotePlayerId,
             transform.localPosition.x,
             transform.localPosition.y,
             transform.localPosition.z,
         );
+
+        // Read replicated velocity from the interpolation target — this is
+        // the source-authoritative velocity sent by the producer, not derived
+        // from smoothed position deltas.
+        const interp = world.getService(InterpolationService);
+        const rv = interp?.getTargetVelocity(stableId);
+        if (rv) {
+            setPlayerVelocity(remotePlayerId, rv.x, rv.z);
+        }
 
         if (gameState.phase === 'replay') {
             const replayPos = getReplayPosition(remotePlayerId);

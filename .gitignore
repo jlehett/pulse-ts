@@ -16,3 +16,4 @@ tsconfig.tsbuildinfo
 *.tfvars
 .terraform/
 .terraform.lock.hcl
+*.tfstate.*

@@ -109,7 +109,11 @@ export function ArenaNode(props?: Readonly<ArenaNodeProps>) {
     const gameState: GameState = {
         scores: [0, 0],
         round: 1,
-        phase: props?.aiPersonality ? 'intro' : 'playing',
+        phase: props?.aiPersonality
+            ? 'intro'
+            : online
+              ? 'countdown'
+              : 'playing',
         lastKnockedOut: -1,
         countdownValue: -1,
         matchWinner: -1,
@@ -215,10 +219,11 @@ export function ArenaNode(props?: Readonly<ArenaNodeProps>) {
     }
 
     // Touch controls — self-gates on touch-capable devices
-    useChild(TouchControlsNode);
+    const localId = online ? props.playerId! : 0;
+    useChild(TouchControlsNode, { playerId: localId });
 
     // Dash cooldown HUD bar — desktop only (mobile uses dash button fill)
-    useChild(DashCooldownHudNode);
+    useChild(DashCooldownHudNode, { playerId: localId });
 
     // Camera rig — fixed overhead view
     useChild(CameraRigNode);

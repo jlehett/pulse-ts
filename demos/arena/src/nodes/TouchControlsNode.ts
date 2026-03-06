@@ -84,6 +84,8 @@ export function applyDeadzone(
 // ────────────────────────────── Props ──────────────────────────────
 
 export interface TouchControlsNodeProps {
+    /** Local player ID for reading dash cooldown progress. @defaultValue `0` */
+    playerId?: number;
     /** Input action name for 2D movement axis. @defaultValue `'p1Move'` */
     moveAction?: string;
     /** Input action name for the dash digital action. @defaultValue `'p1Dash'` */
@@ -108,6 +110,7 @@ export function TouchControlsNode(props?: Readonly<TouchControlsNodeProps>) {
     if (!isMobileDevice()) return;
 
     const input = useInput();
+    const localPlayerId = props?.playerId ?? 0;
     const moveAction = props?.moveAction ?? 'p1Move';
     const dashAction = props?.dashAction ?? 'p1Dash';
 
@@ -344,7 +347,7 @@ export function TouchControlsNode(props?: Readonly<TouchControlsNodeProps>) {
 
         // Dash cooldown fill — fills from bottom to top as cooldown recovers
         if (!hidden) {
-            const progress = getDashCooldownProgress(0);
+            const progress = getDashCooldownProgress(localPlayerId);
             if (progress >= 1) {
                 dashBtn.style.background = 'rgba(72,201,176,0.25)';
             } else {

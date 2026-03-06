@@ -14,7 +14,7 @@ export const SPAWN_POSITIONS: readonly [
 ];
 
 /** Number of knockouts required to win a match. */
-export const WIN_COUNT = 5;
+export const WIN_COUNT = 3;
 
 /** Duration of the KO flash overlay in seconds. */
 export const KO_FLASH_DURATION = 0.8;
