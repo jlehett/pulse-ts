@@ -1,8 +1,9 @@
 /**
  * @packageDocumentation
- * Visual effects for Pulse TS — particle systems and animated values.
+ * Visual effects for Pulse TS — particle systems, animated values, and effect pools.
  *
  * Features:
+ * - **`useEffectPool`** — fixed-size pool of timed effects with auto-recycling
  * - **`installParticles`** — world-level service for shared particle pools
  * - **`useParticleBurst`** — declarative one-shot burst from any node
  * - **`useParticleEmitter`** — declarative continuous emitter tied to node position
