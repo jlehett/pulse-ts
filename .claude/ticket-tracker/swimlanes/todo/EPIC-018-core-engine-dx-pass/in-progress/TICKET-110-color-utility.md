@@ -2,10 +2,11 @@
 id: TICKET-110
 epic: EPIC-018
 title: Color Utility
-status: todo
+status: in-progress
 priority: low
+branch: ticket-110-color-utility
 created: 2026-03-13
-updated: 2026-03-13
+updated: 2026-03-14
 labels:
   - core
   - utility
@@ -34,3 +35,4 @@ Design doc: `design-docs/approved/021-color-utility.md`
 ## Notes
 
 - **2026-03-13**: Ticket created from approved design doc #21.
+- **2026-03-14**: Starting implementation.
