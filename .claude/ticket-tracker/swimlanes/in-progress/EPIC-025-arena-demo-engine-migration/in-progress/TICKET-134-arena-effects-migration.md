@@ -2,7 +2,7 @@
 id: TICKET-134
 epic: EPIC-025
 title: "Arena migration: effects"
-status: todo
+status: in-progress
 priority: medium
 created: 2026-03-13
 updated: 2026-03-13
