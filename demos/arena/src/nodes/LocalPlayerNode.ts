@@ -606,7 +606,10 @@ export function LocalPlayerNode({
             // In online mode, also compute and send the OTHER player's knockback
             // so they can apply it if their physics didn't detect the collision.
             if (publishKnockback) {
-                const [myVx, myVz] = getPlayerVelocity(velocities.states, playerId);
+                const [myVx, myVz] = getPlayerVelocity(
+                    velocities.states,
+                    playerId,
+                );
                 const myApproach = computeApproachSpeed(
                     otherTransform.localPosition.x,
                     otherTransform.localPosition.z,
