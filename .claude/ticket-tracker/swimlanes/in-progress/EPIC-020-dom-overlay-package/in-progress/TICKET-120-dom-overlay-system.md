@@ -2,10 +2,11 @@
 id: TICKET-120
 epic: EPIC-020
 title: DOM Overlay System (@pulse-ts/dom)
-status: todo
+status: in-progress
 priority: high
 created: 2026-03-13
-updated: 2026-03-13
+updated: 2026-03-14
+branch: ticket-120-dom-overlay-system
 labels:
   - dom
   - new-package
@@ -43,3 +44,4 @@ Design doc: `design-docs/approved/001-dom-overlay-system.md`
 ## Notes
 
 - **2026-03-13**: Ticket created from approved design doc #1. Subsumes improvements #6 (useButton), #24 (useModal), #28 (useEntrance).
+- **2026-03-14**: Starting implementation
