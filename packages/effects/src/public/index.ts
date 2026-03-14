@@ -46,6 +46,10 @@ export type {
     AnimatedValue,
 } from './useAnimate';
 
+// Sequencing
+export { useSequence } from './useSequence';
+export type { SequenceStep, SequenceHandle } from './useSequence';
+
 // Re-export domain types consumers need for init/update callbacks
 export type {
     Particle,
