@@ -8,6 +8,14 @@ import type { UseMeshResult } from './useMesh';
 // Lightweight Three.js mock — extends the standard mock with geometry classes
 // ---------------------------------------------------------------------------
 jest.mock('three', () => {
+    class Vector2 {
+        x: number;
+        y: number;
+        constructor(x = 0, y = 0) {
+            this.x = x;
+            this.y = y;
+        }
+    }
     class Vector3 {
         x = 0;
         y = 0;
@@ -131,6 +139,23 @@ jest.mock('three', () => {
     }
 
     class MeshStandardMaterial {
+        _type = 'MeshStandardMaterial';
+        _opts: Record<string, unknown>;
+        constructor(opts: Record<string, unknown> = {}) {
+            this._opts = opts;
+        }
+    }
+
+    class MeshBasicMaterial {
+        _type = 'MeshBasicMaterial';
+        _opts: Record<string, unknown>;
+        constructor(opts: Record<string, unknown> = {}) {
+            this._opts = opts;
+        }
+    }
+
+    class MeshPhongMaterial {
+        _type = 'MeshPhongMaterial';
         _opts: Record<string, unknown>;
         constructor(opts: Record<string, unknown> = {}) {
             this._opts = opts;
@@ -139,15 +164,30 @@ jest.mock('three', () => {
 
     class Mesh extends Object3D {
         geometry: BufferGeometry;
-        material: MeshStandardMaterial;
-        constructor(geometry: BufferGeometry, material: MeshStandardMaterial) {
+        material: MeshStandardMaterial | MeshBasicMaterial | MeshPhongMaterial;
+        constructor(
+            geometry: BufferGeometry,
+            material:
+                | MeshStandardMaterial
+                | MeshBasicMaterial
+                | MeshPhongMaterial,
+        ) {
             super();
             this.geometry = geometry;
             this.material = material;
         }
     }
 
+    // Three.js constants
+    const FrontSide = 0;
+    const BackSide = 1;
+    const DoubleSide = 2;
+    const NormalBlending = 1;
+    const AdditiveBlending = 2;
+    const MultiplyBlending = 4;
+
     return {
+        Vector2,
         Vector3,
         Quaternion,
         Object3D,
@@ -168,7 +208,15 @@ jest.mock('three', () => {
         PlaneGeometry,
         TorusGeometry,
         MeshStandardMaterial,
+        MeshBasicMaterial,
+        MeshPhongMaterial,
         Mesh,
+        FrontSide,
+        BackSide,
+        DoubleSide,
+        NormalBlending,
+        AdditiveBlending,
+        MultiplyBlending,
     };
 });
 
@@ -379,5 +427,158 @@ describe('useMesh', () => {
         node.destroy();
 
         expect(svc.scene.children).not.toContain(result.root);
+    });
+
+    // ----- Texture map options -----
+
+    test('forwards texture map options to material', () => {
+        const fakeTexture = {} as any;
+        const { result } = mountUseMesh(world, 'box', {
+            size: [1, 1, 1],
+            map: fakeTexture,
+            normalMap: fakeTexture,
+            emissiveMap: fakeTexture,
+            roughnessMap: fakeTexture,
+            metalnessMap: fakeTexture,
+            alphaMap: fakeTexture,
+            envMap: fakeTexture,
+        });
+        const opts = (result.material as any)._opts;
+        expect(opts.map).toBe(fakeTexture);
+        expect(opts.normalMap).toBe(fakeTexture);
+        expect(opts.emissiveMap).toBe(fakeTexture);
+        expect(opts.roughnessMap).toBe(fakeTexture);
+        expect(opts.metalnessMap).toBe(fakeTexture);
+        expect(opts.alphaMap).toBe(fakeTexture);
+        expect(opts.envMap).toBe(fakeTexture);
+    });
+
+    test('converts normalScale tuple to Vector2', () => {
+        const { result } = mountUseMesh(world, 'box', {
+            size: [1, 1, 1],
+            normalScale: [0.5, 0.8],
+        });
+        const ns = (result.material as any)._opts.normalScale;
+        expect(ns.x).toBe(0.5);
+        expect(ns.y).toBe(0.8);
+    });
+
+    // ----- Render state options -----
+
+    test('maps side "front" to FrontSide constant', () => {
+        const THREE = require('three');
+        const { result } = mountUseMesh(world, 'box', {
+            size: [1, 1, 1],
+            side: 'front',
+        });
+        expect((result.material as any)._opts.side).toBe(THREE.FrontSide);
+    });
+
+    test('maps side "back" to BackSide constant', () => {
+        const THREE = require('three');
+        const { result } = mountUseMesh(world, 'box', {
+            size: [1, 1, 1],
+            side: 'back',
+        });
+        expect((result.material as any)._opts.side).toBe(THREE.BackSide);
+    });
+
+    test('maps side "double" to DoubleSide constant', () => {
+        const THREE = require('three');
+        const { result } = mountUseMesh(world, 'box', {
+            size: [1, 1, 1],
+            side: 'double',
+        });
+        expect((result.material as any)._opts.side).toBe(THREE.DoubleSide);
+    });
+
+    test('forwards depthWrite option', () => {
+        const { result } = mountUseMesh(world, 'box', {
+            size: [1, 1, 1],
+            depthWrite: false,
+        });
+        expect((result.material as any)._opts.depthWrite).toBe(false);
+    });
+
+    test('maps blending "normal" to NormalBlending constant', () => {
+        const THREE = require('three');
+        const { result } = mountUseMesh(world, 'box', {
+            size: [1, 1, 1],
+            blending: 'normal',
+        });
+        expect((result.material as any)._opts.blending).toBe(
+            THREE.NormalBlending,
+        );
+    });
+
+    test('maps blending "additive" to AdditiveBlending constant', () => {
+        const THREE = require('three');
+        const { result } = mountUseMesh(world, 'box', {
+            size: [1, 1, 1],
+            blending: 'additive',
+        });
+        expect((result.material as any)._opts.blending).toBe(
+            THREE.AdditiveBlending,
+        );
+    });
+
+    test('maps blending "multiply" to MultiplyBlending constant', () => {
+        const THREE = require('three');
+        const { result } = mountUseMesh(world, 'box', {
+            size: [1, 1, 1],
+            blending: 'multiply',
+        });
+        expect((result.material as any)._opts.blending).toBe(
+            THREE.MultiplyBlending,
+        );
+    });
+
+    // ----- Material type options -----
+
+    test('defaults to MeshStandardMaterial when materialType is omitted', () => {
+        const { result } = mountUseMesh(world, 'box', {
+            size: [1, 1, 1],
+        });
+        expect((result.material as any)._type).toBe('MeshStandardMaterial');
+    });
+
+    test('creates MeshStandardMaterial when materialType is "standard"', () => {
+        const { result } = mountUseMesh(world, 'box', {
+            size: [1, 1, 1],
+            materialType: 'standard',
+        });
+        expect((result.material as any)._type).toBe('MeshStandardMaterial');
+    });
+
+    test('creates MeshBasicMaterial when materialType is "basic"', () => {
+        const { result } = mountUseMesh(world, 'box', {
+            size: [1, 1, 1],
+            materialType: 'basic',
+            color: 0x00ff00,
+        });
+        expect((result.material as any)._type).toBe('MeshBasicMaterial');
+        expect((result.material as any)._opts.color).toBe(0x00ff00);
+    });
+
+    test('creates MeshPhongMaterial when materialType is "phong"', () => {
+        const { result } = mountUseMesh(world, 'box', {
+            size: [1, 1, 1],
+            materialType: 'phong',
+            color: 0x0000ff,
+        });
+        expect((result.material as any)._type).toBe('MeshPhongMaterial');
+        expect((result.material as any)._opts.color).toBe(0x0000ff);
+    });
+
+    // ----- Backward compatibility -----
+
+    test('all new options are optional — existing calls work unchanged', () => {
+        const { result } = mountUseMesh(world, 'box', {
+            size: [1, 1, 1],
+            color: 0xcccccc,
+            roughness: 0.5,
+        });
+        expect((result.material as any)._type).toBe('MeshStandardMaterial');
+        expect((result.geometry as any)._type).toBe('BoxGeometry');
     });
 });
