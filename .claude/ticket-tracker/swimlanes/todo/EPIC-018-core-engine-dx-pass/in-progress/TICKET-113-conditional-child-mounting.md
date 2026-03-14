@@ -2,10 +2,11 @@
 id: TICKET-113
 epic: EPIC-018
 title: Conditional Child Mounting (useConditionalChild)
-status: todo
+status: in-progress
 priority: medium
+branch: ticket-113-conditional-child-mounting
 created: 2026-03-13
-updated: 2026-03-13
+updated: 2026-03-14
 labels:
   - core
   - dx
@@ -33,3 +34,4 @@ Design doc: `design-docs/approved/044-conditional-child-mounting.md`
 ## Notes
 
 - **2026-03-13**: Ticket created from approved design doc #44.
+- **2026-03-14**: Starting implementation.
