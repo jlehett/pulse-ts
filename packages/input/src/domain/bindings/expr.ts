@@ -104,6 +104,91 @@ export function Axis2D(
     } as Axis2DBinding;
 }
 
+// ─── Axis2D shorthand methods ───────────────────────────────────────────────
+
+/**
+ * Namespace for `Axis2D` shorthand factory methods.
+ *
+ * @remarks
+ * These methods provide convenient shortcuts for common 2D axis binding
+ * patterns. The full form `Axis2D({ x: {...}, y: {...} })` remains available
+ * for custom configurations.
+ */
+// eslint-disable-next-line @typescript-eslint/no-namespace
+export namespace Axis2D {
+    /**
+     * Create a 2D axis from four key codes: left, right, down, up.
+     *
+     * Equivalent to:
+     * ```ts
+     * Axis2D({
+     *   x: { neg: Key(left), pos: Key(right) },
+     *   y: { neg: Key(down), pos: Key(up) },
+     * })
+     * ```
+     *
+     * @param left - Key code for the negative X direction.
+     * @param right - Key code for the positive X direction.
+     * @param down - Key code for the negative Y direction.
+     * @param up - Key code for the positive Y direction.
+     * @returns An {@link Axis2DBinding} with `x` and `y` axes.
+     *
+     * @example
+     * ```ts
+     * import { Axis2D } from '@pulse-ts/input';
+     *
+     * const ijklMove = Axis2D.keys('KeyJ', 'KeyL', 'KeyK', 'KeyI');
+     * ```
+     */
+    export function keys(
+        left: string,
+        right: string,
+        down: string,
+        up: string,
+    ): Axis2DBinding {
+        return Axis2D({
+            x: { neg: Key(left), pos: Key(right) },
+            y: { neg: Key(down), pos: Key(up) },
+        });
+    }
+
+    /**
+     * Create a 2D axis preset for WASD keys.
+     *
+     * Equivalent to `Axis2D.keys('KeyA', 'KeyD', 'KeyS', 'KeyW')`.
+     *
+     * @returns An {@link Axis2DBinding} bound to WASD.
+     *
+     * @example
+     * ```ts
+     * import { Axis2D } from '@pulse-ts/input';
+     *
+     * const move = Axis2D.wasd();
+     * ```
+     */
+    export function wasd(): Axis2DBinding {
+        return keys('KeyA', 'KeyD', 'KeyS', 'KeyW');
+    }
+
+    /**
+     * Create a 2D axis preset for arrow keys.
+     *
+     * Equivalent to `Axis2D.keys('ArrowLeft', 'ArrowRight', 'ArrowDown', 'ArrowUp')`.
+     *
+     * @returns An {@link Axis2DBinding} bound to arrow keys.
+     *
+     * @example
+     * ```ts
+     * import { Axis2D } from '@pulse-ts/input';
+     *
+     * const move = Axis2D.arrows();
+     * ```
+     */
+    export function arrows(): Axis2DBinding {
+        return keys('ArrowLeft', 'ArrowRight', 'ArrowDown', 'ArrowUp');
+    }
+}
+
 /**
  * Create a pointer movement binding (maps mouse/touch delta to a 2D axis).
  * @param opts Pointer options (invert/scale per-axis).

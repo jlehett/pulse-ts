@@ -15,10 +15,13 @@ installInput(world, {
     jump: Chord([Key('Space')]),
     dash: Sequence([Key('KeyD'), Key('KeyS')], { maxGapFrames: 10 }),
 
-    // Axes
+    // Axes — shorthand presets
+    move: Axis2D.wasd(),
+    p2Move: Axis2D.arrows(),
+
+    // Axes — explicit form still available
     moveX: Axis1D({ pos: Key('D'), neg: Key('A') }),
     moveY: Axis1D({ pos: Key('W'), neg: Key('S') }),
-    move: Axis2D({ x: { pos: Key('D'), neg: Key('A') }, y: { pos: Key('W'), neg: Key('S') } }),
 
     // Pointer
     look: PointerMovement({ scaleX: 0.1, scaleY: 0.1 }),
@@ -85,11 +88,32 @@ const off = input.actionEvent.on(({ name, state }) => {
 off();
 ```
 
+## Axis2D shorthands
+
+For the most common 2D axis bindings, use the shorthand methods instead of the full nested form:
+
+```ts
+// WASD preset
+move: Axis2D.wasd(),
+
+// Arrow keys preset
+p2Move: Axis2D.arrows(),
+
+// Custom four-key layout (left, right, down, up)
+ijklMove: Axis2D.keys('KeyJ', 'KeyL', 'KeyK', 'KeyI'),
+```
+
+The full form remains available for custom configurations (e.g., mixed keyboard + gamepad axes):
+
+```ts
+move: Axis2D({ x: { pos: Key('D'), neg: Key('A') }, y: { pos: Key('W'), neg: Key('S') } }),
+```
+
 ## Tips
 
 - Set `preventDefault` to avoid scrolling/back/forward during gameplay.
 - Enable `pointerLock` to capture mouse for FPS-style look.
-- Use `Axis2D` for combined WASD vectors and `Axis1D` for single axes.
+- Use `Axis2D.wasd()` or `Axis2D.arrows()` for quick movement bindings, or `Axis2D.keys()` for custom layouts.
 - Use `Chord` for simultaneous keys and `Sequence` for combos.
 
 Note: `preventDefault` and `pointerLock` default to `false` unless specified in `installInput` options.
