@@ -10,19 +10,18 @@ import { allBindings } from './config/bindings';
 import { showMainMenu } from './menu';
 import { showLobby, type LobbyResult } from './lobby';
 import { AI_PERSONALITIES, type AiPersonality } from './ai/personalities';
-import { initLandscapeEnforcer } from './landscapeEnforcer';
-import { initAutoFullscreen } from './autoFullscreen';
-import { showInstallPrompt } from './installPrompt';
+import { installMobileSupport, isMobile } from '@pulse-ts/platform';
 import { setupPostProcessing } from './setupPostProcessing';
-import { isMobileDevice } from './isMobileDevice';
 import { startVersionPolling, isUpdateAvailable } from './versionCheck';
 
 const canvas = document.getElementById('arena') as HTMLCanvasElement;
 const container = canvas.parentElement ?? document.body;
 
-initLandscapeEnforcer();
-initAutoFullscreen();
-showInstallPrompt();
+installMobileSupport({
+    fullscreen: true,
+    orientation: 'landscape',
+    installPrompt: true,
+});
 startVersionPolling();
 
 function createMenuWorld(): { world: World; destroy: () => void } {
@@ -31,7 +30,7 @@ function createMenuWorld(): { world: World; destroy: () => void } {
     installDefaults(world);
     installPhysics(world, { gravity: { x: 0, y: -20, z: 0 } });
 
-    const mobile = isMobileDevice();
+    const mobile = isMobile();
     const three = installThree(world, {
         canvas,
         clearColor: 0x050508,
@@ -68,7 +67,7 @@ function startLocalGame(): Promise<void> {
         installInput(world, { preventDefault: true, bindings: allBindings });
         installPhysics(world, { gravity: { x: 0, y: -20, z: 0 } });
 
-        const mobile = isMobileDevice();
+        const mobile = isMobile();
         const three = installThree(world, {
             canvas,
             clearColor: 0x050508,
@@ -116,7 +115,7 @@ function startSoloGame(personality: AiPersonality): Promise<void> {
         installInput(world, { preventDefault: true, bindings: allBindings });
         installPhysics(world, { gravity: { x: 0, y: -20, z: 0 } });
 
-        const mobile = isMobileDevice();
+        const mobile = isMobile();
         const three = installThree(world, {
             canvas,
             clearColor: 0x050508,
@@ -167,7 +166,7 @@ async function startOnlineGame(lobby: LobbyResult): Promise<void> {
             });
             installPhysics(world, { gravity: { x: 0, y: -20, z: 0 } });
 
-            const mobile = isMobileDevice();
+            const mobile = isMobile();
             const three = installThree(world, {
                 canvas,
                 clearColor: 0x050508,

@@ -3,7 +3,7 @@ import {
     applyStaggeredEntrance,
     applyButtonHoverScale,
 } from './overlayAnimations';
-import { isMobileDevice } from './isMobileDevice';
+import { isMobile } from '@pulse-ts/platform';
 
 /** The mode selected by the user from the main menu. */
 export type MenuChoice = 'local' | 'online' | 'solo';
@@ -24,7 +24,7 @@ export type MenuChoice = 'local' | 'online' | 'solo';
  */
 export function showMainMenu(container: HTMLElement): Promise<MenuChoice> {
     return new Promise((resolve) => {
-        const mobile = isMobileDevice();
+        const mobile = isMobile();
 
         // Inject title bump keyframes
         const styleEl = injectTitleBumpStyle();

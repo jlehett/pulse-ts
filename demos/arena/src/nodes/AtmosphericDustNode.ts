@@ -3,7 +3,7 @@ import { useParticleBurst } from '@pulse-ts/effects';
 import { useThreeContext } from '@pulse-ts/three';
 import { ARENA_RADIUS } from '../config/arena';
 import { GameCtx, type RoundPhase } from '../contexts';
-import { isMobileDevice } from '../isMobileDevice';
+import { isMobile } from '@pulse-ts/platform';
 import {
     useHitImpactPool,
     HIT_IMPACT_DURATION,
@@ -98,7 +98,7 @@ export function AtmosphericDustNode() {
     const { scene } = useThreeContext();
     const gameState = useContext(GameCtx);
     const hitPool = useHitImpactPool();
-    const mobile = isMobileDevice();
+    const mobile = isMobile();
     const dustCount = mobile ? Math.floor(DUST_COUNT / 2) : DUST_COUNT;
 
     // Influence zones: current players (strength=1) + fading trail positions.

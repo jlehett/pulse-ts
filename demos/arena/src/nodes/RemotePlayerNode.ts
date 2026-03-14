@@ -1,10 +1,8 @@
 import {
     useComponent,
-    useStableId,
     useContext,
     useFixedUpdate,
     useFrameUpdate,
-    useWorld,
     Transform,
     useStore,
     useWatch,
@@ -12,7 +10,7 @@ import {
 import { useRigidBody, useSphereCollider } from '@pulse-ts/physics';
 import { useMesh } from '@pulse-ts/three';
 import { useParticleBurst } from '@pulse-ts/effects';
-import { useReplicateTransform, InterpolationService } from '@pulse-ts/network';
+import { useRemoteEntity } from '@pulse-ts/network';
 import { PlayerTag } from '../components/PlayerTag';
 import { GameCtx } from '../contexts';
 import { PLAYER_RADIUS } from './LocalPlayerNode';
@@ -45,18 +43,14 @@ export function RemotePlayerNode({
     const gameState = useContext(GameCtx);
     const spawn = SPAWN_POSITIONS[remotePlayerId];
 
-    const world = useWorld();
-
     const [replay] = useStore(ReplayStore);
     const [velocities] = useStore(PlayerVelocityStore);
 
-    // Network identity — matches the producer's StableId in the other world
-    const stableId = `player-${remotePlayerId}`;
-    useStableId(stableId);
+    // Network identity + consumer replication via one-liner hook.
     // Higher lambda = snappier tracking. Default 12 is too sluggish for a
     // fast-paced arena — remote players visually lag behind their true position,
     // making collisions appear to trigger at a distance ("forcefield" effect).
-    useReplicateTransform({ role: 'consumer', lambda: 25 });
+    const remote = useRemoteEntity(`player-${remotePlayerId}`, { lambda: 25 });
 
     useComponent(PlayerTag);
 
@@ -113,7 +107,7 @@ export function RemotePlayerNode({
 
     // Stage position for replay recording every fixed step, and drive
     // transform from replay buffer during playback so trsSync picks it up.
-    // Use the replicated velocity from the InterpolationService (source-
+    // Use the replicated velocity from the RemoteEntityHandle (source-
     // authoritative, sent by the producer in each snapshot) rather than
     // deriving it from interpolated position deltas, which lag during
     // sudden speed changes (dashes).
@@ -129,8 +123,7 @@ export function RemotePlayerNode({
         // Read replicated velocity from the interpolation target — this is
         // the source-authoritative velocity sent by the producer, not derived
         // from smoothed position deltas.
-        const interp = world.getService(InterpolationService);
-        const rv = interp?.getTargetVelocity(stableId);
+        const rv = remote.targetVelocity;
         if (rv) {
             setPlayerVelocity(velocities.states, remotePlayerId, rv.x, rv.z);
         }

@@ -5,7 +5,7 @@ import {
     useTimer,
     useStore,
 } from '@pulse-ts/core';
-import { useSound } from '@pulse-ts/audio';
+import { useSound, useSoundGroup } from '@pulse-ts/audio';
 import { useChannel } from '@pulse-ts/network';
 import { GameCtx } from '../contexts';
 import {
@@ -175,23 +175,29 @@ export function GameManagerNode(props?: Readonly<GameManagerNodeProps>) {
     const resetPauseTimer = useTimer(RESET_PAUSE_DURATION);
     const countdownTimer = useTimer(COUNTDOWN_DURATION);
 
+    // Sound mixing group for all game manager SFX
+    useSoundGroup('sfx');
+
     const countdownBeepSfx = useSound('tone', {
         wave: 'sine',
         frequency: 880,
         duration: 0.1,
         gain: 0.15,
+        group: 'sfx',
     });
     const countdownGoSfx = useSound('tone', {
         wave: 'sine',
         frequency: 1320,
         duration: 0.15,
         gain: 0.15,
+        group: 'sfx',
     });
     const koAnnounceSfx = useSound('tone', {
         wave: 'sawtooth',
         frequency: [200, 100],
         duration: 0.4,
         gain: 0.12,
+        group: 'sfx',
     });
     const matchFanfareSfx = useSound('arpeggio', {
         wave: 'sine',
@@ -199,6 +205,7 @@ export function GameManagerNode(props?: Readonly<GameManagerNodeProps>) {
         interval: 0.08,
         duration: 0.4,
         gain: 0.12,
+        group: 'sfx',
     });
 
     let prevCountdown = -1;

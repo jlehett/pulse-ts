@@ -2,10 +2,10 @@
 id: TICKET-135
 epic: EPIC-025
 title: "Arena migration: input, platform, network, audio, physics"
-status: todo
+status: done
 priority: medium
 created: 2026-03-13
-updated: 2026-03-13
+updated: 2026-03-14
 labels:
   - arena
   - migration
@@ -40,14 +40,14 @@ Refactor the arena demo to adopt remaining engine improvements from EPIC-022 thr
 
 ## Acceptance Criteria
 
-- [ ] Axis2D bindings use shorthand methods
-- [ ] TouchControlsNode uses useVirtualJoystick
-- [ ] Mobile utilities replaced with @pulse-ts/platform
-- [ ] Network entity setup uses useRemoteEntity/useLocalEntity
-- [ ] Sound effects routed through mixing groups
-- [ ] Collision callbacks use filter option
-- [ ] All tests pass
-- [ ] Lint clean
+- [x] Axis2D bindings use shorthand methods
+- [x] TouchControlsNode uses useVirtualJoystick
+- [x] Mobile utilities replaced with @pulse-ts/platform
+- [x] Network entity setup uses useRemoteEntity/useLocalEntity
+- [x] Sound effects routed through mixing groups
+- [x] Collision callbacks use filter option
+- [x] All tests pass
+- [x] Lint clean
 
 ## Notes
 

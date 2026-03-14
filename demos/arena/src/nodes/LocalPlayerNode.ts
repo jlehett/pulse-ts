@@ -26,7 +26,7 @@ import {
     useInterpolatedPosition,
     useScreenProjection,
 } from '@pulse-ts/three';
-import { useSound } from '@pulse-ts/audio';
+import { useSound, useSoundGroup } from '@pulse-ts/audio';
 import { useParticleBurst } from '@pulse-ts/effects';
 import { useReplicateTransform, useChannel } from '@pulse-ts/network';
 import { PlayerTag } from '../components/PlayerTag';
@@ -367,24 +367,30 @@ export function LocalPlayerNode({
         useDestroy(() => indicatorRing!.remove());
     }
 
+    // Sound mixing group for all player SFX
+    useSoundGroup('sfx');
+
     // Sound effects
     const dashSfx = useSound('noise', {
         filter: 'bandpass',
         frequency: [2000, 500],
         duration: 0.15,
         gain: 0.12,
+        group: 'sfx',
     });
     const deathSfx = useSound('tone', {
         wave: 'sawtooth',
         frequency: [600, 150],
         duration: 0.2,
         gain: 0.12,
+        group: 'sfx',
     });
     const impactSfx = useSound('tone', {
         wave: 'square',
         frequency: [300, 100],
         duration: 0.1,
         gain: 0.15,
+        group: 'sfx',
     });
 
     // Particle burst for collision impact
@@ -518,108 +524,116 @@ export function LocalPlayerNode({
     // detects the collision, the other side receives and applies the impulse.
     // The impactCD cooldown deduplicates — if both detect, the channel
     // message is ignored.
-    useOnCollisionStart(({ other }) => {
-        if (other === node) return;
-        if (!getComponent(other, PlayerTag)) return;
-        // Prevent double-hits from rapid re-collision (physics bounce)
-        if (!impactCD.ready) return;
+    useOnCollisionStart(
+        ({ other }) => {
+            if (other === node) return;
+            // Prevent double-hits from rapid re-collision (physics bounce)
+            if (!impactCD.ready) return;
 
-        const otherTransform = getComponent(other, Transform);
-        if (!otherTransform) return;
+            const otherTransform = getComponent(other, Transform);
+            if (!otherTransform) return;
 
-        // In online mode, correct the physics solver's velocity bounce.
-        // The solver treated the kinematic remote body as an immovable wall
-        // with zero velocity. The simple halving trick works when the remote
-        // player is stationary, but when BOTH players are moving toward each
-        // other the residual velocity pointing at the opponent can exceed the
-        // knockback impulse, causing the players to "stick."
-        //
-        // Fix: replace the solver's result with the proper equal-mass elastic
-        // collision formula using the remote player's known velocity. Only
-        // the normal (along collision axis) component is corrected; tangential
-        // velocity (glancing blows) is preserved from the solver.
-        const otherPlayerId = 1 - playerId;
-        const [otherVx, otherVz] = getPlayerVelocity(
-            velocities.states,
-            otherPlayerId,
-        );
+            // In online mode, correct the physics solver's velocity bounce.
+            // The solver treated the kinematic remote body as an immovable wall
+            // with zero velocity. The simple halving trick works when the remote
+            // player is stationary, but when BOTH players are moving toward each
+            // other the residual velocity pointing at the opponent can exceed the
+            // knockback impulse, causing the players to "stick."
+            //
+            // Fix: replace the solver's result with the proper equal-mass elastic
+            // collision formula using the remote player's known velocity. Only
+            // the normal (along collision axis) component is corrected; tangential
+            // velocity (glancing blows) is preserved from the solver.
+            const otherPlayerId = 1 - playerId;
+            const [otherVx, otherVz] = getPlayerVelocity(
+                velocities.states,
+                otherPlayerId,
+            );
 
-        if (replicate) {
-            const cdx =
-                otherTransform.localPosition.x - transform.localPosition.x;
-            const cdz =
-                otherTransform.localPosition.z - transform.localPosition.z;
-            const clen = Math.sqrt(cdx * cdx + cdz * cdz);
-            if (clen > 0.01) {
-                const nx = cdx / clen;
-                const nz = cdz / clen;
-                // Our pre-solver normal velocity (toward opponent)
-                const myNormal = prePhysVx * nx + prePhysVz * nz;
-                // Other player's normal velocity (toward us, from their perspective)
-                const otherNormal = otherVx * nx + otherVz * nz;
-                // Equal-mass collision: exchange normal components (e=0.2)
-                const e = 0.2;
-                const correctedNormal =
-                    ((1 - e) / 2) * myNormal + ((1 + e) / 2) * otherNormal;
-                // Strip the solver's normal velocity and replace with ours
-                const solverNormal =
-                    body.linearVelocity.x * nx + body.linearVelocity.z * nz;
-                body.linearVelocity.x += (correctedNormal - solverNormal) * nx;
-                body.linearVelocity.z += (correctedNormal - solverNormal) * nz;
-            } else {
-                // Overlapping — just zero out horizontal velocity
-                body.linearVelocity.x = 0;
-                body.linearVelocity.z = 0;
+            if (replicate) {
+                const cdx =
+                    otherTransform.localPosition.x - transform.localPosition.x;
+                const cdz =
+                    otherTransform.localPosition.z - transform.localPosition.z;
+                const clen = Math.sqrt(cdx * cdx + cdz * cdz);
+                if (clen > 0.01) {
+                    const nx = cdx / clen;
+                    const nz = cdz / clen;
+                    // Our pre-solver normal velocity (toward opponent)
+                    const myNormal = prePhysVx * nx + prePhysVz * nz;
+                    // Other player's normal velocity (toward us, from their perspective)
+                    const otherNormal = otherVx * nx + otherVz * nz;
+                    // Equal-mass collision: exchange normal components (e=0.2)
+                    const e = 0.2;
+                    const correctedNormal =
+                        ((1 - e) / 2) * myNormal + ((1 + e) / 2) * otherNormal;
+                    // Strip the solver's normal velocity and replace with ours
+                    const solverNormal =
+                        body.linearVelocity.x * nx + body.linearVelocity.z * nz;
+                    body.linearVelocity.x +=
+                        (correctedNormal - solverNormal) * nx;
+                    body.linearVelocity.z +=
+                        (correctedNormal - solverNormal) * nz;
+                } else {
+                    // Overlapping — just zero out horizontal velocity
+                    body.linearVelocity.x = 0;
+                    body.linearVelocity.z = 0;
+                }
             }
-        }
-        const approachSpeed = computeApproachSpeed(
-            transform.localPosition.x,
-            transform.localPosition.z,
-            otherTransform.localPosition.x,
-            otherTransform.localPosition.z,
-            otherVx,
-            otherVz,
-        );
-        const effectiveForce =
-            KNOCKBACK_BASE + approachSpeed * KNOCKBACK_VELOCITY_SCALE;
 
-        // Impulse applied to US (pushed away from the other player)
-        const [ix, iy, iz] = computeKnockback(
-            transform.localPosition.x,
-            transform.localPosition.z,
-            otherTransform.localPosition.x,
-            otherTransform.localPosition.z,
-            effectiveForce,
-        );
-
-        applyKnockbackEffects([ix, iy, iz]);
-
-        // In online mode, also compute and send the OTHER player's knockback
-        // so they can apply it if their physics didn't detect the collision.
-        if (publishKnockback) {
-            const [myVx, myVz] = getPlayerVelocity(velocities.states, playerId);
-            const myApproach = computeApproachSpeed(
-                otherTransform.localPosition.x,
-                otherTransform.localPosition.z,
+            const approachSpeed = computeApproachSpeed(
                 transform.localPosition.x,
                 transform.localPosition.z,
-                myVx,
-                myVz,
-            );
-            const otherForce =
-                KNOCKBACK_BASE + myApproach * KNOCKBACK_VELOCITY_SCALE;
-
-            const [ox, oy, oz] = computeKnockback(
                 otherTransform.localPosition.x,
                 otherTransform.localPosition.z,
+                otherVx,
+                otherVz,
+            );
+            const effectiveForce =
+                KNOCKBACK_BASE + approachSpeed * KNOCKBACK_VELOCITY_SCALE;
+
+            // Impulse applied to US (pushed away from the other player)
+            const [ix, iy, iz] = computeKnockback(
                 transform.localPosition.x,
                 transform.localPosition.z,
-                otherForce,
+                otherTransform.localPosition.x,
+                otherTransform.localPosition.z,
+                effectiveForce,
             );
 
-            publishKnockback([ox, oy, oz]);
-        }
-    });
+            applyKnockbackEffects([ix, iy, iz]);
+
+            // In online mode, also compute and send the OTHER player's knockback
+            // so they can apply it if their physics didn't detect the collision.
+            if (publishKnockback) {
+                const [myVx, myVz] = getPlayerVelocity(
+                    velocities.states,
+                    playerId,
+                );
+                const myApproach = computeApproachSpeed(
+                    otherTransform.localPosition.x,
+                    otherTransform.localPosition.z,
+                    transform.localPosition.x,
+                    transform.localPosition.z,
+                    myVx,
+                    myVz,
+                );
+                const otherForce =
+                    KNOCKBACK_BASE + myApproach * KNOCKBACK_VELOCITY_SCALE;
+
+                const [ox, oy, oz] = computeKnockback(
+                    otherTransform.localPosition.x,
+                    otherTransform.localPosition.z,
+                    transform.localPosition.x,
+                    transform.localPosition.z,
+                    otherForce,
+                );
+
+                publishKnockback([ox, oy, oz]);
+            }
+        },
+        { filter: PlayerTag },
+    );
 
     useFixedUpdate((dt) => {
         // Stage position for replay recording and shared position store
