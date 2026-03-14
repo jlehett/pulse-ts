@@ -1,4 +1,9 @@
-import { useComponent, Transform, useFrameUpdate } from '@pulse-ts/core';
+import {
+    useComponent,
+    Transform,
+    useFrameUpdate,
+    useStore,
+} from '@pulse-ts/core';
 import { useRigidBody, useCylinderCollider } from '@pulse-ts/physics';
 import {
     useMesh,
@@ -12,8 +17,8 @@ import * as THREE from 'three';
 import { ARENA_RADIUS } from '../config/arena';
 import { isMobileDevice } from '../isMobileDevice';
 import {
+    HitImpactStore,
     updateHitImpacts,
-    getActiveHitImpacts,
     HIT_RIPPLE_DISPLACEMENT,
     HIT_RIPPLE_MAX_RADIUS,
     HIT_RIPPLE_EXPAND_DURATION,
@@ -444,6 +449,7 @@ export function worldToUV(
  * (no edge walls so players can be knocked off).
  */
 export function PlatformNode() {
+    const [impacts] = useStore(HitImpactStore);
     const transform = useComponent(Transform);
     transform.localPosition.set(0, 0, 0);
 
@@ -694,10 +700,10 @@ export function PlatformNode() {
 
     useFrameUpdate((dt) => {
         // Advance hit impact ages (must run before AtmosphericDustNode reads them)
-        updateHitImpacts(dt);
+        updateHitImpacts(impacts.slots, dt);
 
         // Sync hit ripple uniforms from active slots
-        const hitSlots = getActiveHitImpacts();
+        const hitSlots = impacts.slots;
         for (let i = 0; i < 4; i++) {
             const slot = hitSlots[i];
             if (slot.active) {

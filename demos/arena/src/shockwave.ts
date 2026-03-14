@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { ShaderPass } from 'three/examples/jsm/postprocessing/ShaderPass.js';
+import { defineStore } from '@pulse-ts/core';
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -11,7 +12,7 @@ export const SHOCKWAVE_DURATION = 0.35;
 /** Maximum simultaneous shockwaves. */
 export const MAX_SHOCKWAVES = 4;
 
-/** Maximum radius of the shockwave ring in NDC (0–1) space. */
+/** Maximum radius of the shockwave ring in NDC (0-1) space. */
 export const SHOCKWAVE_MAX_RADIUS = 0.25;
 
 /** UV displacement strength at the ring wavefront. */
@@ -24,7 +25,8 @@ export const SHOCKWAVE_RING_WIDTH = 0.06;
 // Slot state
 // ---------------------------------------------------------------------------
 
-interface ShockwaveSlot {
+/** A single shockwave slot. */
+export interface ShockwaveSlot {
     active: boolean;
     centerX: number;
     centerY: number;
@@ -32,12 +34,29 @@ interface ShockwaveSlot {
     duration: number;
 }
 
-const slots: ShockwaveSlot[] = Array.from({ length: MAX_SHOCKWAVES }, () => ({
-    active: false,
-    centerX: 0,
-    centerY: 0,
-    elapsed: 0,
-    duration: SHOCKWAVE_DURATION,
+/**
+ * Store definition for shockwave pool state.
+ *
+ * @example
+ * ```ts
+ * import { useStore } from '@pulse-ts/core';
+ * import { ShockwaveStore, triggerShockwave } from '../shockwave';
+ *
+ * const [shockwaves] = useStore(ShockwaveStore);
+ * triggerShockwave(shockwaves.slots, 0.5, 0.5);
+ * ```
+ */
+export const ShockwaveStore = defineStore('shockwave', () => ({
+    slots: Array.from(
+        { length: MAX_SHOCKWAVES },
+        (): ShockwaveSlot => ({
+            active: false,
+            centerX: 0,
+            centerY: 0,
+            elapsed: 0,
+            duration: SHOCKWAVE_DURATION,
+        }),
+    ),
 }));
 
 // ---------------------------------------------------------------------------
@@ -45,22 +64,25 @@ const slots: ShockwaveSlot[] = Array.from({ length: MAX_SHOCKWAVES }, () => ({
 // ---------------------------------------------------------------------------
 
 /**
- * Trigger a shockwave at the given screen-space UV position (0–1).
+ * Trigger a shockwave at the given screen-space UV position (0-1).
  * If all slots are occupied, the oldest (highest elapsed) is recycled.
  *
+ * @param slots - The shockwave slots from the store.
  * @param screenX - Horizontal UV coordinate (0 = left, 1 = right).
  * @param screenY - Vertical UV coordinate (0 = bottom, 1 = top).
  *
  * @example
  * ```ts
- * triggerShockwave(0.5, 0.5); // center of screen
+ * triggerShockwave(shockwaves.slots, 0.5, 0.5);
  * ```
  */
-export function triggerShockwave(screenX: number, screenY: number): void {
-    // Find first inactive slot
+export function triggerShockwave(
+    slots: ShockwaveSlot[],
+    screenX: number,
+    screenY: number,
+): void {
     let slot = slots.find((s) => !s.active);
     if (!slot) {
-        // Recycle oldest — highest elapsed
         slot = slots.reduce((oldest, s) =>
             s.elapsed > oldest.elapsed ? s : oldest,
         );
@@ -75,14 +97,15 @@ export function triggerShockwave(screenX: number, screenY: number): void {
 /**
  * Advance all active shockwaves by `dt` seconds. Deactivates expired ones.
  *
+ * @param slots - The shockwave slots from the store.
  * @param dt - Frame delta time in seconds.
  *
  * @example
  * ```ts
- * updateShockwaves(1 / 60);
+ * updateShockwaves(shockwaves.slots, 1 / 60);
  * ```
  */
-export function updateShockwaves(dt: number): void {
+export function updateShockwaves(slots: ShockwaveSlot[], dt: number): void {
     for (const slot of slots) {
         if (!slot.active) continue;
         slot.elapsed += dt;
@@ -96,15 +119,20 @@ export function updateShockwaves(dt: number): void {
  * Write current shockwave state into the pass uniforms and toggle
  * `pass.enabled` based on whether any shockwave is active.
  *
+ * @param slots - The shockwave slots from the store.
  * @param pass - The ShaderPass returned by {@link createShockwavePass}.
  * @param aspect - Viewport aspect ratio (width / height).
  *
  * @example
  * ```ts
- * syncShockwaveUniforms(shockwavePass, canvas.width / canvas.height);
+ * syncShockwaveUniforms(shockwaves.slots, shockwavePass, canvas.width / canvas.height);
  * ```
  */
-export function syncShockwaveUniforms(pass: ShaderPass, aspect: number): void {
+export function syncShockwaveUniforms(
+    slots: ShockwaveSlot[],
+    pass: ShaderPass,
+    aspect: number,
+): void {
     const uniforms = pass.uniforms;
     let anyActive = false;
     for (let i = 0; i < MAX_SHOCKWAVES; i++) {
@@ -124,18 +152,18 @@ export function syncShockwaveUniforms(pass: ShaderPass, aspect: number): void {
 }
 
 /**
- * Project a world position to screen-space UV coordinates (0–1).
+ * Project a world position to screen-space UV coordinates (0-1).
  *
  * @param x - World X.
  * @param y - World Y.
  * @param z - World Z.
  * @param camera - The Three.js camera used for rendering.
- * @returns `[u, v]` in 0–1 UV space (origin bottom-left).
+ * @returns `[u, v]` in 0-1 UV space (origin bottom-left).
  *
  * @example
  * ```ts
  * const [u, v] = worldToScreen(0, 1, 0, camera);
- * triggerShockwave(u, v);
+ * triggerShockwave(shockwaves.slots, u, v);
  * ```
  */
 export function worldToScreen(
@@ -145,7 +173,6 @@ export function worldToScreen(
     camera: THREE.Camera,
 ): [number, number] {
     const v = new THREE.Vector3(x, y, z).project(camera);
-    // project() returns NDC in -1..1; convert to 0..1 UV
     return [(v.x + 1) / 2, (v.y + 1) / 2];
 }
 
@@ -163,7 +190,6 @@ export function worldToScreen(
  * ```
  */
 export function createShockwavePass(): ShaderPass {
-    // Build uniforms for all slots
     const uniforms: Record<string, { value: any }> = {
         tDiffuse: { value: null },
         aspect: { value: 1.0 },
@@ -230,24 +256,28 @@ export function createShockwavePass(): ShaderPass {
 /**
  * Returns `true` if at least one shockwave slot is active.
  *
+ * @param slots - The shockwave slots from the store.
+ *
  * @example
  * ```ts
- * if (hasActiveShockwave()) { ... }
+ * if (hasActiveShockwave(shockwaves.slots)) { ... }
  * ```
  */
-export function hasActiveShockwave(): boolean {
+export function hasActiveShockwave(slots: ShockwaveSlot[]): boolean {
     return slots.some((s) => s.active);
 }
 
 /**
- * Reset all shockwave slots to inactive. Useful for testing.
+ * Reset all shockwave slots to inactive.
+ *
+ * @param slots - The shockwave slots from the store.
  *
  * @example
  * ```ts
- * resetShockwaves();
+ * resetShockwaves(shockwaves.slots);
  * ```
  */
-export function resetShockwaves(): void {
+export function resetShockwaves(slots: ShockwaveSlot[]): void {
     for (const s of slots) {
         s.active = false;
         s.centerX = 0;

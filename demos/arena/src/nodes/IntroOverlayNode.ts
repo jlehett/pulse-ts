@@ -1,4 +1,4 @@
-import { useFrameUpdate, useDestroy, useContext } from '@pulse-ts/core';
+import { useFrameUpdate, useDestroy, useContext, color } from '@pulse-ts/core';
 import { useThreeContext } from '@pulse-ts/three';
 import { GameCtx } from '../contexts';
 import { applyStaggeredEntrance } from '../overlayAnimations';
@@ -13,24 +13,6 @@ const FADE_OUT_MS = 400;
 export interface IntroOverlayNodeProps {
     /** The AI personality to display during the intro. */
     personality: AiPersonality;
-}
-
-/**
- * Convert a numeric hex color to a CSS `rgb()` string.
- *
- * @param hex - Hex color value (e.g. `0xe74c3c`).
- * @returns CSS color string.
- *
- * @example
- * ```ts
- * hexToCss(0xff0000); // 'rgb(255, 0, 0)'
- * ```
- */
-export function hexToCss(hex: number): string {
-    const r = (hex >> 16) & 0xff;
-    const g = (hex >> 8) & 0xff;
-    const b = hex & 0xff;
-    return `rgb(${r}, ${g}, ${b})`;
 }
 
 /**
@@ -83,8 +65,8 @@ export function IntroOverlayNode({
     nameLabel.textContent = personality.name.toUpperCase();
     Object.assign(nameLabel.style, {
         font: 'bold clamp(32px, 10vw, 56px) monospace',
-        color: hexToCss(personality.color),
-        textShadow: `0 0 20px ${hexToCss(personality.color)}`,
+        color: color(personality.color).rgb,
+        textShadow: `0 0 20px ${color(personality.color).rgb}`,
         letterSpacing: '3px',
     } as Partial<CSSStyleDeclaration>);
     el.appendChild(nameLabel);

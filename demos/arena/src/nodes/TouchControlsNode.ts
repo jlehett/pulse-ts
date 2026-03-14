@@ -1,9 +1,14 @@
-import { useDestroy, useContext, useFrameUpdate } from '@pulse-ts/core';
+import {
+    useDestroy,
+    useContext,
+    useFrameUpdate,
+    useStore,
+} from '@pulse-ts/core';
 import { useInput } from '@pulse-ts/input';
 import { isMobileDevice } from '../isMobileDevice';
 import { GameCtx } from '../contexts';
-import { isReplayActive } from '../replay';
-import { getDashCooldownProgress } from '../dashCooldown';
+import { ReplayStore, isReplayActive } from '../replay';
+import { DashCooldownStore } from '../dashCooldown';
 
 /** Default deadzone — inputs within this magnitude are zeroed. */
 const DEADZONE = 0.15;
@@ -335,11 +340,13 @@ export function TouchControlsNode(props?: Readonly<TouchControlsNodeProps>) {
     // ── Hide during replay ──
 
     const gameState = useContext(GameCtx);
+    const [replay] = useStore(ReplayStore);
+    const [cooldown] = useStore(DashCooldownStore);
 
     useFrameUpdate(() => {
         const hidden =
             gameState.phase === 'intro' ||
-            (gameState.phase === 'replay' && isReplayActive());
+            (gameState.phase === 'replay' && isReplayActive(replay));
         const vis = hidden ? 'hidden' : 'visible';
         joystickBase.style.visibility = vis;
         dashBtn.style.visibility = vis;
@@ -347,7 +354,7 @@ export function TouchControlsNode(props?: Readonly<TouchControlsNodeProps>) {
 
         // Dash cooldown fill — fills from bottom to top as cooldown recovers
         if (!hidden) {
-            const progress = getDashCooldownProgress(localPlayerId);
+            const progress = cooldown.progress[localPlayerId];
             if (progress >= 1) {
                 dashBtn.style.background = 'rgba(72,201,176,0.25)';
             } else {
