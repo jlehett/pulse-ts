@@ -29,6 +29,7 @@ export default defineConfig({
         { text: 'Networking: Server Broker (WebSocket)', link: '/guides/networking-server-broker' },
         { text: 'Networking: Cookbook', link: '/guides/networking-cookbook' },
         { text: 'State Management', link: '/guides/state-management' },
+        { text: 'Procedural Textures', link: '/guides/procedural-textures' },
       ]
     },
     search: {

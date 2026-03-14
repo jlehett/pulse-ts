@@ -52,3 +52,13 @@ export {
     StatsOverlaySystem,
     type StatsOverlayOptions,
 } from '../domain/systems/statsOverlay';
+export {
+    createTexture,
+    createTexture1D,
+    type PixelFn,
+    type PixelFn1D,
+    type WrapMode,
+    type FilterMode,
+    type TextureFormat,
+    type TextureOptions,
+} from './createTexture';
