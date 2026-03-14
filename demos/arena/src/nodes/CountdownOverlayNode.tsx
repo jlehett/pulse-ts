@@ -1,5 +1,6 @@
-import { useFrameUpdate, useDestroy, useContext } from '@pulse-ts/core';
+import { useFrameUpdate, useContext } from '@pulse-ts/core';
 import { useThreeContext } from '@pulse-ts/three';
+import { useOverlay } from '@pulse-ts/dom';
 import { GameCtx } from '../contexts';
 import { applyScalePop } from '../overlayAnimations';
 
@@ -29,40 +30,39 @@ export function CountdownOverlayNode() {
     const { renderer } = useThreeContext();
     const container = renderer.domElement.parentElement ?? document.body;
 
-    const el = document.createElement('div');
-    Object.assign(el.style, {
-        position: 'absolute',
-        top: '50%',
-        left: '50%',
-        transform: 'translate(-50%, -50%)',
-        zIndex: '3000',
-        font: 'bold clamp(40px, 14vw, 72px) monospace',
-        color: '#fff',
-        textShadow: '0 0 16px rgba(0,0,0,0.8)',
-        transition: 'opacity 0.2s ease-out',
-        opacity: '0',
-        pointerEvents: 'none',
-    } as Partial<CSSStyleDeclaration>);
-    container.appendChild(el);
+    const root = useOverlay(
+        <div
+            style={{
+                position: 'absolute',
+                top: '50%',
+                left: '50%',
+                transform: 'translate(-50%, -50%)',
+                zIndex: '3000',
+                font: 'bold clamp(40px, 14vw, 72px) monospace',
+                color: '#fff',
+                textShadow: '0 0 16px rgba(0,0,0,0.8)',
+                transition: 'opacity 0.2s ease-out',
+                opacity: () => (gameState.phase === 'countdown' ? '1' : '0'),
+                pointerEvents: 'none',
+            }}
+        >
+            {() => countdownLabel(gameState.countdownValue)}
+        </div>,
+        container,
+    );
 
     let lastValue = -1;
 
     useFrameUpdate(() => {
         const visible = gameState.phase === 'countdown';
-        el.style.opacity = visible ? '1' : '0';
 
         if (visible) {
-            el.textContent = countdownLabel(gameState.countdownValue);
             if (gameState.countdownValue !== lastValue) {
                 lastValue = gameState.countdownValue;
-                applyScalePop(el);
+                applyScalePop(root as HTMLElement);
             }
         } else {
             lastValue = -1;
         }
-    });
-
-    useDestroy(() => {
-        el.remove();
     });
 }

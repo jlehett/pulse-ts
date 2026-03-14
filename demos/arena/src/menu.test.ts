@@ -33,7 +33,8 @@ describe('showMainMenu', () => {
     it('displays the game title', () => {
         showMainMenu(container);
 
-        expect(container.textContent).toContain('BUMPER BALLS');
+        expect(container.textContent).toContain('BUMPER');
+        expect(container.textContent).toContain('BALLS');
         expect(container.textContent).toContain('ARENA');
     });
 

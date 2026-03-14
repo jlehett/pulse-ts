@@ -62,6 +62,11 @@ describe('PauseMenuNode', () => {
         expect(typeof PauseMenuNode).toBe('function');
     });
 
+    /** Find the last useFrameUpdate callback (the node's own, after useOverlay's). */
+    function getNodeFrameUpdate() {
+        return mockFrameUpdateCallbacks[mockFrameUpdateCallbacks.length - 1];
+    }
+
     describe('offline mode — setTimeScale', () => {
         function mount() {
             PauseMenuNode();
@@ -70,7 +75,7 @@ describe('PauseMenuNode', () => {
         it('calls setTimeScale(0) when pausing via Escape', () => {
             mount();
             mockPauseAction = { pressed: true };
-            mockFrameUpdateCallbacks[0](0.016);
+            getNodeFrameUpdate()(0.016);
 
             expect(mockSetTimeScale).toHaveBeenCalledWith(0);
             expect(mockGameState.paused).toBe(true);
@@ -80,12 +85,12 @@ describe('PauseMenuNode', () => {
             mount();
             // First press: pause
             mockPauseAction = { pressed: true };
-            mockFrameUpdateCallbacks[0](0.016);
+            getNodeFrameUpdate()(0.016);
             mockSetTimeScale.mockClear();
 
             // Second press: unpause
             mockPauseAction = { pressed: true };
-            mockFrameUpdateCallbacks[0](0.016);
+            getNodeFrameUpdate()(0.016);
 
             expect(mockSetTimeScale).toHaveBeenCalledWith(1);
             expect(mockGameState.paused).toBe(false);
@@ -94,7 +99,7 @@ describe('PauseMenuNode', () => {
         it('does not call setTimeScale when Escape is not pressed', () => {
             mount();
             mockPauseAction = { pressed: false };
-            mockFrameUpdateCallbacks[0](0.016);
+            getNodeFrameUpdate()(0.016);
             expect(mockSetTimeScale).not.toHaveBeenCalled();
         });
     });
@@ -107,7 +112,7 @@ describe('PauseMenuNode', () => {
         it('does not call setTimeScale when toggling online menu', () => {
             mount();
             mockPauseAction = { pressed: true };
-            mockFrameUpdateCallbacks[0](0.016);
+            getNodeFrameUpdate()(0.016);
 
             expect(mockSetTimeScale).not.toHaveBeenCalled();
         });
