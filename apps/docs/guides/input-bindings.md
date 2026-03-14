@@ -15,10 +15,14 @@ installInput(world, {
     jump: Chord([Key('Space')]),
     dash: Sequence([Key('KeyD'), Key('KeyS')], { maxGapFrames: 10 }),
 
-    // Axes
+    // Axes (shorthand)
+    move: Axis2D.wasd(),
+    p2Move: Axis2D.arrows(),
+
+    // Axes (full form — use when you need custom keys or scale)
     moveX: Axis1D({ pos: Key('D'), neg: Key('A') }),
     moveY: Axis1D({ pos: Key('W'), neg: Key('S') }),
-    move: Axis2D({ x: { pos: Key('D'), neg: Key('A') }, y: { pos: Key('W'), neg: Key('S') } }),
+    customMove: Axis2D({ x: { pos: Key('D'), neg: Key('A') }, y: { pos: Key('W'), neg: Key('S') } }),
 
     // Pointer
     look: PointerMovement({ scaleX: 0.1, scaleY: 0.1 }),
@@ -129,7 +133,7 @@ const joystick = useVirtualJoystick('move', {
 
 - Set `preventDefault` to avoid scrolling/back/forward during gameplay.
 - Enable `pointerLock` to capture mouse for FPS-style look.
-- Use `Axis2D` for combined WASD vectors and `Axis1D` for single axes.
+- Use `Axis2D.wasd()` or `Axis2D.arrows()` for common movement bindings, or `Axis2D.keys(left, right, down, up)` for custom four-key layouts.
 - Use `Chord` for simultaneous keys and `Sequence` for combos.
 
 Note: `preventDefault` and `pointerLock` default to `false` unless specified in `installInput` options.

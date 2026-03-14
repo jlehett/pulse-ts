@@ -105,6 +105,69 @@ export function Axis2D(
 }
 
 /**
+ * Create a 2D axis from four key codes: left, right, down, up.
+ *
+ * Equivalent to `Axis2D({ x: Axis1D({ neg: Key(left), pos: Key(right) }), y: Axis1D({ neg: Key(down), pos: Key(up) }) })`.
+ *
+ * @param left  Key code for negative X (move left).
+ * @param right Key code for positive X (move right).
+ * @param down  Key code for negative Y (move down).
+ * @param up    Key code for positive Y (move up).
+ * @returns The Axis2D binding expression.
+ *
+ * @example
+ * ```ts
+ * import { Axis2D } from '@pulse-ts/input';
+ * const ijklMove = Axis2D.keys('KeyJ', 'KeyL', 'KeyK', 'KeyI');
+ * ```
+ */
+Axis2D.keys = function keys(
+    left: string,
+    right: string,
+    down: string,
+    up: string,
+): Axis2DBinding {
+    return Axis2D({
+        x: { neg: Key(left), pos: Key(right) },
+        y: { neg: Key(down), pos: Key(up) },
+    });
+};
+
+/**
+ * Create a 2D axis bound to WASD keys.
+ *
+ * Shorthand for `Axis2D.keys('KeyA', 'KeyD', 'KeyS', 'KeyW')`.
+ *
+ * @returns The Axis2D binding expression for WASD.
+ *
+ * @example
+ * ```ts
+ * import { Axis2D } from '@pulse-ts/input';
+ * const move = Axis2D.wasd();
+ * ```
+ */
+Axis2D.wasd = function wasd(): Axis2DBinding {
+    return Axis2D.keys('KeyA', 'KeyD', 'KeyS', 'KeyW');
+};
+
+/**
+ * Create a 2D axis bound to arrow keys.
+ *
+ * Shorthand for `Axis2D.keys('ArrowLeft', 'ArrowRight', 'ArrowDown', 'ArrowUp')`.
+ *
+ * @returns The Axis2D binding expression for arrow keys.
+ *
+ * @example
+ * ```ts
+ * import { Axis2D } from '@pulse-ts/input';
+ * const move = Axis2D.arrows();
+ * ```
+ */
+Axis2D.arrows = function arrows(): Axis2DBinding {
+    return Axis2D.keys('ArrowLeft', 'ArrowRight', 'ArrowDown', 'ArrowUp');
+};
+
+/**
  * Create a pointer movement binding (maps mouse/touch delta to a 2D axis).
  * @param opts Pointer options (invert/scale per-axis).
  * @returns The pointer movement binding expression.
