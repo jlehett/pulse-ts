@@ -31,7 +31,7 @@ import {
     clearRecording,
 } from '../replay';
 import { DashCooldownStore } from '../dashCooldown';
-import { HitImpactStore, resetHitImpacts } from '../hitImpact';
+import { useHitImpactPool } from '../hitImpact';
 import { resetPlayerPositions } from '../ai/playerPositions';
 import { resetCameraShake } from './CameraRigNode';
 import { PlayerVelocityStore } from '../playerVelocity';
@@ -86,7 +86,7 @@ export function GameManagerNode(props?: Readonly<GameManagerNodeProps>) {
     // World-scoped stores — auto-reset on world.destroy()
     const [replay] = useStore(ReplayStore);
     const [cooldown] = useStore(DashCooldownStore);
-    const [impacts] = useStore(HitImpactStore);
+    const hitImpactPool = useHitImpactPool();
     const [velocities] = useStore(PlayerVelocityStore);
 
     // Clear non-store module state from any previous game session.
@@ -100,7 +100,7 @@ export function GameManagerNode(props?: Readonly<GameManagerNodeProps>) {
     // within the same world.
     cooldown.progress[0] = 1;
     cooldown.progress[1] = 1;
-    resetHitImpacts(impacts.slots);
+    hitImpactPool.reset();
     for (const s of velocities.states) {
         s.prevX = s.prevZ = s.vx = s.vz = 0;
     }

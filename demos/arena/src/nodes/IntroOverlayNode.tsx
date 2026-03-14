@@ -1,6 +1,7 @@
-import { useFrameUpdate, useContext } from '@pulse-ts/core';
+import { useFrameUpdate, useContext, color } from '@pulse-ts/core';
 import { useThreeContext } from '@pulse-ts/three';
 import { useOverlay, Column } from '@pulse-ts/dom';
+import { useSequence } from '@pulse-ts/effects';
 import { GameCtx } from '../contexts';
 import { applyStaggeredEntrance } from '../overlayAnimations';
 import type { AiPersonality } from '../ai/personalities';
@@ -31,7 +32,7 @@ export function IntroOverlayNode({
     const { renderer } = useThreeContext();
     const container = renderer.domElement.parentElement ?? document.body;
 
-    const accentColor = hexToCss(personality.color);
+    const accentColor = color(personality.color).rgb;
 
     const root = useOverlay(
         <Column
@@ -89,29 +90,21 @@ export function IntroOverlayNode({
     const taglineLabel = rootEl.children[2] as HTMLElement;
     applyStaggeredEntrance([vsLabel, nameLabel, taglineLabel], 200);
 
-    let elapsed = 0;
-    let fadingOut = false;
+    // Declarative intro sequence: show → fade out → transition to countdown
+    const introSequence = useSequence([
+        { action: () => { rootEl.style.opacity = '1'; }, post: INTRO_DURATION },
+        { action: () => { rootEl.style.opacity = '0'; }, post: FADE_OUT_MS / 1000 },
+        { action: () => { gameState.phase = 'countdown'; } },
+    ]);
 
-    useFrameUpdate((dt) => {
+    useFrameUpdate(() => {
         if (gameState.phase !== 'intro') {
             rootEl.style.opacity = '0';
             return;
         }
 
-        // Show the overlay
-        if (!fadingOut) {
-            rootEl.style.opacity = '1';
-        }
-
-        elapsed += dt;
-
-        if (elapsed >= INTRO_DURATION && !fadingOut) {
-            fadingOut = true;
-            rootEl.style.opacity = '0';
-            // Transition to countdown (3-2-1-GO!) after fade completes
-            setTimeout(() => {
-                gameState.phase = 'countdown';
-            }, FADE_OUT_MS);
+        if (!introSequence.finished && introSequence.elapsed === 0) {
+            introSequence.play();
         }
     });
 }

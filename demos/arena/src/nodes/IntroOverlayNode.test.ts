@@ -7,6 +7,9 @@ import { INTRO_DURATION } from './IntroOverlayNode';
 
 let mockFrameUpdateCallbacks: ((dt: number) => void)[] = [];
 let mockDestroyCallbacks: (() => void)[] = [];
+/** Accumulated time in the mock sequence runner. */
+let mockSequenceElapsed = 0;
+let mockSequenceSteps: any[] = [];
 let mockGameState = {
     phase: 'intro' as string,
     scores: [0, 0] as [number, number],
@@ -47,13 +50,63 @@ jest.mock('@pulse-ts/core', () => ({
             rgba: (a: number) => `rgba(${r}, ${g}, ${b}, ${a})`,
         };
     },
-}));
+}), { virtual: true });
 
 jest.mock('@pulse-ts/three', () => ({
     useThreeContext: () => ({
         renderer: { domElement: mockCanvas },
     }),
-}));
+}), { virtual: true });
+
+jest.mock('@pulse-ts/dom', () => ({
+    useOverlay: (jsx: any, container: HTMLElement) => {
+        const el = document.createElement('div');
+        // Apply style props from the JSX column
+        if (jsx?.props?.style) {
+            Object.assign(el.style, jsx.props.style);
+        }
+        // Render children as text
+        if (jsx?.props?.children) {
+            for (const child of [].concat(jsx.props.children)) {
+                const childEl = document.createElement('div');
+                if (child?.props?.style) {
+                    Object.assign(childEl.style, child.props.style);
+                }
+                if (typeof child?.props?.children === 'string') {
+                    childEl.textContent = child.props.children;
+                }
+                el.appendChild(childEl);
+            }
+        }
+        container.appendChild(el);
+        // Register cleanup
+        mockDestroyCallbacks.push(() => {
+            el.remove();
+        });
+        return el;
+    },
+    Column: 'div',
+}), { virtual: true });
+
+jest.mock('@pulse-ts/effects', () => ({
+    useSequence: (steps: any[]) => {
+        mockSequenceSteps = steps;
+        return {
+            play() {
+                mockSequenceElapsed = 0;
+            },
+            reset() {
+                mockSequenceElapsed = 0;
+            },
+            get finished() {
+                return false;
+            },
+            get elapsed() {
+                return mockSequenceElapsed;
+            },
+        };
+    },
+}), { virtual: true });
 
 jest.mock('../overlayAnimations', () => ({
     applyStaggeredEntrance: jest.fn(),
@@ -64,6 +117,8 @@ import { IntroOverlayNode } from './IntroOverlayNode';
 beforeEach(() => {
     mockFrameUpdateCallbacks = [];
     mockDestroyCallbacks = [];
+    mockSequenceElapsed = 0;
+    mockSequenceSteps = [];
     mockGameState = {
         phase: 'intro',
         scores: [0, 0],
@@ -81,8 +136,6 @@ beforeEach(() => {
 /* ------------------------------------------------------------------ */
 /*  Tests                                                              */
 /* ------------------------------------------------------------------ */
-
-// hexToCss was replaced by color() from @pulse-ts/core — tested in core package
 
 describe('IntroOverlayNode', () => {
     function mount() {
@@ -109,13 +162,6 @@ describe('IntroOverlayNode', () => {
         expect(text).toContain(BRAWLER.tagline);
     });
 
-    it('sets opacity to 1 during intro phase', () => {
-        mount();
-        mockFrameUpdateCallbacks[0](0.016);
-        const overlay = mockContainer.firstElementChild as HTMLElement;
-        expect(overlay.style.opacity).toBe('1');
-    });
-
     it('sets opacity to 0 when phase is not intro', () => {
         mount();
         mockGameState.phase = 'playing';
@@ -134,23 +180,36 @@ describe('IntroOverlayNode', () => {
         expect(overlay.style.backgroundColor).toContain('rgba(0, 0, 0');
     });
 
-    it('fades out after INTRO_DURATION seconds', () => {
+    it('creates a sequence with show, fade-out, and countdown steps', () => {
         mount();
-        // Advance past the intro duration
-        mockFrameUpdateCallbacks[0](INTRO_DURATION + 0.1);
+        expect(mockSequenceSteps).toHaveLength(3);
+        // First step shows the overlay
+        expect(typeof mockSequenceSteps[0].action).toBe('function');
+        expect(mockSequenceSteps[0].post).toBe(INTRO_DURATION);
+        // Second step fades out
+        expect(typeof mockSequenceSteps[1].action).toBe('function');
+        // Third step transitions to countdown
+        expect(typeof mockSequenceSteps[2].action).toBe('function');
+    });
+
+    it('sequence show action sets opacity to 1', () => {
+        mount();
+        mockSequenceSteps[0].action();
+        const overlay = mockContainer.firstElementChild as HTMLElement;
+        expect(overlay.style.opacity).toBe('1');
+    });
+
+    it('sequence fade-out action sets opacity to 0', () => {
+        mount();
+        mockSequenceSteps[1].action();
         const overlay = mockContainer.firstElementChild as HTMLElement;
         expect(overlay.style.opacity).toBe('0');
     });
 
-    it('transitions to countdown phase after fade', () => {
-        jest.useFakeTimers();
+    it('sequence countdown action transitions to countdown phase', () => {
         mount();
-        // Advance past intro duration to trigger fade-out
-        mockFrameUpdateCallbacks[0](INTRO_DURATION + 0.1);
-        // Fast-forward the setTimeout
-        jest.runAllTimers();
+        mockSequenceSteps[2].action();
         expect(mockGameState.phase).toBe('countdown');
-        jest.useRealTimers();
     });
 
     it('removes the overlay on destroy', () => {
@@ -162,7 +221,7 @@ describe('IntroOverlayNode', () => {
 
     it('registers a useFrameUpdate and useDestroy callback', () => {
         mount();
-        // useOverlay registers a useFrameUpdate (for bindings) and useDestroy (for cleanup)
+        // useOverlay registers cleanup via useDestroy
         // plus the node's own useFrameUpdate
         expect(mockFrameUpdateCallbacks.length).toBeGreaterThanOrEqual(1);
         expect(mockDestroyCallbacks.length).toBeGreaterThanOrEqual(1);

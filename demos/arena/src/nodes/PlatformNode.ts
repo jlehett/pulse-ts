@@ -17,8 +17,7 @@ import * as THREE from 'three';
 import { ARENA_RADIUS } from '../config/arena';
 import { isMobileDevice } from '../isMobileDevice';
 import {
-    HitImpactStore,
-    updateHitImpacts,
+    useHitImpactPool,
     HIT_RIPPLE_DISPLACEMENT,
     HIT_RIPPLE_MAX_RADIUS,
     HIT_RIPPLE_EXPAND_DURATION,
@@ -449,7 +448,7 @@ export function worldToUV(
  * (no edge walls so players can be knocked off).
  */
 export function PlatformNode() {
-    const [impacts] = useStore(HitImpactStore);
+    const hitPool = useHitImpactPool();
     const transform = useComponent(Transform);
     transform.localPosition.set(0, 0, 0);
 
@@ -699,33 +698,31 @@ export function PlatformNode() {
     const ringGlowSpin = useAnimate({ rate: RING_GLOW_SPEED });
 
     useFrameUpdate((dt) => {
-        // Advance hit impact ages (must run before AtmosphericDustNode reads them)
-        updateHitImpacts(impacts.slots, dt);
-
-        // Sync hit ripple uniforms from active slots
-        const hitSlots = impacts.slots;
+        // Sync hit ripple uniforms from active pool slots
+        // Reset all ripple slots first
         for (let i = 0; i < 4; i++) {
-            const slot = hitSlots[i];
-            if (slot.active) {
-                const [u, v] = worldToUV(
-                    slot.worldX,
-                    slot.worldZ,
-                    ARENA_RADIUS,
-                );
-                hitRippleCenterX.setComponent(i, u);
-                hitRippleCenterY.setComponent(i, v);
-                // Expanding radius: age / expand_duration, clamped to max
-                const progress = Math.min(
-                    slot.age / HIT_RIPPLE_EXPAND_DURATION,
-                    1,
-                );
-                hitRippleRadii.setComponent(
-                    i,
-                    progress * HIT_RIPPLE_MAX_RADIUS,
-                );
-            } else {
-                hitRippleRadii.setComponent(i, -1);
-            }
+            hitRippleRadii.setComponent(i, -1);
+        }
+        let hitSlotIdx = 0;
+        for (const slot of hitPool.active()) {
+            if (hitSlotIdx >= 4) break;
+            const [u, v] = worldToUV(
+                slot.data.worldX,
+                slot.data.worldZ,
+                ARENA_RADIUS,
+            );
+            hitRippleCenterX.setComponent(hitSlotIdx, u);
+            hitRippleCenterY.setComponent(hitSlotIdx, v);
+            // Expanding radius: age / expand_duration, clamped to max
+            const progress = Math.min(
+                slot.age / HIT_RIPPLE_EXPAND_DURATION,
+                1,
+            );
+            hitRippleRadii.setComponent(
+                hitSlotIdx,
+                progress * HIT_RIPPLE_MAX_RADIUS,
+            );
+            hitSlotIdx++;
         }
 
         ringMaterial.emissiveIntensity = pulse.value;

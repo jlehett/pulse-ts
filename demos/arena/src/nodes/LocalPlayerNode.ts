@@ -46,8 +46,8 @@ import {
     markHit,
     getReplayPosition,
 } from '../replay';
-import { ShockwaveStore, triggerShockwave, worldToScreen } from '../shockwave';
-import { HitImpactStore, triggerHitImpact } from '../hitImpact';
+import { useShockwavePool, worldToScreen } from '../shockwave';
+import { useHitImpactPool } from '../hitImpact';
 import { setPlayerPosition } from '../ai/playerPositions';
 import { DashCooldownStore } from '../dashCooldown';
 import {
@@ -238,8 +238,8 @@ export function LocalPlayerNode({
     const spawn = SPAWN_POSITIONS[playerId];
 
     const [replay] = useStore(ReplayStore);
-    const [shockwaves] = useStore(ShockwaveStore);
-    const [impacts] = useStore(HitImpactStore);
+    const shockwavePool = useShockwavePool();
+    const hitImpactPool = useHitImpactPool();
     const [cooldown] = useStore(DashCooldownStore);
     const [velocities] = useStore(PlayerVelocityStore);
 
@@ -449,8 +449,8 @@ export function LocalPlayerNode({
             impactBurst([surfX, surfY, surfZ]);
 
             const [su, sv] = worldToScreen(surfX, surfY, surfZ, threeCamera);
-            triggerShockwave(shockwaves.slots, su, sv);
-            triggerHitImpact(impacts.slots, surfX, surfZ);
+            shockwavePool.trigger({ centerX: su, centerY: sv });
+            hitImpactPool.trigger({ worldX: surfX, worldZ: surfZ });
         }
 
         triggerCameraShake(0.3, 0.2);

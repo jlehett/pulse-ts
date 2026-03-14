@@ -1,15 +1,26 @@
 jest.mock('@pulse-ts/core', () => ({
+    createContext: (name: string) => ({ name }),
     useFrameUpdate: jest.fn(),
     useDestroy: jest.fn(),
     useContext: jest.fn(),
-    createContext: (name: string) => ({ name }),
-}));
+    useStore: jest.fn(() => [{}]),
+}), { virtual: true });
 
 jest.mock('@pulse-ts/three', () => ({
     useThreeContext: jest.fn(),
-}));
+}), { virtual: true });
+
+jest.mock('@pulse-ts/dom', () => ({
+    useOverlay: jest.fn(() => document.createElement('div')),
+    Row: 'div',
+}), { virtual: true });
+
+jest.mock('@pulse-ts/effects', () => ({
+    useAnimate: jest.fn(() => ({ play: jest.fn(), value: 0 })),
+}), { virtual: true });
 
 jest.mock('../replay', () => ({
+    ReplayStore: {},
     isReplayActive: jest.fn(() => false),
 }));
 

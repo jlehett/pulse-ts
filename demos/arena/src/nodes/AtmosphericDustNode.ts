@@ -1,7 +1,6 @@
 import {
     useContext,
     useFrameUpdate,
-    useStore,
     curlNoise2D,
 } from '@pulse-ts/core';
 import { useParticleBurst } from '@pulse-ts/effects';
@@ -10,7 +9,7 @@ import { ARENA_RADIUS } from '../config/arena';
 import { GameCtx, type RoundPhase } from '../contexts';
 import { isMobileDevice } from '../isMobileDevice';
 import {
-    HitImpactStore,
+    useHitImpactPool,
     HIT_IMPACT_DURATION,
     HIT_SCATTER_RADIUS,
     HIT_SCATTER_STRENGTH,
@@ -102,7 +101,7 @@ const DUST_LIFETIME = 999999;
 export function AtmosphericDustNode() {
     const { scene } = useThreeContext();
     const gameState = useContext(GameCtx);
-    const [impacts] = useStore(HitImpactStore);
+    const hitPool = useHitImpactPool();
     const mobile = isMobileDevice();
     const dustCount = mobile ? Math.floor(DUST_COUNT / 2) : DUST_COUNT;
 
@@ -397,14 +396,13 @@ export function AtmosphericDustNode() {
         }
 
         // Append active hit impacts as high-radius scatter influences
-        for (const slot of impacts.slots) {
-            if (!slot.active) continue;
+        for (const slot of hitPool.active()) {
             // Smoothstep decay from 1→0 over HIT_IMPACT_DURATION
             const t = slot.age / HIT_IMPACT_DURATION;
             const strength = 1 - t * t * (3 - 2 * t);
             influences.push({
-                x: slot.worldX,
-                z: slot.worldZ,
+                x: slot.data.worldX,
+                z: slot.data.worldZ,
                 strength,
                 radius: HIT_SCATTER_RADIUS,
                 pushStrength: HIT_SCATTER_STRENGTH,

@@ -1,11 +1,7 @@
-import { useFrameUpdate, useStore } from '@pulse-ts/core';
+import { useFrameUpdate } from '@pulse-ts/core';
 import { useThreeContext } from '@pulse-ts/three';
 import type { ShaderPass } from 'three/examples/jsm/postprocessing/ShaderPass.js';
-import {
-    ShockwaveStore,
-    updateShockwaves,
-    syncShockwaveUniforms,
-} from '../shockwave';
+import { useShockwavePool, syncShockwaveUniforms } from '../shockwave';
 
 export interface ShockwaveNodeProps {
     /** The ShaderPass instance returned by {@link createShockwavePass}. */
@@ -14,8 +10,11 @@ export interface ShockwaveNodeProps {
 
 /**
  * Frame-update node that drives the shockwave distortion effect.
- * Advances shockwave timers and syncs uniform state into the post-processing
- * pass each frame. Does nothing if no pass is provided.
+ * Syncs the effect pool state into the post-processing pass uniforms
+ * each frame. Does nothing if no pass is provided.
+ *
+ * The pool timing is managed automatically by {@link useShockwavePool}
+ * via `useEffectPool`'s internal `useFixedUpdate`.
  *
  * @param props - Must include the `pass` from `createShockwavePass()`.
  *
@@ -29,12 +28,11 @@ export function ShockwaveNode(props?: Readonly<ShockwaveNodeProps>) {
     if (!pass) return;
 
     const { renderer } = useThreeContext();
-    const [shockwaves] = useStore(ShockwaveStore);
+    const pool = useShockwavePool();
 
-    useFrameUpdate((dt) => {
-        updateShockwaves(shockwaves.slots, dt);
+    useFrameUpdate(() => {
         const canvas = renderer.domElement;
         const aspect = canvas.clientWidth / canvas.clientHeight;
-        syncShockwaveUniforms(shockwaves.slots, pass, aspect);
+        syncShockwaveUniforms(pool, pass, aspect);
     });
 }
