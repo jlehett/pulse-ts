@@ -127,8 +127,12 @@ export class TransportService extends Service {
      * Unsubscribes all internal handlers and clears the transport reference.
      * Useful when the transport lifecycle is managed externally (e.g.,
      * a P2P DataChannel that survives world teardown for rematch).
+     *
+     * Flushes any pending outbound messages before detaching so that
+     * messages published just before world teardown are not lost.
      */
     detach() {
+        this.flushOutgoing();
         (this as any)._offT?.();
         (this as any)._offT = undefined;
         this.transport = null;

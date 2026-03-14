@@ -163,6 +163,34 @@ describe('TransportService', () => {
         expect(left).toEqual(['a']);
     });
 
+    it('detach() flushes pending outbound messages before clearing transport', async () => {
+        const hub = createMemoryHub();
+        const aT = new MemoryTransport(hub, 'a');
+        const bT = new MemoryTransport(hub, 'b');
+
+        const a = new TransportService({ selfId: 'a' });
+        const b = new TransportService({ selfId: 'b' });
+        a.setTransport(aT);
+        b.setTransport(bT);
+        await a.connect();
+        await b.connect();
+
+        const received: string[] = [];
+        b.subscribe<string>('chat', (msg) => received.push(msg));
+
+        // Publish a message but do NOT flush manually
+        a.publish('chat', 'last-words');
+
+        // Detach should flush the outbox before clearing
+        a.detach();
+
+        // The message should have been sent to the transport
+        b.dispatchIncoming();
+        expect(received).toEqual(['last-words']);
+
+        await b.disconnect();
+    });
+
     it('detach() unsubscribes handlers without disconnecting the transport', async () => {
         const hub = createMemoryHub();
         const aT = new MemoryTransport(hub, 'a');

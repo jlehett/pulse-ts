@@ -2,10 +2,10 @@
 id: TICKET-127
 epic: EPIC-023
 title: Network Flush on World Destroy
-status: todo
+status: done
 priority: medium
 created: 2026-03-13
-updated: 2026-03-13
+updated: 2026-03-14
 labels:
   - network
   - bugfix
@@ -21,12 +21,12 @@ Design doc: `design-docs/approved/009-network-flush-on-destroy.md`
 
 ## Acceptance Criteria
 
-- [ ] Pending outbound messages are flushed when world is destroyed
-- [ ] Implemented via `useDestroy` in network installer (no new API)
-- [ ] No messages lost during world teardown
-- [ ] Backward compatible — no API changes
-- [ ] Unit tests for flush-on-destroy behavior
-- [ ] Documentation updated if needed
+- [x] Pending outbound messages are flushed when world is destroyed
+- [x] Implemented via TransportService.detach() flush (no new API)
+- [x] No messages lost during world teardown
+- [x] Backward compatible — no API changes
+- [x] Unit tests for flush-on-destroy behavior
+- [x] Documentation updated if needed
 
 ## Notes
 
