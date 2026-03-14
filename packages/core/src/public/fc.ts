@@ -29,3 +29,10 @@ export type { TimerHandle, CooldownHandle } from '../domain/fc/timers';
 export { defineStore, useStore } from '../domain/fc/stores';
 export type { StoreDefinition, SetStore } from '../domain/fc/stores';
 export { useWatch } from '../domain/fc/watch';
+export { useStateMachine } from '../domain/fc/stateMachine';
+export type {
+    StateMachineConfig,
+    StateMachineHandle,
+    StateConfig,
+    TransitionConfig,
+} from '../domain/fc/stateMachine';
