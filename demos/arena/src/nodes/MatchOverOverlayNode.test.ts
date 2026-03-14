@@ -1,3 +1,24 @@
+jest.mock('@pulse-ts/core', () => ({
+    useFrameUpdate: jest.fn(),
+    useDestroy: jest.fn(),
+    useContext: jest.fn(),
+    useWorld: jest.fn(() => ({ getService: jest.fn() })),
+    createContext: (name: string) => ({ name }),
+}));
+
+jest.mock('@pulse-ts/three', () => ({
+    useThreeContext: jest.fn(),
+}));
+
+jest.mock('@pulse-ts/audio', () => ({
+    useSound: jest.fn(() => ({ play: jest.fn() })),
+}));
+
+jest.mock('@pulse-ts/network', () => ({
+    useChannel: jest.fn(),
+    TransportService: {},
+}));
+
 jest.mock('../versionCheck', () => ({
     isUpdateAvailable: jest.fn(() => false),
 }));
@@ -8,6 +29,10 @@ jest.mock('../updateAutoReload', () => ({
         cancel: jest.fn(),
         dispose: jest.fn(),
     })),
+}));
+
+jest.mock('../overlayAnimations', () => ({
+    applyStaggeredEntrance: jest.fn(),
 }));
 
 import { MatchOverOverlayNode } from './MatchOverOverlayNode';

@@ -1,10 +1,6 @@
-import {
-    useFrameUpdate,
-    useDestroy,
-    useContext,
-    useStore,
-} from '@pulse-ts/core';
+import { useFrameUpdate, useContext, useStore } from '@pulse-ts/core';
 import { useThreeContext } from '@pulse-ts/three';
+import { useOverlay, Row } from '@pulse-ts/dom';
 import { GameCtx } from '../contexts';
 import { ReplayStore, isReplayActive } from '../replay';
 import { ANIM_EASING } from '../overlayAnimations';
@@ -40,8 +36,6 @@ const CORNER_R = 6;
  * @returns A CSS `polygon(...)` value.
  */
 function trapezoidClip(taper: number, r: number): string {
-    // Extra polygon points approximate a curve at each bottom corner.
-    // Bottom-left corner is at (taper, 100%). Bottom-right is at (100%-taper, 100%).
     return `polygon(
         0 0,
         100% 0,
@@ -52,27 +46,6 @@ function trapezoidClip(taper: number, r: number): string {
         ${taper + 1}px calc(100% - ${Math.round(r * 0.3)}px),
         ${taper - 1}px calc(100% - ${r}px)
     )`;
-}
-
-/**
- * Create a score number span.
- *
- * @returns The span element.
- */
-function createNum(): HTMLSpanElement {
-    const num = document.createElement('span');
-    Object.assign(num.style, {
-        color: '#ffffff',
-        fontWeight: '700',
-        fontFamily: 'system-ui, -apple-system, sans-serif',
-        fontSize: 'clamp(16px, 3vw, 26px)',
-        textShadow: '0 1px 3px rgba(0,0,0,0.5)',
-        lineHeight: '1',
-        display: 'inline-block',
-        transition: `transform ${FLASH_DURATION}ms ${ANIM_EASING}`,
-    } as Partial<CSSStyleDeclaration>);
-    num.textContent = '0';
-    return num;
 }
 
 /**
@@ -89,72 +62,98 @@ export function ScoreHudNode() {
     const container = renderer.domElement.parentElement ?? document.body;
     const [replay] = useStore(ReplayStore);
 
-    // Outer shell: white-filled trapezoid that acts as the border
-    const border = document.createElement('div');
-    Object.assign(border.style, {
-        position: 'absolute',
-        top: '0',
-        left: '50%',
-        transform: 'translateX(-50%)',
-        zIndex: '1000',
-        pointerEvents: 'none',
-        backgroundColor: '#ffffff',
-        clipPath: trapezoidClip(TAPER_PX, CORNER_R),
-        transition: `opacity 200ms ${ANIM_EASING}`,
-        opacity: gameState.phase === 'intro' ? '0' : '1',
-    } as Partial<CSSStyleDeclaration>);
-    container.appendChild(border);
-
-    // Inner container: slightly inset trapezoid holding the colored panels
-    const el = document.createElement('div');
-    Object.assign(el.style, {
-        margin: `0 ${BORDER_PX}px ${BORDER_PX}px ${BORDER_PX}px`,
-        display: 'flex',
-        alignItems: 'stretch',
-        clipPath: trapezoidClip(TAPER_PX, CORNER_R),
-    } as Partial<CSSStyleDeclaration>);
-    border.appendChild(el);
-
     // Use custom player colors when available (solo mode personality accent)
     const p1Color = gameState.playerColors?.[0] ?? SCORE_COLORS[0];
     const p2Color = gameState.playerColors?.[1] ?? SCORE_COLORS[1];
 
-    // Left panel (P1)
-    const p1Panel = document.createElement('div');
-    Object.assign(p1Panel.style, {
-        width: '64px',
-        backgroundColor: p1Color,
-        padding: '8px 0',
-        textAlign: 'center',
-    } as Partial<CSSStyleDeclaration>);
+    const root = useOverlay(
+        <div
+            style={{
+                position: 'absolute',
+                top: '0',
+                left: '50%',
+                transform: 'translateX(-50%)',
+                zIndex: '1000',
+                pointerEvents: 'none',
+                backgroundColor: '#ffffff',
+                clipPath: trapezoidClip(TAPER_PX, CORNER_R),
+                transition: `opacity 200ms ${ANIM_EASING}`,
+                opacity: gameState.phase === 'intro' ? '0' : '1',
+            }}
+        >
+            <Row
+                style={{
+                    margin: `0 ${BORDER_PX}px ${BORDER_PX}px ${BORDER_PX}px`,
+                    alignItems: 'stretch',
+                    clipPath: trapezoidClip(TAPER_PX, CORNER_R),
+                }}
+            >
+                <div
+                    style={{
+                        width: '64px',
+                        backgroundColor: p1Color,
+                        padding: '8px 0',
+                        textAlign: 'center',
+                    }}
+                >
+                    <span
+                        style={{
+                            color: '#ffffff',
+                            fontWeight: '700',
+                            fontFamily: 'system-ui, -apple-system, sans-serif',
+                            fontSize: 'clamp(16px, 3vw, 26px)',
+                            textShadow: '0 1px 3px rgba(0,0,0,0.5)',
+                            lineHeight: '1',
+                            display: 'inline-block',
+                            transition: `transform ${FLASH_DURATION}ms ${ANIM_EASING}`,
+                        }}
+                    >
+                        {() => String(gameState.scores[0])}
+                    </span>
+                </div>
+                <div
+                    style={{
+                        width: '2px',
+                        backgroundColor: '#ffffff',
+                        alignSelf: 'stretch',
+                    }}
+                />
+                <div
+                    style={{
+                        width: '64px',
+                        backgroundColor: p2Color,
+                        padding: '8px 0',
+                        textAlign: 'center',
+                    }}
+                >
+                    <span
+                        style={{
+                            color: '#ffffff',
+                            fontWeight: '700',
+                            fontFamily: 'system-ui, -apple-system, sans-serif',
+                            fontSize: 'clamp(16px, 3vw, 26px)',
+                            textShadow: '0 1px 3px rgba(0,0,0,0.5)',
+                            lineHeight: '1',
+                            display: 'inline-block',
+                            transition: `transform ${FLASH_DURATION}ms ${ANIM_EASING}`,
+                        }}
+                    >
+                        {() => String(gameState.scores[1])}
+                    </span>
+                </div>
+            </Row>
+        </div>,
+        container,
+    );
 
-    // White vertical divider
-    const divider = document.createElement('div');
-    Object.assign(divider.style, {
-        width: '2px',
-        backgroundColor: '#ffffff',
-        alignSelf: 'stretch',
-    } as Partial<CSSStyleDeclaration>);
+    const border = root as HTMLElement;
+    const inner = border.children[0] as HTMLElement;
+    const p1Panel = inner.children[0] as HTMLElement;
+    const p2Panel = inner.children[2] as HTMLElement;
+    const p1Num = p1Panel.children[0] as HTMLElement;
+    const p2Num = p2Panel.children[0] as HTMLElement;
 
-    // Right panel (P2)
-    const p2Panel = document.createElement('div');
-    Object.assign(p2Panel.style, {
-        width: '64px',
-        backgroundColor: p2Color,
-        padding: '8px 0',
-        textAlign: 'center',
-    } as Partial<CSSStyleDeclaration>);
-
-    const p1Num = createNum();
-    const p2Num = createNum();
-    p1Panel.appendChild(p1Num);
-    p2Panel.appendChild(p2Num);
-
-    el.appendChild(p1Panel);
-    el.appendChild(divider);
-    el.appendChild(p2Panel);
-
-    /** Displayed scores — may lag behind gameState.scores during replay. */
+    /** Displayed scores --- may lag behind gameState.scores during replay. */
     let shownP1 = -1;
     let shownP2 = -1;
 
@@ -165,27 +164,20 @@ export function ScoreHudNode() {
     let scoreRevealTime = 0;
 
     /**
-     * Flash a panel on score change. Uses forced reflow to guarantee the
-     * bright state is painted before the transition back begins (a single
-     * requestAnimationFrame inside the game loop's own rAF can batch both
-     * style changes into one paint, making the flash invisible).
+     * Flash a panel on score change.
      *
      * @param panel - The panel element to flash.
      * @param num - The number span inside the panel to scale-pop.
      */
     function flashPanel(panel: HTMLElement, num: HTMLElement): void {
-        // Instantly brighten the panel
         panel.style.transition = 'none';
         panel.style.filter = 'brightness(2.0)';
 
-        // Scale-pop the number
         num.style.transition = 'none';
         num.style.transform = 'scale(1.35)';
 
-        // Force reflow so the browser commits the bright/scaled state
         void panel.offsetHeight;
 
-        // Transition back to normal
         panel.style.transition = `filter ${FLASH_DURATION}ms ${ANIM_EASING}`;
         panel.style.filter = 'brightness(1)';
 
@@ -198,13 +190,11 @@ export function ScoreHudNode() {
         const hidden = gameState.phase === 'intro' || inReplay;
         border.style.opacity = hidden ? '0' : '1';
 
-        // When exiting replay, defer score sync so the HUD fades in first
         if (wasInReplay && !inReplay) {
             scoreRevealTime = performance.now() + SCORE_REVEAL_DELAY;
         }
         wasInReplay = inReplay;
 
-        // Only sync displayed scores when visible and past the reveal delay
         if (!inReplay && performance.now() >= scoreRevealTime) {
             const s0 = gameState.scores[0];
             const s1 = gameState.scores[1];
@@ -212,17 +202,11 @@ export function ScoreHudNode() {
             if (s0 !== shownP1) {
                 if (shownP1 !== -1) flashPanel(p1Panel, p1Num);
                 shownP1 = s0;
-                p1Num.textContent = String(s0);
             }
             if (s1 !== shownP2) {
                 if (shownP2 !== -1) flashPanel(p2Panel, p2Num);
                 shownP2 = s1;
-                p2Num.textContent = String(s1);
             }
         }
-    });
-
-    useDestroy(() => {
-        border.remove();
     });
 }

@@ -1,3 +1,4 @@
+import { createElement, Column, Row, Button } from '@pulse-ts/dom';
 import {
     applyStaggeredEntrance,
     applyButtonHoverScale,
@@ -28,14 +29,12 @@ const ICE_SERVERS_TIMEOUT = 5000;
  * For local development, falls back to localhost.
  */
 function getSignalingUrl(): string {
-    // Check for environment variable set at build time
     const envUrl =
         typeof (window as any).__SIGNALING_URL__ === 'string'
             ? (window as any).__SIGNALING_URL__
             : undefined;
     if (envUrl) return envUrl;
 
-    // Fallback: assume signaling server is co-located
     const proto = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
     return `${proto}//${window.location.host}`;
 }
@@ -190,7 +189,6 @@ function establishP2P(
             resolve(new DataChannelTransport(channel, pc, peerConnectionId));
         }
 
-        // Send ICE candidates to peer via signaling
         pc.onicecandidate = (ev) => {
             if (ev.candidate) {
                 signalingWs.send(
@@ -202,8 +200,6 @@ function establishP2P(
             }
         };
 
-        // Queue ICE candidates that arrive before the offer/answer sets the
-        // remote description. Flushed once setRemoteDescription succeeds.
         const pendingIceCandidates: RTCIceCandidate[] = [];
         let remoteDescriptionSet = false;
 
@@ -220,7 +216,6 @@ function establishP2P(
             pendingIceCandidates.length = 0;
         }
 
-        // Listen for signaling messages from the peer
         const onSignal = (event: MessageEvent) => {
             let msg: any;
             try {
@@ -283,13 +278,11 @@ function establishP2P(
 
         signalingWs.addEventListener('message', onSignal);
 
-        // Replay any messages buffered during ICE credential fetch
         for (const msg of bufferedMessages) {
             onSignal(msg);
         }
 
         if (isHost) {
-            // Host creates the DataChannel and sends the offer
             dc = pc.createDataChannel('game', { ordered: false });
             dc.binaryType = 'arraybuffer';
             dc.onopen = () => done(dc!);
@@ -308,7 +301,6 @@ function establishP2P(
                     console.error(`[P2P ${role}] Error creating offer:`, err);
                 });
         } else {
-            // Joiner waits for the DataChannel from the host
             pc.ondatachannel = (ev) => {
                 dc = ev.channel;
                 dc.binaryType = 'arraybuffer';
@@ -329,7 +321,6 @@ function establishP2P(
 type Finish = (result: LobbyResult | 'back') => void;
 
 function showLobbyMenu(overlay: HTMLElement, finish: Finish) {
-    // Gate: require a username before proceeding
     if (!hasUsername()) {
         showUsernamePrompt(overlay, finish, false);
         return;
@@ -338,15 +329,13 @@ function showLobbyMenu(overlay: HTMLElement, finish: Finish) {
     const content = clearAndCreateContent(overlay);
 
     const heading = createHeading('ONLINE PLAY');
-
-    // Display current username
     const nameLabel = createSubheading(`Playing as: ${getUsername()}`);
 
-    const btnHost = createButton('Host Game', '#48c9b0');
-    const btnJoin = createButton('Join Game', '#e74c3c');
-    const btnChangeName = createButton('Change Name', '#f1c40f');
-    const btnBack = createButton('Back', '#888');
-    const buttons = createColumn(btnHost, btnJoin, btnChangeName, btnBack);
+    const btnHost = createBtn('Host Game', '#48c9b0');
+    const btnJoin = createBtn('Join Game', '#e74c3c');
+    const btnChangeName = createBtn('Change Name', '#f1c40f');
+    const btnBack = createBtn('Back', '#888');
+    const buttons = createColumnEl(btnHost, btnJoin, btnChangeName, btnBack);
 
     content.appendChild(heading);
     content.appendChild(nameLabel);
@@ -408,9 +397,9 @@ function showUsernamePrompt(
         textAlign: 'center',
     } as Partial<CSSStyleDeclaration>);
 
-    const btnConfirm = createButton(isEdit ? 'Save' : 'Continue', '#48c9b0');
-    const btnBack = createButton('Back', '#888');
-    const buttons = createColumn(btnConfirm, btnBack);
+    const btnConfirm = createBtn(isEdit ? 'Save' : 'Continue', '#48c9b0');
+    const btnBack = createBtn('Back', '#888');
+    const buttons = createColumnEl(btnConfirm, btnBack);
 
     content.appendChild(heading);
     content.appendChild(input);
@@ -421,7 +410,6 @@ function showUsernamePrompt(
     applyButtonHoverScale(btnConfirm);
     applyButtonHoverScale(btnBack);
 
-    // Auto-focus the input
     requestAnimationFrame(() => input.focus());
 
     function tryConfirm() {
@@ -454,12 +442,12 @@ function showHostSetup(overlay: HTMLElement, finish: Finish) {
     const heading = createHeading('HOST GAME');
     const subheading = createSubheading('Choose your player');
 
-    const btnP1 = createButton('Player 1', '#48c9b0');
-    const btnP2 = createButton('Player 2', '#e74c3c');
-    const playerRow = createRow(btnP1, btnP2);
+    const btnP1 = createBtn('Player 1', '#48c9b0');
+    const btnP2 = createBtn('Player 2', '#e74c3c');
+    const playerRow = createRowEl(btnP1, btnP2);
 
-    const btnBack = createButton('Back', '#888');
-    const backCol = createColumn(btnBack);
+    const btnBack = createBtn('Back', '#888');
+    const backCol = createColumnEl(btnBack);
 
     content.appendChild(heading);
     content.appendChild(subheading);
@@ -486,10 +474,10 @@ function showHostWaiting(
 
     const heading = createHeading('HOSTING');
     const status = createStatusIndicator();
-    const btnStart = createButton('Start Game', '#48c9b0');
+    const btnStart = createBtn('Start Game', '#48c9b0');
     btnStart.style.display = 'none';
-    const btnBack = createButton('Back', '#888');
-    const buttons = createColumn(btnStart, btnBack);
+    const btnBack = createBtn('Back', '#888');
+    const buttons = createColumnEl(btnStart, btnBack);
 
     content.appendChild(heading);
     content.appendChild(status.el);
@@ -511,13 +499,11 @@ function showHostWaiting(
         ws = null;
     }
 
-    // Connect to signaling server
     status.set('connecting', 'Connecting to signaling server...');
     ws = new WebSocket(sigUrl);
 
     ws.addEventListener('open', () => {
         if (cleaned) return;
-        // Create a lobby
         ws!.send(
             JSON.stringify({
                 action: 'create-lobby',
@@ -572,12 +558,10 @@ function showHostWaiting(
         btnStart.style.display = 'none';
         status.set('connecting', 'Fetching relay credentials...');
 
-        // Fetch TURN credentials before starting P2P handshake
         const iceServers = await requestIceServers(ws);
 
         status.set('connecting', 'Establishing P2P connection...');
 
-        // Tell the joiner the game is starting
         ws.send(JSON.stringify({ action: 'game-start' }));
 
         try {
@@ -623,9 +607,9 @@ function showJoinBrowser(overlay: HTMLElement, finish: Finish) {
         maxWidth: '320px',
     } as Partial<CSSStyleDeclaration>);
 
-    const btnRefresh = createButton('Refresh', '#48c9b0');
-    const btnBack = createButton('Back', '#888');
-    const buttons = createColumn(btnRefresh, btnBack);
+    const btnRefresh = createBtn('Refresh', '#48c9b0');
+    const btnBack = createBtn('Back', '#888');
+    const buttons = createColumnEl(btnRefresh, btnBack);
 
     content.appendChild(heading);
     content.appendChild(status.el);
@@ -652,7 +636,6 @@ function showJoinBrowser(overlay: HTMLElement, finish: Finish) {
         }
     }
 
-    // Connect to signaling server
     status.set('connecting', 'Connecting...');
     ws = new WebSocket(sigUrl);
 
@@ -716,7 +699,7 @@ function renderLobbies(
 ) {
     container.innerHTML = '';
     for (const lobby of lobbies) {
-        const btn = createButton(`${lobby.hostUsername}'s Game`, '#48c9b0');
+        const btn = createBtn(`${lobby.hostUsername}'s Game`, '#48c9b0');
         btn.style.minWidth = 'min(280px, 70vw)';
         applyButtonHoverScale(btn);
         btn.addEventListener('click', () => onJoin(lobby.lobbyId));
@@ -735,8 +718,8 @@ function showJoinWaiting(
 
     const heading = createHeading('JOINING');
     const status = createStatusIndicator();
-    const btnBack = createButton('Back', '#888');
-    const backCol = createColumn(btnBack);
+    const btnBack = createBtn('Back', '#888');
+    const backCol = createColumnEl(btnBack);
 
     content.appendChild(heading);
     content.appendChild(status.el);
@@ -748,9 +731,6 @@ function showJoinWaiting(
     let cleaned = false;
     let hostConnectionId: string | null = null;
 
-    // Buffer signal messages from the moment we join. Lambda processes
-    // game-start and offer as concurrent invocations, so the offer can
-    // arrive BEFORE game-start. Buffering early ensures we never lose it.
     const signalBuffer: MessageEvent[] = [];
     const signalBufferHandler = (ev: MessageEvent) => {
         try {
@@ -809,7 +789,6 @@ function showJoinWaiting(
 
             const iceServers = await requestIceServers(ws);
 
-            // Stop buffering and hand everything to establishP2P
             ws.removeEventListener('message', signalBufferHandler);
             status.set('connecting', 'Establishing P2P connection...');
 
@@ -892,7 +871,7 @@ function showVersionMismatch(
             location.reload();
         }, VERSION_MISMATCH_RELOAD_DELAY);
     } else {
-        const btnBack = createButton('Back to Lobby', '#888');
+        const btnBack = createBtn('Back to Lobby', '#888');
         content.appendChild(btnBack);
         applyButtonHoverScale(btnBack);
         btnBack.addEventListener('click', () => {
@@ -935,116 +914,106 @@ function setUsername(name: string): void {
 // ---------------------------------------------------------------------------
 
 function createOverlay(): HTMLDivElement {
-    const el = document.createElement('div');
-    Object.assign(el.style, {
-        position: 'absolute',
-        inset: '0',
-        zIndex: '5000',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        backgroundColor: 'rgba(10, 10, 26, 0.65)',
-        opacity: '0',
-        transition: 'opacity 0.4s ease-in-out',
-    } as Partial<CSSStyleDeclaration>);
-    return el;
+    const { root } = createElement(
+        <div
+            style={{
+                position: 'absolute',
+                inset: '0',
+                zIndex: '5000',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                backgroundColor: 'rgba(10, 10, 26, 0.65)',
+                opacity: '0',
+                transition: 'opacity 0.4s ease-in-out',
+            }}
+        />,
+    );
+    return root as HTMLDivElement;
 }
 
 function clearAndCreateContent(overlay: HTMLElement): HTMLDivElement {
     overlay.innerHTML = '';
-    const content = document.createElement('div');
-    Object.assign(content.style, {
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        gap: '16px',
-        padding: '0 20px',
-    } as Partial<CSSStyleDeclaration>);
+    const { root } = createElement(
+        <Column
+            gap={16}
+            style={{
+                alignItems: 'center',
+                padding: '0 20px',
+            }}
+        />,
+    );
+    const content = root as HTMLDivElement;
     overlay.appendChild(content);
     return content;
 }
 
 function createHeading(text: string): HTMLDivElement {
-    const el = document.createElement('div');
-    el.textContent = text;
-    Object.assign(el.style, {
-        font: 'bold clamp(22px, 6vw, 32px) monospace',
-        color: '#fff',
-        textShadow: '0 0 16px rgba(72, 201, 176, 0.5)',
-        letterSpacing: '3px',
-        marginBottom: '8px',
-    } as Partial<CSSStyleDeclaration>);
-    return el;
+    const { root } = createElement(
+        <div
+            style={{
+                font: 'bold clamp(22px, 6vw, 32px) monospace',
+                color: '#fff',
+                textShadow: '0 0 16px rgba(72, 201, 176, 0.5)',
+                letterSpacing: '3px',
+                marginBottom: '8px',
+            }}
+        >
+            {text}
+        </div>,
+    );
+    return root as HTMLDivElement;
 }
 
 function createSubheading(text: string): HTMLDivElement {
-    const el = document.createElement('div');
-    el.textContent = text;
-    Object.assign(el.style, {
-        font: '14px monospace',
-        color: '#888',
-        letterSpacing: '2px',
-        textTransform: 'uppercase',
-    } as Partial<CSSStyleDeclaration>);
-    return el;
+    const { root } = createElement(
+        <div
+            style={{
+                font: '14px monospace',
+                color: '#888',
+                letterSpacing: '2px',
+                textTransform: 'uppercase',
+            }}
+        >
+            {text}
+        </div>,
+    );
+    return root as HTMLDivElement;
 }
 
-function createButton(label: string, color: string): HTMLButtonElement {
-    const btn = document.createElement('button');
-    btn.textContent = label;
-    Object.assign(btn.style, {
-        font: 'bold clamp(14px, 3.5vw, 18px) monospace',
-        color: '#fff',
-        backgroundColor: 'rgba(255,255,255,0.08)',
-        border: '2px solid rgba(255,255,255,0.2)',
-        borderRadius: '6px',
-        padding: '12px 32px',
-        cursor: 'pointer',
-        minWidth: 'min(200px, 70vw)',
-        minHeight: '44px',
-        transition: 'all 0.2s ease',
-    } as Partial<CSSStyleDeclaration>);
-
-    btn.addEventListener('pointerdown', () => {
-        btn.style.backgroundColor = 'rgba(255,255,255,0.15)';
-        btn.style.borderColor = color;
-        btn.style.boxShadow = `0 0 12px ${color}44`;
-    });
-    btn.addEventListener('pointerup', () => {
-        btn.style.backgroundColor = 'rgba(255,255,255,0.08)';
-        btn.style.borderColor = 'rgba(255,255,255,0.2)';
-        btn.style.boxShadow = 'none';
-    });
-    btn.addEventListener('pointerleave', () => {
-        btn.style.backgroundColor = 'rgba(255,255,255,0.08)';
-        btn.style.borderColor = 'rgba(255,255,255,0.2)';
-        btn.style.boxShadow = 'none';
-    });
-
-    return btn;
+function createBtn(label: string, color: string): HTMLButtonElement {
+    const { root } = createElement(
+        <Button
+            accent={color}
+            style={{
+                font: 'bold clamp(14px, 3.5vw, 18px) monospace',
+                border: '2px solid rgba(255,255,255,0.2)',
+                borderRadius: '6px',
+                padding: '12px 32px',
+                minWidth: 'min(200px, 70vw)',
+                minHeight: '44px',
+            }}
+        >
+            {label}
+        </Button>,
+    );
+    return root as HTMLButtonElement;
 }
 
-function createColumn(...children: HTMLElement[]): HTMLDivElement {
-    const col = document.createElement('div');
-    Object.assign(col.style, {
-        display: 'flex',
-        flexDirection: 'column',
-        gap: '12px',
-        alignItems: 'center',
-    } as Partial<CSSStyleDeclaration>);
+function createColumnEl(...children: HTMLElement[]): HTMLDivElement {
+    const { root } = createElement(
+        <Column gap={12} style={{ alignItems: 'center' }} />,
+    );
+    const col = root as HTMLDivElement;
     children.forEach((c) => col.appendChild(c));
     return col;
 }
 
-function createRow(...children: HTMLElement[]): HTMLDivElement {
-    const row = document.createElement('div');
-    Object.assign(row.style, {
-        display: 'flex',
-        gap: '12px',
-        alignItems: 'center',
-        flexWrap: 'wrap',
-        justifyContent: 'center',
-    } as Partial<CSSStyleDeclaration>);
+function createRowEl(...children: HTMLElement[]): HTMLDivElement {
+    const { root } = createElement(
+        <Row gap={12} center style={{ flexWrap: 'wrap' }} />,
+    );
+    const row = root as HTMLDivElement;
     children.forEach((c) => row.appendChild(c));
     return row;
 }
@@ -1066,13 +1035,17 @@ const STATUS_COLORS: Record<string, string> = {
 };
 
 function createStatusIndicator(): StatusIndicator {
-    const el = document.createElement('div');
-    Object.assign(el.style, {
-        font: '13px monospace',
-        color: '#888',
-        minHeight: '20px',
-        textAlign: 'center',
-    } as Partial<CSSStyleDeclaration>);
+    const { root } = createElement(
+        <div
+            style={{
+                font: '13px monospace',
+                color: '#888',
+                minHeight: '20px',
+                textAlign: 'center',
+            }}
+        />,
+    );
+    const el = root as HTMLDivElement;
 
     return {
         el,

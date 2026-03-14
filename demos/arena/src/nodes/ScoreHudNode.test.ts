@@ -1,3 +1,18 @@
+jest.mock('@pulse-ts/core', () => ({
+    useFrameUpdate: jest.fn(),
+    useDestroy: jest.fn(),
+    useContext: jest.fn(),
+    createContext: (name: string) => ({ name }),
+}));
+
+jest.mock('@pulse-ts/three', () => ({
+    useThreeContext: jest.fn(),
+}));
+
+jest.mock('../replay', () => ({
+    isReplayActive: jest.fn(() => false),
+}));
+
 import { ScoreHudNode, SCORE_COLORS } from './ScoreHudNode';
 
 describe('ScoreHudNode', () => {
