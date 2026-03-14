@@ -2,10 +2,11 @@
 id: TICKET-112
 epic: EPIC-018
 title: Timer Completion Callbacks
-status: todo
+status: in-progress
 priority: medium
+branch: ticket-112-timer-completion-callbacks
 created: 2026-03-13
-updated: 2026-03-13
+updated: 2026-03-14
 labels:
   - core
   - dx
@@ -35,3 +36,4 @@ Design doc: `design-docs/approved/034-timer-completion-callbacks.md`
 ## Notes
 
 - **2026-03-13**: Ticket created from approved design doc #34.
+- **2026-03-14**: Starting implementation.
