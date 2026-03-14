@@ -4,6 +4,7 @@ epic: EPIC-018
 title: Update Hook 'when' Guard
 status: todo
 priority: medium
+branch: ticket-111-update-hook-when-guard
 created: 2026-03-13
 updated: 2026-03-13
 labels:
