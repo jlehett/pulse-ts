@@ -4,8 +4,9 @@ epic: EPIC-019
 title: useInterpolatedPosition Hook
 status: todo
 priority: medium
+branch: ticket-116-use-interpolated-position
 created: 2026-03-13
-updated: 2026-03-13
+updated: 2026-03-14
 labels:
   - three
   - dx
