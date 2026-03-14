@@ -2,10 +2,10 @@
 id: TICKET-132
 epic: EPIC-025
 title: "Arena migration: Three.js rendering"
-status: todo
+status: done
 priority: high
 created: 2026-03-13
-updated: 2026-03-13
+updated: 2026-03-14
 labels:
   - arena
   - migration
