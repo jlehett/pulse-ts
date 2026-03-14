@@ -106,8 +106,12 @@ export function useComponent<T extends Component>(Component: new () => T): T {
 
 /**
  * Options for scheduling a tick.
+ *
+ * @param order - Lower `order` runs earlier within the same phase (default 0).
+ * @param when - Optional guard function evaluated each tick. When provided,
+ *   the callback is only invoked if the guard returns `true`.
  */
-type TickOpts = { order?: number };
+type TickOpts = { order?: number; when?: () => boolean };
 
 /**
  * Internal helper to register a tick with automatic cleanup.
@@ -117,13 +121,19 @@ function reg(
     phase: 'early' | 'update' | 'late',
     fn: (dt: number) => void,
     order = 0,
+    when?: () => boolean,
 ) {
     const { node, world } = current();
     if (!world)
         throw new Error(
             'Node must be added to a World before registering ticks.',
         );
-    const reg = world.registerTick(node, kind, phase, fn, order);
+    const wrapped = when
+        ? (dt: number) => {
+              if (when()) fn(dt);
+          }
+        : fn;
+    const reg = world.registerTick(node, kind, phase, wrapped, order);
     const dispose = () => reg.dispose();
     current().disposers.push(dispose);
     useDestroy(dispose);
@@ -139,7 +149,7 @@ function reg(
  * @param opts Optional scheduling options (lower `order` runs earlier; default 0).
  */
 export function useFixedEarly(fn: (dt: number) => void, opts: TickOpts = {}) {
-    reg('fixed', 'early', fn, opts.order ?? 0);
+    reg('fixed', 'early', fn, opts.order ?? 0, opts.when);
 }
 
 /**
@@ -149,10 +159,21 @@ export function useFixedEarly(fn: (dt: number) => void, opts: TickOpts = {}) {
  * - Use for core simulation/physics.
  *
  * @param fn Callback invoked with `dt` in seconds for the fixed step.
- * @param opts Optional scheduling options (lower `order` runs earlier; default 0).
+ * @param opts Optional scheduling options.
+ * @param opts.order - Lower values run earlier within the same phase (default 0).
+ * @param opts.when - Guard function evaluated each tick. When provided, the
+ *   callback is only invoked if the guard returns `true`.
+ *
+ * @example
+ * ```ts
+ * // Only run movement logic during the 'playing' phase
+ * useFixedUpdate((dt) => {
+ *     body.applyImpulse(x * MOVE_IMPULSE, 0, -y * MOVE_IMPULSE);
+ * }, { when: () => gameState.phase === 'playing' });
+ * ```
  */
 export function useFixedUpdate(fn: (dt: number) => void, opts: TickOpts = {}) {
-    reg('fixed', 'update', fn, opts.order ?? 0);
+    reg('fixed', 'update', fn, opts.order ?? 0, opts.when);
 }
 
 /**
@@ -165,7 +186,7 @@ export function useFixedUpdate(fn: (dt: number) => void, opts: TickOpts = {}) {
  * @param opts Optional scheduling options (lower `order` runs earlier; default 0).
  */
 export function useFixedLate(fn: (dt: number) => void, opts: TickOpts = {}) {
-    reg('fixed', 'late', fn, opts.order ?? 0);
+    reg('fixed', 'late', fn, opts.order ?? 0, opts.when);
 }
 
 /**
@@ -178,7 +199,7 @@ export function useFixedLate(fn: (dt: number) => void, opts: TickOpts = {}) {
  * @param opts Optional scheduling options (lower `order` runs earlier; default 0).
  */
 export function useFrameEarly(fn: (dt: number) => void, opts: TickOpts = {}) {
-    reg('frame', 'early', fn, opts.order ?? 0);
+    reg('frame', 'early', fn, opts.order ?? 0, opts.when);
 }
 
 /**
@@ -188,7 +209,10 @@ export function useFrameEarly(fn: (dt: number) => void, opts: TickOpts = {}) {
  * - Use for animation and per-frame logic.
  *
  * @param fn Callback invoked with `dt` in seconds for the variable frame step.
- * @param opts Optional scheduling options (lower `order` runs earlier; default 0).
+ * @param opts Optional scheduling options.
+ * @param opts.order - Lower values run earlier within the same phase (default 0).
+ * @param opts.when - Guard function evaluated each tick. When provided, the
+ *   callback is only invoked if the guard returns `true`.
  *
  * @example
  * ```ts
@@ -200,9 +224,17 @@ export function useFrameEarly(fn: (dt: number) => void, opts: TickOpts = {}) {
  * }
  * new World().mount(Rotator);
  * ```
+ *
+ * @example
+ * ```ts
+ * // Only animate during certain phases
+ * useFrameUpdate((dt) => {
+ *     // camera logic...
+ * }, { when: () => ['playing', 'countdown'].includes(gameState.phase) });
+ * ```
  */
 export function useFrameUpdate(fn: (dt: number) => void, opts: TickOpts = {}) {
-    reg('frame', 'update', fn, opts.order ?? 0);
+    reg('frame', 'update', fn, opts.order ?? 0, opts.when);
 }
 
 /**
@@ -215,7 +247,7 @@ export function useFrameUpdate(fn: (dt: number) => void, opts: TickOpts = {}) {
  * @param opts Optional scheduling options (lower `order` runs earlier; default 0).
  */
 export function useFrameLate(fn: (dt: number) => void, opts: TickOpts = {}) {
-    reg('frame', 'late', fn, opts.order ?? 0);
+    reg('frame', 'late', fn, opts.order ?? 0, opts.when);
 }
 
 /**

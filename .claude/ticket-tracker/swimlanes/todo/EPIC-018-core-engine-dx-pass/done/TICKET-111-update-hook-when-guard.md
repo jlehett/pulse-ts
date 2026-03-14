@@ -2,11 +2,11 @@
 id: TICKET-111
 epic: EPIC-018
 title: Update Hook 'when' Guard
-status: todo
+status: done
 priority: medium
 branch: ticket-111-update-hook-when-guard
 created: 2026-03-13
-updated: 2026-03-13
+updated: 2026-03-14
 labels:
   - core
   - dx
@@ -22,14 +22,15 @@ Design doc: `design-docs/approved/022-update-hook-when-guard.md`
 
 ## Acceptance Criteria
 
-- [ ] `useFixedUpdate(cb, { when: () => boolean })` — callback skipped when guard is false
-- [ ] `useFrameUpdate(cb, { when: () => boolean })` — same behavior
-- [ ] Guard is evaluated each tick before the callback
-- [ ] Backward compatible — `when` is optional, existing usages unchanged
-- [ ] JSDoc with examples
-- [ ] Unit tests for guard behavior
-- [ ] Documentation updated
+- [x] `useFixedUpdate(cb, { when: () => boolean })` — callback skipped when guard is false
+- [x] `useFrameUpdate(cb, { when: () => boolean })` — same behavior
+- [x] Guard is evaluated each tick before the callback
+- [x] Backward compatible — `when` is optional, existing usages unchanged
+- [x] JSDoc with examples
+- [x] Unit tests for guard behavior
+- [x] Documentation updated
 
 ## Notes
 
 - **2026-03-13**: Ticket created from approved design doc #22.
+- **2026-03-14**: Implementation complete. Added `when` to all 6 update hook variants via shared `reg` function. 4 new tests.

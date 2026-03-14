@@ -1,7 +1,15 @@
 import { Transform } from '../components/spatial/Transform';
 import { Service } from '../ecs/base/Service';
 import { World } from '../world/world';
-import { useChild, useComponent, useInit, useService, useState } from './hooks';
+import {
+    useChild,
+    useComponent,
+    useFixedUpdate,
+    useFrameUpdate,
+    useInit,
+    useService,
+    useState,
+} from './hooks';
 
 class DemoService extends Service {
     n = 42;
@@ -78,5 +86,95 @@ describe('FC hooks', () => {
         }
         w.mount(Reader);
         expect(value).toBe(42);
+    });
+
+    describe('when guard', () => {
+        const FIXED_MS = 10;
+
+        function createWorld() {
+            return new World({ fixedStepMs: FIXED_MS });
+        }
+
+        test('useFixedUpdate skips callback when guard returns false', () => {
+            const w = createWorld();
+            const state = { active: false };
+            let callCount = 0;
+
+            w.mount(() => {
+                useFixedUpdate(
+                    () => {
+                        callCount++;
+                    },
+                    { when: () => state.active },
+                );
+            });
+
+            w.tick(FIXED_MS);
+            expect(callCount).toBe(0);
+
+            state.active = true;
+            w.tick(FIXED_MS);
+            expect(callCount).toBe(1);
+
+            state.active = false;
+            w.tick(FIXED_MS);
+            expect(callCount).toBe(1); // still 1
+        });
+
+        test('useFrameUpdate skips callback when guard returns false', () => {
+            const w = createWorld();
+            const state = { active: false };
+            let callCount = 0;
+
+            w.mount(() => {
+                useFrameUpdate(
+                    () => {
+                        callCount++;
+                    },
+                    { when: () => state.active },
+                );
+            });
+
+            w.tick(FIXED_MS);
+            expect(callCount).toBe(0);
+
+            state.active = true;
+            w.tick(FIXED_MS);
+            expect(callCount).toBe(1);
+        });
+
+        test('guard is evaluated each tick', () => {
+            const w = createWorld();
+            let guardCalls = 0;
+
+            w.mount(() => {
+                useFixedUpdate(() => {}, {
+                    when: () => {
+                        guardCalls++;
+                        return false;
+                    },
+                });
+            });
+
+            w.tick(FIXED_MS);
+            w.tick(FIXED_MS);
+            w.tick(FIXED_MS);
+            expect(guardCalls).toBe(3);
+        });
+
+        test('backward compatible — no when option means always runs', () => {
+            const w = createWorld();
+            let callCount = 0;
+
+            w.mount(() => {
+                useFixedUpdate(() => {
+                    callCount++;
+                });
+            });
+
+            w.tick(FIXED_MS);
+            w.tick(FIXED_MS);
+            expect(callCount).toBe(2);
+        });
     });
 });
