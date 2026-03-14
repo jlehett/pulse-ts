@@ -2,10 +2,11 @@
 id: TICKET-119
 epic: EPIC-019
 title: Procedural Texture Factory (createTexture)
-status: todo
+status: in-progress
 priority: medium
 created: 2026-03-13
-updated: 2026-03-13
+updated: 2026-03-14
+branch: ticket-119-procedural-texture-factory
 labels:
   - three
   - utility
@@ -34,3 +35,4 @@ Design doc: `design-docs/approved/041-procedural-texture-factory.md`
 ## Notes
 
 - **2026-03-13**: Ticket created from approved design doc #41.
+- **2026-03-14**: Moved to in-progress. Beginning implementation.
