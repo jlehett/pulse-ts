@@ -2,10 +2,10 @@
 id: TICKET-126
 epic: EPIC-022
 title: Platform Package (@pulse-ts/platform)
-status: todo
+status: in-progress
 priority: low
 created: 2026-03-13
-updated: 2026-03-13
+updated: 2026-03-14
 labels:
   - platform
   - new-package
