@@ -1,9 +1,9 @@
 ---
 id: EPIC-023
 title: Network DX Pass
-status: todo
+status: in-progress
 created: 2026-03-13
-updated: 2026-03-13
+updated: 2026-03-14
 ---
 
 ## Description
@@ -20,3 +20,4 @@ messages are never lost on world teardown.
 ## Notes
 
 - **2026-03-13**: Epic created from approved engine improvements (#9, #29). Two tickets.
+- **2026-03-14**: Epic implementation started via agent team

@@ -1,9 +1,9 @@
 ---
 id: EPIC-024
 title: Audio & Physics DX Pass
-status: todo
+status: in-progress
 created: 2026-03-13
-updated: 2026-03-13
+updated: 2026-03-14
 ---
 
 ## Description
@@ -20,3 +20,4 @@ events declaratively instead of manual guard checks.
 ## Notes
 
 - **2026-03-13**: Epic created from approved engine improvements (#36, #40). Two tickets.
+- **2026-03-14**: Epic implementation started via agent team
