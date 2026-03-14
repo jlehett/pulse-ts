@@ -1,9 +1,9 @@
 ---
 id: EPIC-018
 title: Core Engine DX Pass
-status: todo
+status: done
 created: 2026-03-13
-updated: 2026-03-13
+updated: 2026-03-14
 ---
 
 ## Description
@@ -22,3 +22,4 @@ procedural generation — so users rarely need manual boilerplate.
 ## Notes
 
 - **2026-03-13**: Epic created from approved engine improvements (#4, #5, #10, #19, #21, #22, #34, #44, #47). Nine tickets.
+- **2026-03-14**: Epic closed — all tickets complete.
