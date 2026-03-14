@@ -1,3 +1,6 @@
+import { defineStore, useStore } from '@pulse-ts/core';
+import { useEffectPool, type EffectPoolHandle } from '@pulse-ts/effects';
+
 // ---------------------------------------------------------------------------
 // Constants
 // ---------------------------------------------------------------------------
@@ -27,120 +30,63 @@ export const HIT_RIPPLE_EXPAND_DURATION = 0.9;
 export const HIT_RIPPLE_RING_WIDTH = 0.08;
 
 // ---------------------------------------------------------------------------
-// Slot state
+// Hit impact data shape
 // ---------------------------------------------------------------------------
 
-/** A single hit impact slot tracking position and age. */
-export interface HitImpactSlot {
-    /** Whether this slot is currently active. */
-    active: boolean;
+/** Data stored in each hit impact pool slot. */
+export interface HitImpactData {
     /** World-space X position of the hit. */
     worldX: number;
     /** World-space Z position of the hit. */
     worldZ: number;
-    /** Age of the impact in seconds (0 = just triggered). */
-    age: number;
 }
 
-const slots: HitImpactSlot[] = Array.from(
-    { length: HIT_IMPACT_POOL_SIZE },
-    () => ({
-        active: false,
-        worldX: 0,
-        worldZ: 0,
-        age: 0,
-    }),
-);
-
 // ---------------------------------------------------------------------------
-// Public API
+// Store — shares the pool handle across nodes
 // ---------------------------------------------------------------------------
 
 /**
- * Trigger a hit impact at the given world-space position.
- * If all slots are occupied, the oldest (highest age) is recycled.
- *
- * @param worldX - World-space X coordinate of the hit.
- * @param worldZ - World-space Z coordinate of the hit.
- *
- * @example
- * ```ts
- * triggerHitImpact(2.5, -1.0);
- * ```
+ * World-scoped store holding the hit impact effect pool handle.
+ * The pool is created by the first node that calls {@link useHitImpactPool},
+ * and shared with all subsequent callers in the same world.
  */
-export function triggerHitImpact(worldX: number, worldZ: number): void {
-    let slot = slots.find((s) => !s.active);
-    if (!slot) {
-        // Recycle oldest — highest age
-        slot = slots.reduce((oldest, s) => (s.age > oldest.age ? s : oldest));
-    }
-    slot.active = true;
-    slot.worldX = worldX;
-    slot.worldZ = worldZ;
-    slot.age = 0;
-}
+export const HitImpactStore = defineStore('hitImpact', () => ({
+    pool: null as EffectPoolHandle<HitImpactData> | null,
+}));
+
+// ---------------------------------------------------------------------------
+// Hook
+// ---------------------------------------------------------------------------
 
 /**
- * Advance all active hit impacts by `dt` seconds. Deactivates expired ones.
+ * Create or retrieve the shared hit impact effect pool for this world.
+ * The first caller creates the pool (and registers its `useFixedUpdate`
+ * tick); subsequent callers in the same world receive the same handle.
  *
- * @param dt - Frame delta time in seconds.
- *
- * @example
- * ```ts
- * updateHitImpacts(1 / 60);
- * ```
- */
-export function updateHitImpacts(dt: number): void {
-    for (const slot of slots) {
-        if (!slot.active) continue;
-        slot.age += dt;
-        if (slot.age >= HIT_IMPACT_DURATION) {
-            slot.active = false;
-        }
-    }
-}
-
-/**
- * Returns a readonly view of the slot array for reading active hit impacts.
- *
- * @returns The array of hit impact slots.
+ * @returns The shared {@link EffectPoolHandle} for hit impacts.
  *
  * @example
  * ```ts
- * for (const slot of getActiveHitImpacts()) {
- *     if (slot.active) { ... }
+ * const impacts = useHitImpactPool();
+ * impacts.trigger({ worldX: 2.5, worldZ: -1.0 });
+ *
+ * for (const slot of impacts.active()) {
+ *     const fade = 1 - slot.progress;
+ *     // use slot.data.worldX, slot.data.worldZ, slot.age, fade ...
  * }
  * ```
  */
-export function getActiveHitImpacts(): readonly HitImpactSlot[] {
-    return slots;
-}
+export function useHitImpactPool(): EffectPoolHandle<HitImpactData> {
+    const [store, setStore] = useStore(HitImpactStore);
 
-/**
- * Returns `true` if at least one hit impact slot is active.
- *
- * @example
- * ```ts
- * if (hasActiveHitImpact()) { ... }
- * ```
- */
-export function hasActiveHitImpact(): boolean {
-    return slots.some((s) => s.active);
-}
-
-/**
- * Reset all hit impact slots to inactive. Useful for testing.
- *
- * @example
- * ```ts
- * resetHitImpacts();
- * ```
- */
-export function resetHitImpacts(): void {
-    for (const s of slots) {
-        s.active = false;
-        s.worldX = 0;
-        s.worldZ = 0;
-        s.age = 0;
+    if (!store.pool) {
+        const pool = useEffectPool<HitImpactData>({
+            size: HIT_IMPACT_POOL_SIZE,
+            duration: HIT_IMPACT_DURATION,
+            create: () => ({ worldX: 0, worldZ: 0 }),
+        });
+        setStore({ pool });
     }
+
+    return store.pool!;
 }

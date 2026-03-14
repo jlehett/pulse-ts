@@ -24,6 +24,14 @@ export type {
     ParticleStyleOptions,
 } from '../domain/ParticlesService';
 
+// Effect pool
+export { useEffectPool } from './useEffectPool';
+export type {
+    EffectPoolOptions,
+    EffectSlot,
+    EffectPoolHandle,
+} from './useEffectPool';
+
 // Animated values
 export { useAnimate } from './useAnimate';
 export type {
@@ -37,6 +45,10 @@ export type {
     AnimateOptions,
     AnimatedValue,
 } from './useAnimate';
+
+// Sequencing
+export { useSequence } from './useSequence';
+export type { SequenceStep, SequenceHandle } from './useSequence';
 
 // Re-export domain types consumers need for init/update callbacks
 export type {

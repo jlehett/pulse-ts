@@ -1,8 +1,65 @@
-import { __fcCurrent, useComponent, useInit } from '@pulse-ts/core';
-import type { Node } from '@pulse-ts/core';
+import {
+    __fcCurrent,
+    useComponent,
+    useInit,
+    getComponent,
+} from '@pulse-ts/core';
+import type { Node, ComponentCtor } from '@pulse-ts/core';
 import { PhysicsService } from '../domain/services/PhysicsService';
 import { RigidBody } from './components/RigidBody';
 import { Collider } from './components/Collider';
+
+/**
+ * A collision filter that determines whether a collision callback should fire.
+ *
+ * - **Component constructor**: callback fires only if the other node has the given component.
+ * - **Predicate function**: callback fires only if the predicate returns `true` for the other node.
+ *
+ * @example
+ * ```ts
+ * // Component shorthand — only collide with nodes that have PlayerTag
+ * const filter: CollisionFilter = PlayerTag;
+ *
+ * // Predicate — collide with players that don't have a shield
+ * const filter: CollisionFilter = (other) =>
+ *     !!getComponent(other, PlayerTag) && !getComponent(other, Shield);
+ * ```
+ */
+export type CollisionFilter = ComponentCtor | ((other: Node) => boolean);
+
+/**
+ * Options for collision event hooks.
+ *
+ * @example
+ * ```ts
+ * useOnCollisionStart(({ other }) => {
+ *     applyDamage(other);
+ * }, { filter: PlayerTag });
+ * ```
+ */
+export interface CollisionOptions {
+    /** Optional filter to restrict which collisions trigger the callback. */
+    filter?: CollisionFilter;
+}
+
+/**
+ * Resolves a {@link CollisionFilter} into a predicate function.
+ * If the filter is a component constructor, wraps it in a `getComponent` check.
+ *
+ * @param filter - The filter to resolve.
+ * @returns A predicate that accepts a node and returns whether the collision should fire.
+ */
+function resolveFilter(
+    filter?: CollisionFilter,
+): ((other: Node) => boolean) | undefined {
+    if (!filter) return undefined;
+    if (typeof filter === 'function' && filter.prototype !== undefined) {
+        // Component constructor — check if other node has the component
+        const Ctor = filter as ComponentCtor;
+        return (other: Node) => !!getComponent(other, Ctor);
+    }
+    return filter as (other: Node) => boolean;
+}
 
 /**
  * Returns the PhysicsService for the currently executing function component.
@@ -147,14 +204,27 @@ export function useCylinderCollider(
  *
  * @example
  * ```ts
+ * // Unfiltered — fires for every collision start
  * useOnCollisionStart(({ self, other }) => {
  *     console.log('collided with', other.id);
  * });
+ *
+ * // Component shorthand — only fires when the other node has PlayerTag
+ * useOnCollisionStart(({ other }) => {
+ *     applyKnockback(other);
+ * }, { filter: PlayerTag });
+ *
+ * // Predicate — only fires for players without a shield
+ * useOnCollisionStart(({ other }) => {
+ *     applyDamage(other);
+ * }, { filter: (other) => !!getComponent(other, PlayerTag) && !getComponent(other, Shield) });
  * ```
  * @param fn Handler invoked with the local (`self`) and other (`other`) nodes.
+ * @param options Optional configuration including a {@link CollisionFilter}.
  */
 export function useOnCollisionStart(
     fn: (e: { self: Node; other: Node }) => void,
+    options?: CollisionOptions,
 ) {
     const world = __fcCurrent().world;
     const node = __fcCurrent().node;
@@ -163,10 +233,16 @@ export function useOnCollisionStart(
         throw new Error(
             'PhysicsService not provided. Call installPhysics(world) first.',
         );
+    const predicate = resolveFilter(options?.filter);
     useInit(() => {
         const off = svc.collisionStart.on((p) => {
-            if (p.aNode === node) fn({ self: p.aNode, other: p.bNode });
-            else if (p.bNode === node) fn({ self: p.bNode, other: p.aNode });
+            if (p.aNode === node) {
+                if (!predicate || predicate(p.bNode))
+                    fn({ self: p.aNode, other: p.bNode });
+            } else if (p.bNode === node) {
+                if (!predicate || predicate(p.aNode))
+                    fn({ self: p.bNode, other: p.aNode });
+            }
         });
         return () => off();
     });
@@ -177,12 +253,20 @@ export function useOnCollisionStart(
  *
  * @example
  * ```ts
+ * // Unfiltered
  * useOnCollisionEnd(() => console.log('separated!'));
+ *
+ * // Only fires when separating from a node with PlayerTag
+ * useOnCollisionEnd(({ other }) => {
+ *     removeHighlight(other);
+ * }, { filter: PlayerTag });
  * ```
  * @param fn Handler invoked with the local (`self`) and other (`other`) nodes.
+ * @param options Optional configuration including a {@link CollisionFilter}.
  */
 export function useOnCollisionEnd(
     fn: (e: { self: Node; other: Node }) => void,
+    options?: CollisionOptions,
 ) {
     const world = __fcCurrent().world;
     const node = __fcCurrent().node;
@@ -191,10 +275,16 @@ export function useOnCollisionEnd(
         throw new Error(
             'PhysicsService not provided. Call installPhysics(world) first.',
         );
+    const predicate = resolveFilter(options?.filter);
     useInit(() => {
         const off = svc.collisionEnd.on((p) => {
-            if (p.aNode === node) fn({ self: p.aNode, other: p.bNode });
-            else if (p.bNode === node) fn({ self: p.bNode, other: p.aNode });
+            if (p.aNode === node) {
+                if (!predicate || predicate(p.bNode))
+                    fn({ self: p.aNode, other: p.bNode });
+            } else if (p.bNode === node) {
+                if (!predicate || predicate(p.aNode))
+                    fn({ self: p.bNode, other: p.aNode });
+            }
         });
         return () => off();
     });
@@ -205,11 +295,21 @@ export function useOnCollisionEnd(
  *
  * @example
  * ```ts
+ * // Unfiltered
  * useOnCollision(({ other }) => applyDamage(other));
+ *
+ * // Only fires while in contact with a node that has EnemyTag
+ * useOnCollision(({ other }) => {
+ *     drainHealth(other);
+ * }, { filter: EnemyTag });
  * ```
  * @param fn Handler invoked with the local (`self`) and other (`other`) nodes.
+ * @param options Optional configuration including a {@link CollisionFilter}.
  */
-export function useOnCollision(fn: (e: { self: Node; other: Node }) => void) {
+export function useOnCollision(
+    fn: (e: { self: Node; other: Node }) => void,
+    options?: CollisionOptions,
+) {
     const world = __fcCurrent().world;
     const node = __fcCurrent().node;
     const svc = world.getService(PhysicsService);
@@ -217,10 +317,16 @@ export function useOnCollision(fn: (e: { self: Node; other: Node }) => void) {
         throw new Error(
             'PhysicsService not provided. Call installPhysics(world) first.',
         );
+    const predicate = resolveFilter(options?.filter);
     useInit(() => {
         const off = svc.collisions.on((p) => {
-            if (p.aNode === node) fn({ self: p.aNode, other: p.bNode });
-            else if (p.bNode === node) fn({ self: p.bNode, other: p.aNode });
+            if (p.aNode === node) {
+                if (!predicate || predicate(p.bNode))
+                    fn({ self: p.aNode, other: p.bNode });
+            } else if (p.bNode === node) {
+                if (!predicate || predicate(p.aNode))
+                    fn({ self: p.bNode, other: p.aNode });
+            }
         });
         return () => off();
     });

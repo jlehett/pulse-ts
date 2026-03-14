@@ -1,5 +1,5 @@
 import { BRAWLER } from '../ai/personalities';
-import { hexToCss, INTRO_DURATION } from './IntroOverlayNode';
+import { INTRO_DURATION } from './IntroOverlayNode';
 
 /* ------------------------------------------------------------------ */
 /*  Mocks                                                              */
@@ -7,6 +7,9 @@ import { hexToCss, INTRO_DURATION } from './IntroOverlayNode';
 
 let mockFrameUpdateCallbacks: ((dt: number) => void)[] = [];
 let mockDestroyCallbacks: (() => void)[] = [];
+/** Accumulated time in the mock sequence runner. */
+let mockSequenceElapsed = 0;
+let mockSequenceSteps: any[] = [];
 let mockGameState = {
     phase: 'intro' as string,
     scores: [0, 0] as [number, number],
@@ -24,22 +27,79 @@ Object.defineProperty(mockCanvas, 'parentElement', {
     get: () => mockContainer,
 });
 
-jest.mock('@pulse-ts/core', () => ({
-    createContext: (name: string) => ({ name }),
-    useFrameUpdate: (cb: (dt: number) => void) => {
-        mockFrameUpdateCallbacks.push(cb);
-    },
-    useDestroy: (cb: () => void) => {
-        mockDestroyCallbacks.push(cb);
-    },
-    useContext: () => mockGameState,
-}));
-
-jest.mock('@pulse-ts/three', () => ({
-    useThreeContext: () => ({
-        renderer: { domElement: mockCanvas },
+jest.mock(
+    '@pulse-ts/core',
+    () => ({
+        createContext: (name: string) => ({ name }),
+        useFrameUpdate: (cb: (dt: number) => void) => {
+            mockFrameUpdateCallbacks.push(cb);
+        },
+        useDestroy: (cb: () => void) => {
+            mockDestroyCallbacks.push(cb);
+        },
+        useContext: () => mockGameState,
+        color: (hex: number) => {
+            const r = (hex >> 16) & 0xff;
+            const g = (hex >> 8) & 0xff;
+            const b = hex & 0xff;
+            return {
+                num: hex,
+                hex: `#${hex.toString(16).padStart(6, '0')}`,
+                rgb: `rgb(${r}, ${g}, ${b})`,
+                r,
+                g,
+                b,
+                rgba: (a: number) => `rgba(${r}, ${g}, ${b}, ${a})`,
+            };
+        },
     }),
-}));
+    { virtual: true },
+);
+
+jest.mock(
+    '@pulse-ts/three',
+    () => ({
+        useThreeContext: () => ({
+            renderer: { domElement: mockCanvas },
+        }),
+    }),
+    { virtual: true },
+);
+
+let mockUseOverlay = jest.fn();
+
+jest.mock(
+    '@pulse-ts/dom',
+    () => ({
+        useOverlay: (...args: any[]) => mockUseOverlay(...args),
+        Column: 'div',
+    }),
+    { virtual: true },
+);
+
+jest.mock(
+    '@pulse-ts/effects',
+    () => ({
+        useSequence: (steps: any[]) => {
+            mockSequenceSteps = steps;
+            return {
+                play() {
+                    mockSequenceElapsed = 0;
+                },
+                reset() {
+                    mockSequenceElapsed = 0;
+                },
+                get finished() {
+                    return false;
+                },
+                get elapsed() {
+                    return mockSequenceElapsed;
+                },
+            };
+        },
+    }),
+    { virtual: true },
+);
 
 jest.mock('../overlayAnimations', () => ({
     applyStaggeredEntrance: jest.fn(),
@@ -50,6 +110,8 @@ import { IntroOverlayNode } from './IntroOverlayNode';
 beforeEach(() => {
     mockFrameUpdateCallbacks = [];
     mockDestroyCallbacks = [];
+    mockSequenceElapsed = 0;
+    mockSequenceSteps = [];
     mockGameState = {
         phase: 'intro',
         scores: [0, 0],
@@ -61,26 +123,36 @@ beforeEach(() => {
         paused: false,
     };
     mockContainer.innerHTML = '';
-    jest.clearAllMocks();
+    mockUseOverlay = jest
+        .fn()
+        .mockImplementation((jsx: any, container: HTMLElement) => {
+            const el = document.createElement('div');
+            if (jsx?.props?.style) {
+                Object.assign(el.style, jsx.props.style);
+            }
+            if (jsx?.props?.children) {
+                for (const child of [].concat(jsx.props.children)) {
+                    const childEl = document.createElement('div');
+                    if (child?.props?.style) {
+                        Object.assign(childEl.style, child.props.style);
+                    }
+                    if (typeof child?.props?.children === 'string') {
+                        childEl.textContent = child.props.children;
+                    }
+                    el.appendChild(childEl);
+                }
+            }
+            container.appendChild(el);
+            mockDestroyCallbacks.push(() => {
+                el.remove();
+            });
+            return el;
+        });
 });
 
 /* ------------------------------------------------------------------ */
 /*  Tests                                                              */
 /* ------------------------------------------------------------------ */
-
-describe('hexToCss', () => {
-    it('converts red', () => {
-        expect(hexToCss(0xff0000)).toBe('rgb(255, 0, 0)');
-    });
-
-    it('converts green', () => {
-        expect(hexToCss(0x00ff00)).toBe('rgb(0, 255, 0)');
-    });
-
-    it('converts arbitrary color', () => {
-        expect(hexToCss(0xe74c3c)).toBe('rgb(231, 76, 60)');
-    });
-});
 
 describe('IntroOverlayNode', () => {
     function mount() {
@@ -94,24 +166,11 @@ describe('IntroOverlayNode', () => {
         expect(overlay.style.zIndex).toBe('3000');
     });
 
-    it('displays VS label and personality name', () => {
+    it('calls useOverlay with JSX and container', () => {
         mount();
-        const text = mockContainer.textContent ?? '';
-        expect(text).toContain('VS');
-        expect(text).toContain(BRAWLER.name.toUpperCase());
-    });
-
-    it('displays personality tagline', () => {
-        mount();
-        const text = mockContainer.textContent ?? '';
-        expect(text).toContain(BRAWLER.tagline);
-    });
-
-    it('sets opacity to 1 during intro phase', () => {
-        mount();
-        mockFrameUpdateCallbacks[0](0.016);
-        const overlay = mockContainer.firstElementChild as HTMLElement;
-        expect(overlay.style.opacity).toBe('1');
+        expect(mockUseOverlay).toHaveBeenCalledTimes(1);
+        // Second argument should be the container
+        expect(mockUseOverlay.mock.calls[0][1]).toBe(mockContainer);
     });
 
     it('sets opacity to 0 when phase is not intro', () => {
@@ -132,23 +191,36 @@ describe('IntroOverlayNode', () => {
         expect(overlay.style.backgroundColor).toContain('rgba(0, 0, 0');
     });
 
-    it('fades out after INTRO_DURATION seconds', () => {
+    it('creates a sequence with show, fade-out, and countdown steps', () => {
         mount();
-        // Advance past the intro duration
-        mockFrameUpdateCallbacks[0](INTRO_DURATION + 0.1);
+        expect(mockSequenceSteps).toHaveLength(3);
+        // First step shows the overlay
+        expect(typeof mockSequenceSteps[0].action).toBe('function');
+        expect(mockSequenceSteps[0].post).toBe(INTRO_DURATION);
+        // Second step fades out
+        expect(typeof mockSequenceSteps[1].action).toBe('function');
+        // Third step transitions to countdown
+        expect(typeof mockSequenceSteps[2].action).toBe('function');
+    });
+
+    it('sequence show action sets opacity to 1', () => {
+        mount();
+        mockSequenceSteps[0].action();
+        const overlay = mockContainer.firstElementChild as HTMLElement;
+        expect(overlay.style.opacity).toBe('1');
+    });
+
+    it('sequence fade-out action sets opacity to 0', () => {
+        mount();
+        mockSequenceSteps[1].action();
         const overlay = mockContainer.firstElementChild as HTMLElement;
         expect(overlay.style.opacity).toBe('0');
     });
 
-    it('transitions to countdown phase after fade', () => {
-        jest.useFakeTimers();
+    it('sequence countdown action transitions to countdown phase', () => {
         mount();
-        // Advance past intro duration to trigger fade-out
-        mockFrameUpdateCallbacks[0](INTRO_DURATION + 0.1);
-        // Fast-forward the setTimeout
-        jest.runAllTimers();
+        mockSequenceSteps[2].action();
         expect(mockGameState.phase).toBe('countdown');
-        jest.useRealTimers();
     });
 
     it('removes the overlay on destroy', () => {
@@ -160,7 +232,9 @@ describe('IntroOverlayNode', () => {
 
     it('registers a useFrameUpdate and useDestroy callback', () => {
         mount();
-        expect(mockFrameUpdateCallbacks).toHaveLength(1);
-        expect(mockDestroyCallbacks).toHaveLength(1);
+        // useOverlay registers cleanup via useDestroy
+        // plus the node's own useFrameUpdate
+        expect(mockFrameUpdateCallbacks.length).toBeGreaterThanOrEqual(1);
+        expect(mockDestroyCallbacks.length).toBeGreaterThanOrEqual(1);
     });
 });

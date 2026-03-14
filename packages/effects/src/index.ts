@@ -1,14 +1,16 @@
 /**
  * @packageDocumentation
- * Visual effects for Pulse TS — particle systems and animated values.
+ * Visual effects for Pulse TS — particle systems, animated values, effect pools, and sequencing.
  *
  * Features:
+ * - **`useEffectPool`** — fixed-size pool of timed effects with auto-recycling
  * - **`installParticles`** — world-level service for shared particle pools
  * - **`useParticleBurst`** — declarative one-shot burst from any node
  * - **`useParticleEmitter`** — declarative continuous emitter tied to node position
  * - **`useParticles`** — low-level callback-driven emitter (escape hatch)
  * - Per-particle position, velocity, color, opacity, size, and userData
  * - Three.js Points rendering with custom shader
+ * - **`useSequence`** — declarative time-based action sequences with delays and parallel sub-sequences
  *
  * Quick start (convenience hooks)
  * ```ts

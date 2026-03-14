@@ -1,13 +1,18 @@
 import { useComponent, Transform, useFrameUpdate } from '@pulse-ts/core';
 import { useRigidBody, useCylinderCollider } from '@pulse-ts/physics';
-import { useMesh, useObject3D, useThreeContext } from '@pulse-ts/three';
+import {
+    useMesh,
+    useCustomMesh,
+    useThreeContext,
+    createTexture,
+    createTexture1D,
+} from '@pulse-ts/three';
 import { useAnimate } from '@pulse-ts/effects';
 import * as THREE from 'three';
 import { ARENA_RADIUS } from '../config/arena';
-import { isMobileDevice } from '../isMobileDevice';
+import { isMobile } from '@pulse-ts/platform';
 import {
-    updateHitImpacts,
-    getActiveHitImpacts,
+    useHitImpactPool,
     HIT_RIPPLE_DISPLACEMENT,
     HIT_RIPPLE_MAX_RADIUS,
     HIT_RIPPLE_EXPAND_DURATION,
@@ -105,32 +110,17 @@ export function createGridNormalMap(
     size: number = GRID_MAP_SIZE,
     spacing: number = GRID_SPACING,
 ): THREE.DataTexture {
-    const data = new Uint8Array(size * size * 4);
-    for (let y = 0; y < size; y++) {
-        for (let x = 0; x < size; x++) {
-            const i = (y * size + x) * 4;
-            // Default flat normal: (0.5, 0.5, 1.0) in [0,1] -> (0, 0, 1) in [-1,1]
+    return createTexture(
+        size,
+        (x, y) => {
             let nx = 128;
             let ny = 128;
-            const nz = 255;
-
-            // Perturb normals at grid-line boundaries
-            if (x % spacing === 0) nx = 96; // tilt left at vertical lines
-            if (y % spacing === 0) ny = 96; // tilt down at horizontal lines
-
-            data[i] = nx;
-            data[i + 1] = ny;
-            data[i + 2] = nz;
-            data[i + 3] = 255;
-        }
-    }
-    const tex = new THREE.DataTexture(data, size, size, THREE.RGBAFormat);
-    tex.wrapS = THREE.RepeatWrapping;
-    tex.wrapT = THREE.RepeatWrapping;
-    tex.magFilter = THREE.LinearFilter;
-    tex.minFilter = THREE.LinearFilter;
-    tex.needsUpdate = true;
-    return tex;
+            if (x % spacing === 0) nx = 96;
+            if (y % spacing === 0) ny = 96;
+            return [nx, ny, 255, 255];
+        },
+        { wrap: 'repeat', filter: 'linear' },
+    );
 }
 
 /**
@@ -141,6 +131,7 @@ export function createGridNormalMap(
  * @param size - Texture width and height in pixels.
  * @param spacing - Pixel spacing between grid lines.
  * @param lineWidth - Width of each grid line in pixels.
+ * @param radialFade - When true, lines fade from dark at center to bright at edge.
  * @returns A `THREE.DataTexture` with cyan grid lines on black.
  *
  * @example
@@ -155,44 +146,35 @@ export function createGridEmissiveMap(
     lineWidth: number = GRID_LINE_WIDTH,
     radialFade: boolean = false,
 ): THREE.DataTexture {
-    const data = new Uint8Array(size * size * 4);
     const half = Math.floor(lineWidth / 2);
     const center = size / 2;
 
-    for (let y = 0; y < size; y++) {
-        for (let x = 0; x < size; x++) {
-            const i = (y * size + x) * 4;
+    return createTexture(
+        size,
+        (x, y) => {
             const onVertical =
                 x % spacing <= half || x % spacing >= spacing - half;
             const onHorizontal =
                 y % spacing <= half || y % spacing >= spacing - half;
 
             if (onVertical || onHorizontal) {
-                // Radial fade: 0 at center, 1 at edge
                 let fade = 1;
                 if (radialFade) {
                     const dx = (x - center) / center;
                     const dy = (y - center) / center;
                     fade = Math.min(1, Math.sqrt(dx * dx + dy * dy));
                 }
-                // Cyan grid line scaled by radial fade
-                data[i] = Math.floor(50 * fade);
-                data[i + 1] = Math.floor(180 * fade);
-                data[i + 2] = Math.floor(220 * fade);
+                return [
+                    Math.floor(50 * fade),
+                    Math.floor(180 * fade),
+                    Math.floor(220 * fade),
+                    255,
+                ];
             }
-            // else: black (already 0)
-
-            data[i + 3] = 255;
-        }
-    }
-
-    const tex = new THREE.DataTexture(data, size, size, THREE.RGBAFormat);
-    tex.wrapS = THREE.RepeatWrapping;
-    tex.wrapT = THREE.RepeatWrapping;
-    tex.magFilter = THREE.LinearFilter;
-    tex.minFilter = THREE.LinearFilter;
-    tex.needsUpdate = true;
-    return tex;
+            return [0, 0, 0, 255];
+        },
+        { wrap: 'repeat', filter: 'linear' },
+    );
 }
 
 /**
@@ -214,39 +196,31 @@ export function createEnergyLineMap(
     size: number = ENERGY_MAP_SIZE,
     spokeCount: number = ENERGY_SPOKE_COUNT,
 ): THREE.DataTexture {
-    const data = new Uint8Array(size * size * 4);
     const center = size / 2;
 
-    for (let py = 0; py < size; py++) {
-        for (let px = 0; px < size; px++) {
-            const i = (py * size + px) * 4;
+    return createTexture(
+        size,
+        (px, py) => {
             const dx = px - center;
             const dy = py - center;
             const dist = Math.sqrt(dx * dx + dy * dy) / center;
 
-            // Radial spoke pattern with smooth falloff
             const angle = Math.atan2(dy, dx);
             const spokePhase = Math.abs(Math.sin(angle * spokeCount * 0.5));
 
-            // Smooth ramp: fade from 0 at phase 0.9 to full at phase 1.0
             const spokeEdge = Math.max(0, (spokePhase - 0.9) / 0.1);
-            // Dark at center, bright at edge (matching grid radial fade)
             const radialFade = Math.min(1, dist);
             const intensity = spokeEdge * spokeEdge * radialFade * 0.8;
 
-            // Cyan tint (R slightly less than G and B)
-            data[i] = Math.floor(intensity * 128);
-            data[i + 1] = Math.floor(intensity * 220);
-            data[i + 2] = Math.floor(intensity * 255);
-            data[i + 3] = 255;
-        }
-    }
-
-    const tex = new THREE.DataTexture(data, size, size, THREE.RGBAFormat);
-    tex.wrapS = THREE.RepeatWrapping;
-    tex.wrapT = THREE.RepeatWrapping;
-    tex.needsUpdate = true;
-    return tex;
+            return [
+                Math.floor(intensity * 128),
+                Math.floor(intensity * 220),
+                Math.floor(intensity * 255),
+                255,
+            ];
+        },
+        { wrap: 'repeat' },
+    );
 }
 
 /**
@@ -266,29 +240,19 @@ export function createEnergyLineMap(
 export function createRingGlowMap(
     size: number = RING_GLOW_MAP_SIZE,
 ): THREE.DataTexture {
-    const data = new Uint8Array(size * 4);
-    for (let x = 0; x < size; x++) {
-        const t = x / size; // 0..1 around the ring
-        // Smooth bright region centered at t=0 spanning ~25% of the ring
-        // Use a cosine falloff for a natural glow shape
-        const dist = Math.min(t, 1 - t) * 2; // 0 at center, 1 at opposite side
-        const glow = Math.pow(Math.max(0, 1 - dist * 3), 2); // smooth falloff
-        const base = 0.08; // dim base so the ring is never fully dark
-        const intensity = base + (1 - base) * glow;
-
-        const i = x * 4;
-        data[i] = Math.floor(intensity * 255);
-        data[i + 1] = Math.floor(intensity * 255);
-        data[i + 2] = Math.floor(intensity * 255);
-        data[i + 3] = 255;
-    }
-    const tex = new THREE.DataTexture(data, size, 1, THREE.RGBAFormat);
-    tex.wrapS = THREE.RepeatWrapping;
-    tex.wrapT = THREE.RepeatWrapping;
-    tex.magFilter = THREE.LinearFilter;
-    tex.minFilter = THREE.LinearFilter;
-    tex.needsUpdate = true;
-    return tex;
+    return createTexture1D(
+        size,
+        (x, width) => {
+            const t = x / width;
+            const dist = Math.min(t, 1 - t) * 2;
+            const glow = Math.pow(Math.max(0, 1 - dist * 3), 2);
+            const base = 0.08;
+            const intensity = base + (1 - base) * glow;
+            const v = Math.floor(intensity * 255);
+            return [v, v, v, 255];
+        },
+        { wrap: 'repeat', filter: 'linear' },
+    );
 }
 
 /**
@@ -306,12 +270,7 @@ export function createRingGlowMap(
  * ```
  */
 export function createWakeMap(size: number = WAKE_MAP_SIZE): THREE.DataTexture {
-    const data = new Uint8Array(size * size * 4);
-    const tex = new THREE.DataTexture(data, size, size, THREE.RGBAFormat);
-    tex.magFilter = THREE.LinearFilter;
-    tex.minFilter = THREE.LinearFilter;
-    tex.needsUpdate = true;
-    return tex;
+    return createTexture(size, () => [0, 0, 0, 0], { filter: 'linear' });
 }
 
 /**
@@ -484,6 +443,7 @@ export function worldToUV(
  * (no edge walls so players can be knocked off).
  */
 export function PlatformNode() {
+    const hitPool = useHitImpactPool();
     const transform = useComponent(Transform);
     transform.localPosition.set(0, 0, 0);
 
@@ -494,7 +454,17 @@ export function PlatformNode() {
         restitution: 0,
     });
 
+    // Procedural texture maps
+    const normalMap = createGridNormalMap();
+    const gridEmissiveMap = createGridEmissiveMap(
+        GRID_MAP_SIZE,
+        GRID_SPACING / 2,
+        GRID_LINE_WIDTH,
+        true,
+    );
+
     // Visual — cylinder mesh for the platform surface (opaque dark base)
+    // with texture maps passed directly via useMesh extensions
     const { material: platformMat } = useMesh('cylinder', {
         radius: PLATFORM_RADIUS,
         height: PLATFORM_HEIGHT,
@@ -503,103 +473,98 @@ export function PlatformNode() {
         roughness: 0.7,
         metalness: 0.2,
         receiveShadow: true,
+        normalMap,
+        normalScale: [0.3, 0.3],
+        emissive: RING_COLOR,
+        emissiveMap: gridEmissiveMap,
+        emissiveIntensity: 0.15,
     });
 
     // --- Blue tint fill on top of the grid ---
-    const fillGeometry = new THREE.CylinderGeometry(
-        PLATFORM_RADIUS,
-        PLATFORM_RADIUS,
-        0.01,
-        48,
-    );
-    const fillMaterial = new THREE.MeshBasicMaterial({
-        color: 0x2244aa,
-        transparent: true,
-        opacity: 0.035,
-        depthWrite: false,
+    const { object: fillMesh } = useCustomMesh({
+        geometry: () =>
+            new THREE.CylinderGeometry(
+                PLATFORM_RADIUS,
+                PLATFORM_RADIUS,
+                0.01,
+                48,
+            ),
+        material: () =>
+            new THREE.MeshBasicMaterial({
+                color: 0x2244aa,
+                transparent: true,
+                opacity: 0.035,
+                depthWrite: false,
+            }),
     });
-    const fillMesh = new THREE.Mesh(fillGeometry, fillMaterial);
     fillMesh.position.y = PLATFORM_HEIGHT / 2 + 0.01;
-    useObject3D(fillMesh);
-
-    // Procedural grid normal map — subtle surface relief at grid lines
-    const normalMap = createGridNormalMap();
-    platformMat.normalMap = normalMap;
-    platformMat.normalScale = new THREE.Vector2(0.3, 0.3);
-
-    // Grid emissive map — visible glowing grid lines on the surface
-    // Radial fade: lines are dark at center, bright at edge.
-    // No repeat — single pass covers entire surface with baked falloff.
-    const gridEmissiveMap = createGridEmissiveMap(
-        GRID_MAP_SIZE,
-        GRID_SPACING / 2,
-        GRID_LINE_WIDTH,
-        true,
-    );
-    platformMat.emissive = new THREE.Color(RING_COLOR);
-    platformMat.emissiveMap = gridEmissiveMap;
-    platformMat.emissiveIntensity = 0.15;
 
     // --- Energy line overlay ---
     const energyMap = createEnergyLineMap();
-    const energyGeometry = new THREE.CylinderGeometry(
-        PLATFORM_RADIUS - 0.1,
-        PLATFORM_RADIUS - 0.1,
-        0.02,
-        48,
-    );
-    const energyMaterial = new THREE.MeshStandardMaterial({
-        color: 0x000000,
-        emissive: RING_COLOR,
-        emissiveMap: energyMap,
-        emissiveIntensity: 0.12,
-        transparent: true,
-        opacity: 0.15,
-        roughness: 1,
-        metalness: 0,
-        depthWrite: false,
+    const { object: energyMesh } = useCustomMesh({
+        geometry: () =>
+            new THREE.CylinderGeometry(
+                PLATFORM_RADIUS - 0.1,
+                PLATFORM_RADIUS - 0.1,
+                0.02,
+                48,
+            ),
+        material: () =>
+            new THREE.MeshStandardMaterial({
+                color: 0x000000,
+                emissive: RING_COLOR,
+                emissiveMap: energyMap,
+                emissiveIntensity: 0.12,
+                transparent: true,
+                opacity: 0.15,
+                roughness: 1,
+                metalness: 0,
+                depthWrite: false,
+            }),
     });
-    const energyMesh = new THREE.Mesh(energyGeometry, energyMaterial);
     energyMesh.position.y = PLATFORM_HEIGHT / 2 + 0.02;
-    useObject3D(energyMesh);
 
     // --- Enhanced edge ring (primary) with rotating glow ---
     const ringGlowMap = createRingGlowMap();
-    const ringGeometry = new THREE.TorusGeometry(PLATFORM_RADIUS, 0.12, 12, 64);
-    const ringMaterial = new THREE.MeshStandardMaterial({
-        color: 0x000000,
-        emissive: RING_COLOR,
-        emissiveMap: ringGlowMap,
-        emissiveIntensity: 1.5,
-        roughness: 0.3,
-        metalness: 0.5,
+    const { object: ringMesh, material: ringMaterialBase } = useCustomMesh({
+        geometry: () => new THREE.TorusGeometry(PLATFORM_RADIUS, 0.12, 12, 64),
+        material: () =>
+            new THREE.MeshStandardMaterial({
+                color: 0x000000,
+                emissive: RING_COLOR,
+                emissiveMap: ringGlowMap,
+                emissiveIntensity: 1.5,
+                roughness: 0.3,
+                metalness: 0.5,
+            }),
     });
-    const ringMesh = new THREE.Mesh(ringGeometry, ringMaterial);
+    const ringMaterial = ringMaterialBase as THREE.MeshStandardMaterial;
     ringMesh.rotation.x = -Math.PI / 2;
     ringMesh.position.y = PLATFORM_HEIGHT / 2;
-    useObject3D(ringMesh);
 
     // --- Outer glow ring (soft halo) with same rotating glow ---
     const glowGlowMap = createRingGlowMap();
-    const glowGeometry = new THREE.TorusGeometry(PLATFORM_RADIUS, 0.3, 12, 64);
-    const glowMaterial = new THREE.MeshStandardMaterial({
-        color: 0x000000,
-        emissive: RING_COLOR,
-        emissiveMap: glowGlowMap,
-        emissiveIntensity: 0.6,
-        transparent: true,
-        opacity: 0.15,
-        roughness: 0.5,
-        metalness: 0.3,
-        depthWrite: false,
+    const { object: glowMesh, material: glowMaterialBase } = useCustomMesh({
+        geometry: () => new THREE.TorusGeometry(PLATFORM_RADIUS, 0.3, 12, 64),
+        material: () =>
+            new THREE.MeshStandardMaterial({
+                color: 0x000000,
+                emissive: RING_COLOR,
+                emissiveMap: glowGlowMap,
+                emissiveIntensity: 0.6,
+                transparent: true,
+                opacity: 0.15,
+                roughness: 0.5,
+                metalness: 0.3,
+                depthWrite: false,
+            }),
     });
-    const glowMesh = new THREE.Mesh(glowGeometry, glowMaterial);
+    const glowMaterial = glowMaterialBase as THREE.MeshStandardMaterial;
     glowMesh.rotation.x = -Math.PI / 2;
     glowMesh.position.y = PLATFORM_HEIGHT / 2;
-    useObject3D(glowMesh);
 
     // --- Wake map (CPU-rasterized player trail influence) ---
-    const mobile = isMobileDevice();
+    const mobile = isMobile();
     const wakeSize = mobile ? WAKE_MAP_SIZE_MOBILE : WAKE_MAP_SIZE;
     const wakeMap = createWakeMap(wakeSize);
     const wakeTrail: WakeTrailPoint[] = [];
@@ -728,33 +693,28 @@ export function PlatformNode() {
     const ringGlowSpin = useAnimate({ rate: RING_GLOW_SPEED });
 
     useFrameUpdate((dt) => {
-        // Advance hit impact ages (must run before AtmosphericDustNode reads them)
-        updateHitImpacts(dt);
-
-        // Sync hit ripple uniforms from active slots
-        const hitSlots = getActiveHitImpacts();
+        // Sync hit ripple uniforms from active pool slots
+        // Reset all ripple slots first
         for (let i = 0; i < 4; i++) {
-            const slot = hitSlots[i];
-            if (slot.active) {
-                const [u, v] = worldToUV(
-                    slot.worldX,
-                    slot.worldZ,
-                    ARENA_RADIUS,
-                );
-                hitRippleCenterX.setComponent(i, u);
-                hitRippleCenterY.setComponent(i, v);
-                // Expanding radius: age / expand_duration, clamped to max
-                const progress = Math.min(
-                    slot.age / HIT_RIPPLE_EXPAND_DURATION,
-                    1,
-                );
-                hitRippleRadii.setComponent(
-                    i,
-                    progress * HIT_RIPPLE_MAX_RADIUS,
-                );
-            } else {
-                hitRippleRadii.setComponent(i, -1);
-            }
+            hitRippleRadii.setComponent(i, -1);
+        }
+        let hitSlotIdx = 0;
+        for (const slot of hitPool.active()) {
+            if (hitSlotIdx >= 4) break;
+            const [u, v] = worldToUV(
+                slot.data.worldX,
+                slot.data.worldZ,
+                ARENA_RADIUS,
+            );
+            hitRippleCenterX.setComponent(hitSlotIdx, u);
+            hitRippleCenterY.setComponent(hitSlotIdx, v);
+            // Expanding radius: age / expand_duration, clamped to max
+            const progress = Math.min(slot.age / HIT_RIPPLE_EXPAND_DURATION, 1);
+            hitRippleRadii.setComponent(
+                hitSlotIdx,
+                progress * HIT_RIPPLE_MAX_RADIUS,
+            );
+            hitSlotIdx++;
         }
 
         ringMaterial.emissiveIntensity = pulse.value;

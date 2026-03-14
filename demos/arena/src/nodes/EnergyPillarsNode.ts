@@ -1,4 +1,4 @@
-import { useObject3D } from '@pulse-ts/three';
+import { useCustomMesh } from '@pulse-ts/three';
 import { useAnimate } from '@pulse-ts/effects';
 import { useFrameUpdate } from '@pulse-ts/core';
 import * as THREE from 'three';
@@ -35,39 +35,66 @@ export const PILLAR_PULSE_FREQ = 1.0;
  * rhythmic energy-fence effect around the arena edge.
  */
 export function EnergyPillarsNode() {
-    const geometry = new THREE.CylinderGeometry(
+    const materials: THREE.MeshStandardMaterial[] = [];
+
+    // Share geometry across all pillars via useCustomMesh for lifecycle management.
+    // The first pillar's useCustomMesh creates and manages the group; remaining
+    // pillars are added as children of the group.
+    const sharedGeometry = new THREE.CylinderGeometry(
         PILLAR_RADIUS,
         PILLAR_RADIUS,
         PILLAR_HEIGHT,
         8,
     );
 
-    const materials: THREE.MeshStandardMaterial[] = [];
-    const group = new THREE.Group();
+    const { object: group } = useCustomMesh({
+        geometry: () => sharedGeometry,
+        material: () => {
+            const mat = new THREE.MeshStandardMaterial({
+                color: 0x000000,
+                emissive: PILLAR_COLOR,
+                emissiveIntensity: 0.6,
+                transparent: true,
+                opacity: 0.8,
+                roughness: 0.3,
+                metalness: 0.6,
+            });
+            materials.push(mat);
+            return mat;
+        },
+    });
 
-    for (let i = 0; i < PILLAR_COUNT; i++) {
+    // Position the first pillar mesh
+    const angle0 = 0;
+    group.position.set(
+        Math.cos(angle0) * PILLAR_ORBIT_RADIUS,
+        PILLAR_HEIGHT / 2,
+        Math.sin(angle0) * PILLAR_ORBIT_RADIUS,
+    );
+
+    // Create remaining pillars as siblings via additional useCustomMesh calls
+    for (let i = 1; i < PILLAR_COUNT; i++) {
         const angle = (i / PILLAR_COUNT) * Math.PI * 2;
-        const material = new THREE.MeshStandardMaterial({
-            color: 0x000000, // no diffuse — all glow from emissive only
-            emissive: PILLAR_COLOR,
-            emissiveIntensity: 0.6,
-            transparent: true,
-            opacity: 0.8,
-            roughness: 0.3,
-            metalness: 0.6,
+        const { object: pillarMesh, material: pillarMat } = useCustomMesh({
+            geometry: () => sharedGeometry,
+            material: () =>
+                new THREE.MeshStandardMaterial({
+                    color: 0x000000,
+                    emissive: PILLAR_COLOR,
+                    emissiveIntensity: 0.6,
+                    transparent: true,
+                    opacity: 0.8,
+                    roughness: 0.3,
+                    metalness: 0.6,
+                }),
         });
-        materials.push(material);
-
-        const mesh = new THREE.Mesh(geometry, material);
-        mesh.position.set(
+        materials.push(pillarMat as THREE.MeshStandardMaterial);
+        pillarMesh.position.set(
             Math.cos(angle) * PILLAR_ORBIT_RADIUS,
             PILLAR_HEIGHT / 2,
             Math.sin(angle) * PILLAR_ORBIT_RADIUS,
         );
-        group.add(mesh);
     }
-
-    useObject3D(group);
 
     const timer = useAnimate({ rate: PILLAR_PULSE_FREQ });
 

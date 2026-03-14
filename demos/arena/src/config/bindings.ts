@@ -1,4 +1,4 @@
-import { Axis1D, Axis2D, Key } from '@pulse-ts/input';
+import { Axis2D, Key } from '@pulse-ts/input';
 
 /**
  * Merged input bindings for both players in a single world.
@@ -7,18 +7,12 @@ import { Axis1D, Axis2D, Key } from '@pulse-ts/input';
  */
 export const allBindings = {
     /** Player 1 movement — WASD. */
-    p1Move: Axis2D({
-        x: Axis1D({ pos: Key('KeyD'), neg: Key('KeyA') }),
-        y: Axis1D({ pos: Key('KeyW'), neg: Key('KeyS') }),
-    }),
+    p1Move: Axis2D.wasd(),
     /** Player 1 dash — Space. */
     p1Dash: Key('Space'),
 
     /** Player 2 movement — Arrow keys. */
-    p2Move: Axis2D({
-        x: Axis1D({ pos: Key('ArrowRight'), neg: Key('ArrowLeft') }),
-        y: Axis1D({ pos: Key('ArrowUp'), neg: Key('ArrowDown') }),
-    }),
+    p2Move: Axis2D.arrows(),
     /** Player 2 dash — Enter. */
     p2Dash: Key('Enter'),
 

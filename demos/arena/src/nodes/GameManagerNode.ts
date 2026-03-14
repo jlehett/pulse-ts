@@ -3,8 +3,9 @@ import {
     useFixedUpdate,
     useFixedLate,
     useTimer,
+    useStore,
 } from '@pulse-ts/core';
-import { useSound } from '@pulse-ts/audio';
+import { useSound, useSoundGroup } from '@pulse-ts/audio';
 import { useChannel } from '@pulse-ts/network';
 import { GameCtx } from '../contexts';
 import {
@@ -22,17 +23,18 @@ import {
     type ScoringOutcome,
 } from '../config/channels';
 import {
+    ReplayStore,
     startReplay,
     isReplayActive,
     endReplay,
     commitFrame,
     clearRecording,
 } from '../replay';
-import { resetDashCooldownProgress } from '../dashCooldown';
-import { resetHitImpacts } from '../hitImpact';
+import { DashCooldownStore } from '../dashCooldown';
+import { useHitImpactPool } from '../hitImpact';
 import { resetPlayerPositions } from '../ai/playerPositions';
 import { resetCameraShake } from './CameraRigNode';
-import { resetPlayerVelocity } from '../playerVelocity';
+import { PlayerVelocityStore } from '../playerVelocity';
 
 /**
  * Compute the countdown display value from the remaining countdown time.
@@ -69,7 +71,7 @@ export interface GameManagerNodeProps {
 
 /**
  * State-machine game manager that drives the round lifecycle:
- * PLAYING → REPLAY → KO_FLASH → RESETTING → COUNTDOWN → PLAYING.
+ * PLAYING -> REPLAY -> KO_FLASH -> RESETTING -> COUNTDOWN -> PLAYING.
  *
  * When a knockout is detected, an instant replay plays back the last
  * few seconds before proceeding with the score update and KO flash.
@@ -81,15 +83,27 @@ export interface GameManagerNodeProps {
 export function GameManagerNode(props?: Readonly<GameManagerNodeProps>) {
     const gameState = useContext(GameCtx);
 
-    // Clear all module-level state from any previous game session.
-    // world.destroy() only tears down ECS — module singletons persist.
-    clearRecording();
-    endReplay();
-    resetDashCooldownProgress();
-    resetHitImpacts();
+    // World-scoped stores — auto-reset on world.destroy()
+    const [replay] = useStore(ReplayStore);
+    const [cooldown] = useStore(DashCooldownStore);
+    const hitImpactPool = useHitImpactPool();
+    const [velocities] = useStore(PlayerVelocityStore);
+
+    // Clear non-store module state from any previous game session.
+    clearRecording(replay);
+    endReplay(replay);
     resetPlayerPositions();
     resetCameraShake();
-    resetPlayerVelocity();
+
+    // Store state is already fresh from world-scoped initialization,
+    // but explicit reset ensures clean state if the node is re-mounted
+    // within the same world.
+    cooldown.progress[0] = 1;
+    cooldown.progress[1] = 1;
+    hitImpactPool.reset();
+    for (const s of velocities.states) {
+        s.prevX = s.prevZ = s.vx = s.vz = 0;
+    }
 
     // In online mode, receive knockout events from the remote machine
     // and synchronize countdown start via a RTT-compensated handshake:
@@ -161,23 +175,29 @@ export function GameManagerNode(props?: Readonly<GameManagerNodeProps>) {
     const resetPauseTimer = useTimer(RESET_PAUSE_DURATION);
     const countdownTimer = useTimer(COUNTDOWN_DURATION);
 
+    // Sound mixing group for all game manager SFX
+    useSoundGroup('sfx');
+
     const countdownBeepSfx = useSound('tone', {
         wave: 'sine',
         frequency: 880,
         duration: 0.1,
         gain: 0.15,
+        group: 'sfx',
     });
     const countdownGoSfx = useSound('tone', {
         wave: 'sine',
         frequency: 1320,
         duration: 0.15,
         gain: 0.15,
+        group: 'sfx',
     });
     const koAnnounceSfx = useSound('tone', {
         wave: 'sawtooth',
         frequency: [200, 100],
         duration: 0.4,
         gain: 0.12,
+        group: 'sfx',
     });
     const matchFanfareSfx = useSound('arpeggio', {
         wave: 'sine',
@@ -185,6 +205,7 @@ export function GameManagerNode(props?: Readonly<GameManagerNodeProps>) {
         interval: 0.08,
         duration: 0.4,
         gain: 0.12,
+        group: 'sfx',
     });
 
     let prevCountdown = -1;
@@ -221,23 +242,18 @@ export function GameManagerNode(props?: Readonly<GameManagerNodeProps>) {
 
     useFixedUpdate(() => {
         // --- Tie window knockout detection ---
-        // When the first knockout arrives during 'playing', open a tie window
-        // instead of immediately starting the replay.
         if (gameState.pendingKnockout >= 0 && gameState.phase === 'playing') {
             if (tieWindowCounter < 0) {
-                // First knockout — open the tie window
                 firstKnockedOut = gameState.pendingKnockout;
                 gameState.pendingKnockout = -1;
                 tieWindowCounter = TIE_WINDOW_FRAMES;
 
-                // Check if a second knockout already arrived in the same frame
                 if (gameState.pendingKnockout2 >= 0) {
-                    // Both fell in the same frame — immediate tie
                     gameState.isTie = true;
                     gameState.lastKnockedOut = firstKnockedOut;
                     gameState.pendingKnockout2 = -1;
                     tieWindowCounter = -1;
-                    startReplay(firstKnockedOut);
+                    startReplay(replay, firstKnockedOut);
                     gameState.phase = 'replay';
                 }
             }
@@ -247,48 +263,39 @@ export function GameManagerNode(props?: Readonly<GameManagerNodeProps>) {
         if (tieWindowCounter > 0 && gameState.phase === 'playing') {
             tieWindowCounter--;
 
-            // Check for a second knockout arriving during the window
             if (
                 gameState.pendingKnockout >= 0 ||
                 gameState.pendingKnockout2 >= 0
             ) {
-                // Second knockout arrived — tie!
                 gameState.isTie = true;
                 gameState.lastKnockedOut = firstKnockedOut;
                 gameState.pendingKnockout = -1;
                 gameState.pendingKnockout2 = -1;
                 tieWindowCounter = -1;
-                startReplay(firstKnockedOut);
+                startReplay(replay, firstKnockedOut);
                 gameState.phase = 'replay';
             } else if (tieWindowCounter === 0) {
-                // Window expired with only one knockout — normal scoring
                 gameState.isTie = false;
                 gameState.lastKnockedOut = firstKnockedOut;
                 tieWindowCounter = -1;
-                startReplay(firstKnockedOut);
+                startReplay(replay, firstKnockedOut);
                 gameState.phase = 'replay';
             }
         }
 
         switch (gameState.phase) {
             case 'replay': {
-                if (!isReplayActive()) {
+                if (!isReplayActive(replay)) {
                     const isNonHostOnline = props?.online && !props?.isHost;
 
-                    // Non-host: wait for the host's outcome before proceeding
                     if (isNonHostOnline && !receivedOutcome) {
                         break;
                     }
 
-                    endReplay();
-
-                    // Increment round immediately so both players respawn
-                    // at their spawn positions right when the replay ends,
-                    // before the KO flash / scoring overlay appears.
+                    endReplay(replay);
                     gameState.round++;
 
                     if (isNonHostOnline && receivedOutcome) {
-                        // Apply the host's authoritative decision
                         gameState.isTie = receivedOutcome.isTie;
                         applyScoring(
                             receivedOutcome.scorer,
@@ -296,13 +303,11 @@ export function GameManagerNode(props?: Readonly<GameManagerNodeProps>) {
                         );
                         receivedOutcome = null;
                     } else {
-                        // Local mode or host: compute scoring locally
                         const scorer = gameState.isTie
                             ? -1
                             : 1 - gameState.lastKnockedOut;
                         applyScoring(scorer, gameState.isTie);
 
-                        // Host: broadcast the outcome to non-host
                         if (publishScoringOutcome) {
                             publishScoringOutcome({
                                 scorer,
@@ -318,21 +323,16 @@ export function GameManagerNode(props?: Readonly<GameManagerNodeProps>) {
                 if (!koFlashTimer.active) {
                     gameState.phase = 'resetting';
                     resetPauseTimer.reset();
-                    // Reset tie state for the next round
                     gameState.isTie = false;
                     gameState.pendingKnockout2 = -1;
                     firstKnockedOut = -1;
-                    // Clear recorded footage so next replay only shows the new round
-                    clearRecording();
+                    clearRecording(replay);
                 }
                 break;
 
             case 'resetting':
                 if (!resetPauseTimer.active) {
                     gameState.phase = 'countdown';
-                    // Timer and countdownValue are initialised in the
-                    // countdown case — non-host defers until the host's
-                    // countdown-start signal arrives.
                 }
                 break;
 
@@ -340,50 +340,33 @@ export function GameManagerNode(props?: Readonly<GameManagerNodeProps>) {
                 const isNonHost = props?.online && !props?.isHost;
                 const isHost = props?.online && props?.isHost;
 
-                // Countdown timer initialization:
-                // - Local: start timer immediately.
-                // - Host: send countdown-start signal, then WAIT for the
-                //   non-host's ack. On ack, start timer fast-forwarded by
-                //   RTT/2 so both timers expire at the same absolute moment.
-                // - Non-host: wait for the host's countdown-start signal,
-                //   then start timer immediately and send ack back.
                 if (!countdownTimer.active && gameState.countdownValue < 0) {
                     if (isNonHost) {
-                        // Non-host: defer until host signal arrives
                         if (hostCountdownStarted) {
                             countdownTimer.reset();
                             gameState.countdownValue = 3;
                             hostCountdownStarted = false;
                         }
                     } else if (isHost) {
-                        // Host: send signal and wait for ack
                         if (countdownStartSentAt === 0 && !hostAckReceived) {
-                            // First entry — send countdown-start, record time
                             countdownStartSentAt = performance.now();
                             publishCountdownStart!(gameState.round);
                         } else if (hostAckReceived) {
-                            // Ack received — start timer with RTT/2 offset
                             countdownTimer.reset();
                             gameState.countdownValue = 3;
                             hostAckReceived = false;
                         }
                     } else {
-                        // Local: start immediately
                         countdownTimer.reset();
                         gameState.countdownValue = 3;
                     }
                 }
 
-                // Only tick the countdown display when the timer is running
                 if (countdownTimer.active || gameState.countdownValue >= 0) {
-                    // Effective remaining accounts for RTT/2 fast-forward
-                    // on the host so its timer expires earlier to match
-                    // the non-host's timer that started RTT/2 ago.
                     const effectiveRemaining =
                         countdownTimer.remaining - countdownFastForward;
 
                     if (!countdownTimer.active || effectiveRemaining <= 0) {
-                        // Timer expired — transition to playing
                         gameState.phase = 'playing';
                         gameState.countdownValue = -1;
                         prevCountdown = -1;
@@ -401,17 +384,15 @@ export function GameManagerNode(props?: Readonly<GameManagerNodeProps>) {
                 break;
             }
 
-            // 'playing' and 'match_over' — no automatic transitions
             default:
                 break;
         }
     });
 
     // Commit staged player positions into the replay ring buffer.
-    // Runs after all useFixedUpdate callbacks so both players have staged.
     useFixedLate(() => {
         if (gameState.phase === 'playing') {
-            commitFrame();
+            commitFrame(replay);
         }
     });
 }

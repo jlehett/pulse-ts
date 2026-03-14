@@ -1,4 +1,4 @@
-import { useProvideContext, useChild } from '@pulse-ts/core';
+import { useProvideContext, useChild, color } from '@pulse-ts/core';
 import {
     useAmbientLight,
     useDirectionalLight,
@@ -31,7 +31,7 @@ import { SupernovaNode } from './SupernovaNode';
 import { AtmosphericDustNode } from './AtmosphericDustNode';
 import { EnergyPillarsNode } from './EnergyPillarsNode';
 import { AiPlayerNode } from './AiPlayerNode';
-import { IntroOverlayNode, hexToCss } from './IntroOverlayNode';
+import { IntroOverlayNode } from './IntroOverlayNode';
 import { DashCooldownHudNode } from './DashCooldownHudNode';
 import type { AiPersonality } from '../ai/personalities';
 
@@ -125,7 +125,7 @@ export function ArenaNode(props?: Readonly<ArenaNodeProps>) {
             ? ['You', props.aiPersonality.name]
             : undefined,
         playerColors: props?.aiPersonality
-            ? [hexToCss(0x48c9b0), hexToCss(props.aiPersonality.color)]
+            ? [color(0x48c9b0).rgb, color(props.aiPersonality.color).rgb]
             : undefined,
         playerHexColors: props?.aiPersonality
             ? [0x48c9b0, props.aiPersonality.color]

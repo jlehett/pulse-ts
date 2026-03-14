@@ -1,3 +1,4 @@
+import { defineStore } from '@pulse-ts/core';
 import {
     REPLAY_BUFFER_SECONDS,
     REPLAY_NORMAL_SPEED,
@@ -21,37 +22,64 @@ export interface ReplayFrame {
     p1z: number;
 }
 
-// ---------------------------------------------------------------------------
-// Ring buffer — records player positions each fixed step
-// ---------------------------------------------------------------------------
+/** Internal state for the replay system. */
+export interface ReplayState {
+    // Ring buffer
+    buffer: ReplayFrame[];
+    writeCount: number;
+    hitWriteCounts: number[];
 
-const buffer: ReplayFrame[] = [];
-let writeCount = 0;
-let hitWriteCounts: number[] = [];
+    // Playback
+    active: boolean;
+    playbackFrames: ReplayFrame[];
+    hitIndices: number[];
+    hadRealHit: boolean;
+    cursorPos: number;
+    knockedOut: number;
+    scorer: number;
 
-// ---------------------------------------------------------------------------
-// Playback state
-// ---------------------------------------------------------------------------
+    // Per-player staging
+    staged0x: number;
+    staged0y: number;
+    staged0z: number;
+    staged1x: number;
+    staged1y: number;
+    staged1z: number;
+}
 
-let active = false;
-let playbackFrames: ReplayFrame[] = [];
-let hitIndices: number[] = [];
-let hadRealHit = false;
-let cursorPos = 0;
-let knockedOut = -1;
-let scorer = -1;
-
-// ---------------------------------------------------------------------------
-// Per-player staging — each player writes its position, then commitFrame()
-// pushes them into the ring buffer together.
-// ---------------------------------------------------------------------------
-
-let staged0x = 0;
-let staged0y = 0;
-let staged0z = 0;
-let staged1x = 0;
-let staged1y = 0;
-let staged1z = 0;
+/**
+ * Store definition for replay recording and playback state.
+ *
+ * @example
+ * ```ts
+ * import { useStore } from '@pulse-ts/core';
+ * import { ReplayStore, commitFrame, startReplay } from '../replay';
+ *
+ * const [replay] = useStore(ReplayStore);
+ * commitFrame(replay);
+ * ```
+ */
+export const ReplayStore = defineStore(
+    'replay',
+    (): ReplayState => ({
+        buffer: [],
+        writeCount: 0,
+        hitWriteCounts: [],
+        active: false,
+        playbackFrames: [],
+        hitIndices: [],
+        hadRealHit: false,
+        cursorPos: 0,
+        knockedOut: -1,
+        scorer: -1,
+        staged0x: 0,
+        staged0y: 0,
+        staged0z: 0,
+        staged1x: 0,
+        staged1y: 0,
+        staged1z: 0,
+    }),
+);
 
 // ---------------------------------------------------------------------------
 // Recording API
@@ -62,6 +90,7 @@ let staged1z = 0;
  * Call from each player node's `useFixedUpdate`. After both players have
  * staged, call {@link commitFrame} (typically from `useFixedLate`).
  *
+ * @param state - The replay state from the store.
  * @param playerId - Player index (0 or 1).
  * @param x - World X position.
  * @param y - World Y position.
@@ -69,23 +98,24 @@ let staged1z = 0;
  *
  * @example
  * ```ts
- * stagePlayerPosition(0, transform.localPosition.x, ...);
+ * stagePlayerPosition(replay, 0, transform.localPosition.x, ...);
  * ```
  */
 export function stagePlayerPosition(
+    state: ReplayState,
     playerId: number,
     x: number,
     y: number,
     z: number,
 ): void {
     if (playerId === 0) {
-        staged0x = x;
-        staged0y = y;
-        staged0z = z;
+        state.staged0x = x;
+        state.staged0y = y;
+        state.staged0z = z;
     } else {
-        staged1x = x;
-        staged1y = y;
-        staged1z = z;
+        state.staged1x = x;
+        state.staged1y = y;
+        state.staged1z = z;
     }
 }
 
@@ -93,20 +123,29 @@ export function stagePlayerPosition(
  * Commit the staged positions into the ring buffer as one frame.
  * Call once per fixed step after all players have staged their positions.
  *
+ * @param state - The replay state from the store.
+ *
  * @example
  * ```ts
- * useFixedLate(() => { commitFrame(); });
+ * useFixedLate(() => { commitFrame(replay); });
  * ```
  */
-export function commitFrame(): void {
-    recordFrame(staged0x, staged0y, staged0z, staged1x, staged1y, staged1z);
+export function commitFrame(state: ReplayState): void {
+    recordFrame(
+        state,
+        state.staged0x,
+        state.staged0y,
+        state.staged0z,
+        state.staged1x,
+        state.staged1y,
+        state.staged1z,
+    );
 }
 
 /**
  * Record both players' positions for one fixed step.
- * Lower-level API — prefer {@link stagePlayerPosition} + {@link commitFrame}
- * when players record independently.
  *
+ * @param state - The replay state from the store.
  * @param p0x - Player 0 X position.
  * @param p0y - Player 0 Y position.
  * @param p0z - Player 0 Z position.
@@ -116,10 +155,11 @@ export function commitFrame(): void {
  *
  * @example
  * ```ts
- * recordFrame(p0.x, p0.y, p0.z, p1.x, p1.y, p1.z);
+ * recordFrame(replay, p0.x, p0.y, p0.z, p1.x, p1.y, p1.z);
  * ```
  */
 export function recordFrame(
+    state: ReplayState,
     p0x: number,
     p0y: number,
     p0z: number,
@@ -127,11 +167,11 @@ export function recordFrame(
     p1y: number,
     p1z: number,
 ): void {
-    const idx = writeCount % BUFFER_SIZE;
-    if (buffer.length <= idx) {
-        buffer.push({ p0x, p0y, p0z, p1x, p1y, p1z });
+    const idx = state.writeCount % BUFFER_SIZE;
+    if (state.buffer.length <= idx) {
+        state.buffer.push({ p0x, p0y, p0z, p1x, p1y, p1z });
     } else {
-        const f = buffer[idx];
+        const f = state.buffer[idx];
         f.p0x = p0x;
         f.p0y = p0y;
         f.p0z = p0z;
@@ -139,21 +179,21 @@ export function recordFrame(
         f.p1y = p1y;
         f.p1z = p1z;
     }
-    writeCount++;
+    state.writeCount++;
 }
 
 /**
  * Mark the current frame as a collision hit moment.
- * Call from the collision handler in the player node. Multiple hits
- * can be recorded per round — all are preserved for replay playback.
+ *
+ * @param state - The replay state from the store.
  *
  * @example
  * ```ts
- * useOnCollisionStart(() => { markHit(); });
+ * useOnCollisionStart(() => { markHit(replay); });
  * ```
  */
-export function markHit(): void {
-    hitWriteCounts.push(writeCount);
+export function markHit(state: ReplayState): void {
+    state.hitWriteCounts.push(state.writeCount);
 }
 
 // ---------------------------------------------------------------------------
@@ -162,19 +202,20 @@ export function markHit(): void {
 
 /**
  * Compute the playback speed at a given frame index.
- * Speed ramps from `REPLAY_HIT_SPEED` at the hit to `REPLAY_NORMAL_SPEED`
- * over `REPLAY_HIT_WINDOW_FRAMES` frames on either side.
  *
+ * @param hitIndices - Array of hit frame indices.
  * @param frameIndex - Index into the playback frames array.
  * @returns Playback speed as a fraction of real-time.
  *
  * @example
  * ```ts
- * getSpeedAtFrame(hitIndex);     // REPLAY_HIT_SPEED (0.15)
- * getSpeedAtFrame(hitIndex + 30); // REPLAY_NORMAL_SPEED (0.4)
+ * getSpeedAtFrame(replay.hitIndices, hitIndex); // REPLAY_HIT_SPEED (0.15)
  * ```
  */
-export function getSpeedAtFrame(frameIndex: number): number {
+export function getSpeedAtFrame(
+    hitIndices: number[],
+    frameIndex: number,
+): number {
     if (hitIndices.length === 0) return REPLAY_NORMAL_SPEED;
     let minDist = Infinity;
     for (const hi of hitIndices) {
@@ -188,25 +229,28 @@ export function getSpeedAtFrame(frameIndex: number): number {
 /**
  * Snapshot the ring buffer and begin replay playback.
  *
+ * @param state - The replay state from the store.
  * @param knockedOutPlayerId - ID of the player that was knocked out.
  *
  * @example
  * ```ts
- * startReplay(1); // player 1 was knocked out, player 0 is the scorer
+ * startReplay(replay, 1);
  * ```
  */
-export function startReplay(knockedOutPlayerId: number): void {
-    knockedOut = knockedOutPlayerId;
-    scorer = 1 - knockedOutPlayerId;
+export function startReplay(
+    state: ReplayState,
+    knockedOutPlayerId: number,
+): void {
+    state.knockedOut = knockedOutPlayerId;
+    state.scorer = 1 - knockedOutPlayerId;
 
-    // Extract recorded frames in chronological order
-    const frameCount = Math.min(writeCount, BUFFER_SIZE);
-    playbackFrames = [];
-    const startWrite = writeCount - frameCount;
+    const frameCount = Math.min(state.writeCount, BUFFER_SIZE);
+    state.playbackFrames = [];
+    const startWrite = state.writeCount - frameCount;
     for (let i = 0; i < frameCount; i++) {
         const bufIdx = (startWrite + i) % BUFFER_SIZE;
-        const f = buffer[bufIdx];
-        playbackFrames.push({
+        const f = state.buffer[bufIdx];
+        state.playbackFrames.push({
             p0x: f.p0x,
             p0y: f.p0y,
             p0z: f.p0z,
@@ -216,44 +260,43 @@ export function startReplay(knockedOutPlayerId: number): void {
         });
     }
 
-    // Map all hit write counts into playback frame indices
-    hitIndices = [];
-    for (const hwc of hitWriteCounts) {
-        if (hwc >= startWrite && hwc < writeCount) {
-            hitIndices.push(hwc - startWrite);
+    state.hitIndices = [];
+    for (const hwc of state.hitWriteCounts) {
+        if (hwc >= startWrite && hwc < state.writeCount) {
+            state.hitIndices.push(hwc - startWrite);
         }
     }
-    hadRealHit = hitIndices.length > 0;
+    state.hadRealHit = state.hitIndices.length > 0;
 
-    cursorPos = 0;
-    active = true;
+    state.cursorPos = 0;
+    state.active = true;
 }
 
 /**
  * Advance the replay cursor by one frame's worth of real time.
  * Returns `true` while the replay is still playing, `false` when finished.
  *
- * @param dt - Real-time delta in seconds (from `useFrameUpdate`).
+ * @param state - The replay state from the store.
+ * @param dt - Real-time delta in seconds.
  * @returns Whether the replay is still active.
  *
  * @example
  * ```ts
- * useFrameUpdate((dt) => {
- *     if (!advanceReplay(dt)) { /* replay done *\/ }
- * });
+ * if (!advanceReplay(replay, dt)) { /* replay done *\/ }
  * ```
  */
-export function advanceReplay(dt: number): boolean {
-    if (!active || playbackFrames.length === 0) return false;
+export function advanceReplay(state: ReplayState, dt: number): boolean {
+    if (!state.active || state.playbackFrames.length === 0) return false;
 
-    const frameIdx = Math.floor(Math.min(cursorPos, playbackFrames.length - 1));
-    const speed = getSpeedAtFrame(frameIdx);
+    const frameIdx = Math.floor(
+        Math.min(state.cursorPos, state.playbackFrames.length - 1),
+    );
+    const speed = getSpeedAtFrame(state.hitIndices, frameIdx);
 
-    // Advance cursor: speed * FIXED_HZ frames per real-time second
-    cursorPos += dt * speed * FIXED_HZ;
+    state.cursorPos += dt * speed * FIXED_HZ;
 
-    if (cursorPos >= playbackFrames.length - 1) {
-        active = false;
+    if (state.cursorPos >= state.playbackFrames.length - 1) {
+        state.active = false;
         return false;
     }
     return true;
@@ -263,27 +306,29 @@ export function advanceReplay(dt: number): boolean {
  * Get the interpolated position of a player at the current replay cursor.
  * Returns `null` when no replay is active.
  *
+ * @param state - The replay state from the store.
  * @param playerId - Player index (0 or 1).
  * @returns `[x, y, z]` position tuple, or `null` if replay is inactive.
  *
  * @example
  * ```ts
- * const pos = getReplayPosition(0);
+ * const pos = getReplayPosition(replay, 0);
  * if (pos) mesh.position.set(...pos);
  * ```
  */
 export function getReplayPosition(
+    state: ReplayState,
     playerId: number,
 ): [number, number, number] | null {
-    if (!active || playbackFrames.length === 0) return null;
+    if (!state.active || state.playbackFrames.length === 0) return null;
 
-    const idx = Math.min(cursorPos, playbackFrames.length - 1);
+    const idx = Math.min(state.cursorPos, state.playbackFrames.length - 1);
     const i0 = Math.floor(idx);
-    const i1 = Math.min(i0 + 1, playbackFrames.length - 1);
+    const i1 = Math.min(i0 + 1, state.playbackFrames.length - 1);
     const t = idx - i0;
 
-    const f0 = playbackFrames[i0];
-    const f1 = playbackFrames[i1];
+    const f0 = state.playbackFrames[i0];
+    const f1 = state.playbackFrames[i1];
 
     if (playerId === 0) {
         return [
@@ -299,30 +344,38 @@ export function getReplayPosition(
     ];
 }
 
-/** Whether a replay is currently active. */
-export function isReplayActive(): boolean {
-    return active;
+/** Whether a replay is currently active.
+ * @param state - The replay state from the store.
+ */
+export function isReplayActive(state: ReplayState): boolean {
+    return state.active;
 }
 
-/** The player ID of the scorer (winner) in the current/last replay. */
-export function getReplayScorer(): number {
-    return scorer;
+/** The player ID of the scorer (winner) in the current/last replay.
+ * @param state - The replay state from the store.
+ */
+export function getReplayScorer(state: ReplayState): number {
+    return state.scorer;
 }
 
-/** The player ID that was knocked out in the current/last replay. */
-export function getReplayKnockedOut(): number {
-    return knockedOut;
+/** The player ID that was knocked out in the current/last replay.
+ * @param state - The replay state from the store.
+ */
+export function getReplayKnockedOut(state: ReplayState): number {
+    return state.knockedOut;
 }
 
 /**
  * How close the current cursor is to the hit moment (0 = far, 1 = at hit).
- * Used by the camera to zoom in during the impact.
+ *
+ * @param state - The replay state from the store.
  */
-export function getReplayHitProximity(): number {
-    if (hitIndices.length === 0 || playbackFrames.length === 0) return 0;
-    const idx = Math.min(cursorPos, playbackFrames.length - 1);
+export function getReplayHitProximity(state: ReplayState): number {
+    if (state.hitIndices.length === 0 || state.playbackFrames.length === 0)
+        return 0;
+    const idx = Math.min(state.cursorPos, state.playbackFrames.length - 1);
     let minDist = Infinity;
-    for (const hi of hitIndices) {
+    for (const hi of state.hitIndices) {
         minDist = Math.min(minDist, Math.abs(idx - hi));
     }
     if (minDist >= REPLAY_HIT_WINDOW_FRAMES) return 0;
@@ -330,58 +383,42 @@ export function getReplayHitProximity(): number {
 }
 
 /**
- * How far past the hit moment the cursor is, as a 0–1 value.
- * Returns 0 when the cursor is at or before the hit, and ramps to 1
- * over `REPLAY_HIT_WINDOW_FRAMES` after the hit. Used by the camera
- * to transition from follow-cam back to overhead after the impact.
+ * How far past the hit moment the cursor is, as a 0-1 value.
  *
+ * @param state - The replay state from the store.
  * @returns 0 = at/before hit, 1 = far past hit.
- *
- * @example
- * ```ts
- * const pastHit = getReplayPastHit();
- * const followFactor = 1 - pastHit; // 1 = full follow, 0 = overhead
- * ```
  */
-export function getReplayPastHit(): number {
-    if (hitIndices.length === 0 || playbackFrames.length === 0) return 0;
-    // Use the last hit (KO-causing) for camera follow transition
-    const lastHit = hitIndices[hitIndices.length - 1];
-    const idx = Math.min(cursorPos, playbackFrames.length - 1);
-    const dist = idx - lastHit; // signed: negative = before hit
+export function getReplayPastHit(state: ReplayState): number {
+    if (state.hitIndices.length === 0 || state.playbackFrames.length === 0)
+        return 0;
+    const lastHit = state.hitIndices[state.hitIndices.length - 1];
+    const idx = Math.min(state.cursorPos, state.playbackFrames.length - 1);
+    const dist = idx - lastHit;
     if (dist <= 0) return 0;
     if (dist >= REPLAY_HIT_WINDOW_FRAMES) return 1;
     return dist / REPLAY_HIT_WINDOW_FRAMES;
 }
 
 /**
- * Get the velocity of a player at the current replay cursor, computed
- * from position deltas between consecutive frames.
- * Returns `null` when no replay is active.
+ * Get the velocity of a player at the current replay cursor.
  *
+ * @param state - The replay state from the store.
  * @param playerId - Player index (0 or 1).
  * @returns `[vx, vy, vz]` velocity in units/second, or `null`.
- *
- * @example
- * ```ts
- * const vel = getReplayVelocity(0);
- * if (vel) {
- *     const speed = Math.sqrt(vel[0]**2 + vel[2]**2);
- * }
- * ```
  */
 export function getReplayVelocity(
+    state: ReplayState,
     playerId: number,
 ): [number, number, number] | null {
-    if (!active || playbackFrames.length < 2) return null;
+    if (!state.active || state.playbackFrames.length < 2) return null;
 
-    const idx = Math.min(cursorPos, playbackFrames.length - 1);
+    const idx = Math.min(state.cursorPos, state.playbackFrames.length - 1);
     const i0 = Math.floor(idx);
-    const i1 = Math.min(i0 + 1, playbackFrames.length - 1);
+    const i1 = Math.min(i0 + 1, state.playbackFrames.length - 1);
     if (i0 === i1) return [0, 0, 0];
 
-    const f0 = playbackFrames[i0];
-    const f1 = playbackFrames[i1];
+    const f0 = state.playbackFrames[i0];
+    const f1 = state.playbackFrames[i1];
 
     if (playerId === 0) {
         return [
@@ -399,101 +436,81 @@ export function getReplayVelocity(
 
 /**
  * Get the current replay playback speed as a fraction of real-time.
- * Returns 0 when no replay is active.
  *
+ * @param state - The replay state from the store.
  * @returns Speed factor (e.g. 0.4 for normal, 0.15 at hit moment).
- *
- * @example
- * ```ts
- * const speed = getReplaySpeed(); // 0.4 or 0.15
- * ```
  */
-export function getReplaySpeed(): number {
-    if (!active || playbackFrames.length === 0) return 0;
-    const frameIdx = Math.floor(Math.min(cursorPos, playbackFrames.length - 1));
-    return getSpeedAtFrame(frameIdx);
+export function getReplaySpeed(state: ReplayState): number {
+    if (!state.active || state.playbackFrames.length === 0) return 0;
+    const frameIdx = Math.floor(
+        Math.min(state.cursorPos, state.playbackFrames.length - 1),
+    );
+    return getSpeedAtFrame(state.hitIndices, frameIdx);
 }
 
 /**
- * Whether the current replay had a real collision hit (as opposed to a
- * self-KO where the player fell on their own).
+ * Whether the current replay had a real collision hit.
  *
- * @returns `true` if `markHit()` was called before the replay started.
- *
- * @example
- * ```ts
- * if (!hasReplayHit()) showSelfKoText();
- * ```
+ * @param state - The replay state from the store.
  */
-export function hasReplayHit(): boolean {
-    return hadRealHit;
+export function hasReplayHit(state: ReplayState): boolean {
+    return state.hadRealHit;
 }
 
 /**
  * Get the frame indices of all recorded collision hits in the current replay.
- * Returns an empty array when no replay is active or no hits were recorded.
  *
- * @returns Array of hit frame indices into the playback frames.
- *
- * @example
- * ```ts
- * for (const hitIdx of getReplayHitIndices()) {
- *     // fire particles at each hit moment
- * }
- * ```
+ * @param state - The replay state from the store.
  */
-export function getReplayHitIndices(): readonly number[] {
-    return hitIndices;
+export function getReplayHitIndices(state: ReplayState): readonly number[] {
+    return state.hitIndices;
 }
 
 /**
  * Get the current replay cursor position (floating-point frame index).
- * Returns 0 when no replay is active.
  *
- * @returns Current cursor position in the playback frames.
+ * @param state - The replay state from the store.
  */
-export function getReplayCursorPos(): number {
-    return cursorPos;
+export function getReplayCursorPos(state: ReplayState): number {
+    return state.cursorPos;
 }
 
-/** End the replay and release the playback buffer. */
-export function endReplay(): void {
-    active = false;
-    playbackFrames = [];
-    hitIndices = [];
-    hadRealHit = false;
-    cursorPos = 0;
+/** End the replay and release the playback buffer.
+ * @param state - The replay state from the store.
+ */
+export function endReplay(state: ReplayState): void {
+    state.active = false;
+    state.playbackFrames = [];
+    state.hitIndices = [];
+    state.hadRealHit = false;
+    state.cursorPos = 0;
 }
 
 /**
  * Clear the recording buffer without affecting active playback.
- * Call at the start of each round so the replay only contains
- * footage from the current round.
  *
- * @example
- * ```ts
- * // In GameManagerNode when the round counter increments:
- * clearRecording();
- * ```
+ * @param state - The replay state from the store.
  */
-export function clearRecording(): void {
-    buffer.length = 0;
-    writeCount = 0;
-    hitWriteCounts = [];
-    staged0x = staged0y = staged0z = 0;
-    staged1x = staged1y = staged1z = 0;
+export function clearRecording(state: ReplayState): void {
+    state.buffer.length = 0;
+    state.writeCount = 0;
+    state.hitWriteCounts = [];
+    state.staged0x = state.staged0y = state.staged0z = 0;
+    state.staged1x = state.staged1y = state.staged1z = 0;
 }
 
 /**
- * Reset all replay state (recording + playback). Exported for testing.
+ * Reset all replay state (recording + playback).
+ *
+ * @param state - The replay state from the store.
  */
-export function resetReplay(): void {
-    buffer.length = 0;
-    writeCount = 0;
-    hitWriteCounts = [];
-    staged0x = staged0y = staged0z = 0;
-    staged1x = staged1y = staged1z = 0;
-    endReplay();
-    knockedOut = -1;
-    scorer = -1;
+export function resetReplay(state: ReplayState): void {
+    state.buffer.length = 0;
+    state.writeCount = 0;
+    state.hitWriteCounts = [];
+    state.staged0x = state.staged0y = state.staged0z = 0;
+    state.staged1x = state.staged1y = state.staged1z = 0;
+    endReplay(state);
+    state.knockedOut = -1;
+    state.scorer = -1;
 }

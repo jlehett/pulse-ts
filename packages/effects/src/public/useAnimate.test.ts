@@ -374,6 +374,158 @@ describe('useAnimate — tween mode', () => {
 });
 
 // ---------------------------------------------------------------------------
+// Play callback
+// ---------------------------------------------------------------------------
+
+describe('useAnimate — play callback', () => {
+    test('tween mode: callback is invoked each frame with current value', () => {
+        const { handle, step } = setup({
+            from: 0,
+            to: 10,
+            duration: 1,
+        });
+
+        const values: number[] = [];
+        handle.play((v) => values.push(v));
+
+        step(50); // 0.5s
+        expect(values.length).toBe(50);
+        expect(values[values.length - 1]).toBeCloseTo(5, 0);
+    });
+
+    test('tween mode: play() without callback still works', () => {
+        const { handle, step } = setup({
+            from: 0,
+            to: 10,
+            duration: 1,
+        });
+
+        handle.play();
+        step(50);
+        expect(handle.value).toBeCloseTo(5, 0);
+    });
+
+    test('tween mode: callback stops after tween finishes', () => {
+        const { handle, step } = setup({
+            from: 0,
+            to: 10,
+            duration: 0.5,
+        });
+
+        const values: number[] = [];
+        handle.play((v) => values.push(v));
+
+        step(60); // 0.6s — tween is 0.5s, so it should finish
+        const countAtFinish = values.length;
+
+        step(20); // more frames after finish
+        // No new calls after the tween completes
+        expect(values.length).toBe(countAtFinish);
+        expect(values[values.length - 1]).toBe(10);
+    });
+
+    test('rate mode: callback is invoked each frame', () => {
+        const { handle, step } = setup({ rate: 2 });
+
+        const values: number[] = [];
+        handle.play((v) => values.push(v));
+
+        step(100); // 1s
+        expect(values.length).toBe(100);
+        expect(values[values.length - 1]).toBeCloseTo(2.0, 1);
+    });
+
+    test('rate mode: play() without callback still works', () => {
+        const { handle, step } = setup({ rate: 2 });
+
+        handle.play();
+        step(100);
+        expect(handle.value).toBeCloseTo(2.0, 1);
+    });
+
+    test('oscillation amplitude mode: callback is invoked each frame', () => {
+        const { handle, step } = setup({
+            wave: 'sine',
+            amplitude: 0.5,
+            frequency: 2,
+        });
+
+        const values: number[] = [];
+        handle.play((v) => values.push(v));
+
+        step(50);
+        expect(values.length).toBe(50);
+        // Values should match handle.value pattern
+        expect(values.every((v) => Math.abs(v) <= 0.5 + 0.001)).toBe(true);
+    });
+
+    test('oscillation range mode: callback is invoked each frame', () => {
+        const { handle, step } = setup({
+            wave: 'sine',
+            min: 0.3,
+            max: 0.9,
+            frequency: 3,
+        });
+
+        const values: number[] = [];
+        handle.play((v) => values.push(v));
+
+        step(50);
+        expect(values.length).toBe(50);
+        expect(values.every((v) => v >= 0.3 - 0.001 && v <= 0.9 + 0.001)).toBe(
+            true,
+        );
+    });
+
+    test('oscillation mode: play() without callback still works', () => {
+        const { handle, step } = setup({
+            wave: 'sine',
+            amplitude: 1,
+            frequency: 2,
+        });
+
+        handle.play();
+        step(50);
+        expect(handle.value).not.toBe(0);
+    });
+
+    test('tween mode: replaying with a new callback replaces the old one', () => {
+        const { handle, step } = setup({
+            from: 0,
+            to: 10,
+            duration: 1,
+        });
+
+        const first: number[] = [];
+        handle.play((v) => first.push(v));
+        step(10);
+
+        handle.reset();
+        const second: number[] = [];
+        handle.play((v) => second.push(v));
+        step(10);
+
+        // First callback should have stopped receiving values after reset+replay
+        expect(first.length).toBe(10);
+        expect(second.length).toBe(10);
+    });
+
+    test('callback receives the final value on the last frame of a tween', () => {
+        const { handle, step } = setup({
+            from: 0,
+            to: 100,
+            duration: 0.5,
+        });
+
+        const values: number[] = [];
+        handle.play((v) => values.push(v));
+
+        step(60); // 0.6s — well past 0.5s duration
+        expect(values[values.length - 1]).toBe(100);
+    });
+});
+
+// ---------------------------------------------------------------------------
 // General
 // ---------------------------------------------------------------------------
 

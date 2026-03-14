@@ -1,7 +1,14 @@
-import { useFrameUpdate, useContext } from '@pulse-ts/core';
-import { useThreeContext } from '@pulse-ts/three';
-import { GameCtx, type RoundPhase } from '../contexts';
 import {
+    useFrameUpdate,
+    useContext,
+    useStore,
+    useWatch,
+    damp,
+} from '@pulse-ts/core';
+import { useThreeContext } from '@pulse-ts/three';
+import { GameCtx } from '../contexts';
+import {
+    ReplayStore,
     isReplayActive,
     getReplayPosition,
     getReplayScorer,
@@ -105,11 +112,21 @@ export function resetCameraShake(): void {
 export function CameraRigNode() {
     const { camera } = useThreeContext();
     const gameState = useContext(GameCtx);
+    const [replay] = useStore(ReplayStore);
 
     camera.position.set(0, CAMERA_HEIGHT, CAMERA_Z_OFFSET);
     camera.lookAt(0, 0, 0);
 
-    let lastPhase: RoundPhase = gameState.phase;
+    // Auto-trigger big shake on ko_flash transition
+    useWatch(
+        () => gameState.phase,
+        (phase) => {
+            if (phase === 'ko_flash') {
+                triggerCameraShake(0.8, 0.5);
+            }
+        },
+        { kind: 'frame' },
+    );
 
     // Intro cinematic elapsed time
     let introElapsed = 0;
@@ -138,12 +155,6 @@ export function CameraRigNode() {
     let lookZ = gameState.phase === 'intro' ? p2Spawn[2] : 0;
 
     useFrameUpdate((dt) => {
-        // Auto-trigger big shake on ko_flash transition
-        if (gameState.phase === 'ko_flash' && lastPhase !== 'ko_flash') {
-            triggerCameraShake(0.8, 0.5);
-        }
-        lastPhase = gameState.phase;
-
         // Compute target camera position
         let targetX = 0;
         let targetY = CAMERA_HEIGHT;
@@ -162,14 +173,16 @@ export function CameraRigNode() {
             targetLookX = p2Spawn[0];
             targetLookY = p2Spawn[1] + INTRO_LOOK_Y_OFFSET;
             targetLookZ = p2Spawn[2];
-        } else if (isReplayActive()) {
-            const hitProx = hasReplayHit() ? getReplayHitProximity() : 0;
+        } else if (isReplayActive(replay)) {
+            const hitProx = hasReplayHit(replay)
+                ? getReplayHitProximity(replay)
+                : 0;
 
             if (gameState.isTie) {
                 // Tie replay: follow the midpoint between both players,
                 // dynamically adjusting height to keep both in frame.
-                const p0 = getReplayPosition(0);
-                const p1 = getReplayPosition(1);
+                const p0 = getReplayPosition(replay, 0);
+                const p1 = getReplayPosition(replay, 1);
 
                 if (p0 && p1) {
                     const midX = (p0[0] + p1[0]) / 2;
@@ -212,19 +225,21 @@ export function CameraRigNode() {
                 }
             } else {
                 // Normal replay: follow scorer before hit, loser after hit
-                const scorerId = getReplayScorer();
-                const knockedOutId = getReplayKnockedOut();
-                const pastHit = hasReplayHit() ? getReplayPastHit() : 0;
+                const scorerId = getReplayScorer(replay);
+                const knockedOutId = getReplayKnockedOut(replay);
+                const pastHit = hasReplayHit(replay)
+                    ? getReplayPastHit(replay)
+                    : 0;
 
                 let followId: number;
-                if (!hasReplayHit() || pastHit > 0) {
+                if (!hasReplayHit(replay) || pastHit > 0) {
                     followId = knockedOutId;
                 } else {
                     followId = scorerId;
                 }
 
-                const followPos = getReplayPosition(followId);
-                const loserPos = getReplayPosition(knockedOutId);
+                const followPos = getReplayPosition(replay, followId);
+                const loserPos = getReplayPosition(replay, knockedOutId);
 
                 // Zoom out to overhead once the loser has fallen off the platform
                 let zoomOut = 0;
@@ -251,13 +266,12 @@ export function CameraRigNode() {
         }
 
         // Smoothly interpolate camera toward target
-        const s = 1 - Math.exp(-REPLAY_CAMERA_SMOOTH * dt);
-        camX += (targetX - camX) * s;
-        camY += (targetY - camY) * s;
-        camZ += (targetZ - camZ) * s;
-        lookX += (targetLookX - lookX) * s;
-        lookY += (targetLookY - lookY) * s;
-        lookZ += (targetLookZ - lookZ) * s;
+        camX = damp(camX, targetX, REPLAY_CAMERA_SMOOTH, dt);
+        camY = damp(camY, targetY, REPLAY_CAMERA_SMOOTH, dt);
+        camZ = damp(camZ, targetZ, REPLAY_CAMERA_SMOOTH, dt);
+        lookX = damp(lookX, targetLookX, REPLAY_CAMERA_SMOOTH, dt);
+        lookY = damp(lookY, targetLookY, REPLAY_CAMERA_SMOOTH, dt);
+        lookZ = damp(lookZ, targetLookZ, REPLAY_CAMERA_SMOOTH, dt);
 
         // Apply shake offset on top of the smoothed position
         let finalX = camX;

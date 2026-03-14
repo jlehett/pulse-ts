@@ -20,15 +20,25 @@
             ],
             "@babel/preset-typescript"
         ],
-        "plugins": []
+        "plugins": [
+            [
+                "@babel/plugin-transform-react-jsx",
+                {
+                    "runtime": "automatic",
+                    "importSource": "@pulse-ts/dom"
+                }
+            ]
+        ]
     },
     "dependencies": {
         "@pulse-ts/audio": "*",
         "@pulse-ts/core": "*",
+        "@pulse-ts/dom": "*",
         "@pulse-ts/effects": "*",
         "@pulse-ts/input": "*",
         "@pulse-ts/network": "*",
         "@pulse-ts/physics": "*",
+        "@pulse-ts/platform": "*",
         "@pulse-ts/three": "*",
         "three": "^0.179.1",
         "ws": "^8.18.0"

@@ -15,10 +15,14 @@ installInput(world, {
     jump: Chord([Key('Space')]),
     dash: Sequence([Key('KeyD'), Key('KeyS')], { maxGapFrames: 10 }),
 
-    // Axes
+    // Axes (shorthand)
+    move: Axis2D.wasd(),
+    p2Move: Axis2D.arrows(),
+
+    // Axes (full form — use when you need custom keys or scale)
     moveX: Axis1D({ pos: Key('D'), neg: Key('A') }),
     moveY: Axis1D({ pos: Key('W'), neg: Key('S') }),
-    move: Axis2D({ x: { pos: Key('D'), neg: Key('A') }, y: { pos: Key('W'), neg: Key('S') } }),
+    customMove: Axis2D({ x: { pos: Key('D'), neg: Key('A') }, y: { pos: Key('W'), neg: Key('S') } }),
 
     // Pointer
     look: PointerMovement({ scaleX: 0.1, scaleY: 0.1 }),
@@ -85,11 +89,51 @@ const off = input.actionEvent.on(({ name, state }) => {
 off();
 ```
 
+## Virtual joystick (touch/mobile)
+
+Use `useVirtualJoystick` to create a touch-based virtual joystick that injects into the input system as a held Axis2D value. The hook handles all touch math (touch ID tracking, deadzone, normalization) and provides pluggable visuals.
+
+```ts
+import { useVirtualJoystick } from '@pulse-ts/input';
+
+// Default visuals (circle + knob)
+const joystick = useVirtualJoystick('move', {
+  position: 'bottom-left',
+  size: 120,
+  deadzone: 0.15,
+});
+
+// Hide/show based on game state
+joystick.setVisible(false);
+
+// Read current axis values
+const { x, y } = joystick.axes;
+
+// Clean up
+joystick.destroy();
+```
+
+Custom visuals via the `render` callback:
+
+```ts
+const joystick = useVirtualJoystick('move', {
+  position: 'bottom-right',
+  render: (state) => {
+    const el = document.createElement('div');
+    // state.knobX(), state.knobY() — pixel offsets (reactive getters)
+    // state.axisX(), state.axisY() — normalized -1..1 (reactive getters)
+    // state.active() — whether touch is active (reactive getter)
+    // state.size — joystick diameter in pixels
+    return el;
+  },
+});
+```
+
 ## Tips
 
 - Set `preventDefault` to avoid scrolling/back/forward during gameplay.
 - Enable `pointerLock` to capture mouse for FPS-style look.
-- Use `Axis2D` for combined WASD vectors and `Axis1D` for single axes.
+- Use `Axis2D.wasd()` or `Axis2D.arrows()` for common movement bindings, or `Axis2D.keys(left, right, down, up)` for custom four-key layouts.
 - Use `Chord` for simultaneous keys and `Sequence` for combos.
 
 Note: `preventDefault` and `pointerLock` default to `false` unless specified in `installInput` options.

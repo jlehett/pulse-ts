@@ -70,6 +70,22 @@ describe('InterpolationService', () => {
         expect(trans.localPosition.x).toBeCloseTo(5);
     });
 
+    it('getTargetPosition returns null before setTarget and value after', () => {
+        const svc = new InterpolationService();
+        const node = new Node();
+        svc.register(node, { id: 'P', lambda: 1, snapDist: 1000 });
+
+        expect(svc.getTargetPosition('P')).toBeNull();
+
+        svc.setTarget('P', { p: { x: 1, y: 2, z: 3 } });
+        expect(svc.getTargetPosition('P')).toEqual({ x: 1, y: 2, z: 3 });
+    });
+
+    it('getTargetPosition returns null for unknown entity', () => {
+        const svc = new InterpolationService();
+        expect(svc.getTargetPosition('unknown')).toBeNull();
+    });
+
     it('falls back to exponential smoothing without velocity', () => {
         const svc = new InterpolationService();
         const node = new Node();

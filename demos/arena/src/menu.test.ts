@@ -1,11 +1,12 @@
-jest.mock('./isMobileDevice', () => ({
-    isMobileDevice: jest.fn(() => false),
+jest.mock('@pulse-ts/platform', () => ({
+    isMobile: jest.fn(() => false),
+    installMobileSupport: jest.fn(() => () => {}),
 }));
 
 import { showMainMenu, type MenuChoice } from './menu';
-import { isMobileDevice } from './isMobileDevice';
+import { isMobile } from '@pulse-ts/platform';
 
-const mockIsMobile = isMobileDevice as jest.Mock;
+const mockIsMobile = isMobile as jest.Mock;
 
 describe('showMainMenu', () => {
     let container: HTMLDivElement;
@@ -33,7 +34,8 @@ describe('showMainMenu', () => {
     it('displays the game title', () => {
         showMainMenu(container);
 
-        expect(container.textContent).toContain('BUMPER BALLS');
+        expect(container.textContent).toContain('BUMPER');
+        expect(container.textContent).toContain('BALLS');
         expect(container.textContent).toContain('ARENA');
     });
 

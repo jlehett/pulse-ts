@@ -32,3 +32,35 @@ The Axis2D binding expression.
 import { Axis2D, Key } from '@pulse-ts/input';
 const move = Axis2D({ x: { pos: Key('D'), neg: Key('A') }, y: { pos: Key('W'), neg: Key('S') } });
 ```
+
+## Static Methods
+
+### Axis2D.keys()
+
+> **Axis2D.keys**(`left`, `right`, `down`, `up`): [`Axis2DBinding`](../type-aliases/Axis2DBinding.md)
+
+Create a 2D axis from four key codes: left, right, down, up. Parameter order is X-axis first (left, right), then Y-axis (down, up).
+
+```ts
+const ijklMove = Axis2D.keys('KeyJ', 'KeyL', 'KeyK', 'KeyI');
+```
+
+### Axis2D.wasd()
+
+> **Axis2D.wasd**(): [`Axis2DBinding`](../type-aliases/Axis2DBinding.md)
+
+Create a 2D axis bound to WASD keys. Shorthand for `Axis2D.keys('KeyA', 'KeyD', 'KeyS', 'KeyW')`.
+
+```ts
+const move = Axis2D.wasd();
+```
+
+### Axis2D.arrows()
+
+> **Axis2D.arrows**(): [`Axis2DBinding`](../type-aliases/Axis2DBinding.md)
+
+Create a 2D axis bound to arrow keys. Shorthand for `Axis2D.keys('ArrowLeft', 'ArrowRight', 'ArrowDown', 'ArrowUp')`.
+
+```ts
+const move = Axis2D.arrows();
+```

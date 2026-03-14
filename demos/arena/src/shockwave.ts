@@ -1,5 +1,7 @@
 import * as THREE from 'three';
 import { ShaderPass } from 'three/examples/jsm/postprocessing/ShaderPass.js';
+import { defineStore, useStore } from '@pulse-ts/core';
+import { useEffectPool, type EffectPoolHandle } from '@pulse-ts/effects';
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -21,107 +23,113 @@ export const SHOCKWAVE_STRENGTH = 0.03;
 export const SHOCKWAVE_RING_WIDTH = 0.06;
 
 // ---------------------------------------------------------------------------
-// Slot state
+// Shockwave data shape
 // ---------------------------------------------------------------------------
 
-interface ShockwaveSlot {
-    active: boolean;
+/** Data stored in each shockwave pool slot. */
+export interface ShockwaveData {
+    /** Screen-space UV X coordinate (0 = left, 1 = right). */
     centerX: number;
+    /** Screen-space UV Y coordinate (0 = bottom, 1 = top). */
     centerY: number;
-    elapsed: number;
-    duration: number;
 }
 
-const slots: ShockwaveSlot[] = Array.from({ length: MAX_SHOCKWAVES }, () => ({
-    active: false,
-    centerX: 0,
-    centerY: 0,
-    elapsed: 0,
-    duration: SHOCKWAVE_DURATION,
+// ---------------------------------------------------------------------------
+// Store — shares the pool handle across nodes
+// ---------------------------------------------------------------------------
+
+/**
+ * World-scoped store holding the shockwave effect pool handle.
+ * The pool is created by the first node that calls {@link useShockwavePool},
+ * and shared with all subsequent callers in the same world.
+ */
+export const ShockwaveStore = defineStore('shockwave', () => ({
+    pool: null as EffectPoolHandle<ShockwaveData> | null,
 }));
 
 // ---------------------------------------------------------------------------
-// Public API
+// Hook
 // ---------------------------------------------------------------------------
 
 /**
- * Trigger a shockwave at the given screen-space UV position (0–1).
- * If all slots are occupied, the oldest (highest elapsed) is recycled.
+ * Create or retrieve the shared shockwave effect pool for this world.
+ * The first caller creates the pool; subsequent callers receive the same handle.
  *
- * @param screenX - Horizontal UV coordinate (0 = left, 1 = right).
- * @param screenY - Vertical UV coordinate (0 = bottom, 1 = top).
+ * @returns The shared {@link EffectPoolHandle} for shockwaves.
  *
  * @example
  * ```ts
- * triggerShockwave(0.5, 0.5); // center of screen
+ * const shockwaves = useShockwavePool();
+ * shockwaves.trigger({ centerX: 0.5, centerY: 0.5 });
  * ```
  */
-export function triggerShockwave(screenX: number, screenY: number): void {
-    // Find first inactive slot
-    let slot = slots.find((s) => !s.active);
-    if (!slot) {
-        // Recycle oldest — highest elapsed
-        slot = slots.reduce((oldest, s) =>
-            s.elapsed > oldest.elapsed ? s : oldest,
-        );
+export function useShockwavePool(): EffectPoolHandle<ShockwaveData> {
+    const [store, setStore] = useStore(ShockwaveStore);
+
+    if (!store.pool) {
+        const pool = useEffectPool<ShockwaveData>({
+            size: MAX_SHOCKWAVES,
+            duration: SHOCKWAVE_DURATION,
+            create: () => ({ centerX: 0, centerY: 0 }),
+        });
+        setStore({ pool });
     }
-    slot.active = true;
-    slot.centerX = screenX;
-    slot.centerY = screenY;
-    slot.elapsed = 0;
-    slot.duration = SHOCKWAVE_DURATION;
+
+    return store.pool!;
 }
 
-/**
- * Advance all active shockwaves by `dt` seconds. Deactivates expired ones.
- *
- * @param dt - Frame delta time in seconds.
- *
- * @example
- * ```ts
- * updateShockwaves(1 / 60);
- * ```
- */
-export function updateShockwaves(dt: number): void {
-    for (const slot of slots) {
-        if (!slot.active) continue;
-        slot.elapsed += dt;
-        if (slot.elapsed >= slot.duration) {
-            slot.active = false;
-        }
-    }
-}
+// ---------------------------------------------------------------------------
+// Uniform sync
+// ---------------------------------------------------------------------------
 
 /**
  * Write current shockwave state into the pass uniforms and toggle
  * `pass.enabled` based on whether any shockwave is active.
  *
+ * @param pool - The shockwave effect pool handle.
  * @param pass - The ShaderPass returned by {@link createShockwavePass}.
  * @param aspect - Viewport aspect ratio (width / height).
  *
  * @example
  * ```ts
- * syncShockwaveUniforms(shockwavePass, canvas.width / canvas.height);
+ * syncShockwaveUniforms(pool, shockwavePass, canvas.width / canvas.height);
  * ```
  */
-export function syncShockwaveUniforms(pass: ShaderPass, aspect: number): void {
+export function syncShockwaveUniforms(
+    pool: EffectPoolHandle<ShockwaveData>,
+    pass: ShaderPass,
+    aspect: number,
+): void {
     const uniforms = pass.uniforms;
-    let anyActive = false;
+
+    // Reset all slots to inactive
     for (let i = 0; i < MAX_SHOCKWAVES; i++) {
-        const s = slots[i];
-        if (s.active) {
-            anyActive = true;
-            const t = s.elapsed / s.duration;
-            uniforms[`center${i}`].value.set(s.centerX, s.centerY);
-            uniforms[`radius${i}`].value = t * SHOCKWAVE_MAX_RADIUS;
-            uniforms[`strength${i}`].value = SHOCKWAVE_STRENGTH * (1 - t);
-        } else {
-            uniforms[`strength${i}`].value = 0;
-        }
+        uniforms[`strength${i}`].value = 0;
     }
+
+    let anyActive = false;
+    let slotIdx = 0;
+    for (const slot of pool.active()) {
+        if (slotIdx >= MAX_SHOCKWAVES) break;
+        anyActive = true;
+        uniforms[`center${slotIdx}`].value.set(
+            slot.data.centerX,
+            slot.data.centerY,
+        );
+        uniforms[`radius${slotIdx}`].value =
+            slot.progress * SHOCKWAVE_MAX_RADIUS;
+        uniforms[`strength${slotIdx}`].value =
+            SHOCKWAVE_STRENGTH * (1 - slot.progress);
+        slotIdx++;
+    }
+
     uniforms['aspect'].value = aspect;
     pass.enabled = anyActive;
 }
+
+// ---------------------------------------------------------------------------
+// Projection helper
+// ---------------------------------------------------------------------------
 
 /**
  * Project a world position to screen-space UV coordinates (0–1).
@@ -135,7 +143,7 @@ export function syncShockwaveUniforms(pass: ShaderPass, aspect: number): void {
  * @example
  * ```ts
  * const [u, v] = worldToScreen(0, 1, 0, camera);
- * triggerShockwave(u, v);
+ * shockwaves.trigger({ centerX: u, centerY: v });
  * ```
  */
 export function worldToScreen(
@@ -148,6 +156,10 @@ export function worldToScreen(
     // project() returns NDC in -1..1; convert to 0..1 UV
     return [(v.x + 1) / 2, (v.y + 1) / 2];
 }
+
+// ---------------------------------------------------------------------------
+// Shader pass factory
+// ---------------------------------------------------------------------------
 
 /**
  * Create the ShaderPass for the shockwave distortion effect.
@@ -225,34 +237,4 @@ export function createShockwavePass(): ShaderPass {
 
     pass.enabled = false;
     return pass;
-}
-
-/**
- * Returns `true` if at least one shockwave slot is active.
- *
- * @example
- * ```ts
- * if (hasActiveShockwave()) { ... }
- * ```
- */
-export function hasActiveShockwave(): boolean {
-    return slots.some((s) => s.active);
-}
-
-/**
- * Reset all shockwave slots to inactive. Useful for testing.
- *
- * @example
- * ```ts
- * resetShockwaves();
- * ```
- */
-export function resetShockwaves(): void {
-    for (const s of slots) {
-        s.active = false;
-        s.centerX = 0;
-        s.centerY = 0;
-        s.elapsed = 0;
-        s.duration = SHOCKWAVE_DURATION;
-    }
 }

@@ -1,7 +1,7 @@
-import { useObject3D } from '@pulse-ts/three';
+import { useCustomMesh } from '@pulse-ts/three';
 import { useFrameUpdate } from '@pulse-ts/core';
 import * as THREE from 'three';
-import { isMobileDevice } from '../isMobileDevice';
+import { isMobile } from '@pulse-ts/platform';
 
 /** Radius of the nebula sphere (beyond the starfield shell). */
 export const NEBULA_RADIUS = 90;
@@ -138,7 +138,7 @@ void main() {
  * ```
  */
 export function NebulaNode() {
-    const mobile = isMobileDevice();
+    const mobile = isMobile();
     const deepColor = new THREE.Color(NEBULA_COLOR_DEEP);
     const brightColor = new THREE.Color(NEBULA_COLOR_BRIGHT);
 
@@ -153,23 +153,21 @@ export function NebulaNode() {
         ? NEBULA_FBM_OCTAVES_MOBILE
         : NEBULA_FBM_OCTAVES_DESKTOP;
     const segments = mobile ? NEBULA_SEGMENTS_MOBILE : NEBULA_SEGMENTS_DESKTOP;
-    const geometry = new THREE.SphereGeometry(
-        NEBULA_RADIUS,
-        segments,
-        segments,
-    );
-    const material = new THREE.ShaderMaterial({
-        vertexShader,
-        fragmentShader: buildNebulaFragmentShader(octaves),
-        uniforms,
-        side: THREE.BackSide,
-        transparent: true,
-        depthWrite: false,
-        fog: false,
-    });
 
-    const mesh = new THREE.Mesh(geometry, material);
-    useObject3D(mesh);
+    useCustomMesh({
+        geometry: () =>
+            new THREE.SphereGeometry(NEBULA_RADIUS, segments, segments),
+        material: () =>
+            new THREE.ShaderMaterial({
+                vertexShader,
+                fragmentShader: buildNebulaFragmentShader(octaves),
+                uniforms,
+                side: THREE.BackSide,
+                transparent: true,
+                depthWrite: false,
+                fog: false,
+            }),
+    });
 
     useFrameUpdate((dt) => {
         uniforms.uTime.value += dt * NEBULA_SPEED;

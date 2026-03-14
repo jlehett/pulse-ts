@@ -23,6 +23,7 @@
     "demo:arena": "npm run dev -w demos/arena"
   },
   "devDependencies": {
+    "@babel/plugin-transform-react-jsx": "^7.25.0",
     "@babel/preset-env": "^7.26.0",
     "@babel/preset-typescript": "^7.26.0",
     "@changesets/cli": "^2.29.5",

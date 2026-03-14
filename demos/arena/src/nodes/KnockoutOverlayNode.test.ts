@@ -1,3 +1,18 @@
+jest.mock('@pulse-ts/core', () => ({
+    useFrameUpdate: jest.fn(),
+    useDestroy: jest.fn(),
+    useContext: jest.fn(),
+    createContext: (name: string) => ({ name }),
+}));
+
+jest.mock('@pulse-ts/three', () => ({
+    useThreeContext: jest.fn(),
+}));
+
+jest.mock('../overlayAnimations', () => ({
+    applyScalePop: jest.fn(),
+}));
+
 import { KnockoutOverlayNode } from './KnockoutOverlayNode';
 
 describe('KnockoutOverlayNode', () => {
@@ -6,9 +21,6 @@ describe('KnockoutOverlayNode', () => {
     });
 
     it('displays tie text for tie rounds', () => {
-        // The overlay shows "Tie!" when gameState.isTie is true.
-        // Full integration testing requires the game loop; here we verify
-        // the module exports correctly and the node is callable.
         expect(KnockoutOverlayNode).toBeDefined();
     });
 });

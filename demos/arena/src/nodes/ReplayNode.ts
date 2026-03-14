@@ -3,6 +3,7 @@ import {
     useDestroy,
     useContext,
     useWorld,
+    useStore,
 } from '@pulse-ts/core';
 import { useThreeContext } from '@pulse-ts/three';
 import {
@@ -13,6 +14,7 @@ import {
 import { useSound } from '@pulse-ts/audio';
 import { GameCtx } from '../contexts';
 import {
+    ReplayStore,
     advanceReplay,
     isReplayActive,
     getReplayPosition,
@@ -24,8 +26,8 @@ import {
 } from '../replay';
 import { PLAYER_COLORS, TRAIL_BASE_INTERVAL } from '../config/arena';
 import { triggerCameraShake } from './CameraRigNode';
-import { triggerShockwave, worldToScreen } from '../shockwave';
-import { triggerHitImpact } from '../hitImpact';
+import { useShockwavePool, worldToScreen } from '../shockwave';
+import { useHitImpactPool } from '../hitImpact';
 
 /** Height of each cinematic letterbox bar as a CSS value. */
 export const LETTERBOX_HEIGHT = '8%';
@@ -63,6 +65,10 @@ export const SELF_KO_BOB_DISTANCE = 8;
 export function ReplayNode() {
     const gameState = useContext(GameCtx);
     const { renderer, camera } = useThreeContext();
+
+    const [replay] = useStore(ReplayStore);
+    const shockwavePool = useShockwavePool();
+    const hitImpactPool = useHitImpactPool();
     const container = renderer.domElement.parentElement ?? document.body;
 
     // Dark flash overlay — masks the position jump entering/exiting replay
@@ -218,7 +224,7 @@ export function ReplayNode() {
     let selfKoMessagePicked = false;
 
     useFrameUpdate((dt) => {
-        const isReplay = gameState.phase === 'replay' && isReplayActive();
+        const isReplay = gameState.phase === 'replay' && isReplayActive(replay);
 
         // Detect transition into replay — trigger dark flash and clear particles
         if (isReplay && !wasReplay) {
@@ -247,15 +253,15 @@ export function ReplayNode() {
 
         // Scale particle aging to match replay speed
         if (particleService) {
-            particleService.timeScale = isReplay ? getReplaySpeed() : 1;
+            particleService.timeScale = isReplay ? getReplaySpeed(replay) : 1;
         }
 
         // Drive replay playback
         if (isReplay) {
-            advanceReplay(dt);
+            advanceReplay(replay, dt);
 
             // Self-KO text — per-letter bobbing animation
-            if (!hasReplayHit()) {
+            if (!hasReplayHit(replay)) {
                 if (!selfKoMessagePicked) {
                     const msg =
                         SELF_KO_MESSAGES[
@@ -278,13 +284,13 @@ export function ReplayNode() {
             }
 
             // Hit impact bursts + camera shake at each collision moment
-            const cursor = getReplayCursorPos();
-            for (const hitIdx of getReplayHitIndices()) {
+            const cursor = getReplayCursorPos(replay);
+            for (const hitIdx of getReplayHitIndices(replay)) {
                 if (hitBurstsEmitted.has(hitIdx)) continue;
                 // Fire when cursor is within 1 frame of the hit
                 if (Math.abs(cursor - hitIdx) < 1) {
-                    const p0 = getReplayPosition(0);
-                    const p1 = getReplayPosition(1);
+                    const p0 = getReplayPosition(replay, 0);
+                    const p1 = getReplayPosition(replay, 1);
                     if (p0 && p1) {
                         const mx = (p0[0] + p1[0]) / 2;
                         const my = (p0[1] + p1[1]) / 2;
@@ -292,8 +298,8 @@ export function ReplayNode() {
                         hitImpactBurst([mx, my, mz]);
                         triggerCameraShake(0.4, 0.3);
                         const [su, sv] = worldToScreen(mx, my, mz, camera);
-                        triggerShockwave(su, sv);
-                        triggerHitImpact(mx, mz);
+                        shockwavePool.trigger({ centerX: su, centerY: sv });
+                        hitImpactPool.trigger({ worldX: mx, worldZ: mz });
                         impactSfx.play();
                     }
                     hitBurstsEmitted.add(hitIdx);
@@ -302,17 +308,17 @@ export function ReplayNode() {
 
             // Velocity-proportional trail particles
             trailAccum += dt;
-            const speed = getReplaySpeed();
+            const speed = getReplaySpeed(replay);
             const trailInterval =
                 speed > 0 ? TRAIL_BASE_INTERVAL / speed : TRAIL_BASE_INTERVAL;
             if (trailAccum >= trailInterval) {
                 trailAccum = 0;
                 for (let pid = 0; pid < 2; pid++) {
-                    const vel = getReplayVelocity(pid);
+                    const vel = getReplayVelocity(replay, pid);
                     if (!vel) continue;
                     const vmag = Math.sqrt(vel[0] * vel[0] + vel[2] * vel[2]);
                     if (vmag > 0.1) {
-                        const pos = getReplayPosition(pid);
+                        const pos = getReplayPosition(replay, pid);
                         if (pos) {
                             trailBursts[pid](pos);
                         }

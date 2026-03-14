@@ -18,11 +18,17 @@ export {
     type OctahedronGeometryOptions,
     type PlaneGeometryOptions,
     type TorusGeometryOptions,
+    type MaterialType,
     type MeshMaterialOptions,
     type MeshShadowOptions,
     type UseMeshOptions,
     type UseMeshResult,
 } from './useMesh';
+export {
+    useCustomMesh,
+    type CustomMeshOptions,
+    type CustomMeshResult,
+} from './useCustomMesh';
 export {
     useFollowCamera,
     type FollowCameraOptions,
@@ -52,3 +58,10 @@ export {
     StatsOverlaySystem,
     type StatsOverlayOptions,
 } from '../domain/systems/statsOverlay';
+export {
+    createTexture,
+    createTexture1D,
+    type PixelFn,
+    type PixelFn1D,
+    type TextureOptions,
+} from './createTexture';

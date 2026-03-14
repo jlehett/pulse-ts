@@ -1,3 +1,47 @@
+jest.mock(
+    '@pulse-ts/core',
+    () => ({
+        createContext: (name: string) => ({ name }),
+        useFrameUpdate: jest.fn(),
+        useDestroy: jest.fn(),
+        useContext: jest.fn(),
+        useWorld: jest.fn(),
+        defineStore: (name: string, factory: () => any) => ({
+            _key: Symbol(name),
+            _factory: factory,
+        }),
+        useStore: jest.fn(),
+    }),
+    { virtual: true },
+);
+
+jest.mock(
+    '@pulse-ts/three',
+    () => ({
+        useThreeContext: jest.fn(),
+    }),
+    { virtual: true },
+);
+
+jest.mock(
+    '@pulse-ts/effects',
+    () => ({
+        useParticleBurst: jest.fn(),
+        useClearParticles: jest.fn(),
+        ParticlesService: {},
+        useEffectPool: jest.fn(),
+    }),
+    { virtual: true },
+);
+
+jest.mock(
+    '@pulse-ts/audio',
+    () => ({
+        useSound: jest.fn(() => jest.fn()),
+    }),
+    { virtual: true },
+);
+
 jest.mock('three/examples/jsm/postprocessing/ShaderPass.js', () => ({
     ShaderPass: jest.fn(),
 }));

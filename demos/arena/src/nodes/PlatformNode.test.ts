@@ -1,3 +1,57 @@
+jest.mock(
+    '@pulse-ts/core',
+    () => ({
+        defineStore: (name: string, factory: () => any) => ({
+            _key: Symbol(name),
+            _factory: factory,
+        }),
+        useStore: jest.fn(),
+        useComponent: jest.fn(),
+        Transform: {},
+        useFrameUpdate: jest.fn(),
+    }),
+    { virtual: true },
+);
+
+jest.mock(
+    '@pulse-ts/effects',
+    () => ({
+        useEffectPool: jest.fn(),
+        useAnimate: jest.fn(() => ({ value: 0 })),
+    }),
+    { virtual: true },
+);
+
+jest.mock(
+    '@pulse-ts/physics',
+    () => ({
+        useRigidBody: jest.fn(),
+        useCylinderCollider: jest.fn(),
+    }),
+    { virtual: true },
+);
+
+jest.mock(
+    '@pulse-ts/three',
+    () => ({
+        useMesh: jest.fn(() => ({ material: {} })),
+        useCustomMesh: jest.fn(() => ({
+            object: { position: { y: 0 }, rotation: { x: 0, y: 0 } },
+            material: {},
+        })),
+        useThreeContext: jest.fn(() => ({ scene: { traverse: jest.fn() } })),
+        createTexture: jest.fn((size: number) => {
+            const data = new Uint8Array(size * size * 4);
+            return { width: size, height: size, data, needsUpdate: false };
+        }),
+        createTexture1D: jest.fn((size: number) => {
+            const data = new Uint8Array(size * 4);
+            return { data, offset: { x: 0 }, needsUpdate: false };
+        }),
+    }),
+    { virtual: true },
+);
+
 import {
     PLATFORM_RADIUS,
     PLATFORM_HEIGHT,

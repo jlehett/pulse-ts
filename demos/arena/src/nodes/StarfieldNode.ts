@@ -1,4 +1,4 @@
-import { useObject3D, useThreeContext } from '@pulse-ts/three';
+import { useCustomMesh, useThreeContext } from '@pulse-ts/three';
 import { useAnimate } from '@pulse-ts/effects';
 import { useFrameUpdate } from '@pulse-ts/core';
 import * as THREE from 'three';
@@ -73,70 +73,78 @@ export function createStarPositions(
  * to give a subtle sense of depth and motion in the background.
  */
 export function StarfieldNode() {
-    const positions = createStarPositions(
-        STAR_COUNT,
-        STAR_RADIUS_MIN,
-        STAR_RADIUS_MAX,
-    );
-
-    const geometry = new THREE.BufferGeometry();
-    geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-
-    // Random phase per star for independent twinkle timing
-    const phases = new Float32Array(STAR_COUNT);
-    for (let i = 0; i < STAR_COUNT; i++) {
-        phases[i] = Math.random() * Math.PI * 2;
-    }
-    geometry.setAttribute(
-        'aTwinklePhase',
-        new THREE.BufferAttribute(phases, 1),
-    );
-
     const timeUniform = { value: 0 };
 
-    const material = new THREE.PointsMaterial({
-        color: 0xffffff,
-        size: STAR_SIZE,
-        sizeAttenuation: false,
-        fog: false,
-        transparent: true,
-        opacity: STAR_OPACITY,
-        depthWrite: false,
+    const { object: points, material: pointsMaterial } = useCustomMesh({
+        geometry: () => {
+            const positions = createStarPositions(
+                STAR_COUNT,
+                STAR_RADIUS_MIN,
+                STAR_RADIUS_MAX,
+            );
+            const geo = new THREE.BufferGeometry();
+            geo.setAttribute(
+                'position',
+                new THREE.BufferAttribute(positions, 3),
+            );
+
+            // Random phase per star for independent twinkle timing
+            const phases = new Float32Array(STAR_COUNT);
+            for (let i = 0; i < STAR_COUNT; i++) {
+                phases[i] = Math.random() * Math.PI * 2;
+            }
+            geo.setAttribute(
+                'aTwinklePhase',
+                new THREE.BufferAttribute(phases, 1),
+            );
+            return geo;
+        },
+        material: () => {
+            const mat = new THREE.PointsMaterial({
+                color: 0xffffff,
+                size: STAR_SIZE,
+                sizeAttenuation: false,
+                fog: false,
+                transparent: true,
+                opacity: STAR_OPACITY,
+                depthWrite: false,
+            });
+
+            // Patch shader to oscillate per-star opacity using the phase attribute
+            mat.onBeforeCompile = (shader) => {
+                shader.uniforms.uTime = timeUniform;
+
+                shader.vertexShader = shader.vertexShader.replace(
+                    '#include <common>',
+                    `#include <common>
+                    attribute float aTwinklePhase;
+                    varying float vTwinkle;
+                    uniform float uTime;`,
+                );
+
+                shader.vertexShader = shader.vertexShader.replace(
+                    '#include <begin_vertex>',
+                    `#include <begin_vertex>
+                    vTwinkle = ${STAR_TWINKLE_MIN.toFixed(2)} + ${(1.0 - STAR_TWINKLE_MIN).toFixed(2)} * (0.5 + 0.5 * sin(uTime * ${(STAR_TWINKLE_SPEED * Math.PI * 2).toFixed(2)} + aTwinklePhase));`,
+                );
+
+                shader.fragmentShader = shader.fragmentShader.replace(
+                    '#include <common>',
+                    `#include <common>
+                    varying float vTwinkle;`,
+                );
+
+                shader.fragmentShader = shader.fragmentShader.replace(
+                    '#include <premultiplied_alpha_fragment>',
+                    `#include <premultiplied_alpha_fragment>
+                    gl_FragColor.a *= vTwinkle;`,
+                );
+            };
+            return mat;
+        },
+        type: 'points',
     });
-
-    // Patch shader to oscillate per-star opacity using the phase attribute
-    material.onBeforeCompile = (shader) => {
-        shader.uniforms.uTime = timeUniform;
-
-        shader.vertexShader = shader.vertexShader.replace(
-            '#include <common>',
-            `#include <common>
-            attribute float aTwinklePhase;
-            varying float vTwinkle;
-            uniform float uTime;`,
-        );
-
-        shader.vertexShader = shader.vertexShader.replace(
-            '#include <begin_vertex>',
-            `#include <begin_vertex>
-            vTwinkle = ${STAR_TWINKLE_MIN.toFixed(2)} + ${(1.0 - STAR_TWINKLE_MIN).toFixed(2)} * (0.5 + 0.5 * sin(uTime * ${(STAR_TWINKLE_SPEED * Math.PI * 2).toFixed(2)} + aTwinklePhase));`,
-        );
-
-        shader.fragmentShader = shader.fragmentShader.replace(
-            '#include <common>',
-            `#include <common>
-            varying float vTwinkle;`,
-        );
-
-        shader.fragmentShader = shader.fragmentShader.replace(
-            '#include <premultiplied_alpha_fragment>',
-            `#include <premultiplied_alpha_fragment>
-            gl_FragColor.a *= vTwinkle;`,
-        );
-    };
-
-    const points = new THREE.Points(geometry, material);
-    useObject3D(points);
+    const material = pointsMaterial as THREE.PointsMaterial;
 
     const { renderer } = useThreeContext();
     const spin = useAnimate({ rate: STAR_ROTATION_RATE });
