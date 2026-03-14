@@ -1,9 +1,9 @@
 ---
 id: EPIC-022
 title: Input & Platform DX Pass
-status: todo
+status: in-progress
 created: 2026-03-13
-updated: 2026-03-13
+updated: 2026-03-14
 ---
 
 ## Description
@@ -19,3 +19,4 @@ Common input patterns (WASD, arrows, touch joystick) are one-liners. Mobile supp
 ## Notes
 
 - **2026-03-13**: Epic created from approved engine improvements (#14, #15, #37). Three tickets.
+- **2026-03-14**: Epic implementation started via agent team
