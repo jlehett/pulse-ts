@@ -2,7 +2,7 @@
 id: TICKET-110
 epic: EPIC-018
 title: Color Utility
-status: in-progress
+status: done
 priority: low
 branch: ticket-110-color-utility
 created: 2026-03-13
@@ -22,17 +22,18 @@ Design doc: `design-docs/approved/021-color-utility.md`
 
 ## Acceptance Criteria
 
-- [ ] `color(0x48c9b0)` returns an object with format accessors
-- [ ] `.hex` returns CSS hex string (`'#48c9b0'`)
-- [ ] `.num` returns original number
-- [ ] `.rgb` returns CSS rgb string
-- [ ] `.rgba(alpha)` returns CSS rgba string
-- [ ] `.r`, `.g`, `.b` return 0–255 channel values
-- [ ] JSDoc with examples
-- [ ] Unit tests for all format conversions
-- [ ] Documentation updated
+- [x] `color(0x48c9b0)` returns an object with format accessors
+- [x] `.hex` returns CSS hex string (`'#48c9b0'`)
+- [x] `.num` returns original number
+- [x] `.rgb` returns CSS rgb string
+- [x] `.rgba(alpha)` returns CSS rgba string
+- [x] `.r`, `.g`, `.b` return 0–255 channel values
+- [x] JSDoc with examples
+- [x] Unit tests for all format conversions
+- [x] Documentation updated
 
 ## Notes
 
 - **2026-03-13**: Ticket created from approved design doc #21.
 - **2026-03-14**: Starting implementation.
+- **2026-03-14**: Implementation complete. 9 tests covering all formats plus edge cases (black, white, leading zeros, pure channels). Exported `color` function and `Color` type from public math API.
