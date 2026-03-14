@@ -4,6 +4,7 @@ epic: EPIC-018
 title: useStateMachine Hook
 status: todo
 priority: high
+branch: ticket-108-use-state-machine
 created: 2026-03-13
 updated: 2026-03-13
 labels:
