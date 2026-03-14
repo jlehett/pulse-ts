@@ -3,7 +3,6 @@ import {
     useFixedEarly,
     useFixedUpdate,
     useFrameUpdate,
-    useWorld,
     useContext,
     useStableId,
     useNode,
@@ -19,8 +18,12 @@ import {
     useSphereCollider,
     useOnCollisionStart,
 } from '@pulse-ts/physics';
-import { useMesh, useThreeContext } from '@pulse-ts/three';
-import * as THREE from 'three';
+import {
+    useMesh,
+    useThreeContext,
+    useInterpolatedPosition,
+    useScreenProjection,
+} from '@pulse-ts/three';
 import { useSound } from '@pulse-ts/audio';
 import { useParticleBurst } from '@pulse-ts/effects';
 import { useReplicateTransform, useChannel } from '@pulse-ts/network';
@@ -260,7 +263,6 @@ export function LocalPlayerNode({
         restitution: 0.2,
     });
 
-    const world = useWorld();
     const getMove = useAxis2D(moveAction);
     const getDash = useAction(dashAction);
 
@@ -282,28 +284,19 @@ export function LocalPlayerNode({
     let lastPhase = gameState.phase;
     let lastFramePhase = gameState.phase;
 
-    // Previous physics position for frame interpolation
-    let prevX = spawn[0];
-    let prevY = spawn[1];
-    let prevZ = spawn[2];
-
-    // Snapshot position for frame interpolation, and velocity before
-    // the physics solver runs. In online mode, the solver applies a bounce
-    // against the kinematic remote player that's stronger than the local-play
-    // bounce (100% vs 50/50 split). We capture pre-solver velocity so the
-    // collision handler can undo the physics bounce and apply only our
-    // controlled knockback impulse.
+    // Snapshot velocity before the physics solver runs. In online mode,
+    // the solver applies a bounce against the kinematic remote player
+    // that's stronger than the local-play bounce (100% vs 50/50 split).
+    // We capture pre-solver velocity so the collision handler can undo
+    // the physics bounce and apply only our controlled knockback impulse.
     let prePhysVx = 0;
     let prePhysVz = 0;
-    useFixedEarly(() => {
-        prevX = transform.localPosition.x;
-        prevY = transform.localPosition.y;
-        prevZ = transform.localPosition.z;
-        if (replicate) {
+    if (replicate) {
+        useFixedEarly(() => {
             prePhysVx = body.linearVelocity.x;
             prePhysVz = body.linearVelocity.z;
-        }
-    });
+        });
+    }
 
     // Visual — sphere mesh with subtle emissive glow (blooms under post-processing)
     const meshColor = customColor ?? PLAYER_COLORS[playerId];
@@ -317,11 +310,25 @@ export function LocalPlayerNode({
         castShadow: true,
     });
 
+    // Smooth interpolation from fixed-step transform to render-frame root position.
+    // Snap on round reset to avoid interpolation sweep across the arena.
+    let shouldSnap = false;
+    useInterpolatedPosition(transform, root, {
+        snap: () => {
+            if (shouldSnap) {
+                shouldSnap = false;
+                return true;
+            }
+            return false;
+        },
+    });
+
+    // Screen projection for indicator ring positioning
+    const project = useScreenProjection();
+
     // Online mode indicator ring — screen-space CSS circle, always centered on the ball
     const { renderer: threeRenderer, camera: threeCamera } = useThreeContext();
     let indicatorRing: HTMLDivElement | null = null;
-    const projCenter = new THREE.Vector3();
-    const projEdge = new THREE.Vector3();
 
     if (replicate || showIndicatorRing) {
         const container =
@@ -626,6 +633,7 @@ export function LocalPlayerNode({
             body.setLinearVelocity(0, 0, 0);
             dashTimer.cancel();
             dashCD.reset();
+            shouldSnap = true;
         }
 
         // Trigger dash cooldown when the playing phase starts so the
@@ -730,9 +738,8 @@ export function LocalPlayerNode({
                   ? 1
                   : 1 - dashCD.remaining / DASH_COOLDOWN,
         );
-        // During replay, override mesh position from the replay buffer.
-        // When knocked out (between death and round reset), hide the mesh
-        // so there's no visible snap-to-spawn before the replay finishes.
+        // useInterpolatedPosition handles normal fixed-to-frame interpolation.
+        // Override for replay and knockout visibility.
         const replayPos = getReplayPosition(playerId);
         if (replayPos) {
             root.visible = true;
@@ -741,13 +748,6 @@ export function LocalPlayerNode({
             root.visible = false;
         } else {
             root.visible = true;
-            const alpha = world.getAmbientAlpha();
-            const cur = transform.localPosition;
-            root.position.set(
-                prevX + (cur.x - prevX) * alpha,
-                prevY + (cur.y - prevY) * alpha,
-                prevZ + (cur.z - prevZ) * alpha,
-            );
         }
 
         // Velocity-proportional trail particles during gameplay
@@ -784,26 +784,18 @@ export function LocalPlayerNode({
             } else {
                 indicatorRing.style.display = '';
 
-                const hw = threeRenderer.domElement.clientWidth / 2;
-                const hh = threeRenderer.domElement.clientHeight / 2;
-
                 // Project player center to screen
-                projCenter
-                    .set(root.position.x, root.position.y, root.position.z)
-                    .project(threeCamera);
-                const sx = projCenter.x * hw + hw;
-                const sy = -projCenter.y * hh + hh;
+                const center = project(root.position);
+                const sx = center.x;
+                const sy = center.y;
 
                 // Project edge point to get screen-space radius
-                projEdge
-                    .set(
-                        root.position.x + PLAYER_RADIUS * INDICATOR_RING_SCALE,
-                        root.position.y,
-                        root.position.z,
-                    )
-                    .project(threeCamera);
-                const edgeSx = projEdge.x * hw + hw;
-                const radius = Math.abs(edgeSx - sx);
+                const edge = project({
+                    x: root.position.x + PLAYER_RADIUS * INDICATOR_RING_SCALE,
+                    y: root.position.y,
+                    z: root.position.z,
+                });
+                const radius = Math.abs(edge.x - sx);
                 const size = radius * 2;
 
                 indicatorRing.style.width = `${size}px`;
