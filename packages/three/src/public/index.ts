@@ -29,6 +29,10 @@ export {
     type FollowCameraResult,
 } from './useFollowCamera';
 export {
+    useInterpolatedPosition,
+    type InterpolatedPositionOptions,
+} from './useInterpolatedPosition';
+export {
     useScreenProjection,
     type WorldPoint,
     type ScreenPoint,
