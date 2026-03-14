@@ -1,7 +1,7 @@
 ---
 id: EPIC-020
 title: DOM Overlay Package
-status: in-progress
+status: done
 created: 2026-03-13
 updated: 2026-03-14
 ---
@@ -24,3 +24,4 @@ performance for real-time games.
 
 - **2026-03-13**: Epic created from approved engine improvement #1. Single large ticket. Subsumes #6 (useButton), #24 (useModal), #28 (useEntrance).
 - **2026-03-14**: Epic implementation started via agent team
+- **2026-03-14**: Epic closed — all tickets complete
