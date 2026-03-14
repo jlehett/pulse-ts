@@ -1,8 +1,4 @@
-import {
-    useContext,
-    useFrameUpdate,
-    curlNoise2D,
-} from '@pulse-ts/core';
+import { useContext, useFrameUpdate, curlNoise2D } from '@pulse-ts/core';
 import { useParticleBurst } from '@pulse-ts/effects';
 import { useThreeContext } from '@pulse-ts/three';
 import { ARENA_RADIUS } from '../config/arena';

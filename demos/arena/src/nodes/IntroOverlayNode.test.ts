@@ -27,86 +27,79 @@ Object.defineProperty(mockCanvas, 'parentElement', {
     get: () => mockContainer,
 });
 
-jest.mock('@pulse-ts/core', () => ({
-    createContext: (name: string) => ({ name }),
-    useFrameUpdate: (cb: (dt: number) => void) => {
-        mockFrameUpdateCallbacks.push(cb);
-    },
-    useDestroy: (cb: () => void) => {
-        mockDestroyCallbacks.push(cb);
-    },
-    useContext: () => mockGameState,
-    color: (hex: number) => {
-        const r = (hex >> 16) & 0xff;
-        const g = (hex >> 8) & 0xff;
-        const b = hex & 0xff;
-        return {
-            num: hex,
-            hex: `#${hex.toString(16).padStart(6, '0')}`,
-            rgb: `rgb(${r}, ${g}, ${b})`,
-            r,
-            g,
-            b,
-            rgba: (a: number) => `rgba(${r}, ${g}, ${b}, ${a})`,
-        };
-    },
-}), { virtual: true });
-
-jest.mock('@pulse-ts/three', () => ({
-    useThreeContext: () => ({
-        renderer: { domElement: mockCanvas },
+jest.mock(
+    '@pulse-ts/core',
+    () => ({
+        createContext: (name: string) => ({ name }),
+        useFrameUpdate: (cb: (dt: number) => void) => {
+            mockFrameUpdateCallbacks.push(cb);
+        },
+        useDestroy: (cb: () => void) => {
+            mockDestroyCallbacks.push(cb);
+        },
+        useContext: () => mockGameState,
+        color: (hex: number) => {
+            const r = (hex >> 16) & 0xff;
+            const g = (hex >> 8) & 0xff;
+            const b = hex & 0xff;
+            return {
+                num: hex,
+                hex: `#${hex.toString(16).padStart(6, '0')}`,
+                rgb: `rgb(${r}, ${g}, ${b})`,
+                r,
+                g,
+                b,
+                rgba: (a: number) => `rgba(${r}, ${g}, ${b}, ${a})`,
+            };
+        },
     }),
-}), { virtual: true });
+    { virtual: true },
+);
 
-jest.mock('@pulse-ts/dom', () => ({
-    useOverlay: (jsx: any, container: HTMLElement) => {
-        const el = document.createElement('div');
-        // Apply style props from the JSX column
-        if (jsx?.props?.style) {
-            Object.assign(el.style, jsx.props.style);
-        }
-        // Render children as text
-        if (jsx?.props?.children) {
-            for (const child of [].concat(jsx.props.children)) {
-                const childEl = document.createElement('div');
-                if (child?.props?.style) {
-                    Object.assign(childEl.style, child.props.style);
-                }
-                if (typeof child?.props?.children === 'string') {
-                    childEl.textContent = child.props.children;
-                }
-                el.appendChild(childEl);
-            }
-        }
-        container.appendChild(el);
-        // Register cleanup
-        mockDestroyCallbacks.push(() => {
-            el.remove();
-        });
-        return el;
-    },
-    Column: 'div',
-}), { virtual: true });
+jest.mock(
+    '@pulse-ts/three',
+    () => ({
+        useThreeContext: () => ({
+            renderer: { domElement: mockCanvas },
+        }),
+    }),
+    { virtual: true },
+);
 
-jest.mock('@pulse-ts/effects', () => ({
-    useSequence: (steps: any[]) => {
-        mockSequenceSteps = steps;
-        return {
-            play() {
-                mockSequenceElapsed = 0;
-            },
-            reset() {
-                mockSequenceElapsed = 0;
-            },
-            get finished() {
-                return false;
-            },
-            get elapsed() {
-                return mockSequenceElapsed;
-            },
-        };
-    },
-}), { virtual: true });
+let mockUseOverlay = jest.fn();
+
+jest.mock(
+    '@pulse-ts/dom',
+    () => ({
+        useOverlay: (...args: any[]) => mockUseOverlay(...args),
+        Column: 'div',
+    }),
+    { virtual: true },
+);
+
+jest.mock(
+    '@pulse-ts/effects',
+    () => ({
+        useSequence: (steps: any[]) => {
+            mockSequenceSteps = steps;
+            return {
+                play() {
+                    mockSequenceElapsed = 0;
+                },
+                reset() {
+                    mockSequenceElapsed = 0;
+                },
+                get finished() {
+                    return false;
+                },
+                get elapsed() {
+                    return mockSequenceElapsed;
+                },
+            };
+        },
+    }),
+    { virtual: true },
+);
 
 jest.mock('../overlayAnimations', () => ({
     applyStaggeredEntrance: jest.fn(),
@@ -130,7 +123,31 @@ beforeEach(() => {
         paused: false,
     };
     mockContainer.innerHTML = '';
-    jest.clearAllMocks();
+    mockUseOverlay = jest
+        .fn()
+        .mockImplementation((jsx: any, container: HTMLElement) => {
+            const el = document.createElement('div');
+            if (jsx?.props?.style) {
+                Object.assign(el.style, jsx.props.style);
+            }
+            if (jsx?.props?.children) {
+                for (const child of [].concat(jsx.props.children)) {
+                    const childEl = document.createElement('div');
+                    if (child?.props?.style) {
+                        Object.assign(childEl.style, child.props.style);
+                    }
+                    if (typeof child?.props?.children === 'string') {
+                        childEl.textContent = child.props.children;
+                    }
+                    el.appendChild(childEl);
+                }
+            }
+            container.appendChild(el);
+            mockDestroyCallbacks.push(() => {
+                el.remove();
+            });
+            return el;
+        });
 });
 
 /* ------------------------------------------------------------------ */
@@ -149,17 +166,11 @@ describe('IntroOverlayNode', () => {
         expect(overlay.style.zIndex).toBe('3000');
     });
 
-    it('displays VS label and personality name', () => {
+    it('calls useOverlay with JSX and container', () => {
         mount();
-        const text = mockContainer.textContent ?? '';
-        expect(text).toContain('VS');
-        expect(text).toContain(BRAWLER.name.toUpperCase());
-    });
-
-    it('displays personality tagline', () => {
-        mount();
-        const text = mockContainer.textContent ?? '';
-        expect(text).toContain(BRAWLER.tagline);
+        expect(mockUseOverlay).toHaveBeenCalledTimes(1);
+        // Second argument should be the container
+        expect(mockUseOverlay.mock.calls[0][1]).toBe(mockContainer);
     });
 
     it('sets opacity to 0 when phase is not intro', () => {

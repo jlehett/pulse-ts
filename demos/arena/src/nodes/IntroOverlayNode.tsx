@@ -92,9 +92,23 @@ export function IntroOverlayNode({
 
     // Declarative intro sequence: show → fade out → transition to countdown
     const introSequence = useSequence([
-        { action: () => { rootEl.style.opacity = '1'; }, post: INTRO_DURATION },
-        { action: () => { rootEl.style.opacity = '0'; }, post: FADE_OUT_MS / 1000 },
-        { action: () => { gameState.phase = 'countdown'; } },
+        {
+            action: () => {
+                rootEl.style.opacity = '1';
+            },
+            post: INTRO_DURATION,
+        },
+        {
+            action: () => {
+                rootEl.style.opacity = '0';
+            },
+            post: FADE_OUT_MS / 1000,
+        },
+        {
+            action: () => {
+                gameState.phase = 'countdown';
+            },
+        },
     ]);
 
     useFrameUpdate(() => {

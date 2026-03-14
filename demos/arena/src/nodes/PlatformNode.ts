@@ -1,9 +1,4 @@
-import {
-    useComponent,
-    Transform,
-    useFrameUpdate,
-    useStore,
-} from '@pulse-ts/core';
+import { useComponent, Transform, useFrameUpdate } from '@pulse-ts/core';
 import { useRigidBody, useCylinderCollider } from '@pulse-ts/physics';
 import {
     useMesh,
@@ -714,10 +709,7 @@ export function PlatformNode() {
             hitRippleCenterX.setComponent(hitSlotIdx, u);
             hitRippleCenterY.setComponent(hitSlotIdx, v);
             // Expanding radius: age / expand_duration, clamped to max
-            const progress = Math.min(
-                slot.age / HIT_RIPPLE_EXPAND_DURATION,
-                1,
-            );
+            const progress = Math.min(slot.age / HIT_RIPPLE_EXPAND_DURATION, 1);
             hitRippleRadii.setComponent(
                 hitSlotIdx,
                 progress * HIT_RIPPLE_MAX_RADIUS,

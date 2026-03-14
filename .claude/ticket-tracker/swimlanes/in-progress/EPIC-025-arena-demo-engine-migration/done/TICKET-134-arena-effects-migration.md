@@ -2,10 +2,10 @@
 id: TICKET-134
 epic: EPIC-025
 title: "Arena migration: effects"
-status: in-progress
+status: done
 priority: medium
 created: 2026-03-13
-updated: 2026-03-13
+updated: 2026-03-14
 labels:
   - arena
   - migration
@@ -36,13 +36,14 @@ Refactor the arena demo to adopt all new `@pulse-ts/effects` improvements:
 
 ## Acceptance Criteria
 
-- [ ] Manual effect pool implementations replaced with useEffectPool
-- [ ] Time-based sequences replaced with useSequence
-- [ ] Fire-and-forget animation pattern uses play(onUpdate) where applicable
-- [ ] Module singletons for effects removed (covered by useStore + useEffectPool)
-- [ ] All tests pass
-- [ ] Lint clean
+- [x] Manual effect pool implementations replaced with useEffectPool
+- [x] Time-based sequences replaced with useSequence
+- [x] Fire-and-forget animation pattern uses play(onUpdate) where applicable
+- [x] Module singletons for effects removed (covered by useStore + useEffectPool)
+- [x] All tests pass
+- [x] Lint clean
 
 ## Notes
 
 - **2026-03-13**: Ticket created. Depends on EPIC-021 completion.
+- **2026-03-14**: Implementation complete. Replaced hitImpact and shockwave module singletons with defineStore + useEffectPool. SupernovaNode uses useEffectPool. IntroOverlayNode uses useSequence. ScoreHudNode uses useAnimate play(onUpdate). All affected test files updated with virtual mocks. Tests pass, lint clean.
