@@ -27,6 +27,7 @@ import { TypedEvent } from '../../utils/event';
 import type { Service } from '../ecs/base/Service';
 import { defineQuery } from '../ecs/query';
 import type { ComponentCtor } from '../ecs/base/types';
+import { clearStores } from '../fc/stores';
 
 /**
  * Options for the World class.
@@ -313,6 +314,9 @@ export class World implements WorldTimingApi, WorldTransformRegistry {
         // Detach all systems (disposes ticks, removes overlays, etc.)
         for (const s of this.systems.values()) s.detach();
         this.systems.clear();
+
+        // Clear all world-scoped stores
+        clearStores(this);
     }
 
     /**
