@@ -2,10 +2,10 @@
 id: TICKET-119
 epic: EPIC-019
 title: Procedural Texture Factory (createTexture)
-status: todo
+status: done
 priority: medium
 created: 2026-03-13
-updated: 2026-03-13
+updated: 2026-03-14
 labels:
   - three
   - utility
@@ -21,15 +21,15 @@ Design doc: `design-docs/approved/041-procedural-texture-factory.md`
 
 ## Acceptance Criteria
 
-- [ ] `createTexture(size, rasterize, options?)` creates a square DataTexture
-- [ ] `createTexture1D(width, rasterize, options?)` creates a 1×width DataTexture
-- [ ] Pixel callback returns `[R, G, B, A]` (0–255)
-- [ ] Options: wrap ('repeat'/'clamp'/'mirror'), filter ('linear'/'nearest'), format ('rgba'/'rgb')
-- [ ] String enums mapped to Three.js constants
-- [ ] Texture `needsUpdate` set automatically
-- [ ] JSDoc with examples
-- [ ] Unit tests for buffer creation, wrap/filter configuration
-- [ ] Documentation updated
+- [x] `createTexture(size, rasterize, options?)` creates a square DataTexture
+- [x] `createTexture1D(width, rasterize, options?)` creates a 1×width DataTexture
+- [x] Pixel callback returns `[R, G, B, A]` (0–255)
+- [x] Options: wrap ('repeat'/'clamp'/'mirror'), filter ('linear'/'nearest'), format ('rgba'/'rgb')
+- [x] String enums mapped to Three.js constants
+- [x] Texture `needsUpdate` set automatically
+- [x] JSDoc with examples
+- [x] Unit tests for buffer creation, wrap/filter configuration
+- [x] Documentation updated
 
 ## Notes
 

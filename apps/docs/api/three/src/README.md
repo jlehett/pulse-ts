@@ -19,11 +19,19 @@
 - [InterpolatedPositionOptions](interfaces/InterpolatedPositionOptions.md)
 - [ScreenPoint](interfaces/ScreenPoint.md)
 - [StatsOverlayOptions](interfaces/StatsOverlayOptions.md)
+- [TextureOptions](interfaces/TextureOptions.md)
 - [ThreeOptions](interfaces/ThreeOptions.md)
 - [WorldPoint](interfaces/WorldPoint.md)
 
+## Type Aliases
+
+- [PixelFn](type-aliases/PixelFn.md)
+- [PixelFn1D](type-aliases/PixelFn1D.md)
+
 ## Functions
 
+- [createTexture](functions/createTexture.md)
+- [createTexture1D](functions/createTexture1D.md)
 - [installThree](functions/installThree.md)
 - [useInterpolatedPosition](functions/useInterpolatedPosition.md)
 - [useObject3D](functions/useObject3D.md)
