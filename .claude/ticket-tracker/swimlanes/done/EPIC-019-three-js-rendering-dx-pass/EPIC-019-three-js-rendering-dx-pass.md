@@ -1,7 +1,7 @@
 ---
 id: EPIC-019
 title: Three.js Rendering DX Pass
-status: in-progress
+status: done
 created: 2026-03-13
 updated: 2026-03-14
 ---
@@ -22,3 +22,4 @@ or bypass engine hooks.
 
 - **2026-03-13**: Epic created from approved engine improvements (#7, #25, #33, #38, #41). Five tickets.
 - **2026-03-14**: Epic implementation started via agent team
+- **2026-03-14**: Epic closed — all tickets complete

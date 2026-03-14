@@ -2,7 +2,7 @@
 id: TICKET-121
 epic: EPIC-021
 title: useSequence Hook
-status: todo
+status: done
 priority: medium
 created: 2026-03-13
 updated: 2026-03-13
