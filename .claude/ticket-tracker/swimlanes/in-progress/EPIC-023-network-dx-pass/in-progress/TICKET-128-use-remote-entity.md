@@ -2,10 +2,10 @@
 id: TICKET-128
 epic: EPIC-023
 title: useRemoteEntity / useLocalEntity Hooks
-status: todo
+status: in-progress
 priority: medium
 created: 2026-03-13
-updated: 2026-03-13
+updated: 2026-03-14
 labels:
   - network
   - dx
