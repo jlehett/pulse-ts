@@ -1,7 +1,7 @@
 ---
 id: EPIC-021
 title: Effects Package DX Pass
-status: in-progress
+status: done
 created: 2026-03-13
 updated: 2026-03-14
 ---
@@ -22,3 +22,4 @@ management.
 
 - **2026-03-13**: Epic created from approved engine improvements (#12, #13, #16). Three tickets.
 - **2026-03-14**: Epic implementation started via agent team
+- **2026-03-14**: Epic closed — all tickets complete
