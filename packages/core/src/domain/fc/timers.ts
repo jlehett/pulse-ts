@@ -1,6 +1,26 @@
 import { useFixedUpdate } from './hooks';
 
 /**
+ * Options for {@link useTimer}.
+ */
+export interface TimerOptions {
+    /** Called once when the timer reaches its duration. */
+    onComplete?: () => void;
+    /** Called each fixed tick while active with `(remaining, elapsed)`. */
+    onTick?: (remaining: number, elapsed: number) => void;
+}
+
+/**
+ * Options for {@link useCooldown}.
+ */
+export interface CooldownOptions {
+    /** Called once when the cooldown becomes ready. */
+    onReady?: () => void;
+    /** Called each fixed tick while cooling down with `(remaining, duration)`. */
+    onProgress?: (remaining: number, duration: number) => void;
+}
+
+/**
  * Handle returned by {@link useTimer} for controlling a countdown timer.
  *
  * The timer starts **inactive**. Call {@link start} or {@link reset} to begin
@@ -61,34 +81,44 @@ export interface CooldownHandle {
  * are runtime-only and don't need serialization.
  *
  * @param duration - The timer duration in seconds.
+ * @param options - Optional callbacks for timer events.
  * @returns A {@link TimerHandle} for controlling and querying the timer.
  *
  * @example
  * ```ts
- * import { useTimer, useFixedUpdate } from '@pulse-ts/core';
+ * import { useTimer } from '@pulse-ts/core';
  *
- * function DashAbility() {
- *   const dash = useTimer(0.15);
+ * // Basic usage
+ * const dash = useTimer(0.15);
  *
- *   useFixedUpdate(() => {
- *     if (dashPressed) dash.reset();
- *     if (dash.active) {
- *       // apply dash velocity
- *     }
- *   });
- * }
+ * // With callbacks
+ * const countdown = useTimer(3.0, {
+ *   onComplete: () => { gameState.phase = 'playing'; },
+ *   onTick: (remaining) => { gameState.countdownValue = Math.ceil(remaining); },
+ * });
+ * countdown.reset(); // start the timer
  * ```
  */
-export function useTimer(duration: number): TimerHandle {
+export function useTimer(
+    duration: number,
+    options?: TimerOptions,
+): TimerHandle {
     let elapsed = 0;
     let active = false;
     let paused = false;
+    let completeFired = false;
 
     useFixedUpdate((dt) => {
         if (!active || paused) return;
         elapsed = Math.min(duration, elapsed + dt);
-        if (elapsed >= duration) {
+        const completed = elapsed >= duration;
+        options?.onTick?.(duration - elapsed, elapsed);
+        if (completed) {
             active = false;
+            if (!completeFired) {
+                completeFired = true;
+                options?.onComplete?.();
+            }
         }
     });
 
@@ -109,11 +139,13 @@ export function useTimer(duration: number): TimerHandle {
             if (active) return;
             active = true;
             paused = false;
+            completeFired = false;
         },
         reset() {
             elapsed = 0;
             active = true;
             paused = false;
+            completeFired = false;
         },
         cancel() {
             elapsed = 0;
@@ -143,25 +175,29 @@ export function useTimer(duration: number): TimerHandle {
  * are runtime-only and don't need serialization.
  *
  * @param duration - The cooldown duration in seconds.
+ * @param options - Optional callbacks for cooldown events.
  * @returns A {@link CooldownHandle} for controlling and querying the cooldown.
  *
  * @example
  * ```ts
- * import { useCooldown, useFixedUpdate } from '@pulse-ts/core';
+ * import { useCooldown } from '@pulse-ts/core';
  *
- * function Fireball() {
- *   const cd = useCooldown(1.0);
+ * // Basic usage
+ * const cd = useCooldown(1.0);
  *
- *   useFixedUpdate(() => {
- *     if (firePressed && cd.ready) {
- *       cd.trigger();
- *       // launch fireball
- *     }
- *   });
- * }
+ * // With callbacks
+ * const dashCD = useCooldown(2.0, {
+ *   onProgress: (remaining, duration) => {
+ *     setProgress(remaining / duration);
+ *   },
+ *   onReady: () => { flashIndicator(); },
+ * });
  * ```
  */
-export function useCooldown(duration: number): CooldownHandle {
+export function useCooldown(
+    duration: number,
+    options?: CooldownOptions,
+): CooldownHandle {
     let cooldownRemaining = 0;
     let ready = true;
     let paused = false;
@@ -169,8 +205,10 @@ export function useCooldown(duration: number): CooldownHandle {
     useFixedUpdate((dt) => {
         if (ready || paused) return;
         cooldownRemaining = Math.max(0, cooldownRemaining - dt);
+        options?.onProgress?.(cooldownRemaining, duration);
         if (cooldownRemaining <= 0) {
             ready = true;
+            options?.onReady?.();
         }
     });
 

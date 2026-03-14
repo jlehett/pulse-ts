@@ -196,6 +196,120 @@ describe('useTimer', () => {
         expect(b.active).toBe(false);
         expect(b.elapsed).toBeCloseTo(0.1, 5);
     });
+
+    test('onComplete fires once when timer expires', () => {
+        const w = createWorld();
+        const onComplete = jest.fn();
+        let h!: TimerHandle;
+        w.mount(() => {
+            h = useTimer(0.03, { onComplete }); // 3 fixed steps
+        });
+        h.reset();
+        w.tick(FIXED_MS * 2); // not yet complete
+        expect(onComplete).not.toHaveBeenCalled();
+
+        w.tick(FIXED_MS * 1); // completes at step 3
+        expect(onComplete).toHaveBeenCalledTimes(1);
+
+        // Extra ticks should not fire again
+        w.tick(FIXED_MS * 3);
+        expect(onComplete).toHaveBeenCalledTimes(1);
+    });
+
+    test('onComplete fires exactly once per reset() cycle', () => {
+        const w = createWorld();
+        const onComplete = jest.fn();
+        let h!: TimerHandle;
+        w.mount(() => {
+            h = useTimer(0.02, { onComplete }); // 2 fixed steps
+        });
+
+        // First cycle
+        h.reset();
+        w.tick(FIXED_MS * 2);
+        expect(onComplete).toHaveBeenCalledTimes(1);
+
+        // Second cycle
+        h.reset();
+        w.tick(FIXED_MS * 2);
+        expect(onComplete).toHaveBeenCalledTimes(2);
+    });
+
+    test('onTick fires each tick while active with (remaining, elapsed)', () => {
+        const w = createWorld();
+        const onTick = jest.fn();
+        let h!: TimerHandle;
+        w.mount(() => {
+            h = useTimer(0.03, { onTick }); // 3 fixed steps
+        });
+        h.reset();
+
+        w.tick(FIXED_MS * 1); // tick 1: elapsed=0.01, remaining=0.02
+        expect(onTick).toHaveBeenCalledTimes(1);
+        expect(onTick.mock.calls[0]![0]).toBeCloseTo(0.02, 5); // remaining
+        expect(onTick.mock.calls[0]![1]).toBeCloseTo(0.01, 5); // elapsed
+
+        w.tick(FIXED_MS * 1); // tick 2: elapsed=0.02, remaining=0.01
+        expect(onTick).toHaveBeenCalledTimes(2);
+        expect(onTick.mock.calls[1]![0]).toBeCloseTo(0.01, 5);
+        expect(onTick.mock.calls[1]![1]).toBeCloseTo(0.02, 5);
+
+        // tick 3: completion tick — onTick still fires
+        w.tick(FIXED_MS * 1);
+        expect(onTick).toHaveBeenCalledTimes(3);
+        expect(onTick.mock.calls[2]![0]).toBeCloseTo(0, 5);
+        expect(onTick.mock.calls[2]![1]).toBeCloseTo(0.03, 5);
+
+        // After completion, no more ticks
+        w.tick(FIXED_MS * 2);
+        expect(onTick).toHaveBeenCalledTimes(3);
+    });
+
+    test('onTick does not fire when paused', () => {
+        const w = createWorld();
+        const onTick = jest.fn();
+        let h!: TimerHandle;
+        w.mount(() => {
+            h = useTimer(0.1, { onTick });
+        });
+        h.reset();
+        w.tick(FIXED_MS * 1);
+        expect(onTick).toHaveBeenCalledTimes(1);
+
+        h.pause();
+        w.tick(FIXED_MS * 3);
+        expect(onTick).toHaveBeenCalledTimes(1); // no additional calls
+
+        h.resume();
+        w.tick(FIXED_MS * 1);
+        expect(onTick).toHaveBeenCalledTimes(2);
+    });
+
+    test('onComplete does not fire when cancelled', () => {
+        const w = createWorld();
+        const onComplete = jest.fn();
+        let h!: TimerHandle;
+        w.mount(() => {
+            h = useTimer(0.03, { onComplete });
+        });
+        h.reset();
+        w.tick(FIXED_MS * 2);
+        h.cancel();
+        w.tick(FIXED_MS * 5);
+        expect(onComplete).not.toHaveBeenCalled();
+    });
+
+    test('works without options (backward compatible)', () => {
+        const w = createWorld();
+        let h!: TimerHandle;
+        w.mount(() => {
+            h = useTimer(0.02);
+        });
+        h.reset();
+        w.tick(FIXED_MS * 2);
+        expect(h.active).toBe(false);
+        expect(h.elapsed).toBeCloseTo(0.02, 5);
+    });
 });
 
 describe('useCooldown', () => {
@@ -331,5 +445,118 @@ describe('useCooldown', () => {
 
         w.tick(FIXED_MS * 6); // overshoot to avoid float accumulation edge
         expect(b.ready).toBe(true);
+    });
+
+    test('onReady fires once when cooldown becomes ready', () => {
+        const w = createWorld();
+        const onReady = jest.fn();
+        let h!: CooldownHandle;
+        w.mount(() => {
+            h = useCooldown(0.03, { onReady }); // 3 fixed steps
+        });
+        h.trigger();
+        w.tick(FIXED_MS * 2); // not yet ready
+        expect(onReady).not.toHaveBeenCalled();
+
+        w.tick(FIXED_MS * 1); // ready at step 3
+        expect(onReady).toHaveBeenCalledTimes(1);
+
+        // Extra ticks should not fire again
+        w.tick(FIXED_MS * 3);
+        expect(onReady).toHaveBeenCalledTimes(1);
+    });
+
+    test('onReady fires again after re-trigger', () => {
+        const w = createWorld();
+        const onReady = jest.fn();
+        let h!: CooldownHandle;
+        w.mount(() => {
+            h = useCooldown(0.02, { onReady }); // 2 fixed steps
+        });
+
+        // First cycle
+        h.trigger();
+        w.tick(FIXED_MS * 2);
+        expect(onReady).toHaveBeenCalledTimes(1);
+
+        // Second cycle
+        h.trigger();
+        w.tick(FIXED_MS * 2);
+        expect(onReady).toHaveBeenCalledTimes(2);
+    });
+
+    test('onProgress fires each tick while cooling down with (remaining, duration)', () => {
+        const w = createWorld();
+        const onProgress = jest.fn();
+        let h!: CooldownHandle;
+        w.mount(() => {
+            h = useCooldown(0.03, { onProgress }); // 3 fixed steps
+        });
+        h.trigger();
+
+        w.tick(FIXED_MS * 1); // tick 1: remaining=0.02
+        expect(onProgress).toHaveBeenCalledTimes(1);
+        expect(onProgress.mock.calls[0]![0]).toBeCloseTo(0.02, 5); // remaining
+        expect(onProgress.mock.calls[0]![1]).toBeCloseTo(0.03, 5); // duration
+
+        w.tick(FIXED_MS * 1); // tick 2: remaining=0.01
+        expect(onProgress).toHaveBeenCalledTimes(2);
+        expect(onProgress.mock.calls[1]![0]).toBeCloseTo(0.01, 5);
+        expect(onProgress.mock.calls[1]![1]).toBeCloseTo(0.03, 5);
+
+        // tick 3: completion tick — onProgress still fires with remaining=0
+        w.tick(FIXED_MS * 1);
+        expect(onProgress).toHaveBeenCalledTimes(3);
+        expect(onProgress.mock.calls[2]![0]).toBeCloseTo(0, 5);
+        expect(onProgress.mock.calls[2]![1]).toBeCloseTo(0.03, 5);
+
+        // After ready, no more progress calls
+        w.tick(FIXED_MS * 2);
+        expect(onProgress).toHaveBeenCalledTimes(3);
+    });
+
+    test('onProgress does not fire when paused', () => {
+        const w = createWorld();
+        const onProgress = jest.fn();
+        let h!: CooldownHandle;
+        w.mount(() => {
+            h = useCooldown(0.1, { onProgress });
+        });
+        h.trigger();
+        w.tick(FIXED_MS * 1);
+        expect(onProgress).toHaveBeenCalledTimes(1);
+
+        h.pause();
+        w.tick(FIXED_MS * 3);
+        expect(onProgress).toHaveBeenCalledTimes(1); // no additional calls
+
+        h.resume();
+        w.tick(FIXED_MS * 1);
+        expect(onProgress).toHaveBeenCalledTimes(2);
+    });
+
+    test('onReady does not fire on manual reset()', () => {
+        const w = createWorld();
+        const onReady = jest.fn();
+        let h!: CooldownHandle;
+        w.mount(() => {
+            h = useCooldown(0.1, { onReady });
+        });
+        h.trigger();
+        w.tick(FIXED_MS * 2);
+        h.reset(); // manually reset — should NOT fire onReady
+        expect(onReady).not.toHaveBeenCalled();
+    });
+
+    test('works without options (backward compatible)', () => {
+        const w = createWorld();
+        let h!: CooldownHandle;
+        w.mount(() => {
+            h = useCooldown(0.02);
+        });
+        h.trigger();
+        w.tick(FIXED_MS * 2);
+        expect(h.ready).toBe(true);
+        expect(h.remaining).toBeCloseTo(0, 5);
     });
 });
