@@ -4,6 +4,7 @@ epic: EPIC-018
 title: useWatch Hook
 status: todo
 priority: high
+branch: ticket-107-use-watch
 created: 2026-03-13
 updated: 2026-03-13
 labels:
