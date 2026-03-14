@@ -88,6 +88,37 @@ describe('installNetwork + facade integration', () => {
         expect(val).toBe(5);
     });
 
+    it('flushes pending outbound messages when world is destroyed', async () => {
+        const hub = createMemoryHub();
+        const w1 = new World();
+        const w2 = new World();
+
+        await installNetwork(w1, {
+            transport: () => new MemoryTransport(hub, 'a'),
+            autoConnect: true,
+        });
+        const { transport: t2 } = await installNetwork(w2, {
+            transport: () => new MemoryTransport(hub, 'b'),
+            autoConnect: true,
+        });
+
+        const got: string[] = [];
+        const net2 = getNetwork(w2);
+        net2.channel<string>('chat').subscribe((m) => got.push(m));
+
+        const net1 = getNetwork(w1);
+        net1.channel<string>('chat').publish('goodbye');
+
+        // Destroy w1 without manually flushing — destroy should auto-flush
+        w1.destroy();
+
+        // Receive on w2
+        t2.dispatchIncoming();
+        expect(got).toEqual(['goodbye']);
+
+        w2.destroy();
+    });
+
     it('Reliable via facade works end-to-end', async () => {
         const hub = createMemoryHub();
         const w1 = new World();
