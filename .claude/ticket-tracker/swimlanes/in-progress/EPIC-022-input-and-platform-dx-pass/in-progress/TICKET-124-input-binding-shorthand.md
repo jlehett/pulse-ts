@@ -2,7 +2,7 @@
 id: TICKET-124
 epic: EPIC-022
 title: Input Binding Shorthand (Axis2D.keys / wasd / arrows)
-status: todo
+status: in-progress
 priority: low
 created: 2026-03-13
 updated: 2026-03-13
