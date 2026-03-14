@@ -10,6 +10,14 @@ export interface AudioOptions {
     masterVolume?: number;
 }
 
+/** Internal state for a named sound group. */
+export interface SoundGroup {
+    /** Volume multiplier `[0, 1]`. */
+    volume: number;
+    /** Whether the group is muted. */
+    muted: boolean;
+}
+
 /**
  * Manages the Web Audio `AudioContext` lifecycle and provides a master gain
  * node that all sounds route through.
@@ -35,10 +43,48 @@ export class AudioService extends Service {
     private _ctx: AudioContext | null = null;
     private _masterGain: GainNode | null = null;
     private _masterVolume: number;
+    private readonly _groups = new Map<string, SoundGroup>();
 
     constructor(options: AudioOptions = {}) {
         super();
         this._masterVolume = options.masterVolume ?? 1;
+    }
+
+    /**
+     * Returns an existing sound group or creates one with the given defaults.
+     * Groups persist for the lifetime of the service (across world lifecycles).
+     *
+     * @param name - Unique group name.
+     * @param defaults - Initial volume and muted state (only applied on creation).
+     * @returns The group state object.
+     */
+    getOrCreateGroup(
+        name: string,
+        defaults?: { volume?: number; muted?: boolean },
+    ): SoundGroup {
+        let group = this._groups.get(name);
+        if (!group) {
+            group = {
+                volume: defaults?.volume ?? 1,
+                muted: defaults?.muted ?? false,
+            };
+            this._groups.set(name, group);
+        }
+        return group;
+    }
+
+    /**
+     * Returns the effective volume multiplier for a sound in the given group.
+     * If no group name is provided, returns 1 (no scaling beyond master).
+     *
+     * @param groupName - Optional group name.
+     * @returns The group volume multiplier (0 if muted).
+     */
+    getGroupVolume(groupName?: string): number {
+        if (!groupName) return 1;
+        const group = this._groups.get(groupName);
+        if (!group) return 1;
+        return group.muted ? 0 : group.volume;
     }
 
     /**
