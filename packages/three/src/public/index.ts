@@ -24,6 +24,11 @@ export {
     type UseMeshResult,
 } from './useMesh';
 export {
+    useCustomMesh,
+    type CustomMeshOptions,
+    type CustomMeshResult,
+} from './useCustomMesh';
+export {
     useFollowCamera,
     type FollowCameraOptions,
     type FollowCameraResult,
