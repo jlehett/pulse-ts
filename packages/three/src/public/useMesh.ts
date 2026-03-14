@@ -110,10 +110,29 @@ export interface GeometryTypeMap {
 export type GeometryType = keyof GeometryTypeMap;
 
 // ---------------------------------------------------------------------------
+// Material type
+// ---------------------------------------------------------------------------
+
+/**
+ * Supported material types.
+ *
+ * - `'standard'` — `MeshStandardMaterial` (default, PBR).
+ * - `'basic'` — `MeshBasicMaterial` (unlit, no lighting calculations).
+ * - `'phong'` — `MeshPhongMaterial` (Blinn-Phong shading).
+ */
+export type MaterialType = 'standard' | 'basic' | 'phong';
+
+// ---------------------------------------------------------------------------
 // Shared option types
 // ---------------------------------------------------------------------------
 
-/** Material options forwarded to `THREE.MeshStandardMaterial`. */
+/**
+ * Material options forwarded to the underlying Three.js material.
+ *
+ * All properties are optional and backward-compatible with the original
+ * `MeshStandardMaterial`-only API. String enums are used for Three.js
+ * constants so callers never need to import `THREE.*` values directly.
+ */
 export interface MeshMaterialOptions {
     /** Mesh color (hex). @default 0xcccccc */
     color?: number;
@@ -129,6 +148,61 @@ export interface MeshMaterialOptions {
     transparent?: boolean;
     /** Opacity `[0, 1]`. Only effective when `transparent` is true. @default 1 */
     opacity?: number;
+
+    // -- Texture maps --
+
+    /** Color (diffuse) texture map. */
+    map?: THREE.Texture;
+    /** Normal map texture. */
+    normalMap?: THREE.Texture;
+    /**
+     * Normal map scale as `[x, y]` tuple.
+     * Converted to `THREE.Vector2` internally.
+     * @default [1, 1]
+     */
+    normalScale?: [number, number];
+    /** Emissive map texture. */
+    emissiveMap?: THREE.Texture;
+    /** Roughness map texture. */
+    roughnessMap?: THREE.Texture;
+    /** Metalness map texture. */
+    metalnessMap?: THREE.Texture;
+    /** Alpha map texture. Controls per-pixel opacity. */
+    alphaMap?: THREE.Texture;
+    /** Environment map texture. */
+    envMap?: THREE.Texture;
+
+    // -- Render state --
+
+    /**
+     * Which faces to render.
+     * - `'front'` — front faces only (`THREE.FrontSide`).
+     * - `'back'` — back faces only (`THREE.BackSide`).
+     * - `'double'` — both sides (`THREE.DoubleSide`).
+     * @default 'front'
+     */
+    side?: 'front' | 'back' | 'double';
+    /** Whether to write to the depth buffer. @default true */
+    depthWrite?: boolean;
+    /**
+     * Blending mode.
+     * - `'normal'` — `THREE.NormalBlending`.
+     * - `'additive'` — `THREE.AdditiveBlending`.
+     * - `'multiply'` — `THREE.MultiplyBlending`.
+     * @default 'normal'
+     */
+    blending?: 'normal' | 'additive' | 'multiply';
+
+    // -- Material type --
+
+    /**
+     * Which Three.js material class to use.
+     * - `'standard'` — `MeshStandardMaterial` (PBR, default).
+     * - `'basic'` — `MeshBasicMaterial` (unlit).
+     * - `'phong'` — `MeshPhongMaterial` (Blinn-Phong).
+     * @default 'standard'
+     */
+    materialType?: MaterialType;
 }
 
 /** Shadow options applied to the mesh. */
@@ -154,11 +228,30 @@ export interface UseMeshResult {
     root: THREE.Object3D;
     /** The created `THREE.Mesh`. */
     mesh: THREE.Mesh;
-    /** The `MeshStandardMaterial` instance. */
-    material: THREE.MeshStandardMaterial;
+    /** The material instance (type depends on `materialType`). */
+    material: THREE.Material;
     /** The `BufferGeometry` instance. */
     geometry: THREE.BufferGeometry;
 }
+
+// ---------------------------------------------------------------------------
+// String enum → Three.js constant maps
+// ---------------------------------------------------------------------------
+
+const SIDE_MAP: Record<NonNullable<MeshMaterialOptions['side']>, THREE.Side> = {
+    front: THREE.FrontSide,
+    back: THREE.BackSide,
+    double: THREE.DoubleSide,
+};
+
+const BLENDING_MAP: Record<
+    NonNullable<MeshMaterialOptions['blending']>,
+    THREE.Blending
+> = {
+    normal: THREE.NormalBlending,
+    additive: THREE.AdditiveBlending,
+    multiply: THREE.MultiplyBlending,
+};
 
 // ---------------------------------------------------------------------------
 // Geometry factory
@@ -227,6 +320,83 @@ function createGeometry<T extends GeometryType>(
 }
 
 // ---------------------------------------------------------------------------
+// Material factory
+// ---------------------------------------------------------------------------
+
+/**
+ * Builds the shared material parameter object from user-facing options,
+ * mapping string enums to Three.js constants.
+ */
+function buildMaterialParams(
+    opts: MeshMaterialOptions,
+): Record<string, unknown> {
+    const params: Record<string, unknown> = {
+        color: opts.color,
+        roughness: opts.roughness,
+        metalness: opts.metalness,
+        emissive: opts.emissive,
+        emissiveIntensity: opts.emissiveIntensity,
+        transparent: opts.transparent,
+        opacity: opts.opacity,
+        map: opts.map,
+        normalMap: opts.normalMap,
+        emissiveMap: opts.emissiveMap,
+        roughnessMap: opts.roughnessMap,
+        metalnessMap: opts.metalnessMap,
+        alphaMap: opts.alphaMap,
+        envMap: opts.envMap,
+    };
+
+    if (opts.normalScale !== undefined) {
+        params.normalScale = new THREE.Vector2(
+            opts.normalScale[0],
+            opts.normalScale[1],
+        );
+    }
+
+    if (opts.side !== undefined) {
+        params.side = SIDE_MAP[opts.side];
+    }
+
+    if (opts.depthWrite !== undefined) {
+        params.depthWrite = opts.depthWrite;
+    }
+
+    if (opts.blending !== undefined) {
+        params.blending = BLENDING_MAP[opts.blending];
+    }
+
+    return params;
+}
+
+/**
+ * Creates a Three.js material based on the `materialType` option.
+ *
+ * @param opts - Material options including the `materialType` discriminator.
+ * @returns A Three.js material instance.
+ */
+function createMaterial(opts: MeshMaterialOptions): THREE.Material {
+    const params = buildMaterialParams(opts);
+    const type = opts.materialType ?? 'standard';
+
+    switch (type) {
+        case 'basic':
+            return new THREE.MeshBasicMaterial(
+                params as THREE.MeshBasicMaterialParameters,
+            );
+        case 'phong':
+            return new THREE.MeshPhongMaterial(
+                params as THREE.MeshPhongMaterialParameters,
+            );
+        case 'standard':
+        default:
+            return new THREE.MeshStandardMaterial(
+                params as THREE.MeshStandardMaterialParameters,
+            );
+    }
+}
+
+// ---------------------------------------------------------------------------
 // Hook
 // ---------------------------------------------------------------------------
 
@@ -234,10 +404,21 @@ function createGeometry<T extends GeometryType>(
  * Creates a `THREE.Mesh` with the specified geometry, material, and shadow
  * settings, and attaches it to the current node's Three.js root.
  *
- * Combines `useThreeRoot()`, geometry creation, `MeshStandardMaterial` setup,
+ * Combines `useThreeRoot()`, geometry creation, material setup,
  * shadow configuration, and `useObject3D()` into a single declarative call.
  * Returns all internals so callers can still modify them after creation
  * (e.g. animating emissive intensity or reading `mesh.rotation`).
+ *
+ * Supports multiple material types via `materialType`:
+ * - `'standard'` (default) — PBR material (`MeshStandardMaterial`)
+ * - `'basic'` — unlit material (`MeshBasicMaterial`)
+ * - `'phong'` — Blinn-Phong shading (`MeshPhongMaterial`)
+ *
+ * String enums are used for Three.js constants so callers never need to
+ * import `THREE.*` values directly:
+ * - `side`: `'front'` | `'back'` | `'double'`
+ * - `blending`: `'normal'` | `'additive'` | `'multiply'`
+ * - `normalScale`: `[number, number]` tuple instead of `THREE.Vector2`
  *
  * @param type - The geometry type to create (e.g. `'box'`, `'sphere'`, `'capsule'`).
  * @param options - Geometry dimensions, material properties, and shadow flags.
@@ -260,21 +441,50 @@ function createGeometry<T extends GeometryType>(
  *
  * @example
  * ```ts
+ * // Using texture maps and render state
  * import { useMesh } from '@pulse-ts/three';
- * import { useFrameUpdate } from '@pulse-ts/core';
  *
- * function CollectibleNode() {
- *   const { mesh, material } = useMesh('icosahedron', {
- *     radius: 0.25,
- *     color: 0xf4d03f,
- *     emissive: 0xf4d03f,
- *     emissiveIntensity: 0.3,
- *     castShadow: true,
+ * function GlassPanel() {
+ *   const { mesh } = useMesh('plane', {
+ *     width: 2,
+ *     height: 3,
+ *     color: 0xffffff,
+ *     transparent: true,
+ *     opacity: 0.3,
+ *     side: 'double',
+ *     depthWrite: false,
+ *     blending: 'normal',
  *   });
+ * }
+ * ```
  *
- *   // Callers can still manipulate the returned objects.
- *   useFrameUpdate((dt) => {
- *     mesh.rotation.y += 2 * dt;
+ * @example
+ * ```ts
+ * // Using an alternative material type
+ * import { useMesh } from '@pulse-ts/three';
+ *
+ * function UnlitMarker() {
+ *   const { mesh } = useMesh('sphere', {
+ *     radius: 0.1,
+ *     color: 0xff0000,
+ *     materialType: 'basic',
+ *   });
+ * }
+ * ```
+ *
+ * @example
+ * ```ts
+ * // Applying texture maps with normalScale
+ * import { useMesh } from '@pulse-ts/three';
+ * import * as THREE from 'three';
+ *
+ * function TexturedWall(diffuse: THREE.Texture, normal: THREE.Texture) {
+ *   const { mesh } = useMesh('box', {
+ *     size: [4, 3, 0.2],
+ *     map: diffuse,
+ *     normalMap: normal,
+ *     normalScale: [1, 1],
+ *     roughness: 0.9,
  *   });
  * }
  * ```
@@ -286,16 +496,7 @@ export function useMesh<T extends GeometryType>(
     const root = useThreeRoot();
 
     const geometry = createGeometry(type, options as GeometryTypeMap[T]);
-
-    const material = new THREE.MeshStandardMaterial({
-        color: options.color,
-        roughness: options.roughness,
-        metalness: options.metalness,
-        emissive: options.emissive,
-        emissiveIntensity: options.emissiveIntensity,
-        transparent: options.transparent,
-        opacity: options.opacity,
-    });
+    const material = createMaterial(options);
 
     const mesh = new THREE.Mesh(geometry, material);
     mesh.castShadow = options.castShadow ?? false;

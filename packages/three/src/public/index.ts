@@ -18,6 +18,7 @@ export {
     type OctahedronGeometryOptions,
     type PlaneGeometryOptions,
     type TorusGeometryOptions,
+    type MaterialType,
     type MeshMaterialOptions,
     type MeshShadowOptions,
     type UseMeshOptions,
