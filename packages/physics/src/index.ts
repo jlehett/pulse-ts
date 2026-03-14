@@ -71,6 +71,7 @@ export {
     useOnCollision,
     usePhysicsRaycast,
 } from './public/hooks';
+export type { CollisionFilter, CollisionOptions } from './public/hooks';
 
 // Waypoint patrol
 export { useWaypointPatrol } from './public/useWaypointPatrol';
