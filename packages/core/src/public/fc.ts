@@ -28,3 +28,4 @@ export { useTimer, useCooldown } from '../domain/fc/timers';
 export type { TimerHandle, CooldownHandle } from '../domain/fc/timers';
 export { defineStore, useStore } from '../domain/fc/stores';
 export type { StoreDefinition, SetStore } from '../domain/fc/stores';
+export { useWatch } from '../domain/fc/watch';
