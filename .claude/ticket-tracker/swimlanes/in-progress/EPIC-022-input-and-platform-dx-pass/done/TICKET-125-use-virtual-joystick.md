@@ -2,7 +2,7 @@
 id: TICKET-125
 epic: EPIC-022
 title: useVirtualJoystick Hook
-status: in-progress
+status: done
 priority: medium
 created: 2026-03-13
 updated: 2026-03-14
@@ -23,17 +23,18 @@ Design doc: `design-docs/approved/015-use-virtual-joystick.md`
 
 ## Acceptance Criteria
 
-- [ ] `useVirtualJoystick(options)` creates a touch joystick
-- [ ] Injects into input system as an Axis2D binding
-- [ ] Dead zone and normalization handled by the hook
-- [ ] `render` callback receives reactive state (position, angle, magnitude, active)
-- [ ] Default visual rendering if no `render` callback provided
-- [ ] Works on touch devices
-- [ ] JSDoc with examples
-- [ ] Unit tests for touch math, dead zone, input injection
-- [ ] Documentation updated
+- [x] `useVirtualJoystick(options)` creates a touch joystick
+- [x] Injects into input system as an Axis2D binding
+- [x] Dead zone and normalization handled by the hook
+- [x] `render` callback receives reactive state (position, angle, magnitude, active)
+- [x] Default visual rendering if no `render` callback provided
+- [x] Works on touch devices
+- [x] JSDoc with examples
+- [x] Unit tests for touch math, dead zone, input injection
+- [x] Documentation updated
 
 ## Notes
 
 - **2026-03-13**: Ticket created from approved design doc #15.
 - **2026-03-14**: Moved to in-progress.
+- **2026-03-14**: Implementation complete. All 79 tests passing, lint clean.
