@@ -2,10 +2,10 @@
 id: TICKET-130
 epic: EPIC-024
 title: Collision Filter Option
-status: todo
+status: in-progress
 priority: medium
 created: 2026-03-13
-updated: 2026-03-13
+updated: 2026-03-14
 labels:
   - physics
   - dx
