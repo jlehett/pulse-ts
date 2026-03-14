@@ -2,7 +2,7 @@
 id: TICKET-115
 epic: EPIC-019
 title: useScreenProjection Hook
-status: todo
+status: done
 priority: medium
 branch: ticket-115-use-screen-projection
 created: 2026-03-13
@@ -22,14 +22,16 @@ Design doc: `design-docs/approved/007-use-screen-projection.md`
 
 ## Acceptance Criteria
 
-- [ ] `useScreenProjection()` returns a `project(position)` function
-- [ ] Returns `{ x, y, depth, visible }` in screen pixels
-- [ ] Reuses internal Vector3 (no allocations per call)
-- [ ] Works with current camera and renderer dimensions
-- [ ] JSDoc with examples
-- [ ] Unit tests
-- [ ] Documentation updated
+- [x] `useScreenProjection()` returns a `project(position)` function
+- [x] Returns `{ x, y, depth, visible }` in screen pixels
+- [x] Reuses internal Vector3 (no allocations per call)
+- [x] Works with current camera and renderer dimensions
+- [x] JSDoc with examples
+- [x] Unit tests
+- [x] Documentation updated
 
 ## Notes
 
 - **2026-03-13**: Ticket created from approved design doc #7.
+- **2026-03-14**: Starting implementation.
+- **2026-03-14**: Implementation complete. Hook, tests (11 passing), JSDoc, and docs added.

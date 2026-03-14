@@ -29,6 +29,11 @@ export {
     type FollowCameraResult,
 } from './useFollowCamera';
 export {
+    useScreenProjection,
+    type WorldPoint,
+    type ScreenPoint,
+} from './useScreenProjection';
+export {
     useAmbientLight,
     useDirectionalLight,
     usePointLight,

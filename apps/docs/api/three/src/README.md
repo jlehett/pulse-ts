@@ -16,12 +16,15 @@
 
 ## Interfaces
 
+- [ScreenPoint](interfaces/ScreenPoint.md)
 - [StatsOverlayOptions](interfaces/StatsOverlayOptions.md)
 - [ThreeOptions](interfaces/ThreeOptions.md)
+- [WorldPoint](interfaces/WorldPoint.md)
 
 ## Functions
 
 - [installThree](functions/installThree.md)
 - [useObject3D](functions/useObject3D.md)
+- [useScreenProjection](functions/useScreenProjection.md)
 - [useThreeContext](functions/useThreeContext.md)
 - [useThreeRoot](functions/useThreeRoot.md)
