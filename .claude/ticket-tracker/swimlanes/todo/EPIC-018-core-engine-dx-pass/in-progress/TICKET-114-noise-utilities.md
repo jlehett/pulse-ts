@@ -2,10 +2,11 @@
 id: TICKET-114
 epic: EPIC-018
 title: Noise Function Utilities
-status: todo
+status: in-progress
 priority: medium
+branch: ticket-114-noise-utilities
 created: 2026-03-13
-updated: 2026-03-13
+updated: 2026-03-14
 labels:
   - core
   - math
@@ -34,3 +35,4 @@ Design doc: `design-docs/approved/047-noise-utilities.md`
 ## Notes
 
 - **2026-03-13**: Ticket created from approved design doc #47.
+- **2026-03-14**: Starting implementation.
