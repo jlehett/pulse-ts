@@ -2,10 +2,11 @@
 id: TICKET-117
 epic: EPIC-019
 title: useMesh Material Extensions
-status: todo
+status: in-progress
 priority: high
 created: 2026-03-13
-updated: 2026-03-13
+updated: 2026-03-14
+branch: ticket-117-use-mesh-material-extensions
 labels:
   - three
   - dx
@@ -35,3 +36,4 @@ Design doc: `design-docs/approved/033-use-mesh-material-extensions.md`
 ## Notes
 
 - **2026-03-13**: Ticket created from approved design doc #33.
+- **2026-03-14**: Starting implementation
