@@ -11,6 +11,8 @@ import {
     useTimer,
     useCooldown,
     useDestroy,
+    useStore,
+    color,
 } from '@pulse-ts/core';
 import { useAxis2D, useAction } from '@pulse-ts/input';
 import {
@@ -38,12 +40,21 @@ import {
 } from '../config/arena';
 import { KnockoutChannel } from '../config/channels';
 import { triggerCameraShake } from './CameraRigNode';
-import { stagePlayerPosition, markHit, getReplayPosition } from '../replay';
-import { triggerShockwave, worldToScreen } from '../shockwave';
-import { triggerHitImpact } from '../hitImpact';
+import {
+    ReplayStore,
+    stagePlayerPosition,
+    markHit,
+    getReplayPosition,
+} from '../replay';
+import { ShockwaveStore, triggerShockwave, worldToScreen } from '../shockwave';
+import { HitImpactStore, triggerHitImpact } from '../hitImpact';
 import { setPlayerPosition } from '../ai/playerPositions';
-import { setDashCooldownProgress } from '../dashCooldown';
-import { updatePlayerVelocity, getPlayerVelocity } from '../playerVelocity';
+import { DashCooldownStore } from '../dashCooldown';
+import {
+    PlayerVelocityStore,
+    updatePlayerVelocity,
+    getPlayerVelocity,
+} from '../playerVelocity';
 
 /** Sphere radius for the player ball. */
 export const PLAYER_RADIUS = 0.8;
@@ -226,6 +237,12 @@ export function LocalPlayerNode({
     const gameState = useContext(GameCtx);
     const spawn = SPAWN_POSITIONS[playerId];
 
+    const [replay] = useStore(ReplayStore);
+    const [shockwaves] = useStore(ShockwaveStore);
+    const [impacts] = useStore(HitImpactStore);
+    const [cooldown] = useStore(DashCooldownStore);
+    const [velocities] = useStore(PlayerVelocityStore);
+
     useStableId(`player-${playerId}`);
 
     useComponent(PlayerTag);
@@ -334,11 +351,9 @@ export function LocalPlayerNode({
         const container =
             threeRenderer.domElement.parentElement ?? document.body;
         indicatorRing = document.createElement('div');
-        const r = (INDICATOR_RING_COLOR >> 16) & 0xff;
-        const g = (INDICATOR_RING_COLOR >> 8) & 0xff;
-        const b = INDICATOR_RING_COLOR & 0xff;
-        const cssColor = `rgba(${r}, ${g}, ${b}, 0.7)`;
-        const glowColor = `rgba(${r}, ${g}, ${b}, 0.4)`;
+        const indicatorColor = color(INDICATOR_RING_COLOR);
+        const cssColor = indicatorColor.rgba(0.7);
+        const glowColor = indicatorColor.rgba(0.4);
         Object.assign(indicatorRing.style, {
             position: 'absolute',
             borderRadius: '50%',
@@ -434,12 +449,12 @@ export function LocalPlayerNode({
             impactBurst([surfX, surfY, surfZ]);
 
             const [su, sv] = worldToScreen(surfX, surfY, surfZ, threeCamera);
-            triggerShockwave(su, sv);
-            triggerHitImpact(surfX, surfZ);
+            triggerShockwave(shockwaves.slots, su, sv);
+            triggerHitImpact(impacts.slots, surfX, surfZ);
         }
 
         triggerCameraShake(0.3, 0.2);
-        markHit();
+        markHit(replay);
     };
 
     // --- Bidirectional knockback channel (online mode) ---
@@ -524,7 +539,10 @@ export function LocalPlayerNode({
         // the normal (along collision axis) component is corrected; tangential
         // velocity (glancing blows) is preserved from the solver.
         const otherPlayerId = 1 - playerId;
-        const [otherVx, otherVz] = getPlayerVelocity(otherPlayerId);
+        const [otherVx, otherVz] = getPlayerVelocity(
+            velocities.states,
+            otherPlayerId,
+        );
 
         if (replicate) {
             const cdx =
@@ -579,7 +597,7 @@ export function LocalPlayerNode({
         // In online mode, also compute and send the OTHER player's knockback
         // so they can apply it if their physics didn't detect the collision.
         if (publishKnockback) {
-            const [myVx, myVz] = getPlayerVelocity(playerId);
+            const [myVx, myVz] = getPlayerVelocity(velocities.states, playerId);
             const myApproach = computeApproachSpeed(
                 otherTransform.localPosition.x,
                 otherTransform.localPosition.z,
@@ -606,6 +624,7 @@ export function LocalPlayerNode({
     useFixedUpdate((dt) => {
         // Stage position for replay recording and shared position store
         stagePlayerPosition(
+            replay,
             playerId,
             transform.localPosition.x,
             transform.localPosition.y,
@@ -618,6 +637,7 @@ export function LocalPlayerNode({
             transform.localPosition.z,
         );
         updatePlayerVelocity(
+            velocities.states,
             playerId,
             transform.localPosition.x,
             transform.localPosition.z,
@@ -652,7 +672,7 @@ export function LocalPlayerNode({
             // During replay, drive transform from the replay buffer so
             // trsSync (which runs after useFrameUpdate) picks up the position.
             if (gameState.phase === 'replay') {
-                const replayPos = getReplayPosition(playerId);
+                const replayPos = getReplayPosition(replay, playerId);
                 if (replayPos) {
                     transform.localPosition.set(
                         replayPos[0],
@@ -730,17 +750,15 @@ export function LocalPlayerNode({
         const enteringPlaying =
             gameState.phase === 'playing' && lastFramePhase !== 'playing';
         lastFramePhase = gameState.phase;
-        setDashCooldownProgress(
-            playerId,
-            enteringPlaying
-                ? 0
-                : dashCD.ready
-                  ? 1
-                  : 1 - dashCD.remaining / DASH_COOLDOWN,
-        );
-        // useInterpolatedPosition handles normal fixed-to-frame interpolation.
-        // Override for replay and knockout visibility.
-        const replayPos = getReplayPosition(playerId);
+        cooldown.progress[playerId] = enteringPlaying
+            ? 0
+            : dashCD.ready
+              ? 1
+              : 1 - dashCD.remaining / DASH_COOLDOWN;
+        // During replay, override mesh position from the replay buffer.
+        // When knocked out (between death and round reset), hide the mesh
+        // so there's no visible snap-to-spawn before the replay finishes.
+        const replayPos = getReplayPosition(replay, playerId);
         if (replayPos) {
             root.visible = true;
             root.position.set(replayPos[0], replayPos[1], replayPos[2]);

@@ -1,9 +1,14 @@
-import { useFrameUpdate, useDestroy, useContext } from '@pulse-ts/core';
+import {
+    useFrameUpdate,
+    useDestroy,
+    useContext,
+    useStore,
+} from '@pulse-ts/core';
 import { useThreeContext } from '@pulse-ts/three';
 import { isMobileDevice } from '../isMobileDevice';
 import { GameCtx } from '../contexts';
-import { getDashCooldownProgress } from '../dashCooldown';
-import { isReplayActive } from '../replay';
+import { DashCooldownStore } from '../dashCooldown';
+import { ReplayStore, isReplayActive } from '../replay';
 
 export interface DashCooldownHudNodeProps {
     /** Local player ID for reading dash cooldown progress. @defaultValue `0` */
@@ -26,6 +31,8 @@ export function DashCooldownHudNode(
     const gameState = useContext(GameCtx);
     const { renderer } = useThreeContext();
     const container = renderer.domElement.parentElement ?? document.body;
+    const [cooldown] = useStore(DashCooldownStore);
+    const [replay] = useStore(ReplayStore);
 
     // Wrapper — positions and holds both label and bar
     const wrapper = document.createElement('div');
@@ -83,11 +90,11 @@ export function DashCooldownHudNode(
     useFrameUpdate(() => {
         const hidden =
             gameState.phase === 'intro' ||
-            (gameState.phase === 'replay' && isReplayActive());
+            (gameState.phase === 'replay' && isReplayActive(replay));
         wrapper.style.opacity = hidden ? '0' : '1';
 
         if (!hidden) {
-            const progress = getDashCooldownProgress(props?.playerId ?? 0);
+            const progress = cooldown.progress[props?.playerId ?? 0];
             const pct = Math.min(100, Math.round(progress * 100));
             fill.style.width = `${pct}%`;
 

@@ -1,53 +1,20 @@
-import { useContext, useFrameUpdate } from '@pulse-ts/core';
+import {
+    useContext,
+    useFrameUpdate,
+    useStore,
+    curlNoise2D,
+} from '@pulse-ts/core';
 import { useParticleBurst } from '@pulse-ts/effects';
 import { useThreeContext } from '@pulse-ts/three';
 import { ARENA_RADIUS } from '../config/arena';
 import { GameCtx, type RoundPhase } from '../contexts';
 import { isMobileDevice } from '../isMobileDevice';
 import {
-    getActiveHitImpacts,
+    HitImpactStore,
     HIT_IMPACT_DURATION,
     HIT_SCATTER_RADIUS,
     HIT_SCATTER_STRENGTH,
 } from '../hitImpact';
-
-/**
- * Simple 2D value noise using a hash-based approach.
- * Returns a value in [-1, 1].
- *
- * @param x - X coordinate.
- * @param y - Y coordinate.
- * @returns Smoothly varying noise value.
- */
-export function noise2D(x: number, y: number): number {
-    const ix = Math.floor(x);
-    const iy = Math.floor(y);
-    const fx = x - ix;
-    const fy = y - iy;
-
-    // Smooth interpolation curve
-    const ux = fx * fx * (3 - 2 * fx);
-    const uy = fy * fy * (3 - 2 * fy);
-
-    // Hash corners
-    const h00 = hash2(ix, iy);
-    const h10 = hash2(ix + 1, iy);
-    const h01 = hash2(ix, iy + 1);
-    const h11 = hash2(ix + 1, iy + 1);
-
-    // Bilinear interpolation
-    const a = h00 + ux * (h10 - h00);
-    const b = h01 + ux * (h11 - h01);
-    return a + uy * (b - a);
-}
-
-/** Integer hash returning a value in [-1, 1]. */
-function hash2(x: number, y: number): number {
-    let h = (x * 374761393 + y * 668265263 + 1013904223) | 0;
-    h = ((h >> 13) ^ h) | 0;
-    h = (h * (h * h * 15731 + 789221) + 1376312589) | 0;
-    return (h & 0x7fffffff) / 0x3fffffff - 1;
-}
 
 /** Total number of dust particles spawned each round. */
 export const DUST_COUNT = 1500;
@@ -135,6 +102,7 @@ const DUST_LIFETIME = 999999;
 export function AtmosphericDustNode() {
     const { scene } = useThreeContext();
     const gameState = useContext(GameCtx);
+    const [impacts] = useStore(HitImpactStore);
     const mobile = isMobileDevice();
     const dustCount = mobile ? Math.floor(DUST_COUNT / 2) : DUST_COUNT;
 
@@ -211,18 +179,16 @@ export function AtmosphericDustNode() {
             cz = ox * sinA + oz * cosA;
 
             // Curl noise drift (divergence-free, zero net drift)
-            // Skipped on mobile — 4 noise2D calls per particle per frame is expensive.
+            // Skipped on mobile — noise calls per particle per frame is expensive.
             if (!mobile) {
                 const seed = p.userData.noiseSeed as number;
                 const noiseScale = 0.3;
                 const noiseTime = p.age * 0.1;
-                const e = 0.5;
-                const sx = cx * noiseScale + seed;
-                const sz = cz * noiseScale + noiseTime;
-                const curlX =
-                    (noise2D(sx, sz + e) - noise2D(sx, sz - e)) / (2 * e);
-                const curlZ =
-                    -(noise2D(sx + e, sz) - noise2D(sx - e, sz)) / (2 * e);
+                const [curlX, curlZ] = curlNoise2D(
+                    cx * noiseScale + seed,
+                    cz * noiseScale + noiseTime,
+                    { epsilon: 0.5 },
+                );
                 cx += curlX * DUST_NOISE_STRENGTH * dt;
                 cz += curlZ * DUST_NOISE_STRENGTH * dt;
             }
@@ -431,7 +397,7 @@ export function AtmosphericDustNode() {
         }
 
         // Append active hit impacts as high-radius scatter influences
-        for (const slot of getActiveHitImpacts()) {
+        for (const slot of impacts.slots) {
             if (!slot.active) continue;
             // Smoothstep decay from 1→0 over HIT_IMPACT_DURATION
             const t = slot.age / HIT_IMPACT_DURATION;

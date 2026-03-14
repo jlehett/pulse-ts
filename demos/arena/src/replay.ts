@@ -59,24 +59,27 @@ export interface ReplayState {
  * commitFrame(replay);
  * ```
  */
-export const ReplayStore = defineStore('replay', (): ReplayState => ({
-    buffer: [],
-    writeCount: 0,
-    hitWriteCounts: [],
-    active: false,
-    playbackFrames: [],
-    hitIndices: [],
-    hadRealHit: false,
-    cursorPos: 0,
-    knockedOut: -1,
-    scorer: -1,
-    staged0x: 0,
-    staged0y: 0,
-    staged0z: 0,
-    staged1x: 0,
-    staged1y: 0,
-    staged1z: 0,
-}));
+export const ReplayStore = defineStore(
+    'replay',
+    (): ReplayState => ({
+        buffer: [],
+        writeCount: 0,
+        hitWriteCounts: [],
+        active: false,
+        playbackFrames: [],
+        hitIndices: [],
+        hadRealHit: false,
+        cursorPos: 0,
+        knockedOut: -1,
+        scorer: -1,
+        staged0x: 0,
+        staged0y: 0,
+        staged0z: 0,
+        staged1x: 0,
+        staged1y: 0,
+        staged1z: 0,
+    }),
+);
 
 // ---------------------------------------------------------------------------
 // Recording API

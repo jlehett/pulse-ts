@@ -1,6 +1,5 @@
 import {
     AtmosphericDustNode,
-    noise2D,
     DUST_COUNT,
     DUST_COLOR,
     DUST_SPEED_MIN,
@@ -31,25 +30,7 @@ describe('AtmosphericDustNode', () => {
     });
 });
 
-describe('noise2D', () => {
-    it('returns values in [-1, 1]', () => {
-        for (let i = 0; i < 100; i++) {
-            const v = noise2D(i * 0.37, i * 0.53);
-            expect(v).toBeGreaterThanOrEqual(-1);
-            expect(v).toBeLessThanOrEqual(1);
-        }
-    });
-
-    it('is deterministic', () => {
-        expect(noise2D(1.5, 2.3)).toBe(noise2D(1.5, 2.3));
-    });
-
-    it('varies smoothly (nearby inputs produce nearby outputs)', () => {
-        const a = noise2D(1.0, 1.0);
-        const b = noise2D(1.01, 1.0);
-        expect(Math.abs(a - b)).toBeLessThan(0.1);
-    });
-});
+// noise2D was replaced by curlNoise2D from @pulse-ts/core — tested in core package
 
 describe('AtmosphericDustNode constants', () => {
     it('DUST_COUNT is positive and within pool headroom', () => {

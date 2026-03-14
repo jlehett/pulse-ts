@@ -1,5 +1,5 @@
 import { BRAWLER } from '../ai/personalities';
-import { hexToCss, INTRO_DURATION } from './IntroOverlayNode';
+import { INTRO_DURATION } from './IntroOverlayNode';
 
 /* ------------------------------------------------------------------ */
 /*  Mocks                                                              */
@@ -33,6 +33,20 @@ jest.mock('@pulse-ts/core', () => ({
         mockDestroyCallbacks.push(cb);
     },
     useContext: () => mockGameState,
+    color: (hex: number) => {
+        const r = (hex >> 16) & 0xff;
+        const g = (hex >> 8) & 0xff;
+        const b = hex & 0xff;
+        return {
+            num: hex,
+            hex: `#${hex.toString(16).padStart(6, '0')}`,
+            rgb: `rgb(${r}, ${g}, ${b})`,
+            r,
+            g,
+            b,
+            rgba: (a: number) => `rgba(${r}, ${g}, ${b}, ${a})`,
+        };
+    },
 }));
 
 jest.mock('@pulse-ts/three', () => ({
@@ -68,19 +82,7 @@ beforeEach(() => {
 /*  Tests                                                              */
 /* ------------------------------------------------------------------ */
 
-describe('hexToCss', () => {
-    it('converts red', () => {
-        expect(hexToCss(0xff0000)).toBe('rgb(255, 0, 0)');
-    });
-
-    it('converts green', () => {
-        expect(hexToCss(0x00ff00)).toBe('rgb(0, 255, 0)');
-    });
-
-    it('converts arbitrary color', () => {
-        expect(hexToCss(0xe74c3c)).toBe('rgb(231, 76, 60)');
-    });
-});
+// hexToCss was replaced by color() from @pulse-ts/core — tested in core package
 
 describe('IntroOverlayNode', () => {
     function mount() {

@@ -1,7 +1,12 @@
-import { useFrameUpdate, useDestroy, useContext } from '@pulse-ts/core';
+import {
+    useFrameUpdate,
+    useDestroy,
+    useContext,
+    useStore,
+} from '@pulse-ts/core';
 import { useThreeContext } from '@pulse-ts/three';
 import { GameCtx } from '../contexts';
-import { isReplayActive } from '../replay';
+import { ReplayStore, isReplayActive } from '../replay';
 import { ANIM_EASING } from '../overlayAnimations';
 
 /** Player colors: P1 = teal, P2 = coral. */
@@ -82,6 +87,7 @@ export function ScoreHudNode() {
     const gameState = useContext(GameCtx);
     const { renderer } = useThreeContext();
     const container = renderer.domElement.parentElement ?? document.body;
+    const [replay] = useStore(ReplayStore);
 
     // Outer shell: white-filled trapezoid that acts as the border
     const border = document.createElement('div');
@@ -188,7 +194,7 @@ export function ScoreHudNode() {
     }
 
     useFrameUpdate(() => {
-        const inReplay = gameState.phase === 'replay' && isReplayActive();
+        const inReplay = gameState.phase === 'replay' && isReplayActive(replay);
         const hidden = gameState.phase === 'intro' || inReplay;
         border.style.opacity = hidden ? '0' : '1';
 

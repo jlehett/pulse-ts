@@ -1,7 +1,11 @@
-import { useFrameUpdate } from '@pulse-ts/core';
+import { useFrameUpdate, useStore } from '@pulse-ts/core';
 import { useThreeContext } from '@pulse-ts/three';
 import type { ShaderPass } from 'three/examples/jsm/postprocessing/ShaderPass.js';
-import { updateShockwaves, syncShockwaveUniforms } from '../shockwave';
+import {
+    ShockwaveStore,
+    updateShockwaves,
+    syncShockwaveUniforms,
+} from '../shockwave';
 
 export interface ShockwaveNodeProps {
     /** The ShaderPass instance returned by {@link createShockwavePass}. */
@@ -25,11 +29,12 @@ export function ShockwaveNode(props?: Readonly<ShockwaveNodeProps>) {
     if (!pass) return;
 
     const { renderer } = useThreeContext();
+    const [shockwaves] = useStore(ShockwaveStore);
 
     useFrameUpdate((dt) => {
-        updateShockwaves(dt);
+        updateShockwaves(shockwaves.slots, dt);
         const canvas = renderer.domElement;
         const aspect = canvas.clientWidth / canvas.clientHeight;
-        syncShockwaveUniforms(pass, aspect);
+        syncShockwaveUniforms(shockwaves.slots, pass, aspect);
     });
 }
