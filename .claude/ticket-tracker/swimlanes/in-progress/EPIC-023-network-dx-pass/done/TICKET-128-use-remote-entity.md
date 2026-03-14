@@ -2,10 +2,10 @@
 id: TICKET-128
 epic: EPIC-023
 title: useRemoteEntity / useLocalEntity Hooks
-status: todo
+status: done
 priority: medium
 created: 2026-03-13
-updated: 2026-03-13
+updated: 2026-03-14
 labels:
   - network
   - dx
@@ -21,14 +21,14 @@ Design doc: `design-docs/approved/029-use-remote-entity.md`
 
 ## Acceptance Criteria
 
-- [ ] `useLocalEntity(stableId, root)` sets up local entity replication
-- [ ] `useRemoteEntity(stableId, root)` sets up remote entity with interpolation
-- [ ] Returns interpolation data for remote entities
-- [ ] Combines useStableId + useReplicateTransform internally
-- [ ] Backward compatible — individual hooks still available
-- [ ] JSDoc with examples
-- [ ] Unit tests
-- [ ] Documentation updated
+- [x] `useLocalEntity(stableId, root)` sets up local entity replication
+- [x] `useRemoteEntity(stableId, root)` sets up remote entity with interpolation
+- [x] Returns interpolation data for remote entities
+- [x] Combines useStableId + useReplicateTransform internally
+- [x] Backward compatible — individual hooks still available
+- [x] JSDoc with examples
+- [x] Unit tests
+- [x] Documentation updated
 
 ## Notes
 
