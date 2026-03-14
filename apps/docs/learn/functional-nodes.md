@@ -34,6 +34,7 @@ function Player() {
 ## Reactive
 
 - `useWatch(selector, callback)` fires when a derived value changes (strict equality). Defaults to fixed tick. Skips the initial value.
+- `useStateMachine(config)` declarative state machine with `onEnter`/`onExit`/`onUpdate` lifecycle hooks, guard-based auto-transitions, and `sm.send()` for imperative transitions.
 
 ## Composition
 
