@@ -1,6 +1,7 @@
 import { useFrameUpdate, useContext, useStore } from '@pulse-ts/core';
 import { useThreeContext } from '@pulse-ts/three';
 import { useOverlay, Row } from '@pulse-ts/dom';
+import { useAnimate } from '@pulse-ts/effects';
 import { GameCtx } from '../contexts';
 import { ReplayStore, isReplayActive } from '../replay';
 import { ANIM_EASING } from '../overlayAnimations';
@@ -157,6 +158,20 @@ export function ScoreHudNode() {
     let shownP1 = -1;
     let shownP2 = -1;
 
+    // Fire-and-forget flash animations using play(onUpdate)
+    const panelFlash = useAnimate({
+        from: 2.0,
+        to: 1.0,
+        duration: FLASH_DURATION / 1000,
+        easing: 'ease-out',
+    });
+    const numPop = useAnimate({
+        from: 1.35,
+        to: 1.0,
+        duration: FLASH_DURATION / 1000,
+        easing: 'ease-out',
+    });
+
     /** Tracks whether we were in replay last frame. */
     let wasInReplay = false;
 
@@ -164,25 +179,18 @@ export function ScoreHudNode() {
     let scoreRevealTime = 0;
 
     /**
-     * Flash a panel on score change.
+     * Flash a panel on score change using fire-and-forget `play(onUpdate)`.
      *
      * @param panel - The panel element to flash.
      * @param num - The number span inside the panel to scale-pop.
      */
     function flashPanel(panel: HTMLElement, num: HTMLElement): void {
-        panel.style.transition = 'none';
-        panel.style.filter = 'brightness(2.0)';
-
-        num.style.transition = 'none';
-        num.style.transform = 'scale(1.35)';
-
-        void panel.offsetHeight;
-
-        panel.style.transition = `filter ${FLASH_DURATION}ms ${ANIM_EASING}`;
-        panel.style.filter = 'brightness(1)';
-
-        num.style.transition = `transform ${FLASH_DURATION}ms ${ANIM_EASING}`;
-        num.style.transform = 'scale(1)';
+        panelFlash.play((v) => {
+            panel.style.filter = `brightness(${v})`;
+        });
+        numPop.play((v) => {
+            num.style.transform = `scale(${v})`;
+        });
     }
 
     useFrameUpdate(() => {

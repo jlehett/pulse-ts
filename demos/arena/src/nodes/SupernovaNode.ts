@@ -1,5 +1,6 @@
 import { useObject3D } from '@pulse-ts/three';
 import { useFrameUpdate } from '@pulse-ts/core';
+import { useEffectPool } from '@pulse-ts/effects';
 import * as THREE from 'three';
 
 /** Number of sprites in the reusable pool. */
@@ -47,9 +48,8 @@ export const SUPERNOVA_RAY_SHARPNESS = 4;
 /** Radians the corona rotates over the full lifetime — slow spin + expansion = outward radiation. */
 export const SUPERNOVA_CORONA_SPIN = Math.PI / 3;
 
-interface SupernovaState {
-    active: boolean;
-    age: number;
+interface SupernovaSlotData {
+    spriteIndex: number;
     startRotation: number;
 }
 
@@ -258,7 +258,8 @@ export function randomSpherePoint(rMin: number, rMax: number): THREE.Vector3 {
 /**
  * Miniature supernova flashes in the starfield shell.
  *
- * Uses a small pool of `THREE.Sprite` objects with additive blending.
+ * Uses a small pool of `THREE.Sprite` objects with additive blending,
+ * managed by `useEffectPool` for automatic timing and recycling.
  * Periodically spawns a flash at a random shell position that scales up
  * and fades out over {@link SUPERNOVA_LIFETIME} seconds.
  *
@@ -272,7 +273,6 @@ export function SupernovaNode() {
     const group = new THREE.Group();
 
     const sprites: THREE.Sprite[] = [];
-    const states: SupernovaState[] = [];
 
     // HDR near-white color to push additive sprites well above bloom threshold
     const hdrColor = new THREE.Color(
@@ -296,14 +296,23 @@ export function SupernovaNode() {
         sprite.visible = false;
         group.add(sprite);
         sprites.push(sprite);
-        states.push({ active: false, age: 0, startRotation: 0 });
     }
 
     useObject3D(group);
 
+    // Effect pool manages timing and recycling
+    const pool = useEffectPool<SupernovaSlotData>({
+        size: SUPERNOVA_POOL_SIZE,
+        duration: SUPERNOVA_LIFETIME,
+        create: () => ({ spriteIndex: 0, startRotation: 0 }),
+    });
+
     let timer =
         SUPERNOVA_INTERVAL_MIN +
         Math.random() * (SUPERNOVA_INTERVAL_MAX - SUPERNOVA_INTERVAL_MIN);
+
+    // Track which sprite indices are in use by the pool
+    let nextSpriteIndex = 0;
 
     useFrameUpdate((dt) => {
         // Spawn timer
@@ -314,44 +323,42 @@ export function SupernovaNode() {
                 Math.random() *
                     (SUPERNOVA_INTERVAL_MAX - SUPERNOVA_INTERVAL_MIN);
 
-            // Find an inactive sprite
-            for (let i = 0; i < SUPERNOVA_POOL_SIZE; i++) {
-                if (!states[i].active) {
-                    const pos = randomSpherePoint(
-                        SUPERNOVA_RADIUS_MIN,
-                        SUPERNOVA_RADIUS_MAX,
-                    );
-                    sprites[i].position.copy(pos);
-                    sprites[i].visible = true;
-                    states[i].startRotation = Math.random() * Math.PI * 2;
-                    states[i].active = true;
-                    states[i].age = 0;
-                    break;
-                }
-            }
+            // Find an unused sprite by cycling through indices
+            const idx = nextSpriteIndex;
+            nextSpriteIndex = (nextSpriteIndex + 1) % SUPERNOVA_POOL_SIZE;
+
+            const pos = randomSpherePoint(
+                SUPERNOVA_RADIUS_MIN,
+                SUPERNOVA_RADIUS_MAX,
+            );
+            sprites[idx].position.copy(pos);
+            sprites[idx].visible = true;
+
+            pool.trigger({
+                spriteIndex: idx,
+                startRotation: Math.random() * Math.PI * 2,
+            });
         }
 
-        // Animate active sprites
+        // First, hide all sprites — then show only active ones
         for (let i = 0; i < SUPERNOVA_POOL_SIZE; i++) {
-            if (!states[i].active) continue;
+            sprites[i].visible = false;
+            (sprites[i].material as THREE.SpriteMaterial).opacity = 0;
+        }
 
-            states[i].age += dt;
-            const t = states[i].age / SUPERNOVA_LIFETIME;
+        // Animate active slots
+        for (const slot of pool.active()) {
+            const idx = slot.data.spriteIndex;
+            const t = slot.progress;
 
-            if (t >= 1) {
-                // Deactivate
-                sprites[i].visible = false;
-                (sprites[i].material as THREE.SpriteMaterial).opacity = 0;
-                states[i].active = false;
-                continue;
-            }
+            sprites[idx].visible = true;
 
             // Scale: ease-out quadratic expansion
             const easeOut = 1 - (1 - t) * (1 - t);
             const scale =
                 SUPERNOVA_SCALE_START +
                 (SUPERNOVA_SCALE_END - SUPERNOVA_SCALE_START) * easeOut;
-            sprites[i].scale.setScalar(scale);
+            sprites[idx].scale.setScalar(scale);
 
             // Opacity: ramp up (0–10%), sustain (10–30%), fade out (30–100%)
             let opacity: number;
@@ -362,12 +369,12 @@ export function SupernovaNode() {
             } else {
                 opacity = 1 - (t - 0.3) / 0.7;
             }
-            const mat = sprites[i].material as THREE.SpriteMaterial;
+            const mat = sprites[idx].material as THREE.SpriteMaterial;
             mat.opacity = opacity;
 
             // Corona spin: slow rotation over lifetime creates outward radiation
             mat.rotation =
-                states[i].startRotation + easeOut * SUPERNOVA_CORONA_SPIN;
+                slot.data.startRotation + easeOut * SUPERNOVA_CORONA_SPIN;
         }
     });
 }

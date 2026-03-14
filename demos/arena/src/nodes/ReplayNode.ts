@@ -26,8 +26,8 @@ import {
 } from '../replay';
 import { PLAYER_COLORS, TRAIL_BASE_INTERVAL } from '../config/arena';
 import { triggerCameraShake } from './CameraRigNode';
-import { ShockwaveStore, triggerShockwave, worldToScreen } from '../shockwave';
-import { HitImpactStore, triggerHitImpact } from '../hitImpact';
+import { useShockwavePool, worldToScreen } from '../shockwave';
+import { useHitImpactPool } from '../hitImpact';
 
 /** Height of each cinematic letterbox bar as a CSS value. */
 export const LETTERBOX_HEIGHT = '8%';
@@ -67,8 +67,8 @@ export function ReplayNode() {
     const { renderer, camera } = useThreeContext();
 
     const [replay] = useStore(ReplayStore);
-    const [shockwaves] = useStore(ShockwaveStore);
-    const [impacts] = useStore(HitImpactStore);
+    const shockwavePool = useShockwavePool();
+    const hitImpactPool = useHitImpactPool();
     const container = renderer.domElement.parentElement ?? document.body;
 
     // Dark flash overlay — masks the position jump entering/exiting replay
@@ -298,8 +298,8 @@ export function ReplayNode() {
                         hitImpactBurst([mx, my, mz]);
                         triggerCameraShake(0.4, 0.3);
                         const [su, sv] = worldToScreen(mx, my, mz, camera);
-                        triggerShockwave(shockwaves.slots, su, sv);
-                        triggerHitImpact(impacts.slots, mx, mz);
+                        shockwavePool.trigger({ centerX: su, centerY: sv });
+                        hitImpactPool.trigger({ worldX: mx, worldZ: mz });
                         impactSfx.play();
                     }
                     hitBurstsEmitted.add(hitIdx);

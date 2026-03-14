@@ -1,3 +1,40 @@
+jest.mock(
+    '@pulse-ts/core',
+    () => ({
+        useFrameUpdate: jest.fn(),
+    }),
+    { virtual: true },
+);
+
+jest.mock(
+    '@pulse-ts/three',
+    () => ({
+        useObject3D: jest.fn(),
+    }),
+    { virtual: true },
+);
+
+jest.mock(
+    '@pulse-ts/effects',
+    () => ({
+        useEffectPool: jest.fn().mockReturnValue({
+            trigger: jest.fn(),
+            active: () => [],
+            hasActive: false,
+            reset: jest.fn(),
+        }),
+    }),
+    { virtual: true },
+);
+
+jest.mock('three', () => {
+    const actual = jest.requireActual('three');
+    return {
+        ...actual,
+        CanvasTexture: jest.fn().mockImplementation(() => ({})),
+    };
+});
+
 import {
     SupernovaNode,
     createSupernovaTexture,
