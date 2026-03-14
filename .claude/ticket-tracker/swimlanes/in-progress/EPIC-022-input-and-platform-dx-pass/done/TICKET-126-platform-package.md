@@ -2,10 +2,10 @@
 id: TICKET-126
 epic: EPIC-022
 title: Platform Package (@pulse-ts/platform)
-status: todo
+status: done
 priority: low
 created: 2026-03-13
-updated: 2026-03-13
+updated: 2026-03-14
 labels:
   - platform
   - new-package
@@ -22,13 +22,13 @@ Design doc: `design-docs/approved/014-platform-package.md`
 
 ## Acceptance Criteria
 
-- [ ] New `@pulse-ts/platform` package created
-- [ ] `isMobile()` returns boolean based on user agent / touch support
-- [ ] `installMobileSupport(options)` handles fullscreen, orientation lock, install prompt
-- [ ] Options are all optional with sensible defaults
-- [ ] JSDoc with examples
-- [ ] Unit tests (mocked environment)
-- [ ] Documentation: overview, quickstart
+- [x] New `@pulse-ts/platform` package created
+- [x] `isMobile()` returns boolean based on user agent / touch support
+- [x] `installMobileSupport(options)` handles fullscreen, orientation lock, install prompt
+- [x] Options are all optional with sensible defaults
+- [x] JSDoc with examples
+- [x] Unit tests (mocked environment)
+- [x] Documentation: overview, quickstart
 
 ## Notes
 
