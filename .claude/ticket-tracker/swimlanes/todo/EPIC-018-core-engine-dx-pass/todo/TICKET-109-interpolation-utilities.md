@@ -4,6 +4,7 @@ epic: EPIC-018
 title: Interpolation Utilities
 status: todo
 priority: medium
+branch: ticket-109-interpolation-utilities
 created: 2026-03-13
 updated: 2026-03-13
 labels:
