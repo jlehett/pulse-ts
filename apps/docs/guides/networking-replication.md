@@ -19,7 +19,37 @@ await installNetwork(serverWorld, { systems: { interpolation: false } })
 await installNetwork(clientWorld, { systems: { snapshot: false } })
 ```
 
-## Transform helper
+## Entity convenience hooks
+
+`useLocalEntity` and `useRemoteEntity` combine stable ID assignment and transform replication into a single call, reducing boilerplate for the most common case.
+
+```ts
+import { useLocalEntity, useRemoteEntity } from '@pulse-ts/network'
+
+// Producer side (server or local player)
+function LocalPlayer() {
+  useLocalEntity(`player-${playerId}`)
+}
+
+// Consumer side (remote player)
+function RemotePlayer() {
+  const remote = useRemoteEntity(`player-${remotePlayerId}`, { lambda: 25 })
+
+  useFixedUpdate(() => {
+    const rv = remote.targetVelocity
+    if (rv) setPlayerVelocity(remotePlayerId, rv.x, rv.z)
+
+    const rp = remote.targetPosition
+    if (rp) console.log('remote at', rp.x, rp.y, rp.z)
+  })
+}
+```
+
+`useRemoteEntity` returns a `RemoteEntityHandle` with lazy accessors for `targetVelocity` and `targetPosition` from the `InterpolationService`, returning `null` before the first network update.
+
+## Transform helper (lower-level)
+
+For more control (e.g., `role: 'both'`, custom `snapDist`, or velocity readers), use `useReplicateTransform` directly:
 
 ```ts
 import { useReplicateTransform } from '@pulse-ts/network'
