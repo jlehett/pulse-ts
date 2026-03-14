@@ -15,6 +15,9 @@
 ## Interfaces
 
 - [InputProvider](interfaces/InputProvider.md)
+- [JoystickRenderState](interfaces/JoystickRenderState.md)
+- [VirtualJoystickHandle](interfaces/VirtualJoystickHandle.md)
+- [VirtualJoystickOptions](interfaces/VirtualJoystickOptions.md)
 
 ## Type Aliases
 
@@ -52,3 +55,4 @@
 - [useAxis2D](functions/useAxis2D.md)
 - [useInput](functions/useInput.md)
 - [usePointer](functions/usePointer.md)
+- [useVirtualJoystick](functions/useVirtualJoystick.md)

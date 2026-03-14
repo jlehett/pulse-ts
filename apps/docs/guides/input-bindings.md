@@ -85,6 +85,46 @@ const off = input.actionEvent.on(({ name, state }) => {
 off();
 ```
 
+## Virtual joystick (touch/mobile)
+
+Use `useVirtualJoystick` to create a touch-based virtual joystick that injects into the input system as a held Axis2D value. The hook handles all touch math (touch ID tracking, deadzone, normalization) and provides pluggable visuals.
+
+```ts
+import { useVirtualJoystick } from '@pulse-ts/input';
+
+// Default visuals (circle + knob)
+const joystick = useVirtualJoystick('move', {
+  position: 'bottom-left',
+  size: 120,
+  deadzone: 0.15,
+});
+
+// Hide/show based on game state
+joystick.setVisible(false);
+
+// Read current axis values
+const { x, y } = joystick.axes;
+
+// Clean up
+joystick.destroy();
+```
+
+Custom visuals via the `render` callback:
+
+```ts
+const joystick = useVirtualJoystick('move', {
+  position: 'bottom-right',
+  render: (state) => {
+    const el = document.createElement('div');
+    // state.knobX(), state.knobY() — pixel offsets (reactive getters)
+    // state.axisX(), state.axisY() — normalized -1..1 (reactive getters)
+    // state.active() — whether touch is active (reactive getter)
+    // state.size — joystick diameter in pixels
+    return el;
+  },
+});
+```
+
 ## Tips
 
 - Set `preventDefault` to avoid scrolling/back/forward during gameplay.
