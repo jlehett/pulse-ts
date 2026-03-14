@@ -2,10 +2,10 @@
 id: TICKET-123
 epic: EPIC-021
 title: useEffectPool Hook
-status: todo
+status: done
 priority: medium
 created: 2026-03-13
-updated: 2026-03-13
+updated: 2026-03-14
 labels:
   - effects
   - dx
@@ -21,14 +21,14 @@ Design doc: `design-docs/approved/016-use-effect-pool.md`
 
 ## Acceptance Criteria
 
-- [ ] `useEffectPool(size, duration)` creates a fixed-size pool
-- [ ] `pool.trigger(data)` activates the oldest inactive slot (or recycles oldest active)
-- [ ] Each slot has `active`, `progress` (0→1), and user data
-- [ ] Slots auto-deactivate when progress reaches 1
-- [ ] `pool.active()` iterates currently active slots
-- [ ] JSDoc with examples
-- [ ] Unit tests for triggering, recycling, progress, auto-deactivation
-- [ ] Documentation updated
+- [x] `useEffectPool(size, duration)` creates a fixed-size pool
+- [x] `pool.trigger(data)` activates the oldest inactive slot (or recycles oldest active)
+- [x] Each slot has `active`, `progress` (0→1), and user data
+- [x] Slots auto-deactivate when progress reaches 1
+- [x] `pool.active()` iterates currently active slots
+- [x] JSDoc with examples
+- [x] Unit tests for triggering, recycling, progress, auto-deactivation
+- [x] Documentation updated
 
 ## Notes
 

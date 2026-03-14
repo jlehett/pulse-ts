@@ -24,6 +24,14 @@ export type {
     ParticleStyleOptions,
 } from '../domain/ParticlesService';
 
+// Effect pool
+export { useEffectPool } from './useEffectPool';
+export type {
+    EffectPoolOptions,
+    EffectSlot,
+    EffectPoolHandle,
+} from './useEffectPool';
+
 // Animated values
 export { useAnimate } from './useAnimate';
 export type {
