@@ -89,6 +89,24 @@ export class InterpolationService extends Service {
         return e?.target.v ?? null;
     }
 
+    /**
+     * Returns the most recent replicated position for an entity, or `null`
+     * if no position data has been received.
+     *
+     * @param id - The stable entity identifier.
+     * @returns The position `{x, y, z}` from the latest target, or `null`.
+     *
+     * @example
+     * ```ts
+     * const p = interp.getTargetPosition('player-1');
+     * if (p) console.log(p.x, p.y, p.z);
+     * ```
+     */
+    getTargetPosition(id: string): { x: number; y: number; z: number } | null {
+        const e = this.m.get(id);
+        return e?.target.p ?? null;
+    }
+
     /** Steps interpolation toward targets for all registered entities.
      * @param dt Delta time in seconds. */
     tick(dt: number) {

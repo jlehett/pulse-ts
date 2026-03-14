@@ -24,6 +24,11 @@ export {
     useClockSync,
 } from './public/hooks';
 export { useReplicateTransform } from './public/transform';
+export {
+    useRemoteEntity,
+    useLocalEntity,
+    type RemoteEntityHandle,
+} from './public/entity';
 // Service classes for direct world.getService() access
 export { TransportService } from './domain/services/TransportService';
 export { InterpolationService } from './domain/services/InterpolationService';
