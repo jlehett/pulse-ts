@@ -276,6 +276,73 @@ export function useChild<P>(fc: (props: Readonly<P>) => void, props?: P): Node {
 }
 
 /**
+ * Conditionally mount/unmount a child node based on a reactive guard.
+ *
+ * The guard is evaluated each fixed tick. When it transitions:
+ * - `false → true`: the child FC is mounted as a child of the current node.
+ * - `true → false`: the child node is destroyed.
+ *
+ * The child is also destroyed automatically when the parent node is destroyed.
+ *
+ * @param guard - Evaluated each tick to determine mount state.
+ * @param fc - The function component to mount.
+ * @param props - Props passed to the FC on mount.
+ *
+ * @example
+ * ```ts
+ * import { useConditionalChild } from '@pulse-ts/core';
+ *
+ * // Mount overlay only when disconnected
+ * useConditionalChild(
+ *     () => !isConnected,
+ *     DisconnectOverlayNode,
+ *     { isHost: props.isHost },
+ * );
+ * ```
+ *
+ * @example
+ * ```ts
+ * // Dynamic enemy spawning — reactive to game state
+ * useConditionalChild(
+ *     () => gameState.phase === 'playing' && waveActive,
+ *     EnemyNode,
+ *     { difficulty: currentWave },
+ * );
+ * ```
+ */
+export function useConditionalChild<P>(
+    guard: () => boolean,
+    fc: (props: Readonly<P>) => void,
+    props?: P,
+): void {
+    const { world, node } = current();
+    let childNode: Node | null = null;
+    let mounted = false;
+
+    useFixedUpdate(() => {
+        const shouldMount = guard();
+        if (shouldMount && !mounted) {
+            childNode = world.mount(fc, props, { parent: node });
+            mounted = true;
+        } else if (!shouldMount && mounted) {
+            childNode?.destroy();
+            childNode = null;
+            mounted = false;
+        }
+    });
+
+    useDestroy(() => {
+        // Child is already destroyed recursively by Node.destroy() when the
+        // parent is destroyed, so only clean up if still in the world.
+        if (mounted && childNode?.parent) {
+            childNode.destroy();
+        }
+        childNode = null;
+        mounted = false;
+    });
+}
+
+/**
  * Persistent state hook for Pulse FCs (no re-render model).
  *
  * - Values are stored in the node's `State` component (JSON-serializable recommended).

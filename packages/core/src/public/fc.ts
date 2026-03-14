@@ -13,6 +13,7 @@ export {
     useFrameUpdate,
     useFrameLate,
     useChild,
+    useConditionalChild,
     useState,
     useStableId,
     useService,
