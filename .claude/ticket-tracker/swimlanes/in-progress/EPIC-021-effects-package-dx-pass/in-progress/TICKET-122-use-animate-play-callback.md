@@ -2,10 +2,11 @@
 id: TICKET-122
 epic: EPIC-021
 title: useAnimate Play Callback
-status: todo
+status: in-progress
 priority: low
 created: 2026-03-13
-updated: 2026-03-13
+updated: 2026-03-14
+branch: ticket-122-use-animate-play-callback
 labels:
   - effects
   - dx
