@@ -1,7 +1,7 @@
 import { useCustomMesh } from '@pulse-ts/three';
 import { useFrameUpdate } from '@pulse-ts/core';
 import * as THREE from 'three';
-import { isMobileDevice } from '../isMobileDevice';
+import { isMobile } from '@pulse-ts/platform';
 
 /** Radius of the nebula sphere (beyond the starfield shell). */
 export const NEBULA_RADIUS = 90;
@@ -138,7 +138,7 @@ void main() {
  * ```
  */
 export function NebulaNode() {
-    const mobile = isMobileDevice();
+    const mobile = isMobile();
     const deepColor = new THREE.Color(NEBULA_COLOR_DEEP);
     const brightColor = new THREE.Color(NEBULA_COLOR_BRIGHT);
 

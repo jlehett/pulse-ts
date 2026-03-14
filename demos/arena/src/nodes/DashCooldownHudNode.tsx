@@ -1,7 +1,7 @@
 import { useFrameUpdate, useContext, useStore } from '@pulse-ts/core';
 import { useThreeContext } from '@pulse-ts/three';
 import { useOverlay, Column } from '@pulse-ts/dom';
-import { isMobileDevice } from '../isMobileDevice';
+import { isMobile } from '@pulse-ts/platform';
 import { GameCtx } from '../contexts';
 import { DashCooldownStore } from '../dashCooldown';
 import { ReplayStore, isReplayActive } from '../replay';
@@ -22,7 +22,7 @@ export function DashCooldownHudNode(
     props?: Readonly<DashCooldownHudNodeProps>,
 ) {
     // Only render on desktop --- mobile uses the dash button fill
-    if (isMobileDevice()) return;
+    if (isMobile()) return;
 
     const gameState = useContext(GameCtx);
     const { renderer } = useThreeContext();

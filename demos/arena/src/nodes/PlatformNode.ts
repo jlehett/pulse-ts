@@ -10,7 +10,7 @@ import {
 import { useAnimate } from '@pulse-ts/effects';
 import * as THREE from 'three';
 import { ARENA_RADIUS } from '../config/arena';
-import { isMobileDevice } from '../isMobileDevice';
+import { isMobile } from '@pulse-ts/platform';
 import {
     useHitImpactPool,
     HIT_RIPPLE_DISPLACEMENT,
@@ -564,7 +564,7 @@ export function PlatformNode() {
     glowMesh.position.y = PLATFORM_HEIGHT / 2;
 
     // --- Wake map (CPU-rasterized player trail influence) ---
-    const mobile = isMobileDevice();
+    const mobile = isMobile();
     const wakeSize = mobile ? WAKE_MAP_SIZE_MOBILE : WAKE_MAP_SIZE;
     const wakeMap = createWakeMap(wakeSize);
     const wakeTrail: WakeTrailPoint[] = [];

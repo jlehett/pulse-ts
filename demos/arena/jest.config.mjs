@@ -15,6 +15,7 @@ export default {
     moduleNameMapper: {
         '^@pulse-ts/dom$': '<rootDir>/../../packages/dom/src/index.ts',
         '^@pulse-ts/dom/jsx-runtime$': '<rootDir>/../../packages/dom/src/jsx-runtime/index.ts',
+        '^@pulse-ts/platform$': '<rootDir>/../../packages/platform/src/index.ts',
     },
     setupFiles: ['<rootDir>/setupTests.ts'],
     testMatch: ['**/*.test.ts', '**/*.test.tsx'],

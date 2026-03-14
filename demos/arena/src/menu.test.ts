@@ -1,11 +1,12 @@
-jest.mock('./isMobileDevice', () => ({
-    isMobileDevice: jest.fn(() => false),
+jest.mock('@pulse-ts/platform', () => ({
+    isMobile: jest.fn(() => false),
+    installMobileSupport: jest.fn(() => () => {}),
 }));
 
 import { showMainMenu, type MenuChoice } from './menu';
-import { isMobileDevice } from './isMobileDevice';
+import { isMobile } from '@pulse-ts/platform';
 
-const mockIsMobile = isMobileDevice as jest.Mock;
+const mockIsMobile = isMobile as jest.Mock;
 
 describe('showMainMenu', () => {
     let container: HTMLDivElement;
