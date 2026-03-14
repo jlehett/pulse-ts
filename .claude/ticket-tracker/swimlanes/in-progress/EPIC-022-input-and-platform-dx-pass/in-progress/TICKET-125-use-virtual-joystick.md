@@ -2,10 +2,10 @@
 id: TICKET-125
 epic: EPIC-022
 title: useVirtualJoystick Hook
-status: todo
+status: in-progress
 priority: medium
 created: 2026-03-13
-updated: 2026-03-13
+updated: 2026-03-14
 labels:
   - input
   - dx
@@ -36,3 +36,4 @@ Design doc: `design-docs/approved/015-use-virtual-joystick.md`
 ## Notes
 
 - **2026-03-13**: Ticket created from approved design doc #15.
+- **2026-03-14**: Moved to in-progress.
