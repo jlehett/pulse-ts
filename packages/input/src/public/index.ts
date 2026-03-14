@@ -7,6 +7,13 @@ export { InputCommitSystem } from '../domain/systems/commit';
 
 // FC hooks
 export { useInput, useAction, useAxis1D, useAxis2D, usePointer } from './hooks';
+export { useVirtualJoystick } from './useVirtualJoystick';
+export type {
+    VirtualJoystickOptions,
+    VirtualJoystickHandle,
+    JoystickRenderState,
+    JoystickPosition,
+} from './useVirtualJoystick';
 
 // Testing/bots helper
 export { VirtualInput } from './virtual';
