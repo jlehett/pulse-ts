@@ -1,7 +1,7 @@
 ---
 id: EPIC-025
 title: Arena Demo Engine Migration
-status: in-progress
+status: done
 created: 2026-03-13
 updated: 2026-03-14
 ---
@@ -23,3 +23,4 @@ a showcase of pulse-ts DX.
 
 - **2026-03-13**: Epic created. Depends on completion of EPIC-018 through EPIC-024. Tickets cover core, three.js, DOM, effects, input/platform, network, and audio/physics migrations.
 - **2026-03-14**: Epic implementation started via agent team
+- **2026-03-14**: Epic closed — all tickets complete
