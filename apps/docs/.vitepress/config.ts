@@ -28,6 +28,7 @@ export default defineConfig({
         { text: 'Networking: Replication & Interpolation', link: '/guides/networking-replication' },
         { text: 'Networking: Server Broker (WebSocket)', link: '/guides/networking-server-broker' },
         { text: 'Networking: Cookbook', link: '/guides/networking-cookbook' },
+        { text: 'State Management', link: '/guides/state-management' },
       ]
     },
     search: {

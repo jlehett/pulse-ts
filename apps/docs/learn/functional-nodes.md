@@ -25,6 +25,12 @@ function Player() {
 - `useFrameUpdate(fn)` runs each rendered frame for visuals.
 - Early/Late variants control ordering.
 
+## State
+
+- `useState(key, initial)` stores local state on a node.
+- `useContext` / `useProvideContext` share values through the node tree (parent → descendants).
+- `defineStore` / `useStore` share world-scoped state accessible from any node. See [State Management](/guides/state-management).
+
 ## Composition
 
 - `useChild(Fn, props)` creates child nodes.

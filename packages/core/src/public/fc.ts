@@ -26,3 +26,5 @@ export {
 export type { Context } from '../domain/fc/context';
 export { useTimer, useCooldown } from '../domain/fc/timers';
 export type { TimerHandle, CooldownHandle } from '../domain/fc/timers';
+export { defineStore, useStore } from '../domain/fc/stores';
+export type { StoreDefinition, SetStore } from '../domain/fc/stores';
