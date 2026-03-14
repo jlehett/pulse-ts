@@ -4,6 +4,7 @@ epic: EPIC-018
 title: Scoped State Stores (defineStore / useStore)
 status: todo
 priority: high
+branch: ticket-106-scoped-state-stores
 created: 2026-03-13
 updated: 2026-03-13
 labels:
