@@ -2,10 +2,10 @@
 id: TICKET-127
 epic: EPIC-023
 title: Network Flush on World Destroy
-status: todo
+status: in-progress
 priority: medium
 created: 2026-03-13
-updated: 2026-03-13
+updated: 2026-03-14
 labels:
   - network
   - bugfix
