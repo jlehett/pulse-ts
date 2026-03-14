@@ -2,7 +2,7 @@
 id: TICKET-117
 epic: EPIC-019
 title: useMesh Material Extensions
-status: in-progress
+status: done
 priority: high
 created: 2026-03-13
 updated: 2026-03-14
@@ -23,17 +23,18 @@ Design doc: `design-docs/approved/033-use-mesh-material-extensions.md`
 
 ## Acceptance Criteria
 
-- [ ] Texture map options: map, normalMap, normalScale, emissiveMap, roughnessMap, metalnessMap, alphaMap, envMap
-- [ ] Render state options: side ('front'/'back'/'double'), depthWrite, blending ('normal'/'additive'/'multiply')
-- [ ] Material type option: materialType ('standard'/'basic'/'phong')
-- [ ] String enums for Three.js constants (not raw THREE.* values)
-- [ ] normalScale as `[number, number]` tuple
-- [ ] Backward compatible — all new options are optional
-- [ ] JSDoc with examples
-- [ ] Unit tests for new material options
-- [ ] Documentation updated
+- [x] Texture map options: map, normalMap, normalScale, emissiveMap, roughnessMap, metalnessMap, alphaMap, envMap
+- [x] Render state options: side ('front'/'back'/'double'), depthWrite, blending ('normal'/'additive'/'multiply')
+- [x] Material type option: materialType ('standard'/'basic'/'phong')
+- [x] String enums for Three.js constants (not raw THREE.* values)
+- [x] normalScale as `[number, number]` tuple
+- [x] Backward compatible — all new options are optional
+- [x] JSDoc with examples
+- [x] Unit tests for new material options
+- [x] Documentation updated
 
 ## Notes
 
 - **2026-03-13**: Ticket created from approved design doc #33.
 - **2026-03-14**: Starting implementation
+- **2026-03-14**: Implementation complete
