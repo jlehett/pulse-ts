@@ -16,6 +16,8 @@
 
 ## Interfaces
 
+- [CustomMeshOptions](interfaces/CustomMeshOptions.md)
+- [CustomMeshResult](interfaces/CustomMeshResult.md)
 - [InterpolatedPositionOptions](interfaces/InterpolatedPositionOptions.md)
 - [ScreenPoint](interfaces/ScreenPoint.md)
 - [StatsOverlayOptions](interfaces/StatsOverlayOptions.md)
@@ -33,6 +35,7 @@
 - [createTexture](functions/createTexture.md)
 - [createTexture1D](functions/createTexture1D.md)
 - [installThree](functions/installThree.md)
+- [useCustomMesh](functions/useCustomMesh.md)
 - [useInterpolatedPosition](functions/useInterpolatedPosition.md)
 - [useObject3D](functions/useObject3D.md)
 - [useScreenProjection](functions/useScreenProjection.md)
