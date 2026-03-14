@@ -2,10 +2,11 @@
 id: TICKET-118
 epic: EPIC-019
 title: useCustomMesh Hook
-status: todo
+status: in-progress
 priority: high
 created: 2026-03-13
-updated: 2026-03-13
+updated: 2026-03-14
+branch: ticket-118-use-custom-mesh
 labels:
   - three
   - dx
@@ -34,3 +35,4 @@ Design doc: `design-docs/approved/038-use-custom-mesh.md`
 ## Notes
 
 - **2026-03-13**: Ticket created from approved design doc #38.
+- **2026-03-14**: Starting implementation
