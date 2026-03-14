@@ -31,6 +31,10 @@ function Player() {
 - `useContext` / `useProvideContext` share values through the node tree (parent → descendants).
 - `defineStore` / `useStore` share world-scoped state accessible from any node. See [State Management](/guides/state-management).
 
+## Reactive
+
+- `useWatch(selector, callback)` fires when a derived value changes (strict equality). Defaults to fixed tick. Skips the initial value.
+
 ## Composition
 
 - `useChild(Fn, props)` creates child nodes.
