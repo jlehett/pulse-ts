@@ -2,7 +2,7 @@
 id: TICKET-129
 epic: EPIC-024
 title: Audio Mixing Groups (useSoundGroup)
-status: in-progress
+status: done
 priority: medium
 created: 2026-03-13
 updated: 2026-03-14

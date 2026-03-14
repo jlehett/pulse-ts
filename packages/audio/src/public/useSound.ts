@@ -101,6 +101,20 @@ export interface SoundTypeMap {
 /** The sound types supported by {@link useSound}. */
 export type SoundType = keyof SoundTypeMap;
 
+/**
+ * Additional options accepted by {@link useSound} beyond the sound-type-specific
+ * configuration.
+ */
+export interface SoundExtraOptions {
+    /**
+     * Route this sound through a named mixing group. The sound's gain will be
+     * scaled by the group's volume: `sound.gain * group.volume * masterVolume`.
+     *
+     * Create groups with {@link useSoundGroup}.
+     */
+    group?: string;
+}
+
 /** Handle returned by {@link useSound}. */
 export interface SoundHandle {
     /** Triggers playback. Fire-and-forget — audio nodes self-clean after playback. */
@@ -111,11 +125,15 @@ export interface SoundHandle {
 // Internal play helpers
 // ---------------------------------------------------------------------------
 
-function playTone(audio: AudioService, opts: ToneOptions): void {
+function playTone(
+    audio: AudioService,
+    opts: ToneOptions,
+    groupVolume: number,
+): void {
     const ctx = audio.ensureContext();
     const dest = audio.destination;
     const now = ctx.currentTime;
-    const gain = opts.gain ?? 0.1;
+    const gain = (opts.gain ?? 0.1) * groupVolume;
 
     const osc = ctx.createOscillator();
     osc.type = opts.wave ?? 'sine';
@@ -139,11 +157,15 @@ function playTone(audio: AudioService, opts: ToneOptions): void {
     osc.stop(now + opts.duration);
 }
 
-function playNoise(audio: AudioService, opts: NoiseOptions): void {
+function playNoise(
+    audio: AudioService,
+    opts: NoiseOptions,
+    groupVolume: number,
+): void {
     const ctx = audio.ensureContext();
     const dest = audio.destination;
     const now = ctx.currentTime;
-    const gain = opts.gain ?? 0.1;
+    const gain = (opts.gain ?? 0.1) * groupVolume;
 
     // Generate white noise buffer
     const bufferSize = Math.ceil(ctx.sampleRate * opts.duration);
@@ -178,11 +200,15 @@ function playNoise(audio: AudioService, opts: NoiseOptions): void {
     source.stop(now + opts.duration);
 }
 
-function playArpeggio(audio: AudioService, opts: ArpeggioOptions): void {
+function playArpeggio(
+    audio: AudioService,
+    opts: ArpeggioOptions,
+    groupVolume: number,
+): void {
     const ctx = audio.ensureContext();
     const dest = audio.destination;
     const now = ctx.currentTime;
-    const gain = opts.gain ?? 0.1;
+    const gain = (opts.gain ?? 0.1) * groupVolume;
 
     for (let i = 0; i < opts.notes.length; i++) {
         const offset = i * opts.interval;
@@ -240,6 +266,7 @@ function playArpeggio(audio: AudioService, opts: ArpeggioOptions): void {
  *         frequency: [2000, 500],
  *         duration: 0.15,
  *         gain: 0.12,
+ *         group: 'sfx', // route through the 'sfx' mixing group
  *     });
  *
  *     const collectSfx = useSound('arpeggio', {
@@ -257,21 +284,27 @@ function playArpeggio(audio: AudioService, opts: ArpeggioOptions): void {
  */
 export function useSound<T extends SoundType>(
     type: T,
-    options: SoundTypeMap[T],
+    options: SoundTypeMap[T] & SoundExtraOptions,
 ): SoundHandle {
     const audio = useAudio();
+    const groupName = options.group;
 
     return {
         play() {
+            const groupVolume = audio.getGroupVolume(groupName);
             switch (type) {
                 case 'tone':
-                    playTone(audio, options as ToneOptions);
+                    playTone(audio, options as ToneOptions, groupVolume);
                     break;
                 case 'noise':
-                    playNoise(audio, options as NoiseOptions);
+                    playNoise(audio, options as NoiseOptions, groupVolume);
                     break;
                 case 'arpeggio':
-                    playArpeggio(audio, options as ArpeggioOptions);
+                    playArpeggio(
+                        audio,
+                        options as ArpeggioOptions,
+                        groupVolume,
+                    );
                     break;
             }
         },
