@@ -1,0 +1,14 @@
+{
+    "extends": "../../configs/tsconfig.base.json",
+    "compilerOptions": {
+        "outDir": "dist",
+        "rootDir": "src",
+        "baseUrl": "./",
+        "noEmit": true,
+        "declaration": false,
+        "jsx": "react-jsx",
+        "jsxImportSource": "@pulse-ts/dom"
+    },
+    "include": ["src"],
+    "exclude": ["dist"]
+}
