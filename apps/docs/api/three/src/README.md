@@ -16,6 +16,7 @@
 
 ## Interfaces
 
+- [InterpolatedPositionOptions](interfaces/InterpolatedPositionOptions.md)
 - [ScreenPoint](interfaces/ScreenPoint.md)
 - [StatsOverlayOptions](interfaces/StatsOverlayOptions.md)
 - [ThreeOptions](interfaces/ThreeOptions.md)
@@ -24,6 +25,7 @@
 ## Functions
 
 - [installThree](functions/installThree.md)
+- [useInterpolatedPosition](functions/useInterpolatedPosition.md)
 - [useObject3D](functions/useObject3D.md)
 - [useScreenProjection](functions/useScreenProjection.md)
 - [useThreeContext](functions/useThreeContext.md)
