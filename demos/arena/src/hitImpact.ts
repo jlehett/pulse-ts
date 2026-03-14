@@ -1,3 +1,5 @@
+import { defineStore } from '@pulse-ts/core';
+
 // ---------------------------------------------------------------------------
 // Constants
 // ---------------------------------------------------------------------------
@@ -17,7 +19,7 @@ export const HIT_SCATTER_STRENGTH = 7.0;
 /** Peak UV displacement for the grid ripple ring. */
 export const HIT_RIPPLE_DISPLACEMENT = 0.04;
 
-/** Maximum normalized radius the ripple ring expands to (0–1 UV space). */
+/** Maximum normalized radius the ripple ring expands to (0-1 UV space). */
 export const HIT_RIPPLE_MAX_RADIUS = 0.9;
 
 /** Seconds for the ripple ring to expand from center to max radius. */
@@ -42,15 +44,29 @@ export interface HitImpactSlot {
     age: number;
 }
 
-const slots: HitImpactSlot[] = Array.from(
-    { length: HIT_IMPACT_POOL_SIZE },
-    () => ({
-        active: false,
-        worldX: 0,
-        worldZ: 0,
-        age: 0,
-    }),
-);
+/**
+ * Store definition for hit impact pool state.
+ *
+ * @example
+ * ```ts
+ * import { useStore } from '@pulse-ts/core';
+ * import { HitImpactStore, triggerHitImpact } from '../hitImpact';
+ *
+ * const [impacts] = useStore(HitImpactStore);
+ * triggerHitImpact(impacts.slots, 2.5, -1.0);
+ * ```
+ */
+export const HitImpactStore = defineStore('hitImpact', () => ({
+    slots: Array.from(
+        { length: HIT_IMPACT_POOL_SIZE },
+        (): HitImpactSlot => ({
+            active: false,
+            worldX: 0,
+            worldZ: 0,
+            age: 0,
+        }),
+    ),
+}));
 
 // ---------------------------------------------------------------------------
 // Public API
@@ -60,18 +76,23 @@ const slots: HitImpactSlot[] = Array.from(
  * Trigger a hit impact at the given world-space position.
  * If all slots are occupied, the oldest (highest age) is recycled.
  *
+ * @param slots - The hit impact slots from the store.
  * @param worldX - World-space X coordinate of the hit.
  * @param worldZ - World-space Z coordinate of the hit.
  *
  * @example
  * ```ts
- * triggerHitImpact(2.5, -1.0);
+ * triggerHitImpact(impacts.slots, 2.5, -1.0);
  * ```
  */
-export function triggerHitImpact(worldX: number, worldZ: number): void {
+export function triggerHitImpact(
+    slots: HitImpactSlot[],
+    worldX: number,
+    worldZ: number,
+): void {
     let slot = slots.find((s) => !s.active);
     if (!slot) {
-        // Recycle oldest — highest age
+        // Recycle oldest -- highest age
         slot = slots.reduce((oldest, s) => (s.age > oldest.age ? s : oldest));
     }
     slot.active = true;
@@ -83,14 +104,15 @@ export function triggerHitImpact(worldX: number, worldZ: number): void {
 /**
  * Advance all active hit impacts by `dt` seconds. Deactivates expired ones.
  *
+ * @param slots - The hit impact slots from the store.
  * @param dt - Frame delta time in seconds.
  *
  * @example
  * ```ts
- * updateHitImpacts(1 / 60);
+ * updateHitImpacts(impacts.slots, 1 / 60);
  * ```
  */
-export function updateHitImpacts(dt: number): void {
+export function updateHitImpacts(slots: HitImpactSlot[], dt: number): void {
     for (const slot of slots) {
         if (!slot.active) continue;
         slot.age += dt;
@@ -101,42 +123,30 @@ export function updateHitImpacts(dt: number): void {
 }
 
 /**
- * Returns a readonly view of the slot array for reading active hit impacts.
- *
- * @returns The array of hit impact slots.
- *
- * @example
- * ```ts
- * for (const slot of getActiveHitImpacts()) {
- *     if (slot.active) { ... }
- * }
- * ```
- */
-export function getActiveHitImpacts(): readonly HitImpactSlot[] {
-    return slots;
-}
-
-/**
  * Returns `true` if at least one hit impact slot is active.
  *
+ * @param slots - The hit impact slots from the store.
+ *
  * @example
  * ```ts
- * if (hasActiveHitImpact()) { ... }
+ * if (hasActiveHitImpact(impacts.slots)) { ... }
  * ```
  */
-export function hasActiveHitImpact(): boolean {
+export function hasActiveHitImpact(slots: HitImpactSlot[]): boolean {
     return slots.some((s) => s.active);
 }
 
 /**
- * Reset all hit impact slots to inactive. Useful for testing.
+ * Reset all hit impact slots to inactive.
+ *
+ * @param slots - The hit impact slots from the store.
  *
  * @example
  * ```ts
- * resetHitImpacts();
+ * resetHitImpacts(impacts.slots);
  * ```
  */
-export function resetHitImpacts(): void {
+export function resetHitImpacts(slots: HitImpactSlot[]): void {
     for (const s of slots) {
         s.active = false;
         s.worldX = 0;

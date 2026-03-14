@@ -1,4 +1,5 @@
 import {
+    ReplayStore,
     recordFrame,
     markHit,
     startReplay,
@@ -18,30 +19,31 @@ import {
     endReplay,
     clearRecording,
     resetReplay,
+    type ReplayState,
 } from './replay';
 
-afterEach(() => {
-    resetReplay();
-});
+function create(): ReplayState {
+    return ReplayStore._factory();
+}
 
 describe('recordFrame + startReplay', () => {
     it('records and replays player positions', () => {
-        recordFrame(1, 2, 3, 4, 5, 6);
-        recordFrame(7, 8, 9, 10, 11, 12);
+        const s = create();
+        recordFrame(s, 1, 2, 3, 4, 5, 6);
+        recordFrame(s, 7, 8, 9, 10, 11, 12);
 
-        startReplay(1);
-        expect(isReplayActive()).toBe(true);
-        expect(getReplayScorer()).toBe(0);
-        expect(getReplayKnockedOut()).toBe(1);
+        startReplay(s, 1);
+        expect(isReplayActive(s)).toBe(true);
+        expect(getReplayScorer(s)).toBe(0);
+        expect(getReplayKnockedOut(s)).toBe(1);
 
-        // Cursor starts at 0 — first recorded frame
-        const p0 = getReplayPosition(0);
+        const p0 = getReplayPosition(s, 0);
         expect(p0).not.toBeNull();
         expect(p0![0]).toBeCloseTo(1);
         expect(p0![1]).toBeCloseTo(2);
         expect(p0![2]).toBeCloseTo(3);
 
-        const p1 = getReplayPosition(1);
+        const p1 = getReplayPosition(s, 1);
         expect(p1).not.toBeNull();
         expect(p1![0]).toBeCloseTo(4);
         expect(p1![1]).toBeCloseTo(5);
@@ -49,57 +51,52 @@ describe('recordFrame + startReplay', () => {
     });
 
     it('ring buffer overwrites oldest frames', () => {
-        // Write 250 frames (buffer is 240 at 4s * 60Hz)
+        const s = create();
         for (let i = 0; i < 250; i++) {
-            recordFrame(i, 0, 0, -i, 0, 0);
+            recordFrame(s, i, 0, 0, -i, 0, 0);
         }
-        startReplay(0);
+        startReplay(s, 0);
 
-        // First available frame should be frame 10 (frames 0-9 were overwritten by ring)
-        const p0 = getReplayPosition(0);
+        const p0 = getReplayPosition(s, 0);
         expect(p0).not.toBeNull();
-        // 250 - 240 = 10 overwritten, first available is frame 10
         expect(p0![0]).toBeCloseTo(10);
     });
 });
 
 describe('advanceReplay', () => {
     it('advances cursor and eventually ends', () => {
+        const s = create();
         for (let i = 0; i < 10; i++) {
-            recordFrame(i, 0, 0, 0, 0, i);
+            recordFrame(s, i, 0, 0, 0, 0, i);
         }
-        startReplay(1);
+        startReplay(s, 1);
 
-        // Advance with large dt to finish quickly
         let playing = true;
         let steps = 0;
         while (playing && steps < 1000) {
-            playing = advanceReplay(0.1);
+            playing = advanceReplay(s, 0.1);
             steps++;
         }
         expect(playing).toBe(false);
-        expect(isReplayActive()).toBe(false);
+        expect(isReplayActive(s)).toBe(false);
     });
 
     it('returns false when no replay is active', () => {
-        expect(advanceReplay(0.016)).toBe(false);
+        const s = create();
+        expect(advanceReplay(s, 0.016)).toBe(false);
     });
 });
 
 describe('getReplayPosition interpolation', () => {
     it('interpolates between frames', () => {
-        recordFrame(0, 0, 0, 0, 0, 0);
-        recordFrame(10, 0, 0, 0, 0, 0);
-        startReplay(1);
+        const s = create();
+        recordFrame(s, 0, 0, 0, 0, 0, 0);
+        recordFrame(s, 10, 0, 0, 0, 0, 0);
+        startReplay(s, 1);
 
-        // Advance cursor to approximately midpoint
-        // No markHit → hitIndex = -1 → speed = REPLAY_NORMAL_SPEED (0.8)
-        // cursor += dt * 0.8 * 60 = dt * 48
-        // For cursor ≈ 0.5: dt ≈ 0.5/48 ≈ 0.0104
-        advanceReplay(0.0104);
-        const p0 = getReplayPosition(0);
+        advanceReplay(s, 0.0104);
+        const p0 = getReplayPosition(s, 0);
         expect(p0).not.toBeNull();
-        // Should be roughly between 0 and 10
         expect(p0![0]).toBeGreaterThan(1);
         expect(p0![0]).toBeLessThan(9);
     });
@@ -107,261 +104,269 @@ describe('getReplayPosition interpolation', () => {
 
 describe('getSpeedAtFrame', () => {
     it('returns normal speed far from hit', () => {
-        // No replay started, hitIndex = -1 → always normal
-        expect(getSpeedAtFrame(0)).toBeCloseTo(0.8);
-        expect(getSpeedAtFrame(100)).toBeCloseTo(0.8);
+        expect(getSpeedAtFrame([], 0)).toBeCloseTo(0.8);
+        expect(getSpeedAtFrame([], 100)).toBeCloseTo(0.8);
     });
 
     it('returns hit speed at the hit frame', () => {
-        // Record 10 frames, mark hit at frame 5
+        const s = create();
         for (let i = 0; i < 10; i++) {
-            recordFrame(i, 0, 0, 0, 0, 0);
-            if (i === 5) markHit();
+            recordFrame(s, i, 0, 0, 0, 0, 0);
+            if (i === 5) markHit(s);
         }
-        startReplay(1);
+        startReplay(s, 1);
 
-        // Advance cursor to near the hit frame (~5)
-        // Speed varies near hit; a dt of ~0.15 should get close
-        advanceReplay(0.15);
-        // Hit proximity should be high when cursor is near hitIndex
-        expect(getReplayHitProximity()).toBeGreaterThan(0.5);
+        advanceReplay(s, 0.15);
+        expect(getReplayHitProximity(s)).toBeGreaterThan(0.5);
     });
 });
 
 describe('getReplayHitProximity', () => {
     it('returns 0 when no replay is active', () => {
-        expect(getReplayHitProximity()).toBe(0);
+        const s = create();
+        expect(getReplayHitProximity(s)).toBe(0);
     });
 
     it('returns > 0 when cursor is near hit frame', () => {
+        const s = create();
         for (let i = 0; i < 20; i++) {
-            recordFrame(i, 0, 0, 0, 0, 0);
-            if (i === 5) markHit();
+            recordFrame(s, i, 0, 0, 0, 0, 0);
+            if (i === 5) markHit(s);
         }
-        startReplay(1);
-        // Cursor starts at 0, hit at frame 5 — within window
-        expect(getReplayHitProximity()).toBeGreaterThan(0);
+        startReplay(s, 1);
+        expect(getReplayHitProximity(s)).toBeGreaterThan(0);
     });
 });
 
 describe('getReplayVelocity', () => {
     it('returns null when no replay is active', () => {
-        expect(getReplayVelocity(0)).toBeNull();
+        const s = create();
+        expect(getReplayVelocity(s, 0)).toBeNull();
     });
 
     it('computes velocity from position deltas', () => {
-        // Frame 0: player 0 at x=0, Frame 1: player 0 at x=2
-        // Velocity = (2-0) * 60 = 120 units/sec
-        recordFrame(0, 0, 0, 0, 0, 0);
-        recordFrame(2, 0, 0, 0, 0, 0);
-        startReplay(1);
+        const s = create();
+        recordFrame(s, 0, 0, 0, 0, 0, 0);
+        recordFrame(s, 2, 0, 0, 0, 0, 0);
+        startReplay(s, 1);
 
-        const vel = getReplayVelocity(0);
+        const vel = getReplayVelocity(s, 0);
         expect(vel).not.toBeNull();
-        expect(vel![0]).toBeCloseTo(120); // dx * FIXED_HZ
+        expect(vel![0]).toBeCloseTo(120);
         expect(vel![1]).toBeCloseTo(0);
         expect(vel![2]).toBeCloseTo(0);
     });
 
-    it('returns zero velocity at end of buffer', () => {
-        recordFrame(0, 0, 0, 0, 0, 0);
-        startReplay(1);
-        // Only 1 frame — can't compute deltas
-        const vel = getReplayVelocity(0);
+    it('returns null with only one frame', () => {
+        const s = create();
+        recordFrame(s, 0, 0, 0, 0, 0, 0);
+        startReplay(s, 1);
+        const vel = getReplayVelocity(s, 0);
         expect(vel).toBeNull();
     });
 });
 
 describe('getReplaySpeed', () => {
     it('returns 0 when no replay is active', () => {
-        expect(getReplaySpeed()).toBe(0);
+        const s = create();
+        expect(getReplaySpeed(s)).toBe(0);
     });
 
     it('returns normal speed when no hit was recorded', () => {
-        // No markHit() call — self-KO, hitIndex = -1, always normal speed
+        const s = create();
         for (let i = 0; i < 60; i++) {
-            recordFrame(i, 0, 0, 0, 0, 0);
+            recordFrame(s, i, 0, 0, 0, 0, 0);
         }
-        startReplay(1);
-        expect(getReplaySpeed()).toBeCloseTo(0.8);
+        startReplay(s, 1);
+        expect(getReplaySpeed(s)).toBeCloseTo(0.8);
     });
 });
 
 describe('getReplayPastHit', () => {
     it('returns 0 when no replay is active', () => {
-        expect(getReplayPastHit()).toBe(0);
+        const s = create();
+        expect(getReplayPastHit(s)).toBe(0);
     });
 
     it('returns 0 when cursor is before the hit', () => {
+        const s = create();
         for (let i = 0; i < 40; i++) {
-            recordFrame(i, 0, 0, 0, 0, 0);
-            if (i === 30) markHit();
+            recordFrame(s, i, 0, 0, 0, 0, 0);
+            if (i === 30) markHit(s);
         }
-        startReplay(1);
-        // Cursor at 0, hit at frame 30 — before hit
-        expect(getReplayPastHit()).toBe(0);
+        startReplay(s, 1);
+        expect(getReplayPastHit(s)).toBe(0);
     });
 
     it('ramps toward 1 when cursor passes the hit', () => {
+        const s = create();
         for (let i = 0; i < 60; i++) {
-            recordFrame(i, 0, 0, 0, 0, 0);
-            if (i === 10) markHit();
+            recordFrame(s, i, 0, 0, 0, 0, 0);
+            if (i === 10) markHit(s);
         }
-        startReplay(1);
-        // Advance cursor well past the hit frame
-        // cursor += dt * speed * 60. At normal speed (0.8):
-        // cursor += 1.0 * ~0.8 * 60 ≈ 48 frames (well past hit at 10)
-        advanceReplay(1.0);
-        expect(getReplayPastHit()).toBeGreaterThan(0);
+        startReplay(s, 1);
+        advanceReplay(s, 1.0);
+        expect(getReplayPastHit(s)).toBeGreaterThan(0);
     });
 });
 
 describe('clearRecording', () => {
     it('clears recording buffer but not active playback', () => {
-        recordFrame(0, 0, 0, 0, 0, 0);
-        recordFrame(1, 0, 0, 0, 0, 0);
-        startReplay(1);
-        expect(isReplayActive()).toBe(true);
+        const s = create();
+        recordFrame(s, 0, 0, 0, 0, 0, 0);
+        recordFrame(s, 1, 0, 0, 0, 0, 0);
+        startReplay(s, 1);
+        expect(isReplayActive(s)).toBe(true);
 
-        clearRecording();
+        clearRecording(s);
 
-        // Playback still active — clearRecording only affects recording
-        expect(isReplayActive()).toBe(true);
+        expect(isReplayActive(s)).toBe(true);
 
-        // New replay after clearing has no frames
-        endReplay();
-        recordFrame(5, 0, 0, 0, 0, 0);
-        startReplay(0);
-        const p0 = getReplayPosition(0);
+        endReplay(s);
+        recordFrame(s, 5, 0, 0, 0, 0, 0);
+        startReplay(s, 0);
+        const p0 = getReplayPosition(s, 0);
         expect(p0).not.toBeNull();
-        expect(p0![0]).toBeCloseTo(5); // only the new frame
+        expect(p0![0]).toBeCloseTo(5);
     });
 });
 
 describe('hasReplayHit', () => {
     it('returns false when no hit was marked', () => {
-        recordFrame(0, 0, 0, 0, 0, 0);
-        recordFrame(1, 0, 0, 0, 0, 0);
-        startReplay(1);
-        expect(hasReplayHit()).toBe(false);
+        const s = create();
+        recordFrame(s, 0, 0, 0, 0, 0, 0);
+        recordFrame(s, 1, 0, 0, 0, 0, 0);
+        startReplay(s, 1);
+        expect(hasReplayHit(s)).toBe(false);
     });
 
     it('returns true when markHit was called before replay', () => {
-        recordFrame(0, 0, 0, 0, 0, 0);
-        markHit();
-        recordFrame(1, 0, 0, 0, 0, 0);
-        startReplay(1);
-        expect(hasReplayHit()).toBe(true);
+        const s = create();
+        recordFrame(s, 0, 0, 0, 0, 0, 0);
+        markHit(s);
+        recordFrame(s, 1, 0, 0, 0, 0, 0);
+        startReplay(s, 1);
+        expect(hasReplayHit(s)).toBe(true);
     });
 
     it('returns false after endReplay', () => {
-        recordFrame(0, 0, 0, 0, 0, 0);
-        markHit();
-        recordFrame(1, 0, 0, 0, 0, 0);
-        startReplay(1);
-        expect(hasReplayHit()).toBe(true);
-        endReplay();
-        expect(hasReplayHit()).toBe(false);
+        const s = create();
+        recordFrame(s, 0, 0, 0, 0, 0, 0);
+        markHit(s);
+        recordFrame(s, 1, 0, 0, 0, 0, 0);
+        startReplay(s, 1);
+        expect(hasReplayHit(s)).toBe(true);
+        endReplay(s);
+        expect(hasReplayHit(s)).toBe(false);
     });
 
     it('self-KO has no slow-motion (normal speed throughout)', () => {
+        const s = create();
         for (let i = 0; i < 20; i++) {
-            recordFrame(i, 0, 0, 0, 0, 0);
+            recordFrame(s, i, 0, 0, 0, 0, 0);
         }
-        // No markHit() — self-KO
-        startReplay(1);
-        expect(hasReplayHit()).toBe(false);
-        // hitIndex = -1 → getSpeedAtFrame always returns normal speed
-        expect(getReplaySpeed()).toBeCloseTo(0.8);
-        // hitProximity should be 0 throughout (no hit to be near)
-        expect(getReplayHitProximity()).toBe(0);
+        startReplay(s, 1);
+        expect(hasReplayHit(s)).toBe(false);
+        expect(getReplaySpeed(s)).toBeCloseTo(0.8);
+        expect(getReplayHitProximity(s)).toBe(0);
     });
 });
 
 describe('getReplayHitIndices (multi-hit)', () => {
     it('returns empty array when no hits recorded', () => {
-        recordFrame(0, 0, 0, 0, 0, 0);
-        startReplay(1);
-        expect(getReplayHitIndices()).toEqual([]);
+        const s = create();
+        recordFrame(s, 0, 0, 0, 0, 0, 0);
+        startReplay(s, 1);
+        expect(getReplayHitIndices(s)).toEqual([]);
     });
 
     it('tracks a single hit', () => {
-        recordFrame(0, 0, 0, 0, 0, 0);
-        markHit();
-        recordFrame(1, 0, 0, 0, 0, 0);
-        startReplay(1);
-        expect(getReplayHitIndices()).toEqual([1]);
+        const s = create();
+        recordFrame(s, 0, 0, 0, 0, 0, 0);
+        markHit(s);
+        recordFrame(s, 1, 0, 0, 0, 0, 0);
+        startReplay(s, 1);
+        expect(getReplayHitIndices(s)).toEqual([1]);
     });
 
     it('tracks multiple hits at different frames', () => {
+        const s = create();
         for (let i = 0; i < 20; i++) {
-            recordFrame(i, 0, 0, 0, 0, 0);
-            if (i === 5 || i === 12) markHit();
+            recordFrame(s, i, 0, 0, 0, 0, 0);
+            if (i === 5 || i === 12) markHit(s);
         }
-        startReplay(1);
-        const indices = getReplayHitIndices();
+        startReplay(s, 1);
+        const indices = getReplayHitIndices(s);
         expect(indices.length).toBe(2);
-        expect(indices[0]).toBe(6); // markHit at write count after frame 5
-        expect(indices[1]).toBe(13); // markHit at write count after frame 12
+        expect(indices[0]).toBe(6);
+        expect(indices[1]).toBe(13);
     });
 
     it('speed slows around all hits, not just the last', () => {
+        const s = create();
         for (let i = 0; i < 80; i++) {
-            recordFrame(i, 0, 0, 0, 0, 0);
-            if (i === 5 || i === 60) markHit();
+            recordFrame(s, i, 0, 0, 0, 0, 0);
+            if (i === 5 || i === 60) markHit(s);
         }
-        startReplay(1);
-        const indices = getReplayHitIndices();
-        // Speed should be slow near both hits
-        expect(getSpeedAtFrame(indices[0])).toBeCloseTo(0.15);
-        expect(getSpeedAtFrame(indices[1])).toBeCloseTo(0.15);
-        // Speed should be normal far from both hits (frame 35 is > 15 from both)
-        expect(getSpeedAtFrame(35)).toBeCloseTo(0.8);
+        startReplay(s, 1);
+        const indices = getReplayHitIndices(s);
+        expect(getSpeedAtFrame(indices as number[], indices[0])).toBeCloseTo(
+            0.15,
+        );
+        expect(getSpeedAtFrame(indices as number[], indices[1])).toBeCloseTo(
+            0.15,
+        );
+        expect(getSpeedAtFrame(indices as number[], 35)).toBeCloseTo(0.8);
     });
 
     it('cleared after endReplay', () => {
-        recordFrame(0, 0, 0, 0, 0, 0);
-        markHit();
-        recordFrame(1, 0, 0, 0, 0, 0);
-        startReplay(1);
-        expect(getReplayHitIndices().length).toBe(1);
-        endReplay();
-        expect(getReplayHitIndices()).toEqual([]);
+        const s = create();
+        recordFrame(s, 0, 0, 0, 0, 0, 0);
+        markHit(s);
+        recordFrame(s, 1, 0, 0, 0, 0, 0);
+        startReplay(s, 1);
+        expect(getReplayHitIndices(s).length).toBe(1);
+        endReplay(s);
+        expect(getReplayHitIndices(s)).toEqual([]);
     });
 });
 
 describe('getReplayCursorPos', () => {
     it('starts at 0', () => {
-        recordFrame(0, 0, 0, 0, 0, 0);
-        recordFrame(1, 0, 0, 0, 0, 0);
-        startReplay(1);
-        expect(getReplayCursorPos()).toBe(0);
+        const s = create();
+        recordFrame(s, 0, 0, 0, 0, 0, 0);
+        recordFrame(s, 1, 0, 0, 0, 0, 0);
+        startReplay(s, 1);
+        expect(getReplayCursorPos(s)).toBe(0);
     });
 
     it('advances with advanceReplay', () => {
-        for (let i = 0; i < 20; i++) recordFrame(i, 0, 0, 0, 0, 0);
-        startReplay(1);
-        advanceReplay(0.1);
-        expect(getReplayCursorPos()).toBeGreaterThan(0);
+        const s = create();
+        for (let i = 0; i < 20; i++) recordFrame(s, i, 0, 0, 0, 0, 0);
+        startReplay(s, 1);
+        advanceReplay(s, 0.1);
+        expect(getReplayCursorPos(s)).toBeGreaterThan(0);
     });
 });
 
 describe('endReplay / resetReplay', () => {
     it('endReplay deactivates playback', () => {
-        recordFrame(0, 0, 0, 0, 0, 0);
-        startReplay(0);
-        expect(isReplayActive()).toBe(true);
-        endReplay();
-        expect(isReplayActive()).toBe(false);
+        const s = create();
+        recordFrame(s, 0, 0, 0, 0, 0, 0);
+        startReplay(s, 0);
+        expect(isReplayActive(s)).toBe(true);
+        endReplay(s);
+        expect(isReplayActive(s)).toBe(false);
     });
 
     it('resetReplay clears all state', () => {
-        recordFrame(0, 0, 0, 0, 0, 0);
-        markHit();
-        startReplay(0);
-        resetReplay();
-        expect(isReplayActive()).toBe(false);
-        expect(getReplayPosition(0)).toBeNull();
-        expect(getReplayScorer()).toBe(-1);
+        const s = create();
+        recordFrame(s, 0, 0, 0, 0, 0, 0);
+        markHit(s);
+        startReplay(s, 0);
+        resetReplay(s);
+        expect(isReplayActive(s)).toBe(false);
+        expect(getReplayPosition(s, 0)).toBeNull();
+        expect(getReplayScorer(s)).toBe(-1);
     });
 });

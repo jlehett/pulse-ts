@@ -27,6 +27,7 @@ jest.mock('three/examples/jsm/postprocessing/ShaderPass.js', () => ({
 }));
 
 import {
+    ShockwaveStore,
     triggerShockwave,
     updateShockwaves,
     syncShockwaveUniforms,
@@ -39,44 +40,42 @@ import {
     SHOCKWAVE_MAX_RADIUS,
     SHOCKWAVE_STRENGTH,
     SHOCKWAVE_RING_WIDTH,
+    type ShockwaveSlot,
 } from './shockwave';
 
-beforeEach(() => {
-    resetShockwaves();
-});
+function createSlots(): ShockwaveSlot[] {
+    return ShockwaveStore._factory().slots;
+}
 
 describe('triggerShockwave', () => {
     it('activates a slot', () => {
-        expect(hasActiveShockwave()).toBe(false);
-        triggerShockwave(0.5, 0.5);
-        expect(hasActiveShockwave()).toBe(true);
+        const slots = createSlots();
+        expect(hasActiveShockwave(slots)).toBe(false);
+        triggerShockwave(slots, 0.5, 0.5);
+        expect(hasActiveShockwave(slots)).toBe(true);
     });
 
     it('supports multiple simultaneous shockwaves', () => {
+        const slots = createSlots();
         for (let i = 0; i < MAX_SHOCKWAVES; i++) {
-            triggerShockwave(i * 0.2, 0.5);
+            triggerShockwave(slots, i * 0.2, 0.5);
         }
-        expect(hasActiveShockwave()).toBe(true);
+        expect(hasActiveShockwave(slots)).toBe(true);
     });
 
     it('recycles oldest slot when all are full', () => {
-        // Fill all slots with staggered elapsed times
+        const slots = createSlots();
         for (let i = 0; i < MAX_SHOCKWAVES; i++) {
-            triggerShockwave(i * 0.1, 0.5);
-            // Advance time so each has different elapsed
-            updateShockwaves(0.01);
+            triggerShockwave(slots, i * 0.1, 0.5);
+            updateShockwaves(slots, 0.01);
         }
 
-        // Trigger one more — should recycle the oldest (slot 0)
-        triggerShockwave(0.99, 0.99);
+        triggerShockwave(slots, 0.99, 0.99);
 
-        // All slots should still be active
-        expect(hasActiveShockwave()).toBe(true);
+        expect(hasActiveShockwave(slots)).toBe(true);
 
-        // Verify the new shockwave was placed (sync and check uniforms)
         const pass = createShockwavePass();
-        syncShockwaveUniforms(pass, 1.0);
-        // At least one center should be at 0.99
+        syncShockwaveUniforms(slots, pass, 1.0);
         let foundNew = false;
         for (let i = 0; i < MAX_SHOCKWAVES; i++) {
             const c = pass.uniforms[`center${i}`].value;
@@ -88,39 +87,41 @@ describe('triggerShockwave', () => {
 
 describe('updateShockwaves', () => {
     it('expires shockwaves after their duration', () => {
-        triggerShockwave(0.5, 0.5);
-        expect(hasActiveShockwave()).toBe(true);
-        updateShockwaves(SHOCKWAVE_DURATION + 0.01);
-        expect(hasActiveShockwave()).toBe(false);
+        const slots = createSlots();
+        triggerShockwave(slots, 0.5, 0.5);
+        expect(hasActiveShockwave(slots)).toBe(true);
+        updateShockwaves(slots, SHOCKWAVE_DURATION + 0.01);
+        expect(hasActiveShockwave(slots)).toBe(false);
     });
 
     it('does not expire before duration', () => {
-        triggerShockwave(0.5, 0.5);
-        updateShockwaves(SHOCKWAVE_DURATION * 0.5);
-        expect(hasActiveShockwave()).toBe(true);
+        const slots = createSlots();
+        triggerShockwave(slots, 0.5, 0.5);
+        updateShockwaves(slots, SHOCKWAVE_DURATION * 0.5);
+        expect(hasActiveShockwave(slots)).toBe(true);
     });
 });
 
 describe('resetShockwaves', () => {
     it('clears all active shockwaves', () => {
-        triggerShockwave(0.5, 0.5);
-        triggerShockwave(0.3, 0.7);
-        expect(hasActiveShockwave()).toBe(true);
-        resetShockwaves();
-        expect(hasActiveShockwave()).toBe(false);
+        const slots = createSlots();
+        triggerShockwave(slots, 0.5, 0.5);
+        triggerShockwave(slots, 0.3, 0.7);
+        expect(hasActiveShockwave(slots)).toBe(true);
+        resetShockwaves(slots);
+        expect(hasActiveShockwave(slots)).toBe(false);
     });
 });
 
 describe('syncShockwaveUniforms', () => {
     it('writes correct uniform values for an active shockwave', () => {
-        triggerShockwave(0.4, 0.6);
-        // Advance halfway through duration
-        updateShockwaves(SHOCKWAVE_DURATION / 2);
+        const slots = createSlots();
+        triggerShockwave(slots, 0.4, 0.6);
+        updateShockwaves(slots, SHOCKWAVE_DURATION / 2);
 
         const pass = createShockwavePass();
-        syncShockwaveUniforms(pass, 1.5);
+        syncShockwaveUniforms(slots, pass, 1.5);
 
-        // Find the active slot
         let activeIdx = -1;
         for (let i = 0; i < MAX_SHOCKWAVES; i++) {
             if (pass.uniforms[`strength${i}`].value > 0) {
@@ -130,7 +131,7 @@ describe('syncShockwaveUniforms', () => {
         }
         expect(activeIdx).toBeGreaterThanOrEqual(0);
 
-        const t = 0.5; // halfway
+        const t = 0.5;
         expect(pass.uniforms[`center${activeIdx}`].value.x).toBe(0.4);
         expect(pass.uniforms[`center${activeIdx}`].value.y).toBe(0.6);
         expect(pass.uniforms[`radius${activeIdx}`].value).toBeCloseTo(
@@ -143,25 +144,28 @@ describe('syncShockwaveUniforms', () => {
     });
 
     it('enables the pass when shockwaves are active', () => {
+        const slots = createSlots();
         const pass = createShockwavePass();
         pass.enabled = false;
 
-        triggerShockwave(0.5, 0.5);
-        syncShockwaveUniforms(pass, 1.0);
+        triggerShockwave(slots, 0.5, 0.5);
+        syncShockwaveUniforms(slots, pass, 1.0);
         expect(pass.enabled).toBe(true);
     });
 
     it('disables the pass when no shockwaves are active', () => {
+        const slots = createSlots();
         const pass = createShockwavePass();
         pass.enabled = true;
 
-        syncShockwaveUniforms(pass, 1.0);
+        syncShockwaveUniforms(slots, pass, 1.0);
         expect(pass.enabled).toBe(false);
     });
 
     it('sets strength to 0 for inactive slots', () => {
+        const slots = createSlots();
         const pass = createShockwavePass();
-        syncShockwaveUniforms(pass, 1.0);
+        syncShockwaveUniforms(slots, pass, 1.0);
         for (let i = 0; i < MAX_SHOCKWAVES; i++) {
             expect(pass.uniforms[`strength${i}`].value).toBe(0);
         }
@@ -189,10 +193,23 @@ describe('createShockwavePass', () => {
 
 describe('worldToScreen', () => {
     it('converts NDC to 0..1 UV space', () => {
-        // Our mock project() returns raw coords, so (0,0,0) → NDC (0,0) → UV (0.5, 0.5)
         const [u, v] = worldToScreen(0, 0, 0, {} as any);
         expect(u).toBeCloseTo(0.5);
         expect(v).toBeCloseTo(0.5);
+    });
+});
+
+describe('ShockwaveStore', () => {
+    it('factory creates correct pool size', () => {
+        const slots = createSlots();
+        expect(slots.length).toBe(MAX_SHOCKWAVES);
+    });
+
+    it('factory returns fresh objects each call', () => {
+        const a = ShockwaveStore._factory();
+        const b = ShockwaveStore._factory();
+        expect(a).not.toBe(b);
+        expect(a.slots).not.toBe(b.slots);
     });
 });
 
