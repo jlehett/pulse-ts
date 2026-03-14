@@ -2,10 +2,10 @@
 id: TICKET-133
 epic: EPIC-025
 title: "Arena migration: DOM overlays"
-status: todo
+status: in-progress
 priority: high
 created: 2026-03-13
-updated: 2026-03-13
+updated: 2026-03-14
 labels:
   - arena
   - migration
