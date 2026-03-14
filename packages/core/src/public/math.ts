@@ -8,3 +8,5 @@ export {
     clamp,
     remap,
 } from '../utils/math/interpolation';
+export { color } from '../utils/math/color';
+export type { Color } from '../utils/math/color';
