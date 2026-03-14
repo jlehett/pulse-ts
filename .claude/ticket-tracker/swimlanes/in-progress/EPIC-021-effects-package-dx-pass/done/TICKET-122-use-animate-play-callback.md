@@ -2,10 +2,11 @@
 id: TICKET-122
 epic: EPIC-021
 title: useAnimate Play Callback
-status: todo
+status: done
 priority: low
 created: 2026-03-13
-updated: 2026-03-13
+updated: 2026-03-14
+branch: ticket-122-use-animate-play-callback
 labels:
   - effects
   - dx
@@ -21,13 +22,13 @@ Design doc: `design-docs/approved/013-use-animate-play-callback.md`
 
 ## Acceptance Criteria
 
-- [ ] `play(onUpdate)` accepts optional callback receiving current value each frame
-- [ ] Callback is called each frame while animation is playing
-- [ ] Works with tween, oscillation, and rate modes
-- [ ] Backward compatible — `play()` with no args still works
-- [ ] JSDoc with examples
-- [ ] Unit tests for callback invocation across modes
-- [ ] Documentation updated
+- [x] `play(onUpdate)` accepts optional callback receiving current value each frame
+- [x] Callback is called each frame while animation is playing
+- [x] Works with tween, oscillation, and rate modes
+- [x] Backward compatible — `play()` with no args still works
+- [x] JSDoc with examples
+- [x] Unit tests for callback invocation across modes
+- [x] Documentation updated
 
 ## Notes
 

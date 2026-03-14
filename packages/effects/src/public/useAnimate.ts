@@ -82,14 +82,36 @@ export type AnimateOptions =
  *
  * Read `.value` each frame to get the current animated number.
  * For tween mode, use `play()`, `reset()`, and `finished`.
- * For oscillation/rate modes, `play()` is a no-op, `reset()` resets
- * elapsed time to zero, and `finished` is always `false`.
+ * For oscillation/rate modes, `play()` registers an optional callback,
+ * `reset()` resets elapsed time to zero, and `finished` is always `false`.
  */
 export interface AnimatedValue {
     /** Current animated value (auto-updated each frame). */
     readonly value: number;
-    /** Start or restart the animation (tween mode only). */
-    play(): void;
+    /**
+     * Start or restart the animation.
+     *
+     * For tween mode this begins playback. For oscillation/rate modes,
+     * the animation runs automatically from mount — `play()` is only
+     * needed if you want to attach a callback.
+     *
+     * @param onUpdate - Optional callback invoked each frame with the
+     *   current animated value. Useful for fire-and-forget consumption
+     *   without a separate `useFrameUpdate`.
+     *
+     * @example
+     * ```ts
+     * const flash = useAnimate({ from: 2.0, to: 1.0, duration: 0.5, easing: 'ease-out' });
+     * flash.play((v) => { panel.style.filter = `brightness(${v})`; });
+     * ```
+     *
+     * @example
+     * ```ts
+     * const pulse = useAnimate({ wave: 'sine', min: 0.4, max: 1.5, frequency: 1.5 });
+     * pulse.play((v) => { material.emissiveIntensity = v; });
+     * ```
+     */
+    play(onUpdate?: (value: number) => void): void;
     /** Reset elapsed time to zero / tween to initial state. */
     reset(): void;
     /** Whether the tween has completed. Always `false` for oscillation/rate. */
@@ -216,18 +238,20 @@ export function useAnimate(options: Readonly<AnimateOptions>): AnimatedValue {
     if (isRate(options)) {
         // Rate mode: value = rate × elapsed
         currentValue = 0;
+        let onUpdate: ((value: number) => void) | undefined;
 
         useFrameUpdate((dt) => {
             elapsed += dt;
             currentValue = options.rate * elapsed;
+            if (onUpdate) onUpdate(currentValue);
         });
 
         return {
             get value() {
                 return currentValue;
             },
-            play() {
-                /* no-op */
+            play(cb?: (value: number) => void) {
+                onUpdate = cb;
             },
             reset() {
                 elapsed = 0;
@@ -244,6 +268,7 @@ export function useAnimate(options: Readonly<AnimateOptions>): AnimatedValue {
         const ease = resolveEasing(options.easing);
         let playing = false;
         let done = false;
+        let onUpdate: ((value: number) => void) | undefined;
         currentValue = options.from;
 
         useFrameUpdate((dt) => {
@@ -252,6 +277,7 @@ export function useAnimate(options: Readonly<AnimateOptions>): AnimatedValue {
             const raw = Math.min(elapsed / options.duration, 1);
             currentValue =
                 options.from + (options.to - options.from) * ease(raw);
+            if (onUpdate) onUpdate(currentValue);
             if (raw >= 1) done = true;
         });
 
@@ -259,7 +285,8 @@ export function useAnimate(options: Readonly<AnimateOptions>): AnimatedValue {
             get value() {
                 return currentValue;
             },
-            play() {
+            play(cb?: (value: number) => void) {
+                onUpdate = cb;
                 playing = true;
                 done = false;
             },
@@ -280,20 +307,22 @@ export function useAnimate(options: Readonly<AnimateOptions>): AnimatedValue {
         const waveFn = WAVE_MAP[options.wave];
         const { min, max, frequency } = options;
         currentValue = min;
+        let onUpdate: ((value: number) => void) | undefined;
 
         useFrameUpdate((dt) => {
             elapsed += dt;
             const raw = waveFn(frequency * elapsed); // [-1, 1]
             const normalized = (raw + 1) / 2; // [0, 1]
             currentValue = min + normalized * (max - min);
+            if (onUpdate) onUpdate(currentValue);
         });
 
         return {
             get value() {
                 return currentValue;
             },
-            play() {
-                /* no-op */
+            play(cb?: (value: number) => void) {
+                onUpdate = cb;
             },
             reset() {
                 elapsed = 0;
@@ -310,18 +339,20 @@ export function useAnimate(options: Readonly<AnimateOptions>): AnimatedValue {
     const waveFn = WAVE_MAP[ampOptions.wave];
     const { amplitude, frequency } = ampOptions;
     currentValue = 0;
+    let onUpdate: ((value: number) => void) | undefined;
 
     useFrameUpdate((dt) => {
         elapsed += dt;
         currentValue = waveFn(frequency * elapsed) * amplitude;
+        if (onUpdate) onUpdate(currentValue);
     });
 
     return {
         get value() {
             return currentValue;
         },
-        play() {
-            /* no-op */
+        play(cb?: (value: number) => void) {
+            onUpdate = cb;
         },
         reset() {
             elapsed = 0;
