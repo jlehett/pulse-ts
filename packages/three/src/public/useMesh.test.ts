@@ -465,31 +465,31 @@ describe('useMesh', () => {
 
     // ----- Render state options -----
 
-    test('maps side "front" to FrontSide constant', () => {
-        const THREE = require('three');
+    test('maps side "front" to FrontSide constant (0)', () => {
         const { result } = mountUseMesh(world, 'box', {
             size: [1, 1, 1],
             side: 'front',
         });
-        expect((result.material as any)._opts.side).toBe(THREE.FrontSide);
+        // FrontSide = 0 in our mock (matches Three.js)
+        expect((result.material as any)._opts.side).toBe(0);
     });
 
-    test('maps side "back" to BackSide constant', () => {
-        const THREE = require('three');
+    test('maps side "back" to BackSide constant (1)', () => {
         const { result } = mountUseMesh(world, 'box', {
             size: [1, 1, 1],
             side: 'back',
         });
-        expect((result.material as any)._opts.side).toBe(THREE.BackSide);
+        // BackSide = 1
+        expect((result.material as any)._opts.side).toBe(1);
     });
 
-    test('maps side "double" to DoubleSide constant', () => {
-        const THREE = require('three');
+    test('maps side "double" to DoubleSide constant (2)', () => {
         const { result } = mountUseMesh(world, 'box', {
             size: [1, 1, 1],
             side: 'double',
         });
-        expect((result.material as any)._opts.side).toBe(THREE.DoubleSide);
+        // DoubleSide = 2
+        expect((result.material as any)._opts.side).toBe(2);
     });
 
     test('forwards depthWrite option', () => {
@@ -500,37 +500,31 @@ describe('useMesh', () => {
         expect((result.material as any)._opts.depthWrite).toBe(false);
     });
 
-    test('maps blending "normal" to NormalBlending constant', () => {
-        const THREE = require('three');
+    test('maps blending "normal" to NormalBlending constant (1)', () => {
         const { result } = mountUseMesh(world, 'box', {
             size: [1, 1, 1],
             blending: 'normal',
         });
-        expect((result.material as any)._opts.blending).toBe(
-            THREE.NormalBlending,
-        );
+        // NormalBlending = 1
+        expect((result.material as any)._opts.blending).toBe(1);
     });
 
-    test('maps blending "additive" to AdditiveBlending constant', () => {
-        const THREE = require('three');
+    test('maps blending "additive" to AdditiveBlending constant (2)', () => {
         const { result } = mountUseMesh(world, 'box', {
             size: [1, 1, 1],
             blending: 'additive',
         });
-        expect((result.material as any)._opts.blending).toBe(
-            THREE.AdditiveBlending,
-        );
+        // AdditiveBlending = 2
+        expect((result.material as any)._opts.blending).toBe(2);
     });
 
-    test('maps blending "multiply" to MultiplyBlending constant', () => {
-        const THREE = require('three');
+    test('maps blending "multiply" to MultiplyBlending constant (4)', () => {
         const { result } = mountUseMesh(world, 'box', {
             size: [1, 1, 1],
             blending: 'multiply',
         });
-        expect((result.material as any)._opts.blending).toBe(
-            THREE.MultiplyBlending,
-        );
+        // MultiplyBlending = 4
+        expect((result.material as any)._opts.blending).toBe(4);
     });
 
     // ----- Material type options -----
