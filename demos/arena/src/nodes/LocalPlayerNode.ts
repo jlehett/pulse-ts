@@ -46,7 +46,7 @@ import {
 import { useDash, tryActivateDash, DASH_SPEED, DASH_COOLDOWN } from './dash';
 import { useIndicatorRing } from './indicatorRing';
 import { useKnockback, KNOCKOUT_BURST_COUNT } from './knockback';
-import type { KnockbackDeps } from './knockback';
+import type { CollisionEffectsDeps } from './collisionEffects';
 import { createTrailEmitter } from './trailEmitter';
 
 // Re-export pure functions and constants so existing imports continue to work.
@@ -247,11 +247,13 @@ export function LocalPlayerNode({
         dash,
         playerId,
         replicate: !!replicate,
-        impactSfx,
-        impactBurst,
-        shockwavePool,
-        hitImpactPool,
-        threeCamera: threeCamera as KnockbackDeps['threeCamera'],
+        collisionEffects: {
+            impactBurst,
+            impactSfx,
+            shockwavePool,
+            hitImpactPool,
+            camera: threeCamera as CollisionEffectsDeps['camera'],
+        },
         replay,
         velocityStates: velocities.states,
         playerRadius: PLAYER_RADIUS,
