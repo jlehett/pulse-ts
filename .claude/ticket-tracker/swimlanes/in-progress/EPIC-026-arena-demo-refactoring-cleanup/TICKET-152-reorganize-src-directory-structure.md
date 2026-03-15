@@ -1,7 +1,7 @@
 ---
 id: TICKET-152
 title: Reorganize src/ directory structure
-status: todo
+status: in-progress
 epic: EPIC-026
 created: 2026-03-14
 priority: high
