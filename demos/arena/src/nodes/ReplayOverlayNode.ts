@@ -8,8 +8,6 @@ import { useThreeContext } from '@pulse-ts/three';
 import { GameCtx } from '../contexts';
 import {
     ReplayStore,
-    isReplayActive,
-    hasReplayHit,
 } from '../replay';
 
 /** Height of each cinematic letterbox bar as a CSS value. */
@@ -153,7 +151,7 @@ export function ReplayOverlayNode() {
     let selfKoMessagePicked = false;
 
     useFrameUpdate((dt) => {
-        const isReplay = gameState.phase === 'replay' && isReplayActive(replay);
+        const isReplay = gameState.phase === 'replay' && replay.active;
 
         // Detect transition into replay — trigger dark flash
         if (isReplay && !wasReplay) {
@@ -181,7 +179,7 @@ export function ReplayOverlayNode() {
 
         // Self-KO text — per-letter bobbing animation
         if (isReplay) {
-            if (!hasReplayHit(replay)) {
+            if (!replay.hadRealHit) {
                 if (!selfKoMessagePicked) {
                     const msg =
                         SELF_KO_MESSAGES[

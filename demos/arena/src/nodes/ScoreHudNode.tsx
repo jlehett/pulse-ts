@@ -3,7 +3,7 @@ import { useThreeContext } from '@pulse-ts/three';
 import { useOverlay, Row } from '@pulse-ts/dom';
 import { useAnimate } from '@pulse-ts/effects';
 import { GameCtx } from '../contexts';
-import { ReplayStore, isReplayActive } from '../replay';
+import { ReplayStore } from '../replay';
 import { ANIM_EASING } from '../overlayAnimations';
 
 /** Player colors: P1 = teal, P2 = coral. */
@@ -194,7 +194,7 @@ export function ScoreHudNode() {
     }
 
     useFrameUpdate(() => {
-        const inReplay = gameState.phase === 'replay' && isReplayActive(replay);
+        const inReplay = gameState.phase === 'replay' && replay.active;
         const hidden = gameState.phase === 'intro' || inReplay;
         border.style.opacity = hidden ? '0' : '1';
 

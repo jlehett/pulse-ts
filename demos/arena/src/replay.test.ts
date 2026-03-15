@@ -5,17 +5,11 @@ import {
     startReplay,
     advanceReplay,
     getReplayPosition,
-    isReplayActive,
-    getReplayScorer,
-    getReplayKnockedOut,
     getReplayHitProximity,
     getReplayPastHit,
     getSpeedAtFrame,
     getReplayVelocity,
     getReplaySpeed,
-    getReplayHitIndices,
-    getReplayCursorPos,
-    hasReplayHit,
     endReplay,
     clearRecording,
     resetReplay,
@@ -33,9 +27,9 @@ describe('recordFrame + startReplay', () => {
         recordFrame(s, 7, 8, 9, 10, 11, 12);
 
         startReplay(s, 1);
-        expect(isReplayActive(s)).toBe(true);
-        expect(getReplayScorer(s)).toBe(0);
-        expect(getReplayKnockedOut(s)).toBe(1);
+        expect(s.active).toBe(true);
+        expect(s.scorer).toBe(0);
+        expect(s.knockedOut).toBe(1);
 
         const p0 = getReplayPosition(s, 0);
         expect(p0).not.toBeNull();
@@ -78,7 +72,7 @@ describe('advanceReplay', () => {
             steps++;
         }
         expect(playing).toBe(false);
-        expect(isReplayActive(s)).toBe(false);
+        expect(s.active).toBe(false);
     });
 
     it('returns false when no replay is active', () => {
@@ -216,11 +210,11 @@ describe('clearRecording', () => {
         recordFrame(s, 0, 0, 0, 0, 0, 0);
         recordFrame(s, 1, 0, 0, 0, 0, 0);
         startReplay(s, 1);
-        expect(isReplayActive(s)).toBe(true);
+        expect(s.active).toBe(true);
 
         clearRecording(s);
 
-        expect(isReplayActive(s)).toBe(true);
+        expect(s.active).toBe(true);
 
         endReplay(s);
         recordFrame(s, 5, 0, 0, 0, 0, 0);
@@ -231,13 +225,13 @@ describe('clearRecording', () => {
     });
 });
 
-describe('hasReplayHit', () => {
+describe('hadRealHit', () => {
     it('returns false when no hit was marked', () => {
         const s = create();
         recordFrame(s, 0, 0, 0, 0, 0, 0);
         recordFrame(s, 1, 0, 0, 0, 0, 0);
         startReplay(s, 1);
-        expect(hasReplayHit(s)).toBe(false);
+        expect(s.hadRealHit).toBe(false);
     });
 
     it('returns true when markHit was called before replay', () => {
@@ -246,7 +240,7 @@ describe('hasReplayHit', () => {
         markHit(s);
         recordFrame(s, 1, 0, 0, 0, 0, 0);
         startReplay(s, 1);
-        expect(hasReplayHit(s)).toBe(true);
+        expect(s.hadRealHit).toBe(true);
     });
 
     it('returns false after endReplay', () => {
@@ -255,9 +249,9 @@ describe('hasReplayHit', () => {
         markHit(s);
         recordFrame(s, 1, 0, 0, 0, 0, 0);
         startReplay(s, 1);
-        expect(hasReplayHit(s)).toBe(true);
+        expect(s.hadRealHit).toBe(true);
         endReplay(s);
-        expect(hasReplayHit(s)).toBe(false);
+        expect(s.hadRealHit).toBe(false);
     });
 
     it('self-KO has no slow-motion (normal speed throughout)', () => {
@@ -266,18 +260,18 @@ describe('hasReplayHit', () => {
             recordFrame(s, i, 0, 0, 0, 0, 0);
         }
         startReplay(s, 1);
-        expect(hasReplayHit(s)).toBe(false);
+        expect(s.hadRealHit).toBe(false);
         expect(getReplaySpeed(s)).toBeCloseTo(0.8);
         expect(getReplayHitProximity(s)).toBe(0);
     });
 });
 
-describe('getReplayHitIndices (multi-hit)', () => {
+describe('hitIndices (multi-hit)', () => {
     it('returns empty array when no hits recorded', () => {
         const s = create();
         recordFrame(s, 0, 0, 0, 0, 0, 0);
         startReplay(s, 1);
-        expect(getReplayHitIndices(s)).toEqual([]);
+        expect(s.hitIndices).toEqual([]);
     });
 
     it('tracks a single hit', () => {
@@ -286,7 +280,7 @@ describe('getReplayHitIndices (multi-hit)', () => {
         markHit(s);
         recordFrame(s, 1, 0, 0, 0, 0, 0);
         startReplay(s, 1);
-        expect(getReplayHitIndices(s)).toEqual([1]);
+        expect(s.hitIndices).toEqual([1]);
     });
 
     it('tracks multiple hits at different frames', () => {
@@ -296,7 +290,7 @@ describe('getReplayHitIndices (multi-hit)', () => {
             if (i === 5 || i === 12) markHit(s);
         }
         startReplay(s, 1);
-        const indices = getReplayHitIndices(s);
+        const indices = s.hitIndices;
         expect(indices.length).toBe(2);
         expect(indices[0]).toBe(6);
         expect(indices[1]).toBe(13);
@@ -309,14 +303,14 @@ describe('getReplayHitIndices (multi-hit)', () => {
             if (i === 5 || i === 60) markHit(s);
         }
         startReplay(s, 1);
-        const indices = getReplayHitIndices(s);
-        expect(getSpeedAtFrame(indices as number[], indices[0])).toBeCloseTo(
+        const indices = s.hitIndices;
+        expect(getSpeedAtFrame(indices, indices[0])).toBeCloseTo(
             0.15,
         );
-        expect(getSpeedAtFrame(indices as number[], indices[1])).toBeCloseTo(
+        expect(getSpeedAtFrame(indices, indices[1])).toBeCloseTo(
             0.15,
         );
-        expect(getSpeedAtFrame(indices as number[], 35)).toBeCloseTo(0.8);
+        expect(getSpeedAtFrame(indices, 35)).toBeCloseTo(0.8);
     });
 
     it('cleared after endReplay', () => {
@@ -325,19 +319,19 @@ describe('getReplayHitIndices (multi-hit)', () => {
         markHit(s);
         recordFrame(s, 1, 0, 0, 0, 0, 0);
         startReplay(s, 1);
-        expect(getReplayHitIndices(s).length).toBe(1);
+        expect(s.hitIndices.length).toBe(1);
         endReplay(s);
-        expect(getReplayHitIndices(s)).toEqual([]);
+        expect(s.hitIndices).toEqual([]);
     });
 });
 
-describe('getReplayCursorPos', () => {
+describe('cursorPos', () => {
     it('starts at 0', () => {
         const s = create();
         recordFrame(s, 0, 0, 0, 0, 0, 0);
         recordFrame(s, 1, 0, 0, 0, 0, 0);
         startReplay(s, 1);
-        expect(getReplayCursorPos(s)).toBe(0);
+        expect(s.cursorPos).toBe(0);
     });
 
     it('advances with advanceReplay', () => {
@@ -345,7 +339,7 @@ describe('getReplayCursorPos', () => {
         for (let i = 0; i < 20; i++) recordFrame(s, i, 0, 0, 0, 0, 0);
         startReplay(s, 1);
         advanceReplay(s, 0.1);
-        expect(getReplayCursorPos(s)).toBeGreaterThan(0);
+        expect(s.cursorPos).toBeGreaterThan(0);
     });
 });
 
@@ -354,9 +348,9 @@ describe('endReplay / resetReplay', () => {
         const s = create();
         recordFrame(s, 0, 0, 0, 0, 0, 0);
         startReplay(s, 0);
-        expect(isReplayActive(s)).toBe(true);
+        expect(s.active).toBe(true);
         endReplay(s);
-        expect(isReplayActive(s)).toBe(false);
+        expect(s.active).toBe(false);
     });
 
     it('resetReplay clears all state', () => {
@@ -365,8 +359,8 @@ describe('endReplay / resetReplay', () => {
         markHit(s);
         startReplay(s, 0);
         resetReplay(s);
-        expect(isReplayActive(s)).toBe(false);
+        expect(s.active).toBe(false);
         expect(getReplayPosition(s, 0)).toBeNull();
-        expect(getReplayScorer(s)).toBe(-1);
+        expect(s.scorer).toBe(-1);
     });
 });

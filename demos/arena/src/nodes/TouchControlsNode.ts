@@ -7,7 +7,7 @@ import {
 import { useInput, useVirtualJoystick } from '@pulse-ts/input';
 import { isMobile } from '@pulse-ts/platform';
 import { GameCtx } from '../contexts';
-import { ReplayStore, isReplayActive } from '../replay';
+import { ReplayStore } from '../replay';
 import { DashCooldownStore } from '../dashCooldown';
 
 /** Dash button radius in pixels. */
@@ -173,7 +173,7 @@ export function TouchControlsNode(props?: Readonly<TouchControlsNodeProps>) {
     useFrameUpdate(() => {
         const hidden =
             gameState.phase === 'intro' ||
-            (gameState.phase === 'replay' && isReplayActive(replay));
+            (gameState.phase === 'replay' && replay.active);
         const vis = hidden ? 'hidden' : 'visible';
         joystick.setVisible(!hidden);
         dashBtn.style.visibility = vis;

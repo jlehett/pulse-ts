@@ -322,26 +322,6 @@ export function getReplayPosition(
     ];
 }
 
-/** Whether a replay is currently active.
- * @param state - The replay state from the store.
- */
-export function isReplayActive(state: ReplayState): boolean {
-    return state.active;
-}
-
-/** The player ID of the scorer (winner) in the current/last replay.
- * @param state - The replay state from the store.
- */
-export function getReplayScorer(state: ReplayState): number {
-    return state.scorer;
-}
-
-/** The player ID that was knocked out in the current/last replay.
- * @param state - The replay state from the store.
- */
-export function getReplayKnockedOut(state: ReplayState): number {
-    return state.knockedOut;
-}
 
 /**
  * How close the current cursor is to the hit moment (0 = far, 1 = at hit).
@@ -417,33 +397,6 @@ export function getReplaySpeed(state: ReplayState): number {
         Math.min(state.cursorPos, state.playbackFrames.length - 1),
     );
     return getSpeedAtFrame(state.hitIndices, frameIdx);
-}
-
-/**
- * Whether the current replay had a real collision hit.
- *
- * @param state - The replay state from the store.
- */
-export function hasReplayHit(state: ReplayState): boolean {
-    return state.hadRealHit;
-}
-
-/**
- * Get the frame indices of all recorded collision hits in the current replay.
- *
- * @param state - The replay state from the store.
- */
-export function getReplayHitIndices(state: ReplayState): readonly number[] {
-    return state.hitIndices;
-}
-
-/**
- * Get the current replay cursor position (floating-point frame index).
- *
- * @param state - The replay state from the store.
- */
-export function getReplayCursorPos(state: ReplayState): number {
-    return state.cursorPos;
 }
 
 /** End the replay and release the playback buffer.

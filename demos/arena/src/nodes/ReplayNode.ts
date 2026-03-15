@@ -15,12 +15,9 @@ import { GameCtx } from '../contexts';
 import {
     ReplayStore,
     advanceReplay,
-    isReplayActive,
     getReplayPosition,
     getReplayVelocity,
     getReplaySpeed,
-    getReplayHitIndices,
-    getReplayCursorPos,
 } from '../replay';
 import { PLAYER_COLORS, TRAIL_BASE_INTERVAL } from '../config/arena';
 import { triggerCameraShake } from './CameraRigNode';
@@ -97,7 +94,7 @@ export function ReplayNode() {
     const hitBurstsEmitted = new Set<number>();
 
     useFrameUpdate((dt) => {
-        const isReplay = gameState.phase === 'replay' && isReplayActive(replay);
+        const isReplay = gameState.phase === 'replay' && replay.active;
 
         // Detect transition into replay — clear lingering particles
         if (isReplay && !wasReplay) {
@@ -115,8 +112,8 @@ export function ReplayNode() {
             advanceReplay(replay, dt);
 
             // Hit impact bursts + camera shake at each collision moment
-            const cursor = getReplayCursorPos(replay);
-            for (const hitIdx of getReplayHitIndices(replay)) {
+            const cursor = replay.cursorPos;
+            for (const hitIdx of replay.hitIndices) {
                 if (hitBurstsEmitted.has(hitIdx)) continue;
                 // Fire when cursor is within 1 frame of the hit
                 if (Math.abs(cursor - hitIdx) < 1) {

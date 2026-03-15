@@ -18,7 +18,7 @@ jest.mock('../dashCooldown', () => ({
 }));
 
 jest.mock('../replay', () => ({
-    isReplayActive: jest.fn(() => false),
+    ReplayStore: {},
 }));
 
 import { DashCooldownHudNode } from './DashCooldownHudNode';
