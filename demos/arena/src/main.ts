@@ -4,7 +4,7 @@ import { installInput } from '@pulse-ts/input';
 import { installPhysics } from '@pulse-ts/physics';
 import { installThree } from '@pulse-ts/three';
 import type { ThreeService } from '@pulse-ts/three';
-import { installNetwork } from '@pulse-ts/network';
+import { installNetwork, TransportService } from '@pulse-ts/network';
 import type { ShaderPass } from 'three/examples/jsm/postprocessing/ShaderPass.js';
 import { ArenaNode } from './nodes/ArenaNode';
 import { MenuSceneNode } from './nodes/MenuSceneNode';
@@ -152,6 +152,9 @@ async function startOnlineGame(lobby: LobbyResult): Promise<void> {
                     resolve();
                 },
                 onRequestRematch: () => {
+                    // Detach transport before world teardown so the
+                    // DataChannel stays alive across the rematch.
+                    world.getService(TransportService)?.detach();
                     cleanup();
                     startOnlineGame(lobby).then(resolve);
                 },

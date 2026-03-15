@@ -191,33 +191,49 @@ export function Button(props: ButtonProps): PulseElement {
         cursor: 'pointer',
         pointerEvents: 'auto',
         transition: 'background-color 0.15s, transform 0.1s',
+        overflow: 'hidden',
+        textOverflow: 'ellipsis',
+        whiteSpace: 'nowrap',
         ...style,
     };
+
+    // Skip hover/press feedback on touch-only devices where mouseenter
+    // fires on tap but mouseleave doesn't reliably clear, causing sticky hover.
+    const hasHover =
+        typeof globalThis.matchMedia === 'function' &&
+        globalThis.matchMedia('(hover: hover)').matches;
+
+    const hoverProps = hasHover
+        ? {
+              onMouseenter: (e: MouseEvent) => {
+                  const btn = e.currentTarget as HTMLButtonElement;
+                  btn.style.backgroundColor = accent;
+              },
+              onMouseleave: (e: MouseEvent) => {
+                  const btn = e.currentTarget as HTMLButtonElement;
+                  btn.style.backgroundColor =
+                      (typeof style?.backgroundColor === 'function'
+                          ? style.backgroundColor()
+                          : style?.backgroundColor) ??
+                      'rgba(255,255,255,0.15)';
+              },
+              onMousedown: (e: MouseEvent) => {
+                  const btn = e.currentTarget as HTMLButtonElement;
+                  btn.style.transform = 'scale(0.96)';
+              },
+              onMouseup: (e: MouseEvent) => {
+                  const btn = e.currentTarget as HTMLButtonElement;
+                  btn.style.transform = '';
+              },
+          }
+        : {};
 
     return jsx('button', {
         ...rest,
         visible,
         style: mergedStyle,
         onClick,
-        onMouseenter: (e: MouseEvent) => {
-            const btn = e.currentTarget as HTMLButtonElement;
-            btn.style.backgroundColor = accent;
-        },
-        onMouseleave: (e: MouseEvent) => {
-            const btn = e.currentTarget as HTMLButtonElement;
-            btn.style.backgroundColor =
-                (typeof style?.backgroundColor === 'function'
-                    ? style.backgroundColor()
-                    : style?.backgroundColor) ?? 'rgba(255,255,255,0.15)';
-        },
-        onMousedown: (e: MouseEvent) => {
-            const btn = e.currentTarget as HTMLButtonElement;
-            btn.style.transform = 'scale(0.96)';
-        },
-        onMouseup: (e: MouseEvent) => {
-            const btn = e.currentTarget as HTMLButtonElement;
-            btn.style.transform = '';
-        },
+        ...hoverProps,
         children,
     });
 }

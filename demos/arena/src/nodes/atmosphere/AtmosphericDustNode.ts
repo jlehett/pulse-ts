@@ -63,7 +63,7 @@ export const DUST_FADE_DISTANCE = 4;
 export const DUST_ORBIT_STRENGTH = 3.0;
 
 /** Strength of per-particle Perlin noise drift. */
-export const DUST_NOISE_STRENGTH = 3.0;
+export const DUST_NOISE_STRENGTH = 1.0;
 
 /** Shimmer frequency in Hz — how fast each particle pulses. */
 export const DUST_SHIMMER_FREQ = 1.0;
