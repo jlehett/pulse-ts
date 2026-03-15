@@ -22,7 +22,8 @@ import {
     getReplayHitIndices,
     getReplayCursorPos,
 } from '../replay';
-import { PLAYER_COLORS, TRAIL_BASE_INTERVAL } from '../config/arena';
+import { PLAYER_COLORS, TRAIL_VELOCITY_REFERENCE } from '../config/arena';
+import { createTrailEmitter } from './trailEmitter';
 import { triggerCameraShake } from './CameraRigNode';
 import { useShockwavePool, worldToScreen } from '../shockwave';
 import { useHitImpactPool } from '../hitImpact';
@@ -93,7 +94,7 @@ export function ReplayNode() {
 
     // Transition state
     let wasReplay = false;
-    let trailAccum = 0;
+    const replayTrail = createTrailEmitter();
     const hitBurstsEmitted = new Set<number>();
 
     useFrameUpdate((dt) => {
@@ -137,17 +138,21 @@ export function ReplayNode() {
                 }
             }
 
-            // Velocity-proportional trail particles
-            trailAccum += dt;
+            // Velocity-proportional trail particles — use replay speed
+            // scaled by TRAIL_VELOCITY_REFERENCE as effective vmag so the
+            // shared emitter produces the same interval as the old formula:
+            // TRAIL_BASE_INTERVAL / speed.
             const speed = getReplaySpeed(replay);
-            const trailInterval =
-                speed > 0 ? TRAIL_BASE_INTERVAL / speed : TRAIL_BASE_INTERVAL;
-            if (trailAccum >= trailInterval) {
-                trailAccum = 0;
+            const effectiveVmag = speed > 0
+                ? speed * TRAIL_VELOCITY_REFERENCE
+                : 0;
+            replayTrail.update(dt, effectiveVmag, true, () => {
                 for (let pid = 0; pid < 2; pid++) {
                     const vel = getReplayVelocity(replay, pid);
                     if (!vel) continue;
-                    const vmag = Math.sqrt(vel[0] * vel[0] + vel[2] * vel[2]);
+                    const vmag = Math.sqrt(
+                        vel[0] * vel[0] + vel[2] * vel[2],
+                    );
                     if (vmag > 0.1) {
                         const pos = getReplayPosition(replay, pid);
                         if (pos) {
@@ -155,9 +160,9 @@ export function ReplayNode() {
                         }
                     }
                 }
-            }
+            });
         } else {
-            trailAccum = 0;
+            replayTrail.update(0, 0, false, () => {});
             hitBurstsEmitted.clear();
         }
     });
