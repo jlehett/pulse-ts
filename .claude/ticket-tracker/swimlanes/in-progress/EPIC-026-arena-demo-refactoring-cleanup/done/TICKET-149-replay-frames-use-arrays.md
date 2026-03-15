@@ -1,7 +1,7 @@
 ---
 id: TICKET-149
 title: Use arrays instead of named fields in replay frames
-status: in-progress
+status: done
 epic: EPIC-026
 created: 2026-03-14
 updated: 2026-03-14
@@ -22,3 +22,4 @@ Use `positions: [number, number, number][]` (or a flat `Float32Array`) indexed b
 - `demos/arena/src/replay.ts`
 
 - **2026-03-14**: Starting implementation
+- **2026-03-14**: Implementation complete
