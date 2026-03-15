@@ -366,8 +366,10 @@ function showJoinBrowser(overlay: HTMLElement, finish: Finish) {
         minHeight: '60px',
         maxHeight: '240px',
         overflowY: 'auto',
+        scrollbarWidth: 'none',
         width: '100%',
         maxWidth: '320px',
+        padding: '4px',
     } as Partial<CSSStyleDeclaration>);
 
     const btnRefresh = createBtn('Refresh', '#48c9b0');
