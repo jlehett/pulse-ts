@@ -1,7 +1,7 @@
 ---
 id: TICKET-151
 title: Consolidate menu button hover logic
-status: in-progress
+status: done
 epic: EPIC-026
 created: 2026-03-14
 updated: 2026-03-14
@@ -27,3 +27,4 @@ Consolidate button styling into the `Button` component's accent behavior or a sh
 ## Notes
 
 - **2026-03-14**: Starting implementation
+- **2026-03-14**: Implementation complete
