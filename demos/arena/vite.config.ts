@@ -61,6 +61,22 @@ export default defineConfig({
                 __dirname,
                 '../../packages/save/src',
             ),
+            '@pulse-ts/dom/jsx-dev-runtime': path.resolve(
+                __dirname,
+                '../../packages/dom/src/jsx-dev-runtime',
+            ),
+            '@pulse-ts/dom/jsx-runtime': path.resolve(
+                __dirname,
+                '../../packages/dom/src/jsx-runtime',
+            ),
+            '@pulse-ts/dom': path.resolve(
+                __dirname,
+                '../../packages/dom/src',
+            ),
+            '@pulse-ts/platform': path.resolve(
+                __dirname,
+                '../../packages/platform/src',
+            ),
         },
     },
 });

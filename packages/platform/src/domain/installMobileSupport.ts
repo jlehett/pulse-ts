@@ -100,6 +100,11 @@ function setupFullscreen(): () => void {
 // ---------------------------------------------------------------------------
 
 function setupOrientationLock(target: 'landscape' | 'portrait'): () => void {
+    // Only apply orientation lock on mobile/tablet devices
+    const isTouchDevice =
+        'ontouchstart' in globalThis || navigator.maxTouchPoints > 0;
+    if (!isTouchDevice) return () => {};
+
     // Try the Screen Orientation API
     const lockOrientation = () => {
         screen.orientation?.lock?.(target).catch(() => {

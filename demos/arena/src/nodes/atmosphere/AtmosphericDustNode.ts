@@ -1,8 +1,8 @@
-import { useContext, useFrameUpdate, curlNoise2D } from '@pulse-ts/core';
+import { useContext, useFrameUpdate, useStore, curlNoise2D } from '@pulse-ts/core';
 import { useParticleBurst } from '@pulse-ts/effects';
 import { ARENA_RADIUS } from '../../config/arena';
 import { GameCtx, type RoundPhase } from '../../contexts';
-import { getPlayerPosition } from '../../ai/playerPositions';
+import { PlayerPositionStore, getPlayerPosition } from '../../ai/playerPositions';
 import { isMobile } from '@pulse-ts/platform';
 import {
     useHitImpactPool,
@@ -327,6 +327,8 @@ export function AtmosphericDustNode() {
     // first without wiping our freshly spawned dust.
     let respawnDelay = 0;
 
+    const [playerPositions] = useStore(PlayerPositionStore);
+
     useFrameUpdate((dt) => {
         const phase = gameState.phase;
 
@@ -355,7 +357,7 @@ export function AtmosphericDustNode() {
         // Read current player positions from shared store
         const currentPlayers: { x: number; z: number }[] = [];
         for (let i = 0; i < 2; i++) {
-            const [px, , pz] = getPlayerPosition(i);
+            const [px, , pz] = getPlayerPosition(playerPositions, i);
             const xzDistSq = px * px + pz * pz;
             if (xzDistSq < ARENA_RADIUS * ARENA_RADIUS * 4) {
                 currentPlayers.push({ x: px, z: pz });

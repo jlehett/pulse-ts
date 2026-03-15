@@ -1,4 +1,4 @@
-import { useComponent, Transform, useFrameUpdate } from '@pulse-ts/core';
+import { useComponent, Transform, useFrameUpdate, useStore } from '@pulse-ts/core';
 import { useRigidBody, useCylinderCollider } from '@pulse-ts/physics';
 import { useMesh, useCustomMesh } from '@pulse-ts/three';
 import { useAnimate } from '@pulse-ts/effects';
@@ -34,7 +34,7 @@ import {
 import type { WakeTrailPoint } from './wake';
 import { createPlatformShaderUniforms } from './shaderPatch';
 import { applyPlatformShaderPatch } from './shaderPatch';
-import { getPlayerPosition } from '../../ai/playerPositions';
+import { PlayerPositionStore, getPlayerPosition } from '../../ai/playerPositions';
 
 // Re-export all public symbols so existing imports from './PlatformNode' continue to work
 export {
@@ -245,6 +245,8 @@ export function PlatformNode() {
     // Animation — clockwise ring glow rotation
     const ringGlowSpin = useAnimate({ rate: RING_GLOW_SPEED });
 
+    const [playerPositions] = useStore(PlayerPositionStore);
+
     useFrameUpdate((dt) => {
         // Sync hit ripple uniforms from active pool slots
         const hitRippleRadii = shaderUniforms.uHitRippleRadii.value;
@@ -309,7 +311,7 @@ export function PlatformNode() {
         // --- Wake trail tracking ---
         const currentPlayers: { x: number; z: number }[] = [];
         for (let i = 0; i < 2; i++) {
-            const [px, , pz] = getPlayerPosition(i);
+            const [px, , pz] = getPlayerPosition(playerPositions, i);
             const xzDistSq = px * px + pz * pz;
             if (xzDistSq < ARENA_RADIUS * ARENA_RADIUS * 4) {
                 currentPlayers.push({ x: px, z: pz });

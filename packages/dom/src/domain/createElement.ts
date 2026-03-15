@@ -57,7 +57,7 @@ function build(
 
         if (key === 'style' && typeof value === 'object' && value !== null) {
             applyStyle(el, value as Record<string, unknown>, bindings);
-        } else if (key === 'visible') {
+        } else if (key === 'visible' && value !== undefined) {
             applyVisible(el, value, bindings);
         } else if (key.startsWith('on') && typeof value === 'function') {
             const event = key.slice(2).toLowerCase();
