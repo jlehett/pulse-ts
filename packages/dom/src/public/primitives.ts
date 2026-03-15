@@ -172,6 +172,8 @@ interface ButtonProps {
  * ```
  */
 export function Button(props: ButtonProps): PulseElement {
+    injectButtonScrollbarFix();
+
     const {
         onClick,
         accent = '#48c9b0',
@@ -237,4 +239,16 @@ export function Button(props: ButtonProps): PulseElement {
         ...hoverProps,
         children,
     });
+}
+
+/** Inject a global CSS rule once to suppress scrollbars on button elements. */
+let _buttonFixInjected = false;
+function injectButtonScrollbarFix(): void {
+    if (_buttonFixInjected || typeof document === 'undefined') return;
+    _buttonFixInjected = true;
+    const style = document.createElement('style');
+    style.textContent =
+        'button{overflow:hidden!important;scrollbar-width:none!important}' +
+        'button::-webkit-scrollbar{display:none!important}';
+    document.head.appendChild(style);
 }
