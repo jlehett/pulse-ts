@@ -13,8 +13,11 @@ export default {
         }],
     },
     moduleNameMapper: {
+        '^@pulse-ts/core$': '<rootDir>/../../packages/core/src/index.ts',
         '^@pulse-ts/dom$': '<rootDir>/../../packages/dom/src/index.ts',
         '^@pulse-ts/dom/jsx-runtime$': '<rootDir>/../../packages/dom/src/jsx-runtime/index.ts',
+        '^@pulse-ts/network/transports/(.+)$': '<rootDir>/../../packages/network/src/transports/$1/index.ts',
+        '^@pulse-ts/network$': '<rootDir>/../../packages/network/src/index.ts',
         '^@pulse-ts/platform$': '<rootDir>/../../packages/platform/src/index.ts',
     },
     setupFiles: ['<rootDir>/setupTests.ts'],
