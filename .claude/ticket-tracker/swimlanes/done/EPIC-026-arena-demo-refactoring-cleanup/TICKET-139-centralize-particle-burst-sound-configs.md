@@ -1,7 +1,7 @@
 ---
 id: TICKET-139
 title: Centralize particle burst and sound configs
-status: todo
+status: done
 epic: EPIC-026
 created: 2026-03-14
 priority: medium

@@ -11,6 +11,7 @@ import { useRigidBody, useSphereCollider } from '@pulse-ts/physics';
 import { useMesh } from '@pulse-ts/three';
 import { useParticleBurst } from '@pulse-ts/effects';
 import { useRemoteEntity } from '@pulse-ts/network';
+import { TRAIL_BURST_CONFIG } from '../config/particles';
 import { PlayerTag } from '../components/PlayerTag';
 import { GameCtx } from '../contexts';
 import { PLAYER_RADIUS } from './LocalPlayerNode';
@@ -80,14 +81,8 @@ export function RemotePlayerNode({
 
     // Velocity-proportional trail burst — emitted when moving fast
     const trailBurst = useParticleBurst({
-        count: 8,
-        lifetime: 1.0,
+        ...TRAIL_BURST_CONFIG,
         color: PLAYER_COLORS[remotePlayerId],
-        speed: [0.2, 0.8],
-        gravity: 1,
-        size: 0.4,
-        blending: 'additive',
-        shrink: true,
     });
     const trail = createTrailEmitter();
     let prevTrailX = spawn[0];

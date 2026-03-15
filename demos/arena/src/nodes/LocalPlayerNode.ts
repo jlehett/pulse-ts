@@ -8,10 +8,7 @@ import {
     Transform,
 } from '@pulse-ts/core';
 import { useAxis2D, useAction } from '@pulse-ts/input';
-import {
-    useRigidBody,
-    useSphereCollider,
-} from '@pulse-ts/physics';
+import { useRigidBody, useSphereCollider } from '@pulse-ts/physics';
 import {
     useMesh,
     useThreeContext,
@@ -28,19 +25,14 @@ import {
     PLAYER_COLORS,
 } from '../config/arena';
 import { KnockoutChannel } from '../config/channels';
-import {
-    ReplayStore,
-    stagePlayerPosition,
-    getReplayPosition,
-} from '../replay';
+import { TRAIL_BURST_CONFIG, IMPACT_BURST_CONFIG } from '../config/particles';
+import { IMPACT_SOUND_CONFIG } from '../config/sounds';
+import { ReplayStore, stagePlayerPosition, getReplayPosition } from '../replay';
 import { useShockwavePool, worldToScreen } from '../shockwave';
 import { useHitImpactPool } from '../hitImpact';
 import { setPlayerPosition } from '../ai/playerPositions';
 import { DashCooldownStore } from '../dashCooldown';
-import {
-    PlayerVelocityStore,
-    updatePlayerVelocity,
-} from '../playerVelocity';
+import { PlayerVelocityStore, updatePlayerVelocity } from '../playerVelocity';
 
 // Extracted modules
 import { useDash, tryActivateDash, DASH_SPEED, DASH_COOLDOWN } from './dash';
@@ -174,7 +166,10 @@ export function LocalPlayerNode({
     });
 
     // --- Indicator ring ---
-    const ring = useIndicatorRing(!!replicate || !!showIndicatorRing, PLAYER_RADIUS);
+    const ring = useIndicatorRing(
+        !!replicate || !!showIndicatorRing,
+        PLAYER_RADIUS,
+    );
 
     // --- Shockwave / hit impact pools ---
     const shockwavePool = useShockwavePool();
@@ -199,23 +194,12 @@ export function LocalPlayerNode({
         group: 'sfx',
     });
     const impactSfx = useSound('tone', {
-        wave: 'square',
-        frequency: [300, 100],
-        duration: 0.1,
-        gain: 0.15,
+        ...IMPACT_SOUND_CONFIG,
         group: 'sfx',
     });
 
     // --- Particle effects ---
-    const impactBurst = useParticleBurst({
-        count: 16,
-        lifetime: 0.4,
-        color: 0xffffff,
-        speed: [1, 3],
-        gravity: 6,
-        size: 0.3,
-        blending: 'additive',
-    });
+    const impactBurst = useParticleBurst(IMPACT_BURST_CONFIG);
 
     const knockoutBurst = useParticleBurst({
         count: KNOCKOUT_BURST_COUNT,
@@ -229,14 +213,8 @@ export function LocalPlayerNode({
     });
 
     const trailBurst = useParticleBurst({
-        count: 8,
-        lifetime: 1.0,
+        ...TRAIL_BURST_CONFIG,
         color: meshColor,
-        speed: [0.2, 0.8],
-        gravity: 1,
-        size: 0.4,
-        blending: 'additive',
-        shrink: true,
     });
     const trail = createTrailEmitter();
 
@@ -332,12 +310,8 @@ export function LocalPlayerNode({
         const dashActionState = getDash();
 
         // Dash activation
-        tryActivateDash(
-            dash,
-            move.x,
-            move.y,
-            dashActionState.pressed,
-            () => dashSfx.play(),
+        tryActivateDash(dash, move.x, move.y, dashActionState.pressed, () =>
+            dashSfx.play(),
         );
 
         if (dash.timer.active) {
@@ -409,9 +383,6 @@ export function LocalPlayerNode({
         });
 
         // Indicator ring
-        ring.updatePosition(
-            root.position,
-            gameState.phase === 'playing',
-        );
+        ring.updatePosition(root.position, gameState.phase === 'playing');
     });
 }
