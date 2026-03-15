@@ -3,7 +3,7 @@ import {
     HIT_RIPPLE_DISPLACEMENT,
     HIT_RIPPLE_MAX_RADIUS,
     HIT_RIPPLE_RING_WIDTH,
-} from '../../hitImpact';
+} from '../../stores/hitImpact';
 import { WAKE_DISPLACEMENT } from './wake';
 
 /** Peak emissive boost multiplier for the ripple (applied on top of base). */

@@ -8,12 +8,12 @@ import {
 } from '@pulse-ts/three';
 import { installParticles } from '@pulse-ts/effects';
 import { GameCtx, type GameState } from '../contexts';
-import { PlatformNode } from './PlatformNode';
-import { NebulaNode } from './NebulaNode';
-import { StarfieldNode } from './StarfieldNode';
-import { SupernovaNode } from './SupernovaNode';
-import { AtmosphericDustNode } from './AtmosphericDustNode';
-import { EnergyPillarsNode } from './EnergyPillarsNode';
+import { PlatformNode } from './platform/PlatformNode';
+import { NebulaNode } from './atmosphere/NebulaNode';
+import { StarfieldNode } from './atmosphere/StarfieldNode';
+import { SupernovaNode } from './effects/SupernovaNode';
+import { AtmosphericDustNode } from './atmosphere/AtmosphericDustNode';
+import { EnergyPillarsNode } from './atmosphere/EnergyPillarsNode';
 
 /** Camera orbit height — between overhead (26) and intro (8). */
 const ORBIT_HEIGHT = 12;
