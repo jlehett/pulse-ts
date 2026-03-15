@@ -233,11 +233,12 @@ export function useVirtualJoystick(
         currentKnobX = clamped.x;
         currentKnobY = clamped.y;
         currentAxisX = output.x;
-        currentAxisY = output.y;
+        currentAxisY = -output.y;
         isActive = true;
 
         // Inject into input system as a held axis
-        inputService.holdAxis2D(axisAction, { x: output.x, y: output.y });
+        // Negate Y: screen-space Y (down = positive) → game-space Y (up = positive)
+        inputService.holdAxis2D(axisAction, { x: output.x, y: -output.y });
 
         // Update default visuals
         updateDefaultVisuals();
