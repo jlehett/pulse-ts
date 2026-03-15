@@ -4,7 +4,7 @@ import { useOverlay, Column } from '@pulse-ts/dom';
 import { isMobile } from '@pulse-ts/platform';
 import { GameCtx } from '../contexts';
 import { DashCooldownStore } from '../dashCooldown';
-import { ReplayStore, isReplayActive } from '../replay';
+import { ReplayStore } from '../replay';
 
 export interface DashCooldownHudNodeProps {
     /** Local player ID for reading dash cooldown progress. @defaultValue `0` */
@@ -87,7 +87,7 @@ export function DashCooldownHudNode(
     useFrameUpdate(() => {
         const hidden =
             gameState.phase === 'intro' ||
-            (gameState.phase === 'replay' && isReplayActive(replay));
+            (gameState.phase === 'replay' && replay.active);
 
         if (hidden) {
             wrapperOpacity = '0';

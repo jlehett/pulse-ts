@@ -9,13 +9,9 @@ import { useThreeContext } from '@pulse-ts/three';
 import { GameCtx } from '../contexts';
 import {
     ReplayStore,
-    isReplayActive,
     getReplayPosition,
-    getReplayScorer,
-    getReplayKnockedOut,
     getReplayHitProximity,
     getReplayPastHit,
-    hasReplayHit,
 } from '../replay';
 import { SPAWN_POSITIONS } from '../config/arena';
 
@@ -173,8 +169,8 @@ export function CameraRigNode() {
             targetLookX = p2Spawn[0];
             targetLookY = p2Spawn[1] + INTRO_LOOK_Y_OFFSET;
             targetLookZ = p2Spawn[2];
-        } else if (isReplayActive(replay)) {
-            const hitProx = hasReplayHit(replay)
+        } else if (replay.active) {
+            const hitProx = replay.hadRealHit
                 ? getReplayHitProximity(replay)
                 : 0;
 
@@ -225,14 +221,14 @@ export function CameraRigNode() {
                 }
             } else {
                 // Normal replay: follow scorer before hit, loser after hit
-                const scorerId = getReplayScorer(replay);
-                const knockedOutId = getReplayKnockedOut(replay);
-                const pastHit = hasReplayHit(replay)
+                const scorerId = replay.scorer;
+                const knockedOutId = replay.knockedOut;
+                const pastHit = replay.hadRealHit
                     ? getReplayPastHit(replay)
                     : 0;
 
                 let followId: number;
-                if (!hasReplayHit(replay) || pastHit > 0) {
+                if (!replay.hadRealHit || pastHit > 0) {
                     followId = knockedOutId;
                 } else {
                     followId = scorerId;

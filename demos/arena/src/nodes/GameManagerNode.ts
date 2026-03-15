@@ -25,7 +25,6 @@ import {
 import {
     ReplayStore,
     startReplay,
-    isReplayActive,
     endReplay,
     commitFrame,
     clearRecording,
@@ -285,7 +284,7 @@ export function GameManagerNode(props?: Readonly<GameManagerNodeProps>) {
 
         switch (gameState.phase) {
             case 'replay': {
-                if (!isReplayActive(replay)) {
+                if (!replay.active) {
                     const isNonHostOnline = props?.online && !props?.isHost;
 
                     if (isNonHostOnline && !receivedOutcome) {

@@ -39,7 +39,6 @@ jest.mock(
 
 jest.mock('../replay', () => ({
     ReplayStore: {},
-    isReplayActive: jest.fn(() => false),
 }));
 
 import { ScoreHudNode, SCORE_COLORS } from './ScoreHudNode';
