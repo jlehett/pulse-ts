@@ -83,9 +83,10 @@ export function KnockoutOverlayNode() {
             } else {
                 const scorer = 1 - gameState.lastKnockedOut;
                 const label =
-                    gameState.playerLabels?.[scorer] ?? PLAYER_LABELS[scorer];
+                    gameState.playerConfig?.labels[scorer] ??
+                    PLAYER_LABELS[scorer];
                 textContent = `${label} scored!`;
-                const customColor = gameState.playerColors?.[scorer];
+                const customColor = gameState.playerConfig?.colors[scorer];
                 flashBg = customColor
                     ? customColor
                           .replace('rgb(', 'rgba(')

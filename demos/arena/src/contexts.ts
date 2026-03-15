@@ -10,6 +10,19 @@ export type RoundPhase =
     | 'countdown'
     | 'match_over';
 
+/**
+ * Static player configuration set once at game creation.
+ * Used in solo mode to customize labels and colors per player.
+ */
+export interface PlayerConfig {
+    /** Custom player labels (e.g. `['You', 'Brawler']` in solo mode). */
+    labels: [string, string];
+    /** Custom player CSS colors (e.g. personality accent for P2 in solo mode). */
+    colors: [string, string];
+    /** Custom player hex colors for particle effects (e.g. `[0x48c9b0, 0xe74c3c]`). */
+    hexColors: [number, number];
+}
+
 /** Game state — scores, round lifecycle, and match status. */
 export interface GameState {
     scores: [number, number];
@@ -22,20 +35,12 @@ export interface GameState {
     countdownValue: number;
     /** Player ID of the match winner (-1 = no winner yet). */
     matchWinner: number;
-    /** Pending knockout: player ID that just fell off (-1 = none). */
-    pendingKnockout: number;
-    /** Second pending knockout slot for tie detection (-1 = none). */
-    pendingKnockout2: number;
     /** Whether the current round ended in a tie (both players fell simultaneously). */
     isTie: boolean;
     /** Whether the game is currently paused. */
     paused: boolean;
-    /** Custom player labels (e.g. `['You', 'Brawler']` in solo mode). */
-    playerLabels?: [string, string];
-    /** Custom player CSS colors (e.g. personality accent for P2 in solo mode). */
-    playerColors?: [string, string];
-    /** Custom player hex colors for particle effects (e.g. `[0x48c9b0, 0xe74c3c]`). */
-    playerHexColors?: [number, number];
+    /** Static player config for solo mode (labels, colors). Undefined in multiplayer. */
+    playerConfig?: PlayerConfig;
 }
 
 /** Shared game state context — read/written by GameManagerNode, read by HUD. */

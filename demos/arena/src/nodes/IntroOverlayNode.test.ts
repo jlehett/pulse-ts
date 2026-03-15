@@ -17,7 +17,6 @@ let mockGameState = {
     lastKnockedOut: -1,
     countdownValue: -1,
     matchWinner: -1,
-    pendingKnockout: -1,
     paused: false,
 };
 
@@ -119,7 +118,6 @@ beforeEach(() => {
         lastKnockedOut: -1,
         countdownValue: -1,
         matchWinner: -1,
-        pendingKnockout: -1,
         paused: false,
     };
     mockContainer.innerHTML = '';

@@ -23,6 +23,7 @@ import {
 import { createTrailEmitter } from './trailEmitter';
 import { ReplayStore, stagePlayerPosition, getReplayPosition } from '../replay';
 import { PlayerVelocityStore, setPlayerVelocity } from '../playerVelocity';
+import { KnockoutQueueStore } from '../knockoutQueue';
 
 export interface RemotePlayerNodeProps {
     remotePlayerId: number;
@@ -45,6 +46,7 @@ export function RemotePlayerNode({
 
     const [replay] = useStore(ReplayStore);
     const [velocities] = useStore(PlayerVelocityStore);
+    const [ko] = useStore(KnockoutQueueStore);
 
     // Network identity + consumer replication via one-liner hook.
     // Higher lambda = snappier tracking. Default 12 is too sluggish for a
@@ -141,7 +143,7 @@ export function RemotePlayerNode({
         useFixedUpdate(() => {
             if (gameState.phase !== 'playing') return;
             if (transform.localPosition.y < DEATH_PLANE_Y) {
-                gameState.pendingKnockout = remotePlayerId;
+                ko.pending = remotePlayerId;
             }
         });
     }

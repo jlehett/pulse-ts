@@ -32,6 +32,7 @@ import { useShockwavePool, worldToScreen } from '../shockwave';
 import { useHitImpactPool } from '../hitImpact';
 import { setPlayerPosition } from '../ai/playerPositions';
 import { DashCooldownStore } from '../dashCooldown';
+import { KnockoutQueueStore } from '../knockoutQueue';
 import { PlayerVelocityStore, updatePlayerVelocity } from '../playerVelocity';
 
 // Extracted modules
@@ -103,6 +104,7 @@ export function LocalPlayerNode({
     const [replay] = useStore(ReplayStore);
     const [cooldown] = useStore(DashCooldownStore);
     const [velocities] = useStore(PlayerVelocityStore);
+    const [ko] = useStore(KnockoutQueueStore);
 
     useStableId(`player-${playerId}`);
     useComponent(PlayerTag);
@@ -337,10 +339,10 @@ export function LocalPlayerNode({
                 transform.localPosition.z,
             ]);
             deathSfx.play();
-            if (gameState.pendingKnockout >= 0) {
-                gameState.pendingKnockout2 = playerId;
+            if (ko.pending >= 0) {
+                ko.pending2 = playerId;
             } else {
-                gameState.pendingKnockout = playerId;
+                ko.pending = playerId;
             }
             if (publishKnockout) publishKnockout(playerId);
             knockedOut = true;

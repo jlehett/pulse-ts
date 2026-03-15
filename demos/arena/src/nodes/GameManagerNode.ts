@@ -30,6 +30,7 @@ import {
     clearRecording,
 } from '../replay';
 import { DashCooldownStore } from '../dashCooldown';
+import { KnockoutQueueStore } from '../knockoutQueue';
 import { useHitImpactPool } from '../hitImpact';
 import { resetPlayerPositions } from '../ai/playerPositions';
 import { resetCameraShake } from './CameraRigNode';
@@ -87,6 +88,7 @@ export function GameManagerNode(props?: Readonly<GameManagerNodeProps>) {
     const [cooldown] = useStore(DashCooldownStore);
     const hitImpactPool = useHitImpactPool();
     const [velocities] = useStore(PlayerVelocityStore);
+    const [ko] = useStore(KnockoutQueueStore);
 
     // Clear non-store module state from any previous game session.
     clearRecording(replay);
@@ -130,11 +132,11 @@ export function GameManagerNode(props?: Readonly<GameManagerNodeProps>) {
 
     if (props?.online) {
         useChannel(KnockoutChannel, (knockedOutPlayerId) => {
-            // Use pendingKnockout2 if the first slot is already occupied
-            if (gameState.pendingKnockout >= 0) {
-                gameState.pendingKnockout2 = knockedOutPlayerId;
+            // Use pending2 if the first slot is already occupied
+            if (ko.pending >= 0) {
+                ko.pending2 = knockedOutPlayerId;
             } else {
-                gameState.pendingKnockout = knockedOutPlayerId;
+                ko.pending = knockedOutPlayerId;
             }
         });
 
@@ -241,16 +243,16 @@ export function GameManagerNode(props?: Readonly<GameManagerNodeProps>) {
 
     useFixedUpdate(() => {
         // --- Tie window knockout detection ---
-        if (gameState.pendingKnockout >= 0 && gameState.phase === 'playing') {
+        if (ko.pending >= 0 && gameState.phase === 'playing') {
             if (tieWindowCounter < 0) {
-                firstKnockedOut = gameState.pendingKnockout;
-                gameState.pendingKnockout = -1;
+                firstKnockedOut = ko.pending;
+                ko.pending = -1;
                 tieWindowCounter = TIE_WINDOW_FRAMES;
 
-                if (gameState.pendingKnockout2 >= 0) {
+                if (ko.pending2 >= 0) {
                     gameState.isTie = true;
                     gameState.lastKnockedOut = firstKnockedOut;
-                    gameState.pendingKnockout2 = -1;
+                    ko.pending2 = -1;
                     tieWindowCounter = -1;
                     startReplay(replay, firstKnockedOut);
                     gameState.phase = 'replay';
@@ -262,14 +264,11 @@ export function GameManagerNode(props?: Readonly<GameManagerNodeProps>) {
         if (tieWindowCounter > 0 && gameState.phase === 'playing') {
             tieWindowCounter--;
 
-            if (
-                gameState.pendingKnockout >= 0 ||
-                gameState.pendingKnockout2 >= 0
-            ) {
+            if (ko.pending >= 0 || ko.pending2 >= 0) {
                 gameState.isTie = true;
                 gameState.lastKnockedOut = firstKnockedOut;
-                gameState.pendingKnockout = -1;
-                gameState.pendingKnockout2 = -1;
+                ko.pending = -1;
+                ko.pending2 = -1;
                 tieWindowCounter = -1;
                 startReplay(replay, firstKnockedOut);
                 gameState.phase = 'replay';
@@ -323,7 +322,7 @@ export function GameManagerNode(props?: Readonly<GameManagerNodeProps>) {
                     gameState.phase = 'resetting';
                     resetPauseTimer.reset();
                     gameState.isTie = false;
-                    gameState.pendingKnockout2 = -1;
+                    ko.pending2 = -1;
                     firstKnockedOut = -1;
                     clearRecording(replay);
                 }

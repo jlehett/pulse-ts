@@ -249,7 +249,7 @@ export function MatchOverOverlayNode(
 
         if (visible) {
             const winner = gameState.matchWinner;
-            const labels = gameState.playerLabels;
+            const labels = gameState.playerConfig?.labels;
 
             if (labels) {
                 // Solo mode --- Victory (teal) or Defeat (red)

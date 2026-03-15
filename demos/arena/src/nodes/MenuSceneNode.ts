@@ -81,8 +81,6 @@ export function MenuSceneNode() {
         lastKnockedOut: -1,
         countdownValue: -1,
         matchWinner: -1,
-        pendingKnockout: -1,
-        pendingKnockout2: -1,
         isTie: false,
         paused: false,
     };
