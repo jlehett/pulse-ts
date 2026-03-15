@@ -23,6 +23,7 @@ import {
 import { createTrailEmitter } from '../effects/trailEmitter';
 import { ReplayStore, stagePlayerPosition, getReplayPosition } from '../../stores/replay';
 import { PlayerVelocityStore, setPlayerVelocity } from '../../stores/playerVelocity';
+import { PlayerPositionStore, setPlayerPosition } from '../../ai/playerPositions';
 import { KnockoutQueueStore } from '../../stores/knockoutQueue';
 
 export interface RemotePlayerNodeProps {
@@ -47,6 +48,7 @@ export function RemotePlayerNode({
     const [replay] = useStore(ReplayStore);
     const [velocities] = useStore(PlayerVelocityStore);
     const [ko] = useStore(KnockoutQueueStore);
+    const [playerPositions] = useStore(PlayerPositionStore);
 
     // Network identity + consumer replication via one-liner hook.
     // Higher lambda = snappier tracking. Default 12 is too sluggish for a
@@ -110,6 +112,13 @@ export function RemotePlayerNode({
     useFixedUpdate(() => {
         stagePlayerPosition(
             replay,
+            remotePlayerId,
+            transform.localPosition.x,
+            transform.localPosition.y,
+            transform.localPosition.z,
+        );
+        setPlayerPosition(
+            playerPositions,
             remotePlayerId,
             transform.localPosition.x,
             transform.localPosition.y,
