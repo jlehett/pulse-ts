@@ -1,8 +1,8 @@
 import { useContext, useFrameUpdate, curlNoise2D } from '@pulse-ts/core';
 import { useParticleBurst } from '@pulse-ts/effects';
-import { useThreeContext } from '@pulse-ts/three';
 import { ARENA_RADIUS } from '../config/arena';
 import { GameCtx, type RoundPhase } from '../contexts';
+import { getPlayerPosition } from '../ai/playerPositions';
 import { isMobile } from '@pulse-ts/platform';
 import {
     useHitImpactPool,
@@ -95,7 +95,6 @@ const DUST_LIFETIME = 999999;
  * Dust is cleared and re-spawned at replay start and round start.
  */
 export function AtmosphericDustNode() {
-    const { scene } = useThreeContext();
     const gameState = useContext(GameCtx);
     const hitPool = useHitImpactPool();
     const mobile = isMobile();
@@ -353,17 +352,15 @@ export function AtmosphericDustNode() {
             }
         }
 
-        // Find current player positions
+        // Read current player positions from shared store
         const currentPlayers: { x: number; z: number }[] = [];
-        scene.traverse((child) => {
-            const p = child.position;
-            if (child.type === 'Group' && child.parent !== scene) {
-                const xzDistSq = p.x * p.x + p.z * p.z;
-                if (xzDistSq < ARENA_RADIUS * ARENA_RADIUS * 4) {
-                    currentPlayers.push({ x: p.x, z: p.z });
-                }
+        for (let i = 0; i < 2; i++) {
+            const [px, , pz] = getPlayerPosition(i);
+            const xzDistSq = px * px + pz * pz;
+            if (xzDistSq < ARENA_RADIUS * ARENA_RADIUS * 4) {
+                currentPlayers.push({ x: px, z: pz });
             }
-        });
+        }
 
         // Decay existing trail entries and remove fully faded ones
         for (let i = trail.length - 1; i >= 0; i--) {

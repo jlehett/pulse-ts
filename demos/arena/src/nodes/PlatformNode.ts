@@ -3,7 +3,6 @@ import { useRigidBody, useCylinderCollider } from '@pulse-ts/physics';
 import {
     useMesh,
     useCustomMesh,
-    useThreeContext,
 } from '@pulse-ts/three';
 import { useAnimate } from '@pulse-ts/effects';
 import * as THREE from 'three';
@@ -41,6 +40,7 @@ import {
     RIPPLE_INTENSITY,
 } from './platform/shaderPatch';
 import { applyPlatformShaderPatch } from './platform/shaderPatch';
+import { getPlayerPosition } from '../ai/playerPositions';
 
 // Re-export all public symbols so existing imports from './PlatformNode' continue to work
 export {
@@ -237,9 +237,6 @@ export function PlatformNode() {
     let rippleTimer = 0;
     let nextRipple = 0;
 
-    // Scene access for finding player positions
-    const { scene } = useThreeContext();
-
     // Animation — pulsing glow on the ring
     const pulse = useAnimate({
         wave: 'sine',
@@ -317,15 +314,13 @@ export function PlatformNode() {
 
         // --- Wake trail tracking ---
         const currentPlayers: { x: number; z: number }[] = [];
-        scene.traverse((child: THREE.Object3D) => {
-            if (child.type === 'Group' && child.parent !== scene) {
-                const p = child.position;
-                const xzDistSq = p.x * p.x + p.z * p.z;
-                if (xzDistSq < ARENA_RADIUS * ARENA_RADIUS * 4) {
-                    currentPlayers.push({ x: p.x, z: p.z });
-                }
+        for (let i = 0; i < 2; i++) {
+            const [px, , pz] = getPlayerPosition(i);
+            const xzDistSq = px * px + pz * pz;
+            if (xzDistSq < ARENA_RADIUS * ARENA_RADIUS * 4) {
+                currentPlayers.push({ x: px, z: pz });
             }
-        });
+        }
 
         // Decay existing trail entries and remove fully faded ones
         for (let i = wakeTrail.length - 1; i >= 0; i--) {
