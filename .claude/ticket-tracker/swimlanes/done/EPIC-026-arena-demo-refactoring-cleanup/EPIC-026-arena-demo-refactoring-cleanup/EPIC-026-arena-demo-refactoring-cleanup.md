@@ -1,7 +1,7 @@
 ---
 id: EPIC-026
 title: Arena Demo Refactoring & Cleanup
-status: in-progress
+status: done
 created: 2026-03-14
 updated: 2026-03-14
 ---
@@ -39,3 +39,4 @@ Comprehensive refactoring of the arena demo to reduce duplication, split oversiz
 ## Notes
 
 - **2026-03-14**: Epic implementation started via agent team
+- **2026-03-14**: Epic closed — all 17 tickets complete
