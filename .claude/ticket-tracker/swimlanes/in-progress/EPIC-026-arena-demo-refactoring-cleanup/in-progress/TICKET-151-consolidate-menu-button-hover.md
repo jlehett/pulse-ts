@@ -1,9 +1,11 @@
 ---
 id: TICKET-151
 title: Consolidate menu button hover logic
-status: todo
+status: in-progress
 epic: EPIC-026
 created: 2026-03-14
+updated: 2026-03-14
+branch: ticket-151-consolidate-menu-button-hover
 priority: low
 ---
 
@@ -21,3 +23,7 @@ Consolidate button styling into the `Button` component's accent behavior or a sh
 
 - `demos/arena/src/menu.tsx`
 - `demos/arena/src/overlayAnimations.ts`
+
+## Notes
+
+- **2026-03-14**: Starting implementation
