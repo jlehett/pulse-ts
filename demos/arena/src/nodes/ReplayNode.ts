@@ -1,9 +1,4 @@
-import {
-    useFrameUpdate,
-    useContext,
-    useWorld,
-    useStore,
-} from '@pulse-ts/core';
+import { useFrameUpdate, useContext, useWorld, useStore } from '@pulse-ts/core';
 import { useThreeContext } from '@pulse-ts/three';
 import {
     useParticleBurst,
