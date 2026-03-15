@@ -26,8 +26,6 @@ import {
     SPAWN_POSITIONS,
     DEATH_PLANE_Y,
     PLAYER_COLORS,
-    TRAIL_VELOCITY_REFERENCE,
-    TRAIL_BASE_INTERVAL,
 } from '../config/arena';
 import { KnockoutChannel } from '../config/channels';
 import {
@@ -49,6 +47,7 @@ import { useDash, tryActivateDash, DASH_SPEED, DASH_COOLDOWN } from './dash';
 import { useIndicatorRing } from './indicatorRing';
 import { useKnockback, KNOCKOUT_BURST_COUNT } from './knockback';
 import type { KnockbackDeps } from './knockback';
+import { createTrailEmitter } from './trailEmitter';
 
 // Re-export pure functions and constants so existing imports continue to work.
 export {
@@ -239,7 +238,7 @@ export function LocalPlayerNode({
         blending: 'additive',
         shrink: true,
     });
-    let trailAccum = 0;
+    const trail = createTrailEmitter();
 
     // --- Knockback ---
     useKnockback({
@@ -402,30 +401,12 @@ export function LocalPlayerNode({
         }
 
         // Trail particles
-        if (gameState.phase === 'playing') {
-            const vx = body.linearVelocity.x;
-            const vz = body.linearVelocity.z;
-            const vmag = Math.sqrt(vx * vx + vz * vz);
-            if (vmag > 0.1) {
-                trailAccum += dt;
-                const interval = Math.max(
-                    0.01,
-                    TRAIL_BASE_INTERVAL / (vmag / TRAIL_VELOCITY_REFERENCE),
-                );
-                if (trailAccum >= interval) {
-                    trailAccum = 0;
-                    trailBurst([
-                        root.position.x,
-                        root.position.y,
-                        root.position.z,
-                    ]);
-                }
-            } else {
-                trailAccum = 0;
-            }
-        } else {
-            trailAccum = 0;
-        }
+        const vx = body.linearVelocity.x;
+        const vz = body.linearVelocity.z;
+        const vmag = Math.sqrt(vx * vx + vz * vz);
+        trail.update(dt, vmag, gameState.phase === 'playing', () => {
+            trailBurst([root.position.x, root.position.y, root.position.z]);
+        });
 
         // Indicator ring
         ring.updatePosition(

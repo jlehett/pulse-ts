@@ -18,9 +18,8 @@ import {
     SPAWN_POSITIONS,
     DEATH_PLANE_Y,
     PLAYER_COLORS,
-    TRAIL_VELOCITY_REFERENCE,
-    TRAIL_BASE_INTERVAL,
 } from '../config/arena';
+import { createTrailEmitter } from './trailEmitter';
 import { ReplayStore, stagePlayerPosition, getReplayPosition } from '../replay';
 import { PlayerVelocityStore, setPlayerVelocity } from '../playerVelocity';
 
@@ -90,7 +89,7 @@ export function RemotePlayerNode({
         blending: 'additive',
         shrink: true,
     });
-    let trailAccum = 0;
+    const trail = createTrailEmitter();
     let prevTrailX = spawn[0];
     let prevTrailZ = spawn[2];
 
@@ -173,30 +172,20 @@ export function RemotePlayerNode({
 
     // Emit velocity-proportional trail particles during gameplay.
     useFrameUpdate((dt) => {
-        // Velocity-proportional trail particles during gameplay
-        if (gameState.phase === 'playing' && dt > 0) {
+        const active = gameState.phase === 'playing' && dt > 0;
+        if (active) {
             const cx = root.position.x;
             const cz = root.position.z;
             const vx = (cx - prevTrailX) / dt;
             const vz = (cz - prevTrailZ) / dt;
             const vmag = Math.sqrt(vx * vx + vz * vz);
-            if (vmag > 0.1) {
-                trailAccum += dt;
-                const interval = Math.max(
-                    0.01,
-                    TRAIL_BASE_INTERVAL / (vmag / TRAIL_VELOCITY_REFERENCE),
-                );
-                if (trailAccum >= interval) {
-                    trailAccum = 0;
-                    trailBurst([cx, root.position.y, cz]);
-                }
-            } else {
-                trailAccum = 0;
-            }
+            trail.update(dt, vmag, true, () => {
+                trailBurst([cx, root.position.y, cz]);
+            });
             prevTrailX = cx;
             prevTrailZ = cz;
         } else {
-            trailAccum = 0;
+            trail.update(0, 0, false, () => {});
         }
     });
 }
