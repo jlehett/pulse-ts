@@ -1,7 +1,7 @@
 ---
 id: TICKET-137
 title: Extract shared trail particle emission logic
-status: in-progress
+status: done
 epic: EPIC-026
 created: 2026-03-14
 updated: 2026-03-14
