@@ -1,10 +1,12 @@
 ---
 id: TICKET-148
 title: Create generic shared effect pool factory
-status: todo
+status: done
 epic: EPIC-026
 created: 2026-03-14
+updated: 2026-03-14
 priority: low
+branch: ticket-148-generic-shared-effect-pool-factory
 ---
 
 ## Problem
@@ -31,3 +33,8 @@ export const { Store: ShockwaveStore, usePool: useShockwavePool } =
 
 - `demos/arena/src/shockwave.ts`
 - `demos/arena/src/hitImpact.ts`
+
+## Notes
+
+- **2026-03-14**: Starting implementation
+- **2026-03-14**: Implementation complete
