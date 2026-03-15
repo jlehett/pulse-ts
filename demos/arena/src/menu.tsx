@@ -94,7 +94,6 @@ export function showMainMenu(container: HTMLElement): Promise<MenuChoice> {
         const subtitle = overlay.children[1] as HTMLElement;
         const buttonRow = overlay.children[2] as HTMLElement;
 
-        // Create buttons using native DOM for event handling
         function createMenuButton(
             label: string,
             color: string,
@@ -109,41 +108,12 @@ export function showMainMenu(container: HTMLElement): Promise<MenuChoice> {
                         padding: '12px 32px',
                         minWidth: 'min(200px, 70vw)',
                         minHeight: '44px',
-                        background:
-                            'linear-gradient(180deg, rgba(255,255,255,0.12), rgba(255,255,255,0.04))',
                     }}
                 >
                     {label}
                 </Button>,
             );
-            const btn = btnRoot as HTMLButtonElement;
-
-            // Override hover effects for gradient buttons
-            const defaultBg =
-                'linear-gradient(180deg, rgba(255,255,255,0.12), rgba(255,255,255,0.04))';
-            const defaultBorder = 'rgba(255,255,255,0.2)';
-            btn.addEventListener('pointerenter', () => {
-                btn.style.borderColor = color;
-                btn.style.boxShadow = `0 0 15px ${color}44, inset 0 0 8px ${color}22`;
-            });
-            btn.addEventListener('pointerdown', () => {
-                btn.style.background =
-                    'linear-gradient(180deg, rgba(255,255,255,0.18), rgba(255,255,255,0.08))';
-                btn.style.borderColor = color;
-                btn.style.boxShadow = `0 0 20px ${color}66, inset 0 0 12px ${color}33`;
-            });
-            btn.addEventListener('pointerup', () => {
-                btn.style.background = defaultBg;
-                btn.style.borderColor = color;
-                btn.style.boxShadow = `0 0 15px ${color}44, inset 0 0 8px ${color}22`;
-            });
-            btn.addEventListener('pointerleave', () => {
-                btn.style.background = defaultBg;
-                btn.style.borderColor = defaultBorder;
-                btn.style.boxShadow = 'none';
-            });
-
-            return btn;
+            return btnRoot as HTMLButtonElement;
         }
 
         const btnSolo = createMenuButton('Solo Play', '#f1c40f');
