@@ -25,16 +25,14 @@ import {
 import {
     ReplayStore,
     startReplay,
-    isReplayActive,
     endReplay,
     commitFrame,
     clearRecording,
-} from '../replay';
-import { DashCooldownStore } from '../dashCooldown';
-import { useHitImpactPool } from '../hitImpact';
-import { resetPlayerPositions } from '../ai/playerPositions';
-import { resetCameraShake } from './CameraRigNode';
-import { PlayerVelocityStore } from '../playerVelocity';
+} from '../stores/replay';
+import { DashCooldownStore } from '../stores/dashCooldown';
+import { KnockoutQueueStore } from '../stores/knockoutQueue';
+import { useHitImpactPool } from '../stores/hitImpact';
+import { PlayerVelocityStore } from '../stores/playerVelocity';
 
 /**
  * Compute the countdown display value from the remaining countdown time.
@@ -88,13 +86,11 @@ export function GameManagerNode(props?: Readonly<GameManagerNodeProps>) {
     const [cooldown] = useStore(DashCooldownStore);
     const hitImpactPool = useHitImpactPool();
     const [velocities] = useStore(PlayerVelocityStore);
+    const [ko] = useStore(KnockoutQueueStore);
 
     // Clear non-store module state from any previous game session.
     clearRecording(replay);
     endReplay(replay);
-    resetPlayerPositions();
-    resetCameraShake();
-
     // Store state is already fresh from world-scoped initialization,
     // but explicit reset ensures clean state if the node is re-mounted
     // within the same world.
@@ -131,11 +127,11 @@ export function GameManagerNode(props?: Readonly<GameManagerNodeProps>) {
 
     if (props?.online) {
         useChannel(KnockoutChannel, (knockedOutPlayerId) => {
-            // Use pendingKnockout2 if the first slot is already occupied
-            if (gameState.pendingKnockout >= 0) {
-                gameState.pendingKnockout2 = knockedOutPlayerId;
+            // Use pending2 if the first slot is already occupied
+            if (ko.pending >= 0) {
+                ko.pending2 = knockedOutPlayerId;
             } else {
-                gameState.pendingKnockout = knockedOutPlayerId;
+                ko.pending = knockedOutPlayerId;
             }
         });
 
@@ -242,16 +238,16 @@ export function GameManagerNode(props?: Readonly<GameManagerNodeProps>) {
 
     useFixedUpdate(() => {
         // --- Tie window knockout detection ---
-        if (gameState.pendingKnockout >= 0 && gameState.phase === 'playing') {
+        if (ko.pending >= 0 && gameState.phase === 'playing') {
             if (tieWindowCounter < 0) {
-                firstKnockedOut = gameState.pendingKnockout;
-                gameState.pendingKnockout = -1;
+                firstKnockedOut = ko.pending;
+                ko.pending = -1;
                 tieWindowCounter = TIE_WINDOW_FRAMES;
 
-                if (gameState.pendingKnockout2 >= 0) {
+                if (ko.pending2 >= 0) {
                     gameState.isTie = true;
                     gameState.lastKnockedOut = firstKnockedOut;
-                    gameState.pendingKnockout2 = -1;
+                    ko.pending2 = -1;
                     tieWindowCounter = -1;
                     startReplay(replay, firstKnockedOut);
                     gameState.phase = 'replay';
@@ -263,14 +259,11 @@ export function GameManagerNode(props?: Readonly<GameManagerNodeProps>) {
         if (tieWindowCounter > 0 && gameState.phase === 'playing') {
             tieWindowCounter--;
 
-            if (
-                gameState.pendingKnockout >= 0 ||
-                gameState.pendingKnockout2 >= 0
-            ) {
+            if (ko.pending >= 0 || ko.pending2 >= 0) {
                 gameState.isTie = true;
                 gameState.lastKnockedOut = firstKnockedOut;
-                gameState.pendingKnockout = -1;
-                gameState.pendingKnockout2 = -1;
+                ko.pending = -1;
+                ko.pending2 = -1;
                 tieWindowCounter = -1;
                 startReplay(replay, firstKnockedOut);
                 gameState.phase = 'replay';
@@ -285,7 +278,7 @@ export function GameManagerNode(props?: Readonly<GameManagerNodeProps>) {
 
         switch (gameState.phase) {
             case 'replay': {
-                if (!isReplayActive(replay)) {
+                if (!replay.active) {
                     const isNonHostOnline = props?.online && !props?.isHost;
 
                     if (isNonHostOnline && !receivedOutcome) {
@@ -324,7 +317,7 @@ export function GameManagerNode(props?: Readonly<GameManagerNodeProps>) {
                     gameState.phase = 'resetting';
                     resetPauseTimer.reset();
                     gameState.isTie = false;
-                    gameState.pendingKnockout2 = -1;
+                    ko.pending2 = -1;
                     firstKnockedOut = -1;
                     clearRecording(replay);
                 }

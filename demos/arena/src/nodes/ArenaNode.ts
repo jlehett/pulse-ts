@@ -10,29 +10,30 @@ import type { Transport } from '@pulse-ts/network';
 import { installParticles } from '@pulse-ts/effects';
 import type { ShaderPass } from 'three/examples/jsm/postprocessing/ShaderPass.js';
 import { GameCtx, type GameState } from '../contexts';
-import { PlatformNode } from './PlatformNode';
-import { LocalPlayerNode } from './LocalPlayerNode';
-import { RemotePlayerNode } from './RemotePlayerNode';
+import { PlatformNode } from './platform/PlatformNode';
+import { LocalPlayerNode } from './player/LocalPlayerNode';
+import { RemotePlayerNode } from './player/RemotePlayerNode';
 import { GameManagerNode } from './GameManagerNode';
-import { ScoreHudNode } from './ScoreHudNode';
-import { KnockoutOverlayNode } from './KnockoutOverlayNode';
-import { CountdownOverlayNode } from './CountdownOverlayNode';
-import { MatchOverOverlayNode } from './MatchOverOverlayNode';
-import { PauseMenuNode } from './PauseMenuNode';
-import { DisconnectOverlayNode } from './DisconnectOverlayNode';
-import { TouchControlsNode } from './TouchControlsNode';
-import { CameraRigNode } from './CameraRigNode';
-import { VictoryEffectNode } from './VictoryEffectNode';
-import { ReplayNode } from './ReplayNode';
-import { ShockwaveNode } from './ShockwaveNode';
-import { NebulaNode } from './NebulaNode';
-import { StarfieldNode } from './StarfieldNode';
-import { SupernovaNode } from './SupernovaNode';
-import { AtmosphericDustNode } from './AtmosphericDustNode';
-import { EnergyPillarsNode } from './EnergyPillarsNode';
-import { AiPlayerNode } from './AiPlayerNode';
-import { IntroOverlayNode } from './IntroOverlayNode';
-import { DashCooldownHudNode } from './DashCooldownHudNode';
+import { ScoreHudNode } from './hud/ScoreHudNode';
+import { KnockoutOverlayNode } from './hud/KnockoutOverlayNode';
+import { CountdownOverlayNode } from './hud/CountdownOverlayNode';
+import { MatchOverOverlayNode } from './hud/MatchOverOverlayNode';
+import { PauseMenuNode } from './hud/PauseMenuNode';
+import { DisconnectOverlayNode } from './hud/DisconnectOverlayNode';
+import { TouchControlsNode } from './hud/TouchControlsNode';
+import { CameraRigNode } from './camera/CameraRigNode';
+import { VictoryEffectNode } from './effects/VictoryEffectNode';
+import { ReplayNode } from './effects/ReplayNode';
+import { ReplayOverlayNode } from './effects/ReplayOverlayNode';
+import { ShockwaveNode } from './effects/ShockwaveNode';
+import { NebulaNode } from './atmosphere/NebulaNode';
+import { StarfieldNode } from './atmosphere/StarfieldNode';
+import { SupernovaNode } from './effects/SupernovaNode';
+import { AtmosphericDustNode } from './atmosphere/AtmosphericDustNode';
+import { EnergyPillarsNode } from './atmosphere/EnergyPillarsNode';
+import { AiPlayerNode } from './player/AiPlayerNode';
+import { IntroOverlayNode } from './hud/IntroOverlayNode';
+import { DashCooldownHudNode } from './hud/DashCooldownHudNode';
 import type { AiPersonality } from '../ai/personalities';
 
 export interface ArenaNodeProps {
@@ -117,18 +118,17 @@ export function ArenaNode(props?: Readonly<ArenaNodeProps>) {
         lastKnockedOut: -1,
         countdownValue: -1,
         matchWinner: -1,
-        pendingKnockout: -1,
-        pendingKnockout2: -1,
         isTie: false,
         paused: false,
-        playerLabels: props?.aiPersonality
-            ? ['You', props.aiPersonality.name]
-            : undefined,
-        playerColors: props?.aiPersonality
-            ? [color(0x48c9b0).rgb, color(props.aiPersonality.color).rgb]
-            : undefined,
-        playerHexColors: props?.aiPersonality
-            ? [0x48c9b0, props.aiPersonality.color]
+        playerConfig: props?.aiPersonality
+            ? {
+                  labels: ['You', props.aiPersonality.name],
+                  colors: [
+                      color(0x48c9b0).rgb,
+                      color(props.aiPersonality.color).rgb,
+                  ],
+                  hexColors: [0x48c9b0, props.aiPersonality.color],
+              }
             : undefined,
     };
     useProvideContext(GameCtx, gameState);
@@ -228,8 +228,11 @@ export function ArenaNode(props?: Readonly<ArenaNodeProps>) {
     // Camera rig — fixed overhead view
     useChild(CameraRigNode);
 
-    // Instant replay overlay — letterboxing + playback driver
+    // Instant replay — playback driver + VFX
     useChild(ReplayNode);
+
+    // Instant replay — DOM overlay (letterbox, flash, labels)
+    useChild(ReplayOverlayNode);
 
     // Shockwave distortion — screen-space ring on impact
     useChild(ShockwaveNode, { pass: props?.shockwavePass });
