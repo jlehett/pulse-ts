@@ -1,7 +1,7 @@
 ---
 id: TICKET-138
 title: Extract shared collision VFX trigger
-status: in-progress
+status: done
 epic: EPIC-026
 created: 2026-03-14
 updated: 2026-03-14
