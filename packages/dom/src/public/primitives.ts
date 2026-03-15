@@ -194,6 +194,7 @@ export function Button(props: ButtonProps): PulseElement {
         overflow: 'hidden',
         textOverflow: 'ellipsis',
         whiteSpace: 'nowrap',
+        scrollbarWidth: 'none',
         ...style,
     };
 
