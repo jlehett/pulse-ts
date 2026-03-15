@@ -1,7 +1,7 @@
 ---
 id: TICKET-147
 title: Narrow GameCtx and extract knockout detection
-status: in-progress
+status: done
 epic: EPIC-026
 created: 2026-03-14
 priority: low
