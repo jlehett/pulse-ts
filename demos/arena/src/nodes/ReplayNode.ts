@@ -20,6 +20,8 @@ import {
     getReplaySpeed,
 } from '../replay';
 import { PLAYER_COLORS, TRAIL_VELOCITY_REFERENCE } from '../config/arena';
+import { TRAIL_BURST_CONFIG, IMPACT_BURST_CONFIG } from '../config/particles';
+import { IMPACT_SOUND_CONFIG } from '../config/sounds';
 import { createTrailEmitter } from './trailEmitter';
 import { triggerCameraShake } from './CameraRigNode';
 import { useShockwavePool, worldToScreen } from '../shockwave';
@@ -39,48 +41,23 @@ export function ReplayNode() {
     const hitImpactPool = useHitImpactPool();
 
     // Hit impact burst — white particles at the collision point
-    const hitImpactBurst = useParticleBurst({
-        count: 16,
-        lifetime: 0.4,
-        color: 0xffffff,
-        speed: [1, 3],
-        gravity: 6,
-        size: 0.3,
-        blending: 'additive',
-    });
+    const hitImpactBurst = useParticleBurst(IMPACT_BURST_CONFIG);
 
     // Velocity-proportional trail bursts — one per player
     const p0Color = gameState.playerHexColors?.[0] ?? PLAYER_COLORS[0];
     const p1Color = gameState.playerHexColors?.[1] ?? PLAYER_COLORS[1];
     const trailBurst0 = useParticleBurst({
-        count: 8,
-        lifetime: 1.0,
+        ...TRAIL_BURST_CONFIG,
         color: p0Color,
-        speed: [0.2, 0.8],
-        gravity: 1,
-        size: 0.4,
-        blending: 'additive',
-        shrink: true,
     });
     const trailBurst1 = useParticleBurst({
-        count: 8,
-        lifetime: 1.0,
+        ...TRAIL_BURST_CONFIG,
         color: p1Color,
-        speed: [0.2, 0.8],
-        gravity: 1,
-        size: 0.4,
-        blending: 'additive',
-        shrink: true,
     });
     const trailBursts = [trailBurst0, trailBurst1];
 
     // Impact sound — matches the live collision sound from LocalPlayerNode
-    const impactSfx = useSound('tone', {
-        wave: 'square',
-        frequency: [300, 100],
-        duration: 0.1,
-        gain: 0.15,
-    });
+    const impactSfx = useSound('tone', IMPACT_SOUND_CONFIG);
 
     // Scale particle time to match replay speed (slow-motion)
     const world = useWorld();
