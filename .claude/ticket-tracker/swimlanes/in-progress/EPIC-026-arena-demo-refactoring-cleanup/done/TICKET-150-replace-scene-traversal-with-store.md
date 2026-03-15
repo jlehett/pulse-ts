@@ -1,7 +1,7 @@
 ---
 id: TICKET-150
 title: Replace scene traversal with store reads for player positions
-status: todo
+status: done
 epic: EPIC-026
 created: 2026-03-14
 priority: low
