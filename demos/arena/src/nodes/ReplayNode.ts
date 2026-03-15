@@ -18,9 +18,9 @@ import { PLAYER_COLORS, TRAIL_VELOCITY_REFERENCE } from '../config/arena';
 import { TRAIL_BURST_CONFIG, IMPACT_BURST_CONFIG } from '../config/particles';
 import { IMPACT_SOUND_CONFIG } from '../config/sounds';
 import { createTrailEmitter } from './trailEmitter';
-import { triggerCameraShake } from './CameraRigNode';
-import { useShockwavePool, worldToScreen } from '../shockwave';
+import { useShockwavePool } from '../shockwave';
 import { useHitImpactPool } from '../hitImpact';
+import { triggerCollisionEffects } from './collisionEffects';
 
 /**
  * Drives replay playback and VFX (particles, camera shake, sounds) during
@@ -96,12 +96,18 @@ export function ReplayNode() {
                         const mx = (p0[0] + p1[0]) / 2;
                         const my = (p0[1] + p1[1]) / 2;
                         const mz = (p0[2] + p1[2]) / 2;
-                        hitImpactBurst([mx, my, mz]);
-                        triggerCameraShake(0.4, 0.3);
-                        const [su, sv] = worldToScreen(mx, my, mz, camera);
-                        shockwavePool.trigger({ centerX: su, centerY: sv });
-                        hitImpactPool.trigger({ worldX: mx, worldZ: mz });
-                        impactSfx.play();
+                        triggerCollisionEffects(
+                            [mx, my, mz],
+                            {
+                                impactBurst: hitImpactBurst,
+                                impactSfx,
+                                shockwavePool,
+                                hitImpactPool,
+                                camera,
+                            },
+                            0.4,
+                            0.3,
+                        );
                     }
                     hitBurstsEmitted.add(hitIdx);
                 }

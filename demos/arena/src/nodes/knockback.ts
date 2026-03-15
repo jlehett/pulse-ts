@@ -14,11 +14,11 @@ import {
 import { useOnCollisionStart } from '@pulse-ts/physics';
 import { useChannel } from '@pulse-ts/network';
 import { PlayerTag } from '../components/PlayerTag';
-import { triggerCameraShake } from './CameraRigNode';
 import { markHit } from '../replay';
-import { worldToScreen } from '../shockwave';
 import { getPlayerVelocity } from '../playerVelocity';
 import { computeKnockback, computeApproachSpeed } from './mechanics';
+import { triggerCollisionEffects } from './collisionEffects';
+import type { CollisionEffectsDeps } from './collisionEffects';
 import type { DashState } from './dash';
 
 /** Minimum knockback applied even when both players have zero closing speed. */
@@ -50,16 +50,8 @@ export interface KnockbackDeps {
     playerId: number;
     /** Whether online replication is enabled. */
     replicate: boolean;
-    /** Impact sound effect. */
-    impactSfx: { play: () => void };
-    /** Impact particle burst function. */
-    impactBurst: (pos: [number, number, number]) => void;
-    /** Shockwave pool trigger. */
-    shockwavePool: { trigger: (opts: { centerX: number; centerY: number }) => void };
-    /** Hit impact pool trigger. */
-    hitImpactPool: { trigger: (opts: { worldX: number; worldZ: number }) => void };
-    /** Three.js camera for screen projection. */
-    threeCamera: { projectionMatrix: unknown; matrixWorldInverse: unknown };
+    /** Collision VFX dependencies (particles, pools, camera, sound). */
+    collisionEffects: CollisionEffectsDeps;
     /** Replay state. */
     replay: unknown;
     /** Velocity states map. */
@@ -102,8 +94,6 @@ export function useKnockback(deps: KnockbackDeps): void {
         // Cancel any active dash and reset cooldown
         deps.dash.timer.cancel();
         deps.dash.cooldown.trigger();
-
-        deps.impactSfx.play();
         impactCD.trigger();
 
         // Particle burst at surface facing hit direction
@@ -118,19 +108,12 @@ export function useKnockback(deps: KnockbackDeps): void {
             const surfZ =
                 deps.transform.localPosition.z +
                 (hz / hLen) * deps.playerRadius;
-            deps.impactBurst([surfX, surfY, surfZ]);
-
-            const [su, sv] = worldToScreen(
-                surfX,
-                surfY,
-                surfZ,
-                deps.threeCamera as Parameters<typeof worldToScreen>[3],
+            triggerCollisionEffects(
+                [surfX, surfY, surfZ],
+                deps.collisionEffects,
             );
-            deps.shockwavePool.trigger({ centerX: su, centerY: sv });
-            deps.hitImpactPool.trigger({ worldX: surfX, worldZ: surfZ });
         }
 
-        triggerCameraShake(0.3, 0.2);
         markHit(deps.replay as Parameters<typeof markHit>[0]);
     };
 

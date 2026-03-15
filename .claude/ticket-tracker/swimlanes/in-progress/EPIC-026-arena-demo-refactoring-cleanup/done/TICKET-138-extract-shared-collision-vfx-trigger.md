@@ -1,10 +1,12 @@
 ---
 id: TICKET-138
 title: Extract shared collision VFX trigger
-status: todo
+status: done
 epic: EPIC-026
 created: 2026-03-14
+updated: 2026-03-14
 priority: medium
+branch: ticket-138-extract-shared-collision-vfx-trigger
 ---
 
 ## Problem
