@@ -1,10 +1,12 @@
 ---
 id: TICKET-136
 title: Extract shared world setup factory in main.ts
-status: todo
+status: in-progress
 epic: EPIC-026
 created: 2026-03-14
+updated: 2026-03-14
 priority: high
+branch: ticket-136-extract-shared-world-setup-factory
 ---
 
 ## Problem
@@ -25,3 +27,7 @@ Extract a `createGameWorld(options)` factory that handles the shared setup and r
 ## Files
 
 - `demos/arena/src/main.ts`
+
+## Notes
+
+- **2026-03-14**: Starting implementation
