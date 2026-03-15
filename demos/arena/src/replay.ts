@@ -12,14 +12,9 @@ const FIXED_HZ = 60;
 /** Maximum number of frames stored in the ring buffer. */
 const BUFFER_SIZE = REPLAY_BUFFER_SECONDS * FIXED_HZ;
 
-/** A single recorded frame: positions of both players. */
+/** A single recorded frame: positions of both players, indexed by player ID. */
 export interface ReplayFrame {
-    p0x: number;
-    p0y: number;
-    p0z: number;
-    p1x: number;
-    p1y: number;
-    p1z: number;
+    positions: [number, number, number][];
 }
 
 /** Internal state for the replay system. */
@@ -38,13 +33,8 @@ export interface ReplayState {
     knockedOut: number;
     scorer: number;
 
-    // Per-player staging
-    staged0x: number;
-    staged0y: number;
-    staged0z: number;
-    staged1x: number;
-    staged1y: number;
-    staged1z: number;
+    // Per-player staging, indexed by player ID
+    staged: [number, number, number][];
 }
 
 /**
@@ -72,12 +62,10 @@ export const ReplayStore = defineStore(
         cursorPos: 0,
         knockedOut: -1,
         scorer: -1,
-        staged0x: 0,
-        staged0y: 0,
-        staged0z: 0,
-        staged1x: 0,
-        staged1y: 0,
-        staged1z: 0,
+        staged: [
+            [0, 0, 0],
+            [0, 0, 0],
+        ],
     }),
 );
 
@@ -108,15 +96,9 @@ export function stagePlayerPosition(
     y: number,
     z: number,
 ): void {
-    if (playerId === 0) {
-        state.staged0x = x;
-        state.staged0y = y;
-        state.staged0z = z;
-    } else {
-        state.staged1x = x;
-        state.staged1y = y;
-        state.staged1z = z;
-    }
+    state.staged[playerId][0] = x;
+    state.staged[playerId][1] = y;
+    state.staged[playerId][2] = z;
 }
 
 /**
@@ -133,12 +115,12 @@ export function stagePlayerPosition(
 export function commitFrame(state: ReplayState): void {
     recordFrame(
         state,
-        state.staged0x,
-        state.staged0y,
-        state.staged0z,
-        state.staged1x,
-        state.staged1y,
-        state.staged1z,
+        state.staged[0][0],
+        state.staged[0][1],
+        state.staged[0][2],
+        state.staged[1][0],
+        state.staged[1][1],
+        state.staged[1][2],
     );
 }
 
@@ -169,15 +151,20 @@ export function recordFrame(
 ): void {
     const idx = state.writeCount % BUFFER_SIZE;
     if (state.buffer.length <= idx) {
-        state.buffer.push({ p0x, p0y, p0z, p1x, p1y, p1z });
+        state.buffer.push({
+            positions: [
+                [p0x, p0y, p0z],
+                [p1x, p1y, p1z],
+            ],
+        });
     } else {
         const f = state.buffer[idx];
-        f.p0x = p0x;
-        f.p0y = p0y;
-        f.p0z = p0z;
-        f.p1x = p1x;
-        f.p1y = p1y;
-        f.p1z = p1z;
+        f.positions[0][0] = p0x;
+        f.positions[0][1] = p0y;
+        f.positions[0][2] = p0z;
+        f.positions[1][0] = p1x;
+        f.positions[1][1] = p1y;
+        f.positions[1][2] = p1z;
     }
     state.writeCount++;
 }
@@ -251,12 +238,10 @@ export function startReplay(
         const bufIdx = (startWrite + i) % BUFFER_SIZE;
         const f = state.buffer[bufIdx];
         state.playbackFrames.push({
-            p0x: f.p0x,
-            p0y: f.p0y,
-            p0z: f.p0z,
-            p1x: f.p1x,
-            p1y: f.p1y,
-            p1z: f.p1z,
+            positions: [
+                [f.positions[0][0], f.positions[0][1], f.positions[0][2]],
+                [f.positions[1][0], f.positions[1][1], f.positions[1][2]],
+            ],
         });
     }
 
@@ -327,20 +312,13 @@ export function getReplayPosition(
     const i1 = Math.min(i0 + 1, state.playbackFrames.length - 1);
     const t = idx - i0;
 
-    const f0 = state.playbackFrames[i0];
-    const f1 = state.playbackFrames[i1];
+    const pos0 = state.playbackFrames[i0].positions[playerId];
+    const pos1 = state.playbackFrames[i1].positions[playerId];
 
-    if (playerId === 0) {
-        return [
-            f0.p0x + (f1.p0x - f0.p0x) * t,
-            f0.p0y + (f1.p0y - f0.p0y) * t,
-            f0.p0z + (f1.p0z - f0.p0z) * t,
-        ];
-    }
     return [
-        f0.p1x + (f1.p1x - f0.p1x) * t,
-        f0.p1y + (f1.p1y - f0.p1y) * t,
-        f0.p1z + (f1.p1z - f0.p1z) * t,
+        pos0[0] + (pos1[0] - pos0[0]) * t,
+        pos0[1] + (pos1[1] - pos0[1]) * t,
+        pos0[2] + (pos1[2] - pos0[2]) * t,
     ];
 }
 
@@ -417,20 +395,13 @@ export function getReplayVelocity(
     const i1 = Math.min(i0 + 1, state.playbackFrames.length - 1);
     if (i0 === i1) return [0, 0, 0];
 
-    const f0 = state.playbackFrames[i0];
-    const f1 = state.playbackFrames[i1];
+    const pos0 = state.playbackFrames[i0].positions[playerId];
+    const pos1 = state.playbackFrames[i1].positions[playerId];
 
-    if (playerId === 0) {
-        return [
-            (f1.p0x - f0.p0x) * FIXED_HZ,
-            (f1.p0y - f0.p0y) * FIXED_HZ,
-            (f1.p0z - f0.p0z) * FIXED_HZ,
-        ];
-    }
     return [
-        (f1.p1x - f0.p1x) * FIXED_HZ,
-        (f1.p1y - f0.p1y) * FIXED_HZ,
-        (f1.p1z - f0.p1z) * FIXED_HZ,
+        (pos1[0] - pos0[0]) * FIXED_HZ,
+        (pos1[1] - pos0[1]) * FIXED_HZ,
+        (pos1[2] - pos0[2]) * FIXED_HZ,
     ];
 }
 
@@ -495,8 +466,10 @@ export function clearRecording(state: ReplayState): void {
     state.buffer.length = 0;
     state.writeCount = 0;
     state.hitWriteCounts = [];
-    state.staged0x = state.staged0y = state.staged0z = 0;
-    state.staged1x = state.staged1y = state.staged1z = 0;
+    state.staged = [
+        [0, 0, 0],
+        [0, 0, 0],
+    ];
 }
 
 /**
@@ -508,8 +481,10 @@ export function resetReplay(state: ReplayState): void {
     state.buffer.length = 0;
     state.writeCount = 0;
     state.hitWriteCounts = [];
-    state.staged0x = state.staged0y = state.staged0z = 0;
-    state.staged1x = state.staged1y = state.staged1z = 0;
+    state.staged = [
+        [0, 0, 0],
+        [0, 0, 0],
+    ];
     endReplay(state);
     state.knockedOut = -1;
     state.scorer = -1;
