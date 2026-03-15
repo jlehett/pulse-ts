@@ -32,7 +32,6 @@ import {
 import { DashCooldownStore } from '../dashCooldown';
 import { KnockoutQueueStore } from '../knockoutQueue';
 import { useHitImpactPool } from '../hitImpact';
-import { resetCameraShake } from './CameraRigNode';
 import { PlayerVelocityStore } from '../playerVelocity';
 
 /**
@@ -92,8 +91,6 @@ export function GameManagerNode(props?: Readonly<GameManagerNodeProps>) {
     // Clear non-store module state from any previous game session.
     clearRecording(replay);
     endReplay(replay);
-    resetCameraShake();
-
     // Store state is already fresh from world-scoped initialization,
     // but explicit reset ensures clean state if the node is re-mounted
     // within the same world.

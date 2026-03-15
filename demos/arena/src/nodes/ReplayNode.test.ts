@@ -41,7 +41,11 @@ vi.mock('../hitImpact', () => ({
     useHitImpactPool: vi.fn(() => ({ trigger: vi.fn() })),
 }));
 
-vi.mock('./CameraRigNode', () => ({
+vi.mock('../cameraShake', () => ({
+    CameraShakeStore: {
+        _key: Symbol('cameraShake'),
+        _factory: () => ({ intensity: 0, duration: 0, elapsed: 0 }),
+    },
     triggerCameraShake: vi.fn(),
 }));
 

@@ -10,13 +10,11 @@ import {
     REPLAY_FALL_ZOOM_RANGE,
     REPLAY_TIE_BASE_SEPARATION,
     REPLAY_TIE_HEIGHT_PER_UNIT,
-    triggerCameraShake,
-    resetCameraShake,
 } from './CameraRigNode';
-
-afterEach(() => {
-    resetCameraShake();
-});
+import {
+    CameraShakeStore,
+    triggerCameraShake,
+} from '../cameraShake';
 
 describe('CameraRigNode', () => {
     it('exports the node function', () => {
@@ -67,28 +65,35 @@ describe('CameraRigNode', () => {
     });
 });
 
+describe('CameraShakeStore', () => {
+    it('exports the store definition', () => {
+        expect(CameraShakeStore).toBeDefined();
+    });
+});
+
 describe('triggerCameraShake', () => {
-    it('sets shake state', () => {
-        triggerCameraShake(0.5, 0.3);
-        // No throw — state is module-internal, we just verify it runs
-        expect(true).toBe(true);
+    it('sets shake state on the store object', () => {
+        const shake = { intensity: 0, duration: 0, elapsed: 0 };
+        triggerCameraShake(shake, 0.5, 0.3);
+        expect(shake.intensity).toBe(0.5);
+        expect(shake.duration).toBe(0.3);
+        expect(shake.elapsed).toBe(0);
     });
 
     it('weaker shake does not override stronger active shake', () => {
-        // This test verifies the guard: intensity must be greater to override.
-        // We trigger a strong shake, then a weak one — the weak one should
-        // not reset the elapsed counter (tested indirectly via reset).
-        triggerCameraShake(0.8, 0.5);
-        triggerCameraShake(0.3, 0.2); // should be ignored
-        // resetCameraShake clears the module state for next test
-        resetCameraShake();
+        const shake = { intensity: 0, duration: 0, elapsed: 0 };
+        triggerCameraShake(shake, 0.8, 0.5);
+        triggerCameraShake(shake, 0.3, 0.2); // should be ignored
+        expect(shake.intensity).toBe(0.8);
+        expect(shake.duration).toBe(0.5);
     });
 
-    it('resetCameraShake clears state', () => {
-        triggerCameraShake(1.0, 1.0);
-        resetCameraShake();
-        // After reset, triggering with any intensity should work
-        triggerCameraShake(0.1, 0.1);
-        resetCameraShake();
+    it('stronger shake overrides weaker active shake', () => {
+        const shake = { intensity: 0, duration: 0, elapsed: 0 };
+        triggerCameraShake(shake, 0.3, 0.2);
+        triggerCameraShake(shake, 0.8, 0.5);
+        expect(shake.intensity).toBe(0.8);
+        expect(shake.duration).toBe(0.5);
+        expect(shake.elapsed).toBe(0);
     });
 });
