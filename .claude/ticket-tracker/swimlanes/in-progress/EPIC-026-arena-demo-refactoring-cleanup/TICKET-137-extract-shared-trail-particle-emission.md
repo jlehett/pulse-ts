@@ -1,10 +1,12 @@
 ---
 id: TICKET-137
 title: Extract shared trail particle emission logic
-status: todo
+status: in-progress
 epic: EPIC-026
 created: 2026-03-14
+updated: 2026-03-14
 priority: medium
+branch: ticket-137-extract-shared-trail-particle-emission
 ---
 
 ## Problem
