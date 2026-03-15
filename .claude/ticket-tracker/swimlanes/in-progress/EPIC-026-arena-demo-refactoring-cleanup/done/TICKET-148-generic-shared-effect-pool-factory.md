@@ -1,7 +1,7 @@
 ---
 id: TICKET-148
 title: Create generic shared effect pool factory
-status: in-progress
+status: done
 epic: EPIC-026
 created: 2026-03-14
 updated: 2026-03-14
@@ -37,3 +37,4 @@ export const { Store: ShockwaveStore, usePool: useShockwavePool } =
 ## Notes
 
 - **2026-03-14**: Starting implementation
+- **2026-03-14**: Implementation complete
