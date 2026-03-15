@@ -3,7 +3,7 @@
  * that fires on every player-vs-player collision (live or replay).
  */
 
-import { triggerCameraShake } from './CameraRigNode';
+import { triggerCameraShake } from '../cameraShake';
 import { worldToScreen } from '../shockwave';
 
 /** Dependencies for {@link triggerCollisionEffects}. */
@@ -18,6 +18,8 @@ export interface CollisionEffectsDeps {
     hitImpactPool: { trigger: (opts: { worldX: number; worldZ: number }) => void };
     /** Three.js camera for world-to-screen projection. */
     camera: Parameters<typeof worldToScreen>[3];
+    /** Camera shake store state. */
+    cameraShake: { intensity: number; duration: number; elapsed: number };
 }
 
 /**
@@ -50,7 +52,7 @@ export function triggerCollisionEffects(
     shakeDuration = 0.2,
 ): void {
     deps.impactBurst(worldPos);
-    triggerCameraShake(shakeIntensity, shakeDuration);
+    triggerCameraShake(deps.cameraShake, shakeIntensity, shakeDuration);
 
     const [su, sv] = worldToScreen(
         worldPos[0],

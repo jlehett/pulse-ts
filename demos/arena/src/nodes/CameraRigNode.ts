@@ -14,6 +14,7 @@ import {
     getReplayPastHit,
 } from '../replay';
 import { SPAWN_POSITIONS } from '../config/arena';
+import { CameraShakeStore, triggerCameraShake } from '../cameraShake';
 
 /** Fixed camera height above the arena center. */
 export const CAMERA_HEIGHT = 26;
@@ -61,44 +62,6 @@ export const REPLAY_TIE_BASE_SEPARATION = 6;
 /** Extra camera height gained per unit of player separation beyond the base. */
 export const REPLAY_TIE_HEIGHT_PER_UNIT = 0.8;
 
-// ---------------------------------------------------------------------------
-// Module-level shake state — shared across all callers
-// ---------------------------------------------------------------------------
-
-let shakeIntensity = 0;
-let shakeDuration = 0;
-let shakeElapsed = 0;
-
-/**
- * Trigger a camera shake effect. If a shake is already active, the new
- * shake only overrides it when the new intensity is stronger.
- *
- * @param intensity - Maximum offset in world units (e.g. 0.3 for small, 0.8 for big).
- * @param duration - Duration in seconds.
- *
- * @example
- * ```ts
- * triggerCameraShake(0.3, 0.2); // small collision shake
- * triggerCameraShake(0.8, 0.5); // big knockout shake
- * ```
- */
-export function triggerCameraShake(intensity: number, duration: number): void {
-    if (intensity > shakeIntensity) {
-        shakeIntensity = intensity;
-        shakeDuration = duration;
-        shakeElapsed = 0;
-    }
-}
-
-/**
- * Reset shake state. Exported for testing.
- */
-export function resetCameraShake(): void {
-    shakeIntensity = 0;
-    shakeDuration = 0;
-    shakeElapsed = 0;
-}
-
 /**
  * Fixed overhead camera centered on the arena with shake support.
  * During replay, smoothly transitions to a cinematic follow-cam
@@ -109,6 +72,7 @@ export function CameraRigNode() {
     const { camera } = useThreeContext();
     const gameState = useContext(GameCtx);
     const [replay] = useStore(ReplayStore);
+    const [shake] = useStore(CameraShakeStore);
 
     camera.position.set(0, CAMERA_HEIGHT, CAMERA_Z_OFFSET);
     camera.lookAt(0, 0, 0);
@@ -118,7 +82,7 @@ export function CameraRigNode() {
         () => gameState.phase,
         (phase) => {
             if (phase === 'ko_flash') {
-                triggerCameraShake(0.8, 0.5);
+                triggerCameraShake(shake, 0.8, 0.5);
             }
         },
         { kind: 'frame' },
@@ -274,17 +238,17 @@ export function CameraRigNode() {
         let finalY = camY;
         let finalZ = camZ;
 
-        if (shakeIntensity > 0) {
-            shakeElapsed += dt;
-            const t = Math.min(shakeElapsed / shakeDuration, 1);
+        if (shake.intensity > 0) {
+            shake.elapsed += dt;
+            const t = Math.min(shake.elapsed / shake.duration, 1);
             const decay = 1 - t;
 
             if (t >= 1) {
-                shakeIntensity = 0;
-                shakeDuration = 0;
-                shakeElapsed = 0;
+                shake.intensity = 0;
+                shake.duration = 0;
+                shake.elapsed = 0;
             } else {
-                const offset = shakeIntensity * decay;
+                const offset = shake.intensity * decay;
                 finalX += (Math.random() * 2 - 1) * offset;
                 finalZ += (Math.random() * 2 - 1) * offset;
             }

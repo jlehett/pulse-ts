@@ -33,6 +33,7 @@ import { useHitImpactPool } from '../hitImpact';
 import { PlayerPositionStore, setPlayerPosition } from '../ai/playerPositions';
 import { DashCooldownStore } from '../dashCooldown';
 import { KnockoutQueueStore } from '../knockoutQueue';
+import { CameraShakeStore } from '../cameraShake';
 import { PlayerVelocityStore, updatePlayerVelocity } from '../playerVelocity';
 
 // Extracted modules
@@ -106,6 +107,7 @@ export function LocalPlayerNode({
     const [velocities] = useStore(PlayerVelocityStore);
     const [ko] = useStore(KnockoutQueueStore);
     const [playerPositions] = useStore(PlayerPositionStore);
+    const [cameraShake] = useStore(CameraShakeStore);
 
     useStableId(`player-${playerId}`);
     useComponent(PlayerTag);
@@ -234,6 +236,7 @@ export function LocalPlayerNode({
             shockwavePool,
             hitImpactPool,
             camera: threeCamera as CollisionEffectsDeps['camera'],
+            cameraShake,
         },
         replay,
         velocityStates: velocities.states,

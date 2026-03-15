@@ -18,6 +18,7 @@ import { PLAYER_COLORS, TRAIL_VELOCITY_REFERENCE } from '../config/arena';
 import { TRAIL_BURST_CONFIG, IMPACT_BURST_CONFIG } from '../config/particles';
 import { IMPACT_SOUND_CONFIG } from '../config/sounds';
 import { createTrailEmitter } from './trailEmitter';
+import { CameraShakeStore } from '../cameraShake';
 import { useShockwavePool } from '../shockwave';
 import { useHitImpactPool } from '../hitImpact';
 import { triggerCollisionEffects } from './collisionEffects';
@@ -32,6 +33,7 @@ export function ReplayNode() {
     const { camera } = useThreeContext();
 
     const [replay] = useStore(ReplayStore);
+    const [cameraShake] = useStore(CameraShakeStore);
     const shockwavePool = useShockwavePool();
     const hitImpactPool = useHitImpactPool();
 
@@ -104,6 +106,7 @@ export function ReplayNode() {
                                 shockwavePool,
                                 hitImpactPool,
                                 camera,
+                                cameraShake,
                             },
                             0.4,
                             0.3,

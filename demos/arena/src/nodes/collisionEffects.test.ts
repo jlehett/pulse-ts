@@ -2,8 +2,8 @@ import { describe, it, expect, vi } from 'vitest';
 import { triggerCollisionEffects } from './collisionEffects';
 import type { CollisionEffectsDeps } from './collisionEffects';
 
-// Mock CameraRigNode's triggerCameraShake
-vi.mock('./CameraRigNode', () => ({
+// Mock cameraShake's triggerCameraShake
+vi.mock('../cameraShake', () => ({
     triggerCameraShake: vi.fn(),
 }));
 
@@ -12,7 +12,7 @@ vi.mock('../shockwave', () => ({
     worldToScreen: vi.fn(() => [0.5, 0.6]),
 }));
 
-import { triggerCameraShake } from './CameraRigNode';
+import { triggerCameraShake } from '../cameraShake';
 import { worldToScreen } from '../shockwave';
 
 function makeDeps(): CollisionEffectsDeps {
@@ -22,6 +22,7 @@ function makeDeps(): CollisionEffectsDeps {
         shockwavePool: { trigger: vi.fn() },
         hitImpactPool: { trigger: vi.fn() },
         camera: {} as CollisionEffectsDeps['camera'],
+        cameraShake: { intensity: 0, duration: 0, elapsed: 0 },
     };
 }
 
@@ -33,7 +34,11 @@ describe('triggerCollisionEffects', () => {
         triggerCollisionEffects(pos, deps);
 
         expect(deps.impactBurst).toHaveBeenCalledWith(pos);
-        expect(triggerCameraShake).toHaveBeenCalledWith(0.3, 0.2);
+        expect(triggerCameraShake).toHaveBeenCalledWith(
+            deps.cameraShake,
+            0.3,
+            0.2,
+        );
         expect(worldToScreen).toHaveBeenCalledWith(1, 2, 3, deps.camera);
         expect(deps.shockwavePool.trigger).toHaveBeenCalledWith({
             centerX: 0.5,
@@ -51,6 +56,10 @@ describe('triggerCollisionEffects', () => {
 
         triggerCollisionEffects([0, 0, 0], deps, 0.4, 0.3);
 
-        expect(triggerCameraShake).toHaveBeenCalledWith(0.4, 0.3);
+        expect(triggerCameraShake).toHaveBeenCalledWith(
+            deps.cameraShake,
+            0.4,
+            0.3,
+        );
     });
 });
