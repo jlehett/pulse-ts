@@ -60,19 +60,18 @@ export function MatchOverOverlayNode(
 
     // Rematch click handler
     function onRematchClick() {
+        reloader.cancel();
         if (props?.online) {
             if (rematchState === 'idle') {
                 ch!.publish({ type: 'offer' });
                 flushNet();
                 rematchState = 'waiting';
             } else if (rematchState === 'requested') {
-                reloader.cancel();
                 ch!.publish({ type: 'accept' });
                 flushNet();
                 props.onRequestRematch?.();
             }
         } else {
-            reloader.cancel();
             props?.onRequestRematch?.();
         }
     }
