@@ -1,10 +1,12 @@
 ---
 id: TICKET-145
 title: Split lobby.tsx into focused modules
-status: todo
+status: done
 epic: EPIC-026
 created: 2026-03-14
+updated: 2026-03-14
 priority: high
+branch: ticket-145-split-lobby-into-focused-modules
 ---
 
 ## Problem
@@ -28,3 +30,8 @@ The lobby screens remain but become much shorter, focused on screen flow logic.
 ## Files
 
 - `demos/arena/src/lobby.tsx`
+
+## Notes
+
+- **2026-03-14**: Starting implementation
+- **2026-03-14**: Implementation complete
