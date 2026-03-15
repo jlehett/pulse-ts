@@ -3,7 +3,9 @@ import { installAudio } from '@pulse-ts/audio';
 import { installInput } from '@pulse-ts/input';
 import { installPhysics } from '@pulse-ts/physics';
 import { installThree } from '@pulse-ts/three';
+import type { ThreeService } from '@pulse-ts/three';
 import { installNetwork } from '@pulse-ts/network';
+import type { ShaderPass } from 'three/examples/jsm/postprocessing/ShaderPass.js';
 import { ArenaNode } from './nodes/ArenaNode';
 import { MenuSceneNode } from './nodes/MenuSceneNode';
 import { allBindings } from './config/bindings';
@@ -24,7 +26,21 @@ installMobileSupport({
 });
 startVersionPolling();
 
-function createMenuWorld(): { world: World; destroy: () => void } {
+interface GameWorldResult {
+    world: World;
+    three: ThreeService;
+    shockwavePass: ShaderPass;
+    cleanup: () => void;
+}
+
+/**
+ * Create a fully-wired world with the shared boilerplate every game mode needs:
+ * defaults, physics, Three.js renderer, mobile pixel-ratio cap, shadow maps
+ * (desktop only), and post-processing.
+ *
+ * @returns The world, three service, shockwave pass, and a cleanup function.
+ */
+function createGameWorld(): GameWorldResult {
     const world = new World();
 
     installDefaults(world);
@@ -36,6 +52,8 @@ function createMenuWorld(): { world: World; destroy: () => void } {
         clearColor: 0x050508,
     });
 
+    // Cap pixel ratio at 2 on mobile — prevents 3x DPR phones
+    // from rendering 9x the pixels for minimal visual difference.
     if (mobile) {
         three.renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
     }
@@ -45,50 +63,28 @@ function createMenuWorld(): { world: World; destroy: () => void } {
         three.renderer.shadowMap.type = 1; // THREE.PCFShadowMap
     }
 
-    setupPostProcessing(three);
+    const shockwavePass = setupPostProcessing(three);
 
-    world.mount(MenuSceneNode);
-
-    return {
-        world,
-        destroy() {
-            three.renderer.clear();
-            world.destroy();
-        },
+    const cleanup = () => {
+        three.renderer.clear();
+        world.destroy();
     };
+
+    return { world, three, shockwavePass, cleanup };
+}
+
+function createMenuWorld(): { world: World; destroy: () => void } {
+    const { world, cleanup } = createGameWorld();
+    world.mount(MenuSceneNode);
+    return { world, destroy: cleanup };
 }
 
 function startLocalGame(): Promise<void> {
     return new Promise((resolve) => {
-        const world = new World();
+        const { world, shockwavePass, cleanup } = createGameWorld();
 
-        installDefaults(world);
         installAudio(world);
         installInput(world, { preventDefault: true, bindings: allBindings });
-        installPhysics(world, { gravity: { x: 0, y: -20, z: 0 } });
-
-        const mobile = isMobile();
-        const three = installThree(world, {
-            canvas,
-            clearColor: 0x050508,
-        });
-
-        // Cap pixel ratio at 2 on mobile — prevents 3x DPR phones
-        // from rendering 9x the pixels for minimal visual difference.
-        if (mobile) {
-            three.renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
-        }
-
-        if (!mobile) {
-            three.renderer.shadowMap.enabled = true;
-            three.renderer.shadowMap.type = 1; // THREE.PCFShadowMap
-        }
-        const shockwavePass = setupPostProcessing(three);
-
-        const cleanup = () => {
-            three.renderer.clear();
-            world.destroy();
-        };
 
         world.mount(ArenaNode, {
             shockwavePass,
@@ -108,33 +104,10 @@ function startLocalGame(): Promise<void> {
 
 function startSoloGame(personality: AiPersonality): Promise<void> {
     return new Promise((resolve) => {
-        const world = new World();
+        const { world, shockwavePass, cleanup } = createGameWorld();
 
-        installDefaults(world);
         installAudio(world);
         installInput(world, { preventDefault: true, bindings: allBindings });
-        installPhysics(world, { gravity: { x: 0, y: -20, z: 0 } });
-
-        const mobile = isMobile();
-        const three = installThree(world, {
-            canvas,
-            clearColor: 0x050508,
-        });
-
-        if (mobile) {
-            three.renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
-        }
-
-        if (!mobile) {
-            three.renderer.shadowMap.enabled = true;
-            three.renderer.shadowMap.type = 1; // THREE.PCFShadowMap
-        }
-        const shockwavePass = setupPostProcessing(three);
-
-        const cleanup = () => {
-            three.renderer.clear();
-            world.destroy();
-        };
 
         world.mount(ArenaNode, {
             shockwavePass,
@@ -156,40 +129,17 @@ function startSoloGame(personality: AiPersonality): Promise<void> {
 async function startOnlineGame(lobby: LobbyResult): Promise<void> {
     return new Promise((resolve) => {
         const setup = async () => {
-            const world = new World();
+            const { world, shockwavePass, cleanup } = createGameWorld();
 
-            installDefaults(world);
             installAudio(world);
             installInput(world, {
                 preventDefault: true,
                 bindings: allBindings,
             });
-            installPhysics(world, { gravity: { x: 0, y: -20, z: 0 } });
-
-            const mobile = isMobile();
-            const three = installThree(world, {
-                canvas,
-                clearColor: 0x050508,
-            });
-
-            if (mobile) {
-                three.renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
-            }
 
             await installNetwork(world, {
                 replication: { sendHz: 60 },
             });
-
-            if (!mobile) {
-                three.renderer.shadowMap.enabled = true;
-                three.renderer.shadowMap.type = 1; // THREE.PCFShadowMap
-            }
-            const shockwavePass = setupPostProcessing(three);
-
-            const cleanup = () => {
-                three.renderer.clear();
-                world.destroy();
-            };
 
             world.mount(ArenaNode, {
                 playerId: lobby.playerId,
