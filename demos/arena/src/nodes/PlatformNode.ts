@@ -1,9 +1,6 @@
 import { useComponent, Transform, useFrameUpdate } from '@pulse-ts/core';
 import { useRigidBody, useCylinderCollider } from '@pulse-ts/physics';
-import {
-    useMesh,
-    useCustomMesh,
-} from '@pulse-ts/three';
+import { useMesh, useCustomMesh } from '@pulse-ts/three';
 import { useAnimate } from '@pulse-ts/effects';
 import * as THREE from 'three';
 import { ARENA_RADIUS } from '../config/arena';
@@ -35,10 +32,7 @@ import {
     WAKE_MAX_TRAIL,
 } from './platform/wake';
 import type { WakeTrailPoint } from './platform/wake';
-import {
-    createPlatformShaderUniforms,
-    RIPPLE_INTENSITY,
-} from './platform/shaderPatch';
+import { createPlatformShaderUniforms } from './platform/shaderPatch';
 import { applyPlatformShaderPatch } from './platform/shaderPatch';
 import { getPlayerPosition } from '../ai/playerPositions';
 
