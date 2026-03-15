@@ -2,9 +2,9 @@ import { useFrameUpdate, useContext, useStore } from '@pulse-ts/core';
 import { useThreeContext } from '@pulse-ts/three';
 import { useOverlay, Column } from '@pulse-ts/dom';
 import { isMobile } from '@pulse-ts/platform';
-import { GameCtx } from '../contexts';
-import { DashCooldownStore } from '../dashCooldown';
-import { ReplayStore } from '../replay';
+import { GameCtx } from '../../contexts';
+import { DashCooldownStore } from '../../stores/dashCooldown';
+import { ReplayStore } from '../../stores/replay';
 
 export interface DashCooldownHudNodeProps {
     /** Local player ID for reading dash cooldown progress. @defaultValue `0` */

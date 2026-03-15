@@ -5,10 +5,10 @@ import {
     useStore,
 } from '@pulse-ts/core';
 import { useThreeContext } from '@pulse-ts/three';
-import { GameCtx } from '../contexts';
+import { GameCtx } from '../../contexts';
 import {
     ReplayStore,
-} from '../replay';
+} from '../../stores/replay';
 
 /** Height of each cinematic letterbox bar as a CSS value. */
 export const LETTERBOX_HEIGHT = '8%';

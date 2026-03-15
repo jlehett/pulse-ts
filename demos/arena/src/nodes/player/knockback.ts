@@ -13,12 +13,12 @@ import {
 } from '@pulse-ts/core';
 import { useOnCollisionStart } from '@pulse-ts/physics';
 import { useChannel } from '@pulse-ts/network';
-import { PlayerTag } from '../components/PlayerTag';
-import { markHit } from '../replay';
-import { getPlayerVelocity } from '../playerVelocity';
+import { PlayerTag } from './PlayerTag';
+import { markHit } from '../../stores/replay';
+import { getPlayerVelocity } from '../../stores/playerVelocity';
 import { computeKnockback, computeApproachSpeed } from './mechanics';
-import { triggerCollisionEffects } from './collisionEffects';
-import type { CollisionEffectsDeps } from './collisionEffects';
+import { triggerCollisionEffects } from '../effects/collisionEffects';
+import type { CollisionEffectsDeps } from '../effects/collisionEffects';
 import type { DashState } from './dash';
 
 /** Minimum knockback applied even when both players have zero closing speed. */

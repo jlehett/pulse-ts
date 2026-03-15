@@ -12,8 +12,8 @@ vi.mock('../shockwave', () => ({
     worldToScreen: vi.fn(() => [0.5, 0.6]),
 }));
 
-import { triggerCameraShake } from '../cameraShake';
-import { worldToScreen } from '../shockwave';
+import { triggerCameraShake } from '../../stores/cameraShake';
+import { worldToScreen } from '../../stores/shockwave';
 
 function makeDeps(): CollisionEffectsDeps {
     return {

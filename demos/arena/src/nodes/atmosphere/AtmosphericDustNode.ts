@@ -1,15 +1,15 @@
 import { useContext, useFrameUpdate, curlNoise2D } from '@pulse-ts/core';
 import { useParticleBurst } from '@pulse-ts/effects';
-import { ARENA_RADIUS } from '../config/arena';
-import { GameCtx, type RoundPhase } from '../contexts';
-import { getPlayerPosition } from '../ai/playerPositions';
+import { ARENA_RADIUS } from '../../config/arena';
+import { GameCtx, type RoundPhase } from '../../contexts';
+import { getPlayerPosition } from '../../ai/playerPositions';
 import { isMobile } from '@pulse-ts/platform';
 import {
     useHitImpactPool,
     HIT_IMPACT_DURATION,
     HIT_SCATTER_RADIUS,
     HIT_SCATTER_STRENGTH,
-} from '../hitImpact';
+} from '../../stores/hitImpact';
 
 /** Total number of dust particles spawned each round. */
 export const DUST_COUNT = 1500;

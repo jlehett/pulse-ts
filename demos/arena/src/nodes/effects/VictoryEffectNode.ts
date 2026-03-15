@@ -1,6 +1,6 @@
 import { useFrameUpdate, useContext } from '@pulse-ts/core';
 import { useParticleBurst } from '@pulse-ts/effects';
-import { GameCtx, type RoundPhase } from '../contexts';
+import { GameCtx, type RoundPhase } from '../../contexts';
 
 /** Confetti colors — teal, coral, gold, blue, white. */
 const CONFETTI_COLORS = [0x48c9b0, 0xe74c3c, 0xf4d03f, 0x3498db, 0xffffff];

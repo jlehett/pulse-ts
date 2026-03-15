@@ -2,9 +2,9 @@ import { useFrameUpdate, useContext, color } from '@pulse-ts/core';
 import { useThreeContext } from '@pulse-ts/three';
 import { useOverlay, Column } from '@pulse-ts/dom';
 import { useSequence } from '@pulse-ts/effects';
-import { GameCtx } from '../contexts';
-import { applyStaggeredEntrance } from '../overlayAnimations';
-import type { AiPersonality } from '../ai/personalities';
+import { GameCtx } from '../../contexts';
+import { applyStaggeredEntrance } from '../../ui/overlayAnimations';
+import type { AiPersonality } from '../../ai/personalities';
 
 /** Duration of the intro cinematic in seconds before transitioning to playing. */
 export const INTRO_DURATION = 3.0;

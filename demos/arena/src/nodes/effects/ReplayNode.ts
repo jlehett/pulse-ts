@@ -6,21 +6,21 @@ import {
     ParticlesService,
 } from '@pulse-ts/effects';
 import { useSound } from '@pulse-ts/audio';
-import { GameCtx } from '../contexts';
+import { GameCtx } from '../../contexts';
 import {
     ReplayStore,
     advanceReplay,
     getReplayPosition,
     getReplayVelocity,
     getReplaySpeed,
-} from '../replay';
-import { PLAYER_COLORS, TRAIL_VELOCITY_REFERENCE } from '../config/arena';
-import { TRAIL_BURST_CONFIG, IMPACT_BURST_CONFIG } from '../config/particles';
-import { IMPACT_SOUND_CONFIG } from '../config/sounds';
+} from '../../stores/replay';
+import { PLAYER_COLORS, TRAIL_VELOCITY_REFERENCE } from '../../config/arena';
+import { TRAIL_BURST_CONFIG, IMPACT_BURST_CONFIG } from '../../config/particles';
+import { IMPACT_SOUND_CONFIG } from '../../config/sounds';
 import { createTrailEmitter } from './trailEmitter';
-import { CameraShakeStore } from '../cameraShake';
-import { useShockwavePool } from '../shockwave';
-import { useHitImpactPool } from '../hitImpact';
+import { CameraShakeStore } from '../../stores/cameraShake';
+import { useShockwavePool } from '../../stores/shockwave';
+import { useHitImpactPool } from '../../stores/hitImpact';
 import { triggerCollisionEffects } from './collisionEffects';
 
 /**

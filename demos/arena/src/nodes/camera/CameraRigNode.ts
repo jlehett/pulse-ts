@@ -6,15 +6,15 @@ import {
     damp,
 } from '@pulse-ts/core';
 import { useThreeContext } from '@pulse-ts/three';
-import { GameCtx } from '../contexts';
+import { GameCtx } from '../../contexts';
 import {
     ReplayStore,
     getReplayPosition,
     getReplayHitProximity,
     getReplayPastHit,
-} from '../replay';
-import { SPAWN_POSITIONS } from '../config/arena';
-import { CameraShakeStore, triggerCameraShake } from '../cameraShake';
+} from '../../stores/replay';
+import { SPAWN_POSITIONS } from '../../config/arena';
+import { CameraShakeStore, triggerCameraShake } from '../../stores/cameraShake';
 
 /** Fixed camera height above the arena center. */
 export const CAMERA_HEIGHT = 26;

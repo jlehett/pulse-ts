@@ -6,9 +6,9 @@ import {
 } from '@pulse-ts/core';
 import { useInput, useVirtualJoystick } from '@pulse-ts/input';
 import { isMobile } from '@pulse-ts/platform';
-import { GameCtx } from '../contexts';
-import { ReplayStore } from '../replay';
-import { DashCooldownStore } from '../dashCooldown';
+import { GameCtx } from '../../contexts';
+import { ReplayStore } from '../../stores/replay';
+import { DashCooldownStore } from '../../stores/dashCooldown';
 
 /** Dash button radius in pixels. */
 const DASH_RADIUS = 35;

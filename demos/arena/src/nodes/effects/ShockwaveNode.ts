@@ -1,7 +1,7 @@
 import { useFrameUpdate } from '@pulse-ts/core';
 import { useThreeContext } from '@pulse-ts/three';
 import type { ShaderPass } from 'three/examples/jsm/postprocessing/ShaderPass.js';
-import { useShockwavePool, syncShockwaveUniforms } from '../shockwave';
+import { useShockwavePool, syncShockwaveUniforms } from '../../stores/shockwave';
 
 export interface ShockwaveNodeProps {
     /** The ShaderPass instance returned by {@link createShockwavePass}. */

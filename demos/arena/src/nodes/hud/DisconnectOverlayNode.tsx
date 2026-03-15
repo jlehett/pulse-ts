@@ -2,7 +2,7 @@ import { useFrameUpdate } from '@pulse-ts/core';
 import { useThreeContext } from '@pulse-ts/three';
 import { useOnPeerLeave } from '@pulse-ts/network';
 import { useOverlay, Button } from '@pulse-ts/dom';
-import { applyStaggeredEntrance } from '../overlayAnimations';
+import { applyStaggeredEntrance } from '../../ui/overlayAnimations';
 
 export interface DisconnectOverlayNodeProps {
     /** Whether the local player is the host. Determines the disconnect message. */

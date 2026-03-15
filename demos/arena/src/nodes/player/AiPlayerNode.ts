@@ -6,12 +6,12 @@ import {
     useStore,
 } from '@pulse-ts/core';
 import { useInput } from '@pulse-ts/input';
-import { GameCtx } from '../contexts';
-import { ARENA_RADIUS } from '../config/arena';
-import { PlayerPositionStore, getPlayerPosition } from '../ai/playerPositions';
-import { computeAiDecision } from '../ai/aiDecision';
-import { createAiState, updateAiState } from '../ai/aiState';
-import type { AiPersonality } from '../ai/personalities';
+import { GameCtx } from '../../contexts';
+import { ARENA_RADIUS } from '../../config/arena';
+import { PlayerPositionStore, getPlayerPosition } from '../../ai/playerPositions';
+import { computeAiDecision } from '../../ai/aiDecision';
+import { createAiState, updateAiState } from '../../ai/aiState';
+import type { AiPersonality } from '../../ai/personalities';
 import { LocalPlayerNode } from './LocalPlayerNode';
 
 /** Source ID for AI digital input injection. */

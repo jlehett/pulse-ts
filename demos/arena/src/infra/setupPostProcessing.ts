@@ -5,7 +5,7 @@ import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPa
 import { OutputPass } from 'three/examples/jsm/postprocessing/OutputPass.js';
 import type { ShaderPass } from 'three/examples/jsm/postprocessing/ShaderPass.js';
 import type { ThreeService } from '@pulse-ts/three';
-import { createShockwavePass } from './shockwave';
+import { createShockwavePass } from '../stores/shockwave';
 
 /** Options for {@link setupPostProcessing}. */
 export interface PostProcessingOptions {

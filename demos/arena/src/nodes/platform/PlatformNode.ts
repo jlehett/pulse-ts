@@ -3,13 +3,13 @@ import { useRigidBody, useCylinderCollider } from '@pulse-ts/physics';
 import { useMesh, useCustomMesh } from '@pulse-ts/three';
 import { useAnimate } from '@pulse-ts/effects';
 import * as THREE from 'three';
-import { ARENA_RADIUS } from '../config/arena';
+import { ARENA_RADIUS } from '../../config/arena';
 import { isMobile } from '@pulse-ts/platform';
 import {
     useHitImpactPool,
     HIT_RIPPLE_MAX_RADIUS,
     HIT_RIPPLE_EXPAND_DURATION,
-} from '../hitImpact';
+} from '../../stores/hitImpact';
 import {
     createGridNormalMap,
     createGridEmissiveMap,
@@ -19,7 +19,7 @@ import {
     GRID_MAP_SIZE,
     GRID_SPACING,
     GRID_LINE_WIDTH,
-} from './platform/textures';
+} from './textures';
 import {
     rasterizeWake,
     worldToUV,
@@ -30,11 +30,11 @@ import {
     WAKE_TRAIL_INTERVAL,
     WAKE_TRAIL_DECAY,
     WAKE_MAX_TRAIL,
-} from './platform/wake';
-import type { WakeTrailPoint } from './platform/wake';
-import { createPlatformShaderUniforms } from './platform/shaderPatch';
-import { applyPlatformShaderPatch } from './platform/shaderPatch';
-import { getPlayerPosition } from '../ai/playerPositions';
+} from './wake';
+import type { WakeTrailPoint } from './wake';
+import { createPlatformShaderUniforms } from './shaderPatch';
+import { applyPlatformShaderPatch } from './shaderPatch';
+import { getPlayerPosition } from '../../ai/playerPositions';
 
 // Re-export all public symbols so existing imports from './PlatformNode' continue to work
 export {
@@ -43,7 +43,7 @@ export {
     createEnergyLineMap,
     createRingGlowMap,
     createWakeMap,
-} from './platform/textures';
+} from './textures';
 export {
     rasterizeWake,
     worldToUV,
@@ -56,9 +56,9 @@ export {
     WAKE_TRAIL_INTERVAL,
     WAKE_TRAIL_DECAY,
     WAKE_MAX_TRAIL,
-} from './platform/wake';
-export type { WakeTrailPoint } from './platform/wake';
-export { RIPPLE_INTENSITY } from './platform/shaderPatch';
+} from './wake';
+export type { WakeTrailPoint } from './wake';
+export { RIPPLE_INTENSITY } from './shaderPatch';
 
 /** Radius of the arena cylinder (sourced from arena config). */
 export const PLATFORM_RADIUS = ARENA_RADIUS;

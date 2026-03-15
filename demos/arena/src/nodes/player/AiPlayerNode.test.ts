@@ -1,4 +1,4 @@
-import { BRAWLER } from '../ai/personalities';
+import { BRAWLER } from '../../ai/personalities';
 
 /* ------------------------------------------------------------------ */
 /*  Mocks — capture hook callbacks so we can invoke them in tests     */
@@ -60,8 +60,8 @@ jest.mock('./LocalPlayerNode', () => ({
 
 import { AiPlayerNode } from './AiPlayerNode';
 import { LocalPlayerNode } from './LocalPlayerNode';
-import { computeAiDecision } from '../ai/aiDecision';
-import { createAiState, updateAiState } from '../ai/aiState';
+import { computeAiDecision } from '../../ai/aiDecision';
+import { createAiState, updateAiState } from '../../ai/aiState';
 
 beforeEach(() => {
     mockFixedUpdateCallbacks.length = 0;

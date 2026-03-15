@@ -2,7 +2,7 @@ import { useCustomMesh } from '@pulse-ts/three';
 import { useAnimate } from '@pulse-ts/effects';
 import { useFrameUpdate } from '@pulse-ts/core';
 import * as THREE from 'three';
-import { ARENA_RADIUS } from '../config/arena';
+import { ARENA_RADIUS } from '../../config/arena';
 
 /** Number of energy pillars around the perimeter. */
 export const PILLAR_COUNT = 8;

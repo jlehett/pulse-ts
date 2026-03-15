@@ -4,7 +4,7 @@ import {
     REPLAY_NORMAL_SPEED,
     REPLAY_HIT_SPEED,
     REPLAY_HIT_WINDOW_FRAMES,
-} from './config/arena';
+} from '../config/arena';
 
 /** Fixed-step rate (Hz). Must match the engine's fixed step. */
 const FIXED_HZ = 60;

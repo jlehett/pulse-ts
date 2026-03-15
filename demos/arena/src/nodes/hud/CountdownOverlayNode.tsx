@@ -1,8 +1,8 @@
 import { useFrameUpdate, useContext } from '@pulse-ts/core';
 import { useThreeContext } from '@pulse-ts/three';
 import { useOverlay } from '@pulse-ts/dom';
-import { GameCtx } from '../contexts';
-import { applyScalePop } from '../overlayAnimations';
+import { GameCtx } from '../../contexts';
+import { applyScalePop } from '../../ui/overlayAnimations';
 
 /**
  * Convert a countdown numeric value to a display label.

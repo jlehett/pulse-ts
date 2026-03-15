@@ -1,4 +1,4 @@
-import { TRAIL_BASE_INTERVAL, TRAIL_VELOCITY_REFERENCE } from '../config/arena';
+import { TRAIL_BASE_INTERVAL, TRAIL_VELOCITY_REFERENCE } from '../../config/arena';
 
 /**
  * Minimum velocity magnitude (units/sec) required to emit trail particles.

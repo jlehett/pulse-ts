@@ -1,4 +1,4 @@
-import { BRAWLER } from '../ai/personalities';
+import { BRAWLER } from '../../ai/personalities';
 import { INTRO_DURATION } from './IntroOverlayNode';
 
 /* ------------------------------------------------------------------ */

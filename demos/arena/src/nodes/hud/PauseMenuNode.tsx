@@ -2,8 +2,8 @@ import { useFrameUpdate, useContext, useWorld } from '@pulse-ts/core';
 import { useAction } from '@pulse-ts/input';
 import { useThreeContext } from '@pulse-ts/three';
 import { useOverlay, Column, Button } from '@pulse-ts/dom';
-import { GameCtx } from '../contexts';
-import { applyStaggeredEntrance } from '../overlayAnimations';
+import { GameCtx } from '../../contexts';
+import { applyStaggeredEntrance } from '../../ui/overlayAnimations';
 
 export interface PauseMenuNodeProps {
     /** Callback invoked when the player clicks "Exit Match". */

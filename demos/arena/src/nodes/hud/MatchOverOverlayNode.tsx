@@ -3,11 +3,11 @@ import { useThreeContext } from '@pulse-ts/three';
 import { useSound } from '@pulse-ts/audio';
 import { useChannel, TransportService } from '@pulse-ts/network';
 import { useOverlay, Column, Button } from '@pulse-ts/dom';
-import { GameCtx } from '../contexts';
-import { RematchChannel, type RematchMessage } from '../config/channels';
-import { applyStaggeredEntrance } from '../overlayAnimations';
-import { isUpdateAvailable } from '../versionCheck';
-import { createAutoReloader } from '../updateAutoReload';
+import { GameCtx } from '../../contexts';
+import { RematchChannel, type RematchMessage } from '../../config/channels';
+import { applyStaggeredEntrance } from '../../ui/overlayAnimations';
+import { isUpdateAvailable } from '../../infra/versionCheck';
+import { createAutoReloader } from '../../infra/updateAutoReload';
 
 /** Player colors: P1 = teal, P2 = coral. */
 const PLAYER_COLORS = ['#48c9b0', '#e74c3c'];

@@ -75,14 +75,14 @@ import {
     WAKE_MAX_TRAIL,
 } from './PlatformNode';
 import type { WakeTrailPoint } from './PlatformNode';
-import { ARENA_RADIUS } from '../config/arena';
+import { ARENA_RADIUS } from '../../config/arena';
 import {
     HIT_RIPPLE_DISPLACEMENT,
     HIT_RIPPLE_MAX_RADIUS,
     HIT_RIPPLE_EXPAND_DURATION,
     HIT_RIPPLE_RING_WIDTH,
     HIT_IMPACT_DURATION,
-} from '../hitImpact';
+} from '../../stores/hitImpact';
 
 jest.mock('three', () => ({
     DataTexture: jest.fn().mockImplementation((data, w, h) => ({

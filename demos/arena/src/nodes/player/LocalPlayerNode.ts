@@ -17,31 +17,31 @@ import {
 import { useSound, useSoundGroup } from '@pulse-ts/audio';
 import { useParticleBurst } from '@pulse-ts/effects';
 import { useReplicateTransform, useChannel } from '@pulse-ts/network';
-import { PlayerTag } from '../components/PlayerTag';
-import { GameCtx } from '../contexts';
+import { PlayerTag } from './PlayerTag';
+import { GameCtx } from '../../contexts';
 import {
     SPAWN_POSITIONS,
     DEATH_PLANE_Y,
     PLAYER_COLORS,
-} from '../config/arena';
-import { KnockoutChannel } from '../config/channels';
-import { TRAIL_BURST_CONFIG, IMPACT_BURST_CONFIG } from '../config/particles';
-import { IMPACT_SOUND_CONFIG } from '../config/sounds';
-import { ReplayStore, stagePlayerPosition, getReplayPosition } from '../replay';
-import { useShockwavePool, worldToScreen } from '../shockwave';
-import { useHitImpactPool } from '../hitImpact';
-import { PlayerPositionStore, setPlayerPosition } from '../ai/playerPositions';
-import { DashCooldownStore } from '../dashCooldown';
-import { KnockoutQueueStore } from '../knockoutQueue';
-import { CameraShakeStore } from '../cameraShake';
-import { PlayerVelocityStore, updatePlayerVelocity } from '../playerVelocity';
+} from '../../config/arena';
+import { KnockoutChannel } from '../../config/channels';
+import { TRAIL_BURST_CONFIG, IMPACT_BURST_CONFIG } from '../../config/particles';
+import { IMPACT_SOUND_CONFIG } from '../../config/sounds';
+import { ReplayStore, stagePlayerPosition, getReplayPosition } from '../../stores/replay';
+import { useShockwavePool, worldToScreen } from '../../stores/shockwave';
+import { useHitImpactPool } from '../../stores/hitImpact';
+import { PlayerPositionStore, setPlayerPosition } from '../../ai/playerPositions';
+import { DashCooldownStore } from '../../stores/dashCooldown';
+import { KnockoutQueueStore } from '../../stores/knockoutQueue';
+import { CameraShakeStore } from '../../stores/cameraShake';
+import { PlayerVelocityStore, updatePlayerVelocity } from '../../stores/playerVelocity';
 
 // Extracted modules
 import { useDash, tryActivateDash, DASH_SPEED, DASH_COOLDOWN } from './dash';
 import { useIndicatorRing } from './indicatorRing';
 import { useKnockback, KNOCKOUT_BURST_COUNT } from './knockback';
-import type { CollisionEffectsDeps } from './collisionEffects';
-import { createTrailEmitter } from './trailEmitter';
+import type { CollisionEffectsDeps } from '../effects/collisionEffects';
+import { createTrailEmitter } from '../effects/trailEmitter';
 
 // Re-export pure functions and constants so existing imports continue to work.
 export {

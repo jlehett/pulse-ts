@@ -14,7 +14,7 @@ import {
 import {
     CameraShakeStore,
     triggerCameraShake,
-} from '../cameraShake';
+} from '../../stores/cameraShake';
 
 describe('CameraRigNode', () => {
     it('exports the node function', () => {

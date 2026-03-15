@@ -11,19 +11,19 @@ import { useRigidBody, useSphereCollider } from '@pulse-ts/physics';
 import { useMesh } from '@pulse-ts/three';
 import { useParticleBurst } from '@pulse-ts/effects';
 import { useRemoteEntity } from '@pulse-ts/network';
-import { TRAIL_BURST_CONFIG } from '../config/particles';
-import { PlayerTag } from '../components/PlayerTag';
-import { GameCtx } from '../contexts';
+import { TRAIL_BURST_CONFIG } from '../../config/particles';
+import { PlayerTag } from './PlayerTag';
+import { GameCtx } from '../../contexts';
 import { PLAYER_RADIUS } from './LocalPlayerNode';
 import {
     SPAWN_POSITIONS,
     DEATH_PLANE_Y,
     PLAYER_COLORS,
-} from '../config/arena';
-import { createTrailEmitter } from './trailEmitter';
-import { ReplayStore, stagePlayerPosition, getReplayPosition } from '../replay';
-import { PlayerVelocityStore, setPlayerVelocity } from '../playerVelocity';
-import { KnockoutQueueStore } from '../knockoutQueue';
+} from '../../config/arena';
+import { createTrailEmitter } from '../effects/trailEmitter';
+import { ReplayStore, stagePlayerPosition, getReplayPosition } from '../../stores/replay';
+import { PlayerVelocityStore, setPlayerVelocity } from '../../stores/playerVelocity';
+import { KnockoutQueueStore } from '../../stores/knockoutQueue';
 
 export interface RemotePlayerNodeProps {
     remotePlayerId: number;

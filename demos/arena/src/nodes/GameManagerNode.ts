@@ -28,11 +28,11 @@ import {
     endReplay,
     commitFrame,
     clearRecording,
-} from '../replay';
-import { DashCooldownStore } from '../dashCooldown';
-import { KnockoutQueueStore } from '../knockoutQueue';
-import { useHitImpactPool } from '../hitImpact';
-import { PlayerVelocityStore } from '../playerVelocity';
+} from '../stores/replay';
+import { DashCooldownStore } from '../stores/dashCooldown';
+import { KnockoutQueueStore } from '../stores/knockoutQueue';
+import { useHitImpactPool } from '../stores/hitImpact';
+import { PlayerVelocityStore } from '../stores/playerVelocity';
 
 /**
  * Compute the countdown display value from the remaining countdown time.

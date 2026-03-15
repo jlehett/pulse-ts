@@ -2,9 +2,9 @@ import { useFrameUpdate, useContext, useStore } from '@pulse-ts/core';
 import { useThreeContext } from '@pulse-ts/three';
 import { useOverlay, Row } from '@pulse-ts/dom';
 import { useAnimate } from '@pulse-ts/effects';
-import { GameCtx } from '../contexts';
-import { ReplayStore } from '../replay';
-import { ANIM_EASING } from '../overlayAnimations';
+import { GameCtx } from '../../contexts';
+import { ReplayStore } from '../../stores/replay';
+import { ANIM_EASING } from '../../ui/overlayAnimations';
 
 /** Player colors: P1 = teal, P2 = coral. */
 export const SCORE_COLORS = ['#48c9b0', '#e74c3c'];

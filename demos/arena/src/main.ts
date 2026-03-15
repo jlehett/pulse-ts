@@ -9,12 +9,12 @@ import type { ShaderPass } from 'three/examples/jsm/postprocessing/ShaderPass.js
 import { ArenaNode } from './nodes/ArenaNode';
 import { MenuSceneNode } from './nodes/MenuSceneNode';
 import { allBindings } from './config/bindings';
-import { showMainMenu } from './menu';
-import { showLobby, type LobbyResult } from './lobby';
+import { showMainMenu } from './ui/menu';
+import { showLobby, type LobbyResult } from './ui/lobby';
 import { AI_PERSONALITIES, type AiPersonality } from './ai/personalities';
 import { installMobileSupport, isMobile } from '@pulse-ts/platform';
-import { setupPostProcessing } from './setupPostProcessing';
-import { startVersionPolling, isUpdateAvailable } from './versionCheck';
+import { setupPostProcessing } from './infra/setupPostProcessing';
+import { startVersionPolling, isUpdateAvailable } from './infra/versionCheck';
 
 const canvas = document.getElementById('arena') as HTMLCanvasElement;
 const container = canvas.parentElement ?? document.body;

@@ -3,8 +3,8 @@
  * that fires on every player-vs-player collision (live or replay).
  */
 
-import { triggerCameraShake } from '../cameraShake';
-import { worldToScreen } from '../shockwave';
+import { triggerCameraShake } from '../../stores/cameraShake';
+import { worldToScreen } from '../../stores/shockwave';
 
 /** Dependencies for {@link triggerCollisionEffects}. */
 export interface CollisionEffectsDeps {

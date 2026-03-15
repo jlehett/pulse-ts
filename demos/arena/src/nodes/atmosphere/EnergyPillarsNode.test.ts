@@ -9,7 +9,7 @@ import {
     PILLAR_EMISSIVE_MAX,
     PILLAR_PULSE_FREQ,
 } from './EnergyPillarsNode';
-import { ARENA_RADIUS } from '../config/arena';
+import { ARENA_RADIUS } from '../../config/arena';
 
 describe('EnergyPillarsNode', () => {
     it('is a function', () => {

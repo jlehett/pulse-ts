@@ -3,10 +3,10 @@ import {
     applyButtonHoverScale,
 } from './overlayAnimations';
 import type { Transport } from '@pulse-ts/network';
-import { getAppVersion, isUpdateAvailable } from './versionCheck';
-import { versionsMatch } from './versionMatch';
-import { getSignalingUrl, requestIceServers, establishP2P } from './network/webrtc';
-import { getUsername, setUsername, hasUsername, USERNAME_MAX_LENGTH } from './username';
+import { getAppVersion, isUpdateAvailable } from '../infra/versionCheck';
+import { versionsMatch } from '../infra/versionMatch';
+import { getSignalingUrl, requestIceServers, establishP2P } from '../network/webrtc';
+import { getUsername, setUsername, hasUsername, USERNAME_MAX_LENGTH } from '../username';
 import {
     createOverlay,
     clearAndCreateContent,
@@ -16,7 +16,7 @@ import {
     createColumnEl,
     createRowEl,
     createStatusIndicator,
-} from './ui/lobbyHelpers';
+} from './lobbyHelpers';
 
 /** Result returned when the host completes the lobby. */
 export interface HostResult {
