@@ -1,7 +1,7 @@
 ---
 id: TICKET-145
 title: Split lobby.tsx into focused modules
-status: in-progress
+status: done
 epic: EPIC-026
 created: 2026-03-14
 updated: 2026-03-14
@@ -34,3 +34,4 @@ The lobby screens remain but become much shorter, focused on screen flow logic.
 ## Notes
 
 - **2026-03-14**: Starting implementation
+- **2026-03-14**: Implementation complete
