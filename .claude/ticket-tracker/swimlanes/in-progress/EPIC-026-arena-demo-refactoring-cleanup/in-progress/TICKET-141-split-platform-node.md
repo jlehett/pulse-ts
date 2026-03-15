@@ -1,10 +1,12 @@
 ---
 id: TICKET-141
 title: Split PlatformNode into focused concerns
-status: todo
+status: in-progress
 epic: EPIC-026
 created: 2026-03-14
+updated: 2026-03-14
 priority: high
+branch: ticket-141-split-platform-node
 ---
 
 ## Problem
@@ -30,3 +32,5 @@ Extract into focused modules:
 ## Files
 
 - `demos/arena/src/nodes/PlatformNode.ts`
+
+- **2026-03-14**: Starting implementation
