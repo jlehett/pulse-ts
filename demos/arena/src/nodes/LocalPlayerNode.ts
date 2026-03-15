@@ -30,7 +30,7 @@ import { IMPACT_SOUND_CONFIG } from '../config/sounds';
 import { ReplayStore, stagePlayerPosition, getReplayPosition } from '../replay';
 import { useShockwavePool, worldToScreen } from '../shockwave';
 import { useHitImpactPool } from '../hitImpact';
-import { setPlayerPosition } from '../ai/playerPositions';
+import { PlayerPositionStore, setPlayerPosition } from '../ai/playerPositions';
 import { DashCooldownStore } from '../dashCooldown';
 import { KnockoutQueueStore } from '../knockoutQueue';
 import { PlayerVelocityStore, updatePlayerVelocity } from '../playerVelocity';
@@ -105,6 +105,7 @@ export function LocalPlayerNode({
     const [cooldown] = useStore(DashCooldownStore);
     const [velocities] = useStore(PlayerVelocityStore);
     const [ko] = useStore(KnockoutQueueStore);
+    const [playerPositions] = useStore(PlayerPositionStore);
 
     useStableId(`player-${playerId}`);
     useComponent(PlayerTag);
@@ -256,6 +257,7 @@ export function LocalPlayerNode({
             transform.localPosition.z,
         );
         setPlayerPosition(
+            playerPositions,
             playerId,
             transform.localPosition.x,
             transform.localPosition.y,

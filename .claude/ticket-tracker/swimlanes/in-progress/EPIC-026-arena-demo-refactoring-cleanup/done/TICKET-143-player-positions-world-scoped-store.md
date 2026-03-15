@@ -1,7 +1,7 @@
 ---
 id: TICKET-143
 title: Move player positions to world-scoped store
-status: todo
+status: done
 epic: EPIC-026
 created: 2026-03-14
 priority: medium

@@ -3,11 +3,12 @@ import {
     useDestroy,
     useChild,
     useContext,
+    useStore,
 } from '@pulse-ts/core';
 import { useInput } from '@pulse-ts/input';
 import { GameCtx } from '../contexts';
 import { ARENA_RADIUS } from '../config/arena';
-import { getPlayerPosition } from '../ai/playerPositions';
+import { PlayerPositionStore, getPlayerPosition } from '../ai/playerPositions';
 import { computeAiDecision } from '../ai/aiDecision';
 import { createAiState, updateAiState } from '../ai/aiState';
 import type { AiPersonality } from '../ai/personalities';
@@ -55,6 +56,7 @@ export function AiPlayerNode({
 }: Readonly<AiPlayerNodeProps>) {
     const input = useInput();
     const gameState = useContext(GameCtx);
+    const [playerPositions] = useStore(PlayerPositionStore);
     const opponentId = 1 - playerId;
 
     // Frame-to-frame state for stateful personality knobs
@@ -78,8 +80,8 @@ export function AiPlayerNode({
             return;
         }
 
-        const [selfX, , selfZ] = getPlayerPosition(playerId);
-        const [opX, , opZ] = getPlayerPosition(opponentId);
+        const [selfX, , selfZ] = getPlayerPosition(playerPositions, playerId);
+        const [opX, , opZ] = getPlayerPosition(playerPositions, opponentId);
 
         const dt = 1 / 60;
 
