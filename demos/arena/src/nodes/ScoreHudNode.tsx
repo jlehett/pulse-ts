@@ -64,8 +64,8 @@ export function ScoreHudNode() {
     const [replay] = useStore(ReplayStore);
 
     // Use custom player colors when available (solo mode personality accent)
-    const p1Color = gameState.playerColors?.[0] ?? SCORE_COLORS[0];
-    const p2Color = gameState.playerColors?.[1] ?? SCORE_COLORS[1];
+    const p1Color = gameState.playerConfig?.colors[0] ?? SCORE_COLORS[0];
+    const p2Color = gameState.playerConfig?.colors[1] ?? SCORE_COLORS[1];
 
     const root = useOverlay(
         <div

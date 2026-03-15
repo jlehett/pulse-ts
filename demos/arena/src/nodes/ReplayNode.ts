@@ -39,8 +39,8 @@ export function ReplayNode() {
     const hitImpactBurst = useParticleBurst(IMPACT_BURST_CONFIG);
 
     // Velocity-proportional trail bursts — one per player
-    const p0Color = gameState.playerHexColors?.[0] ?? PLAYER_COLORS[0];
-    const p1Color = gameState.playerHexColors?.[1] ?? PLAYER_COLORS[1];
+    const p0Color = gameState.playerConfig?.hexColors[0] ?? PLAYER_COLORS[0];
+    const p1Color = gameState.playerConfig?.hexColors[1] ?? PLAYER_COLORS[1];
     const trailBurst0 = useParticleBurst({
         ...TRAIL_BURST_CONFIG,
         color: p0Color,

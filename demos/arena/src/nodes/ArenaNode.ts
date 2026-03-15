@@ -118,18 +118,17 @@ export function ArenaNode(props?: Readonly<ArenaNodeProps>) {
         lastKnockedOut: -1,
         countdownValue: -1,
         matchWinner: -1,
-        pendingKnockout: -1,
-        pendingKnockout2: -1,
         isTie: false,
         paused: false,
-        playerLabels: props?.aiPersonality
-            ? ['You', props.aiPersonality.name]
-            : undefined,
-        playerColors: props?.aiPersonality
-            ? [color(0x48c9b0).rgb, color(props.aiPersonality.color).rgb]
-            : undefined,
-        playerHexColors: props?.aiPersonality
-            ? [0x48c9b0, props.aiPersonality.color]
+        playerConfig: props?.aiPersonality
+            ? {
+                  labels: ['You', props.aiPersonality.name],
+                  colors: [
+                      color(0x48c9b0).rgb,
+                      color(props.aiPersonality.color).rgb,
+                  ],
+                  hexColors: [0x48c9b0, props.aiPersonality.color],
+              }
             : undefined,
     };
     useProvideContext(GameCtx, gameState);

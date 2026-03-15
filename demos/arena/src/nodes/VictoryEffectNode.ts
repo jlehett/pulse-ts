@@ -38,7 +38,7 @@ export function VictoryEffectNode() {
         if (gameState.phase === 'match_over' && lastPhase !== 'match_over') {
             // In solo mode, only fire confetti when the human wins
             const soloLoss =
-                gameState.playerLabels && gameState.matchWinner !== 0;
+                gameState.playerConfig && gameState.matchWinner !== 0;
             if (!soloLoss) {
                 for (const burst of bursts) {
                     burst(SPAWN_POSITION);
