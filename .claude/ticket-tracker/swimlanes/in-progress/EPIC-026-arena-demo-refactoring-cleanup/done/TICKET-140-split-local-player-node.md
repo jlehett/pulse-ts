@@ -1,9 +1,11 @@
 ---
 id: TICKET-140
 title: Split LocalPlayerNode into focused concerns
-status: todo
+status: done
 epic: EPIC-026
 created: 2026-03-14
+updated: 2026-03-14
+branch: ticket-140-split-local-player-node
 priority: high
 ---
 
@@ -36,3 +38,6 @@ Extract into focused modules:
 ## Files
 
 - `demos/arena/src/nodes/LocalPlayerNode.ts`
+
+- **2026-03-14**: Starting implementation
+- **2026-03-14**: Implementation complete
