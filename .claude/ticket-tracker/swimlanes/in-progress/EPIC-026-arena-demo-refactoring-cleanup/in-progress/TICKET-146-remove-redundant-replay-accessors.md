@@ -1,7 +1,7 @@
 ---
 id: TICKET-146
 title: Remove redundant replay accessor functions
-status: todo
+status: in-progress
 epic: EPIC-026
 created: 2026-03-14
 priority: low
