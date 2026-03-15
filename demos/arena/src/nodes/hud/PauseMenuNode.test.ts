@@ -37,7 +37,7 @@ jest.mock('@pulse-ts/three', () => ({
     }),
 }));
 
-jest.mock('../overlayAnimations', () => ({
+jest.mock('../../ui/overlayAnimations', () => ({
     applyStaggeredEntrance: jest.fn(),
     applyButtonHoverScale: jest.fn(),
 }));

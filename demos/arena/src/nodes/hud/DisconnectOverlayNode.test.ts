@@ -12,7 +12,7 @@ jest.mock('@pulse-ts/network', () => ({
     useOnPeerLeave: jest.fn(),
 }));
 
-jest.mock('../overlayAnimations', () => ({
+jest.mock('../../ui/overlayAnimations', () => ({
     applyStaggeredEntrance: jest.fn(),
 }));
 

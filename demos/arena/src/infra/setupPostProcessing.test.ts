@@ -26,7 +26,7 @@ jest.mock('three/examples/jsm/postprocessing/OutputPass.js', () => ({
     OutputPass: jest.fn(),
 }));
 
-jest.mock('./shockwave', () => ({
+jest.mock('../stores/shockwave', () => ({
     createShockwavePass: jest.fn(() => ({ enabled: false, _mock: true })),
 }));
 

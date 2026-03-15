@@ -100,7 +100,7 @@ jest.mock(
     { virtual: true },
 );
 
-jest.mock('../overlayAnimations', () => ({
+jest.mock('../../ui/overlayAnimations', () => ({
     applyStaggeredEntrance: jest.fn(),
 }));
 

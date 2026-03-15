@@ -19,11 +19,11 @@ jest.mock('@pulse-ts/network', () => ({
     TransportService: {},
 }));
 
-jest.mock('../versionCheck', () => ({
+jest.mock('../../infra/versionCheck', () => ({
     isUpdateAvailable: jest.fn(() => false),
 }));
 
-jest.mock('../updateAutoReload', () => ({
+jest.mock('../../infra/updateAutoReload', () => ({
     createAutoReloader: jest.fn(() => ({
         schedule: jest.fn(),
         cancel: jest.fn(),
@@ -31,7 +31,7 @@ jest.mock('../updateAutoReload', () => ({
     })),
 }));
 
-jest.mock('../overlayAnimations', () => ({
+jest.mock('../../ui/overlayAnimations', () => ({
     applyStaggeredEntrance: jest.fn(),
 }));
 

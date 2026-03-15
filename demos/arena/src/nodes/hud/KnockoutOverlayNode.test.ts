@@ -9,7 +9,7 @@ jest.mock('@pulse-ts/three', () => ({
     useThreeContext: jest.fn(),
 }));
 
-jest.mock('../overlayAnimations', () => ({
+jest.mock('../../ui/overlayAnimations', () => ({
     applyScalePop: jest.fn(),
 }));
 

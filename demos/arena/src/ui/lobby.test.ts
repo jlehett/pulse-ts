@@ -1,7 +1,7 @@
 const mockGetAppVersion = jest.fn(() => 'test-abc');
 const mockIsUpdateAvailable = jest.fn(() => false);
 
-jest.mock('./versionCheck', () => ({
+jest.mock('../infra/versionCheck', () => ({
     getAppVersion: () => mockGetAppVersion(),
     isUpdateAvailable: () => mockIsUpdateAvailable(),
 }));

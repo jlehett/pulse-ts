@@ -37,11 +37,11 @@ jest.mock('@pulse-ts/input', () => ({
     useInput: () => mockInput,
 }));
 
-jest.mock('../ai/playerPositions', () => ({
+jest.mock('../../ai/playerPositions', () => ({
     getPlayerPosition: (id: number) => (id === 1 ? [0, 0, 0] : [5, 0, 5]),
 }));
 
-jest.mock('../ai/aiDecision', () => ({
+jest.mock('../../ai/aiDecision', () => ({
     computeAiDecision: jest.fn(() => ({
         moveX: 0.7,
         moveY: -0.3,
@@ -49,7 +49,7 @@ jest.mock('../ai/aiDecision', () => ({
     })),
 }));
 
-jest.mock('../ai/aiState', () => ({
+jest.mock('../../ai/aiState', () => ({
     createAiState: jest.fn(() => ({ initialized: false })),
     updateAiState: jest.fn(),
 }));

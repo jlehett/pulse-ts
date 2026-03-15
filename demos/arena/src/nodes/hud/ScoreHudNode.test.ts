@@ -37,7 +37,7 @@ jest.mock(
     { virtual: true },
 );
 
-jest.mock('../replay', () => ({
+jest.mock('../../stores/replay', () => ({
     ReplayStore: {},
 }));
 

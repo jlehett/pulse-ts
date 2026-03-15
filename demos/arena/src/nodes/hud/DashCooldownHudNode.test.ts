@@ -9,15 +9,15 @@ jest.mock('@pulse-ts/three', () => ({
     useThreeContext: jest.fn(),
 }));
 
-jest.mock('../isMobileDevice', () => ({
+jest.mock('../../isMobileDevice', () => ({
     isMobileDevice: jest.fn(() => false),
 }));
 
-jest.mock('../dashCooldown', () => ({
+jest.mock('../../stores/dashCooldown', () => ({
     getDashCooldownProgress: jest.fn(() => 0),
 }));
 
-jest.mock('../replay', () => ({
+jest.mock('../../stores/replay', () => ({
     ReplayStore: {},
 }));
 
