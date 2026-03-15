@@ -24,6 +24,7 @@ import { TouchControlsNode } from './TouchControlsNode';
 import { CameraRigNode } from './CameraRigNode';
 import { VictoryEffectNode } from './VictoryEffectNode';
 import { ReplayNode } from './ReplayNode';
+import { ReplayOverlayNode } from './ReplayOverlayNode';
 import { ShockwaveNode } from './ShockwaveNode';
 import { NebulaNode } from './NebulaNode';
 import { StarfieldNode } from './StarfieldNode';
@@ -228,8 +229,11 @@ export function ArenaNode(props?: Readonly<ArenaNodeProps>) {
     // Camera rig — fixed overhead view
     useChild(CameraRigNode);
 
-    // Instant replay overlay — letterboxing + playback driver
+    // Instant replay — playback driver + VFX
     useChild(ReplayNode);
+
+    // Instant replay — DOM overlay (letterbox, flash, labels)
+    useChild(ReplayOverlayNode);
 
     // Shockwave distortion — screen-space ring on impact
     useChild(ShockwaveNode, { pass: props?.shockwavePass });
