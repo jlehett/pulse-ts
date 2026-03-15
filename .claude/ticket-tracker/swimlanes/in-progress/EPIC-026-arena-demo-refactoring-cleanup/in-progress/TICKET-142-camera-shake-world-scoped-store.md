@@ -1,7 +1,7 @@
 ---
 id: TICKET-142
 title: Move camera shake state to world-scoped store
-status: todo
+status: in-progress
 epic: EPIC-026
 created: 2026-03-14
 priority: medium
