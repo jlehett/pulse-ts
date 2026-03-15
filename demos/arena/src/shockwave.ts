@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { ShaderPass } from 'three/examples/jsm/postprocessing/ShaderPass.js';
-import { defineStore, useStore } from '@pulse-ts/core';
-import { useEffectPool, type EffectPoolHandle } from '@pulse-ts/effects';
+import type { EffectPoolHandle } from '@pulse-ts/effects';
+import { createSharedPool } from './createSharedPool';
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -35,27 +35,14 @@ export interface ShockwaveData {
 }
 
 // ---------------------------------------------------------------------------
-// Store — shares the pool handle across nodes
+// Shared pool (store + hook via factory)
 // ---------------------------------------------------------------------------
 
 /**
- * World-scoped store holding the shockwave effect pool handle.
- * The pool is created by the first node that calls {@link useShockwavePool},
- * and shared with all subsequent callers in the same world.
- */
-export const ShockwaveStore = defineStore('shockwave', () => ({
-    pool: null as EffectPoolHandle<ShockwaveData> | null,
-}));
-
-// ---------------------------------------------------------------------------
-// Hook
-// ---------------------------------------------------------------------------
-
-/**
- * Create or retrieve the shared shockwave effect pool for this world.
- * The first caller creates the pool; subsequent callers receive the same handle.
+ * World-scoped store and hook for the shockwave effect pool.
  *
- * @returns The shared {@link EffectPoolHandle} for shockwaves.
+ * `ShockwaveStore` holds the pool handle; `useShockwavePool` lazily creates
+ * it on first call and shares it with all subsequent callers in the same world.
  *
  * @example
  * ```ts
@@ -63,20 +50,12 @@ export const ShockwaveStore = defineStore('shockwave', () => ({
  * shockwaves.trigger({ centerX: 0.5, centerY: 0.5 });
  * ```
  */
-export function useShockwavePool(): EffectPoolHandle<ShockwaveData> {
-    const [store, setStore] = useStore(ShockwaveStore);
-
-    if (!store.pool) {
-        const pool = useEffectPool<ShockwaveData>({
-            size: MAX_SHOCKWAVES,
-            duration: SHOCKWAVE_DURATION,
-            create: () => ({ centerX: 0, centerY: 0 }),
-        });
-        setStore({ pool });
-    }
-
-    return store.pool!;
-}
+export const { Store: ShockwaveStore, usePool: useShockwavePool } =
+    createSharedPool<ShockwaveData>('shockwave', {
+        size: MAX_SHOCKWAVES,
+        duration: SHOCKWAVE_DURATION,
+        create: () => ({ centerX: 0, centerY: 0 }),
+    });
 
 // ---------------------------------------------------------------------------
 // Uniform sync

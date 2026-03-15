@@ -1,5 +1,4 @@
-import { defineStore, useStore } from '@pulse-ts/core';
-import { useEffectPool, type EffectPoolHandle } from '@pulse-ts/effects';
+import { createSharedPool } from './createSharedPool';
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -42,28 +41,14 @@ export interface HitImpactData {
 }
 
 // ---------------------------------------------------------------------------
-// Store — shares the pool handle across nodes
+// Shared pool (store + hook via factory)
 // ---------------------------------------------------------------------------
 
 /**
- * World-scoped store holding the hit impact effect pool handle.
- * The pool is created by the first node that calls {@link useHitImpactPool},
- * and shared with all subsequent callers in the same world.
- */
-export const HitImpactStore = defineStore('hitImpact', () => ({
-    pool: null as EffectPoolHandle<HitImpactData> | null,
-}));
-
-// ---------------------------------------------------------------------------
-// Hook
-// ---------------------------------------------------------------------------
-
-/**
- * Create or retrieve the shared hit impact effect pool for this world.
- * The first caller creates the pool (and registers its `useFixedUpdate`
- * tick); subsequent callers in the same world receive the same handle.
+ * World-scoped store and hook for the hit impact effect pool.
  *
- * @returns The shared {@link EffectPoolHandle} for hit impacts.
+ * `HitImpactStore` holds the pool handle; `useHitImpactPool` lazily creates
+ * it on first call and shares it with all subsequent callers in the same world.
  *
  * @example
  * ```ts
@@ -76,17 +61,9 @@ export const HitImpactStore = defineStore('hitImpact', () => ({
  * }
  * ```
  */
-export function useHitImpactPool(): EffectPoolHandle<HitImpactData> {
-    const [store, setStore] = useStore(HitImpactStore);
-
-    if (!store.pool) {
-        const pool = useEffectPool<HitImpactData>({
-            size: HIT_IMPACT_POOL_SIZE,
-            duration: HIT_IMPACT_DURATION,
-            create: () => ({ worldX: 0, worldZ: 0 }),
-        });
-        setStore({ pool });
-    }
-
-    return store.pool!;
-}
+export const { Store: HitImpactStore, usePool: useHitImpactPool } =
+    createSharedPool<HitImpactData>('hitImpact', {
+        size: HIT_IMPACT_POOL_SIZE,
+        duration: HIT_IMPACT_DURATION,
+        create: () => ({ worldX: 0, worldZ: 0 }),
+    });
