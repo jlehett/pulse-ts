@@ -1,7 +1,7 @@
 ---
 id: TICKET-144
 title: Split ReplayNode DOM overlay from playback logic
-status: in-progress
+status: done
 epic: EPIC-026
 created: 2026-03-14
 updated: 2026-03-14
@@ -26,3 +26,4 @@ Split the DOM overlay (letterbox + label + flash + self-KO text) into a `ReplayO
 - `demos/arena/src/nodes/ReplayNode.ts`
 
 - **2026-03-14**: Starting implementation
+- **2026-03-14**: Implementation complete
