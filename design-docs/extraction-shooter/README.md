@@ -11,7 +11,8 @@ An online-only digital card game inspired by extraction shooters. Players risk c
 | [Combat](./combat.md) | Weapons, ammo, accuracy, range, damage, mutual kills, disengagement |
 | [Visibility](./visibility.md) | Action-based visibility, noise profiles, terrain modifiers, detection tiers, scouting |
 | [Cards & Loadouts](./cards-and-loadouts.md) | Card types, weapon stats, loadout structure, the hand-as-loadout model |
-| [Map & Terrain](./map-and-terrain.md) | Node-graph maps, terrain properties, cover, sightlines, chokepoints |
+| [Map & Terrain](./map-and-terrain.md) | Fixed node-graph maps, PoIs, connective terrain, cover, loot distribution, macro/micro UI |
+| [Map Events](./map-events.md) | Per-map events that activate per raid: environmental, loot, threat, information |
 | [AI Systems](./ai-systems.md) | Shadow Players (human mimics), PvE encounters, difficulty tiers |
 | [Matchmaking](./matchmaking.md) | Queue, lobby timer, session spin-up, low-population handling |
 
