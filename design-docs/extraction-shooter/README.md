@@ -22,6 +22,11 @@ An online-only digital card game inspired by extraction shooters. Players deploy
 | [AI Systems](./ai-systems.md) | Shadow Players (Architect's predictive models), PvE Zone entities, difficulty tiers |
 | [Matchmaking](./matchmaking.md) | Queue, lobby timer, session spin-up, low-population handling |
 
+### Maps
+| Document | Description |
+|---|---|
+| [Vashon Complex](./maps/vashon-complex.md) | Synthesis Zone — full map: 5 PoIs, 68 nodes, PvE entities, loot tables, events, secrets, Weaver paths |
+
 ### Narrative & Factions
 | Document | Description |
 |---|---|
