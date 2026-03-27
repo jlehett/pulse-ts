@@ -4,7 +4,9 @@ Each map has a pool of **unique events** — mechanics specific to that map that
 
 ## Core Concept
 
-Events are **fixed to the map, not global**. Each map has its own set of possible events designed around its PoIs, terrain, and theme. They are not random modifiers pulled from a shared pool — they are hand-crafted mechanics that interact with the specific layout of the map.
+Events are **expressions of the Zone's function** (see [Lore Overview — What It's Building](./lore-overview.md#what-its-building)). Each Zone is a functional component of the Architect's relay, and events are that function manifesting during the raid. A material surge in a Synthesis Zone is the production process ramping up. A signal peak in a Signal Zone is the relay transmitting. Events aren't random modifiers — they're the Zone *doing its job*.
+
+Events are **fixed to the map, not global**. Each map has its own set of possible events designed around its PoIs, terrain, Zone function, and theme. They are hand-crafted mechanics that interact with the specific layout and narrative identity of the map.
 
 Events are **opt-in uncertainty**. The map's terrain, PoIs, and connections are always the same. Players learn the map. But events introduce controlled variation — a player who knows the map well still can't predict exactly what conditions they'll face each raid.
 
@@ -72,7 +74,7 @@ These are illustrative, designed to show the range of what events can do. Specif
 - **Events change conditions, not rules.** The core mechanics (combat, visibility, movement, cover) never change. Events modify the map — blocking paths, changing terrain properties, spawning content — but players always interact with these changes through the same systems they already know.
 - **Events are learnable.** Each map has a fixed pool of possible events. Over time, players learn what *could* happen on a given map. "On this map, the bridge sometimes floods at turn 8 — I should have an alternate route planned." Map knowledge extends to event knowledge.
 - **Events create decisions, not punishments.** A good event forces players to adapt their plan, not abandon it entirely. Losing one extraction point is a setback that forces rerouting, not a death sentence. A supply drop is an opportunity that can be ignored.
-- **Events interact with the map's identity.** A flooding event belongs on a map with water features. A power outage belongs on a map with a Bunker PoI. Events should feel like they belong to the map, not like generic modifiers applied to it.
+- **Events interact with the map's identity and Zone function.** A flooding event belongs on a map with water features. A production surge belongs on a Synthesis Zone. Events should feel like the Zone expressing itself, not like generic modifiers applied to it. See [Narrative Delivery — Map Events as Zone Expression](./narrative-delivery.md#map-events-as-zone-expression).
 - **Not all events are visible.** Some events have obvious indicators (a supply drop landing, a node becoming impassable). Others are silent until a player encounters them (a hidden stash, a roaming heavy). Discovery is part of the gameplay.
 
 ## Event Count Per Map

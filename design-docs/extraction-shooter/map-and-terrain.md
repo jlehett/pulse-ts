@@ -234,6 +234,21 @@ The map layout should create natural tension:
 - **Sightlines from vantage nodes should cover high-traffic paths.** Sniper positions are powerful but predictable — experienced players know where to expect them.
 - **PoIs should have multiple entry points.** No single player can lock down a PoI by controlling one doorway.
 
+## Zones as Functional Sites
+
+Each map is a **Zone** — a section of Earth's surface converted by the Architect into a functional component of a relay node. Maps aren't just themed environments; they have a *purpose* in the Architect's construction plan. This purpose drives the PoI themes, PvE behavior, loot tables, and map events.
+
+See [Lore Overview — What It's Building](./lore-overview.md#what-its-building) for full context on Zone types.
+
+| Map | Pre-Imprint Location | Zone Function | How It Reads |
+|---|---|---|---|
+| **Vashon Complex** | Chemical plant | Synthesis (material production) | Machinery producing unknown compounds. Living fluid in tanks. Active production lines. |
+| **Lachesis Array** | Telecom facility | Signal (inter-Zone coordination) | Dishes aimed at each other and the sky. Pulsing signals. Detection interference. |
+| **Ward 17** | Hospital campus | Storage (data encoding) | Crystals growing from walls. Records become physical objects. Humming rooms. |
+| **Threshold** | Mountain research station | Calibration (boundary testing) | Zone edge visible from inside. Fluctuating boundary. Measurement equipment. |
+
+Players don't learn Zone functions from labels — they piece it together from environment, PvE behavior, and loot. See [Narrative Delivery](./narrative-delivery.md) for how this unfolds.
+
 ## Fixed Maps
 
 Maps are **hand-designed and fixed**. Each map is a curated experience with intentional layouts, balanced PoI placement, and designed routing. Players learn maps over time, and map knowledge becomes a skill dimension.
@@ -241,7 +256,7 @@ Maps are **hand-designed and fixed**. Each map is a curated experience with inte
 Replayability comes from:
 - **Per-raid loot variation** — Loot spawns are rolled each raid from fixed loot tables.
 - **Per-raid PvE variation** — PvE encounter placement may vary within constraints.
-- **Map events** — Unique mechanics that may or may not activate each raid (see [Map Events](./map-events.md)).
+- **Map events** — Zone-specific mechanics that may or may not activate each raid (see [Map Events](./map-events.md)).
 - **Player behavior** — The same map plays differently depending on who's in the raid and what they do.
 
-New maps are added over time as content updates, each with their own PoIs, connective layouts, loot tables, and events.
+New maps are added over time as content updates. Each new map is a new Zone — narratively, the Architect building its next relay component. Each map has its own PoIs, connective layouts, loot tables, events, and Zone function.
