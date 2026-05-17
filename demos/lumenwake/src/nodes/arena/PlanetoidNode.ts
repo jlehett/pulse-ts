@@ -79,7 +79,7 @@ const SURFACE_FRAGMENT = /* glsl */ `
         float grid = 1.0 - smoothstep(0.03, 0.08, edge);
 
         // Player proximity glow (soft radial light around player)
-        float playerRadius = 1.8;
+        float playerRadius = 4.0;
         float playerGlow = 0.0;
         vec3 playerGlowColor = vec3(0.2, 0.6, 0.9);
         for (int i = 0; i < 4; i++) {
