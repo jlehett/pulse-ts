@@ -125,20 +125,23 @@ const SURFACE_FRAGMENT = /* glsl */ `
         float darknessThreshold = mix(-1.0, 1.0, uDarknessLevel);
         float darkness = smoothstep(darknessThreshold + 0.1, darknessThreshold - 0.1, normal.y);
 
-        // Combine — surface is very dark unless illuminated
+        // Combine — illumination reveals the surface texture, not a colored overlay
         float pulse = sin(uTime * 0.4) * 0.05 + 0.95;
         vec3 gridColor = uEmissiveColor * grid * 0.5 * pulse;
-        vec3 glowContrib = playerGlowColor * playerGlow * 0.8;
-        vec3 wakeContrib = wakeColor * wakeGlow * 0.6;
 
-        // Dark base that only reveals with illumination
-        vec3 darkSurface = uSurfaceColor * 0.05;
-        vec3 litSurface = uSurfaceColor * 0.4 + gridColor + glowContrib + wakeContrib;
-        vec3 surfaceColor = mix(darkSurface, litSurface, illumination);
+        // The surface texture at full brightness
+        vec3 fullSurface = uSurfaceColor * 0.5 + gridColor;
+        // Dark unlit surface
+        vec3 darkSurface = uSurfaceColor * 0.03;
+        // Illuminate by revealing the actual texture
+        vec3 surfaceColor = mix(darkSurface, fullSurface, illumination);
 
-        // The grid lines themselves glow faintly even in darkness
-        vec3 dimGrid = uEmissiveColor * grid * 0.04;
-        surfaceColor += dimGrid;
+        // Subtle player color tint (just a hint, not an overlay)
+        vec3 tintColor = mix(playerGlowColor, wakeColor, step(playerGlow, wakeGlow));
+        surfaceColor += tintColor * illumination * 0.08;
+
+        // Faint grid glow even in darkness for spatial reference
+        surfaceColor += uEmissiveColor * grid * 0.03;
 
         vec3 voidColor = vec3(0.0, 0.0, 0.003);
         vec3 finalColor = mix(surfaceColor, voidColor, darkness);
