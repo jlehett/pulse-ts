@@ -136,7 +136,7 @@ const SURFACE_FRAGMENT = /* glsl */ `
         vec3 gridColor = uEmissiveColor * grid * 0.5 * pulse;
 
         // The surface texture at full brightness
-        vec3 fullSurface = uSurfaceColor * 0.5 + gridColor;
+        vec3 fullSurface = uSurfaceColor * 0.8 + gridColor;
         // Dark unlit surface
         vec3 darkSurface = uSurfaceColor * 0.03;
         // Illuminate by revealing the actual texture
