@@ -3,7 +3,7 @@ import { useFrameUpdate } from '@pulse-ts/core';
 import { useCustomMesh } from '@pulse-ts/three';
 import type { MapConfig } from '../../config/maps';
 
-const TRAIL_LENGTH = 32;
+const TRAIL_LENGTH = 48;
 
 const SURFACE_VERTEX = /* glsl */ `
     varying vec3 vWorldPos;
@@ -94,9 +94,12 @@ const SURFACE_FRAGMENT = /* glsl */ `
             }
         }
 
-        // Wake trail — starts at same size as player glow, grows larger while fading
+        // Wake trail — additive ribbon that builds brightness along the path center
+        // Each point contributes a tight glow; overlapping points along the path
+        // create a bright core that fades at the edges (like a boat wake)
         float wakeGlow = 0.0;
         vec3 wakeColor = vec3(0.0);
+        float wakeWeight = 0.0;
         for (int i = 0; i < ${TRAIL_LENGTH}; i++) {
             if (i >= uTrailCount) break;
             vec3 tPos = uTrailPositions[i];
@@ -104,17 +107,20 @@ const SURFACE_FRAGMENT = /* glsl */ `
             float cosAngle = dot(normalize(pos), normalize(tPos));
             float arcDist = acos(clamp(cosAngle, -1.0, 1.0)) * uSphereRadius;
 
-            // Starts at playerRadius, grows to ~1.6x as it ages
-            float spread = playerRadius * (1.0 + age * 0.6);
-            float falloff = exp(-arcDist * arcDist / (spread * spread));
-            // Fade out with age
-            float fade = 1.0 - age * age;
-            float intensity = falloff * fade * 0.6;
+            // Tight per-point radius that grows slightly with age
+            float pointRadius = 1.2 + age * 1.5;
+            float falloff = exp(-arcDist * arcDist / (pointRadius * pointRadius));
+            // Fade intensity with age
+            float fade = 1.0 - age;
+            float intensity = falloff * fade;
 
-            if (intensity > wakeGlow) {
-                wakeGlow = intensity;
-                wakeColor = uTrailColors[i];
-            }
+            // Additive — overlapping points along path build up brightness
+            wakeGlow += intensity * 0.15;
+            wakeColor += uTrailColors[i] * intensity;
+            wakeWeight += intensity;
+        }
+        if (wakeWeight > 0.0) {
+            wakeColor /= wakeWeight;
         }
         wakeGlow = min(wakeGlow, 1.0);
 
@@ -211,8 +217,8 @@ export function PlanetoidNode(props: PlanetoidProps) {
 
     // Trail management
     let trailCount = 0;
-    const TRAIL_SPACING = 0.4; // min distance between trail points
-    const TRAIL_LIFETIME = 2.0; // seconds before trail fully fades
+    const TRAIL_SPACING = 0.25; // min distance between trail points
+    const TRAIL_LIFETIME = 2.5; // seconds before trail fully fades
     const lastTrailPos = new THREE.Vector3();
     let hasLastPos = false;
 
