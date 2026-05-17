@@ -53,8 +53,7 @@ export function GameNode(props?: Readonly<GameNodeProps>) {
     useAmbientLight({ color: 0x112244, intensity: 0.4 });
 
     const camera = CameraNode({ sphereRadius: map.sphereRadius });
-    const arena = useChild(ArenaNode, { map });
-    const { planetoid } = arena;
+    const { planetoid } = ArenaNode({ map });
 
     // Set up player color for the planetoid shader
     const playerColor = new THREE.Color(

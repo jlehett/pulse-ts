@@ -15,7 +15,7 @@ export interface ArenaNodeProps {
 export function ArenaNode(props: ArenaNodeProps) {
     const { map } = props;
 
-    const planetoid = useChild(PlanetoidNode, { map });
+    const planetoid = PlanetoidNode({ map });
 
     for (const obstacle of map.obstacles) {
         useChild(ObstacleNode, { ...obstacle, sphereRadius: map.sphereRadius });
