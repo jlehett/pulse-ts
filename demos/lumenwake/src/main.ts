@@ -7,10 +7,11 @@ import type { ThreeService } from '@pulse-ts/three';
 import { installNetwork, TransportService } from '@pulse-ts/network';
 import type { Transport } from '@pulse-ts/network';
 import { GameNode } from './nodes/GameNode';
-import { showMainMenu, type MenuChoice } from './ui/menu';
+import { showMainMenu } from './ui/menu';
 import { showLobby, type LobbyResult } from './ui/lobby';
 import { allBindings } from './config/bindings';
 import { setupPostProcessing } from './rendering/setupPostProcessing';
+import type { MapConfig } from './config/maps';
 
 const canvas = document.getElementById('lumenwake') as HTMLCanvasElement;
 const container = canvas.parentElement ?? document.body;
@@ -42,7 +43,7 @@ function createGameWorld(): GameWorldResult {
     return { world, three, cleanup };
 }
 
-function startSoloGame(playerCount: number): Promise<void> {
+function startSoloGame(map: MapConfig): Promise<void> {
     return new Promise((resolve) => {
         const { world, cleanup } = createGameWorld();
 
@@ -50,7 +51,8 @@ function startSoloGame(playerCount: number): Promise<void> {
         installInput(world, { preventDefault: true, bindings: allBindings });
 
         world.mount(GameNode, {
-            playerCount,
+            playerCount: 1,
+            map,
             onRequestMenu: () => {
                 cleanup();
                 resolve();
@@ -61,7 +63,10 @@ function startSoloGame(playerCount: number): Promise<void> {
     });
 }
 
-async function startOnlineGame(lobby: LobbyResult): Promise<void> {
+async function startOnlineGame(
+    lobby: LobbyResult,
+    map: MapConfig,
+): Promise<void> {
     return new Promise((resolve) => {
         const setup = async () => {
             const { world, cleanup } = createGameWorld();
@@ -81,6 +86,7 @@ async function startOnlineGame(lobby: LobbyResult): Promise<void> {
                 playerId: lobby.playerId,
                 transport: lobby.transport,
                 isHost: lobby.mode === 'host',
+                map,
                 onRequestMenu: () => {
                     lobby.transport.disconnect();
                     cleanup();
@@ -99,11 +105,11 @@ async function start() {
         const choice = await showMainMenu(container);
 
         if (choice.mode === 'solo') {
-            await startSoloGame(1);
+            await startSoloGame(choice.map);
         } else if (choice.mode === 'online') {
             const lobby = await showLobby(container);
             if (lobby === 'back') continue;
-            await startOnlineGame(lobby);
+            await startOnlineGame(lobby, choice.map);
         }
     }
 }
