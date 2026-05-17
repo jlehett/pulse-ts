@@ -1,14 +1,30 @@
 import { createElement, Column, Button } from '@pulse-ts/dom';
+import { ALL_MAPS, type MapConfig } from '../config/maps';
 
 export interface MenuChoice {
     mode: 'solo' | 'online';
+    map: MapConfig;
 }
 
 /**
- * Display the main menu and wait for the player to pick a mode.
+ * Display the main menu and wait for the player to pick a mode and map.
  */
 export function showMainMenu(container: HTMLElement): Promise<MenuChoice> {
     return new Promise((resolve) => {
+        let selectedMap = ALL_MAPS[0];
+
+        function pick(mode: 'solo' | 'online') {
+            container.removeChild(root);
+            resolve({ mode, map: selectedMap });
+        }
+
+        function cycleMap() {
+            const idx = ALL_MAPS.indexOf(selectedMap);
+            selectedMap = ALL_MAPS[(idx + 1) % ALL_MAPS.length];
+            const label = root.querySelector('#map-label');
+            if (label) label.textContent = selectedMap.name;
+        }
+
         const { root } = createElement(
             <div
                 style={{
@@ -37,10 +53,7 @@ export function showMainMenu(container: HTMLElement): Promise<MenuChoice> {
                 </div>
                 <Column gap={12}>
                     <Button
-                        onClick={() => {
-                            container.removeChild(root);
-                            resolve({ mode: 'solo' });
-                        }}
+                        onClick={() => pick('solo')}
                         style={{
                             padding: '14px 48px',
                             font: 'bold 18px monospace',
@@ -55,10 +68,7 @@ export function showMainMenu(container: HTMLElement): Promise<MenuChoice> {
                         Solo
                     </Button>
                     <Button
-                        onClick={() => {
-                            container.removeChild(root);
-                            resolve({ mode: 'online' });
-                        }}
+                        onClick={() => pick('online')}
                         style={{
                             padding: '14px 48px',
                             font: 'bold 18px monospace',
@@ -73,6 +83,37 @@ export function showMainMenu(container: HTMLElement): Promise<MenuChoice> {
                         Online Co-op
                     </Button>
                 </Column>
+                <div
+                    style={{
+                        marginTop: '32px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '12px',
+                    }}
+                >
+                    <span
+                        style={{
+                            font: '14px monospace',
+                            color: 'rgba(255,255,255,0.5)',
+                        }}
+                    >
+                        MAP:
+                    </span>
+                    <Button
+                        onClick={cycleMap}
+                        style={{
+                            padding: '8px 20px',
+                            font: 'bold 14px monospace',
+                            color: '#fff',
+                            background: 'rgba(255,255,255,0.08)',
+                            border: '1px solid rgba(255,255,255,0.2)',
+                            borderRadius: '4px',
+                            cursor: 'pointer',
+                        }}
+                    >
+                        <span id="map-label">{selectedMap.name}</span>
+                    </Button>
+                </div>
             </div>,
         );
 
