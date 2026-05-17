@@ -7,6 +7,7 @@ import {
 } from '@pulse-ts/core';
 import { useMesh } from '@pulse-ts/three';
 import { ThreeService } from '@pulse-ts/three';
+import { useParticles } from '@pulse-ts/effects';
 import { useAxis2D, useAction, usePointer } from '@pulse-ts/input';
 import { GameCtx } from '../../contexts';
 import type { ClassDef } from '../../config/classes';
@@ -34,6 +35,10 @@ export interface PlayerState {
     alive: boolean;
     position: THREE.Vector3;
     forward: THREE.Vector3;
+    invulnerable: boolean;
+    invulnerableTimer: number;
+    dashTimer: number;
+    dashDirection: THREE.Vector3;
 }
 
 /**
@@ -81,12 +86,40 @@ export function LocalPlayerNode(props: LocalPlayerProps) {
         alive: true,
         position,
         forward,
+        invulnerable: false,
+        invulnerableTimer: 0,
+        dashTimer: 0,
+        dashDirection: new THREE.Vector3(),
     };
 
     // Cooldowns
     const fireCooldown = useCooldown(1 / classDef.primaryFireRate);
     const ability1Cooldown = useCooldown(classDef.ability1.cooldown);
     const ability2Cooldown = useCooldown(classDef.ability2.cooldown);
+
+    // Lumenwake trail — glowing particles left on the sphere surface
+    const trailColor = new THREE.Color(color);
+    const trail = useParticles({
+        maxCount: 128,
+        size: 0.12,
+        blending: 'additive',
+        init: (p) => {
+            p.lifetime = 0.8;
+            p.velocity.x = 0;
+            p.velocity.y = 0;
+            p.velocity.z = 0;
+            p.color.r = trailColor.r;
+            p.color.g = trailColor.g;
+            p.color.b = trailColor.b;
+            p.opacity = 0.7;
+        },
+        update: (p) => {
+            p.opacity = 0.7 * (1 - p.age / p.lifetime);
+            p.size = 0.12 * (1 - p.age / p.lifetime * 0.5);
+        },
+    });
+    let trailAccumulator = 0;
+    const TRAIL_RATE = 30; // particles per second while moving
 
     // Tangent frame at player position
     const frame = {
@@ -114,6 +147,16 @@ export function LocalPlayerNode(props: LocalPlayerProps) {
         // Move along sphere surface
         if (velocity.lengthSq() > 0) {
             moveSpherePosition(position, velocity, dt, sphereRadius);
+
+            // Emit trail particles while moving
+            trailAccumulator += TRAIL_RATE * dt;
+            const toSpawn = Math.floor(trailAccumulator);
+            trailAccumulator -= toSpawn;
+            if (toSpawn > 0) {
+                const n = position.clone().normalize();
+                const trailPos = position.clone().addScaledVector(n, classDef.radius * 0.3);
+                trail.burst(toSpawn, [trailPos.x, trailPos.y, trailPos.z]);
+            }
         }
 
         // Aiming — raycast mouse position onto sphere
@@ -148,6 +191,61 @@ export function LocalPlayerNode(props: LocalPlayerProps) {
             props.onShoot?.(position.clone(), forward.clone());
         }
 
+        // Ability 1
+        const ab1 = ability1Action();
+        if (ab1.pressed && ability1Cooldown.ready) {
+            ability1Cooldown.trigger();
+            if (classDef.id === 'shard') {
+                // Piercing Beam — fast long-range projectile
+                props.onShoot?.(position.clone(), forward.clone());
+            } else if (classDef.id === 'lens') {
+                // Prism Split — 3-way spread
+                const spreadAngle = Math.PI / 8;
+                const up = position.clone().normalize();
+                for (let i = -1; i <= 1; i++) {
+                    const dir = forward.clone();
+                    if (i !== 0) {
+                        dir.applyAxisAngle(up, spreadAngle * i);
+                    }
+                    props.onShoot?.(position.clone(), dir);
+                }
+            }
+            // Ward: Light Barrier — grant brief invulnerability
+            if (classDef.id === 'ward') {
+                state.invulnerable = true;
+                state.invulnerableTimer = 2.0;
+            }
+        }
+
+        // Ability 2
+        const ab2 = ability2Action();
+        if (ab2.pressed && ability2Cooldown.ready) {
+            ability2Cooldown.trigger();
+            if (classDef.id === 'shard') {
+                // Photon Dash — burst forward
+                state.dashTimer = 0.2;
+                state.dashDirection = forward.clone();
+            } else if (classDef.id === 'ward') {
+                // Sanctuary — heal self
+                state.health = Math.min(state.maxHealth, state.health + 40);
+            }
+            // Lens: Slow Field — will affect enemies when enemy system exists
+        }
+
+        // Process active ability states
+        if (state.dashTimer > 0) {
+            const dashSpeed = classDef.moveSpeed * 3;
+            const dashVel = state.dashDirection.clone().multiplyScalar(dashSpeed);
+            moveSpherePosition(position, dashVel, dt, sphereRadius);
+            state.dashTimer -= dt;
+        }
+        if (state.invulnerable) {
+            state.invulnerableTimer -= dt;
+            if (state.invulnerableTimer <= 0) {
+                state.invulnerable = false;
+            }
+        }
+
         // Health-based glow
         const healthRatio = state.health / state.maxHealth;
         (material as THREE.MeshStandardMaterial).emissiveIntensity =
@@ -160,6 +258,7 @@ export function LocalPlayerNode(props: LocalPlayerProps) {
     return {
         state,
         takeDamage(amount: number) {
+            if (state.invulnerable) return;
             state.health = Math.max(0, state.health - amount);
             if (state.health <= 0) {
                 state.alive = false;
