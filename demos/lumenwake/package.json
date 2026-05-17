@@ -1,0 +1,51 @@
+{
+    "name": "@pulse-ts/demo-lumenwake",
+    "private": true,
+    "version": "0.0.0",
+    "type": "module",
+    "scripts": {
+        "dev": "vite",
+        "build": "vite build",
+        "preview": "vite preview",
+        "test": "jest"
+    },
+    "babel": {
+        "presets": [
+            [
+                "@babel/preset-env",
+                {
+                    "targets": { "node": "current" },
+                    "modules": "auto"
+                }
+            ],
+            "@babel/preset-typescript"
+        ],
+        "plugins": [
+            [
+                "@babel/plugin-transform-react-jsx",
+                {
+                    "runtime": "automatic",
+                    "importSource": "@pulse-ts/dom"
+                }
+            ]
+        ]
+    },
+    "dependencies": {
+        "@pulse-ts/audio": "*",
+        "@pulse-ts/core": "*",
+        "@pulse-ts/dom": "*",
+        "@pulse-ts/effects": "*",
+        "@pulse-ts/input": "*",
+        "@pulse-ts/network": "*",
+        "@pulse-ts/physics": "*",
+        "@pulse-ts/platform": "*",
+        "@pulse-ts/three": "*",
+        "three": "^0.179.1",
+        "ws": "^8.18.0"
+    },
+    "devDependencies": {
+        "@types/three": "^0.178.1",
+        "typescript": "^5.9.2",
+        "vite": "^6.3.5"
+    }
+}
