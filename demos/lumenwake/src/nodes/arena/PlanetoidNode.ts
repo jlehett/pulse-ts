@@ -218,7 +218,7 @@ export function PlanetoidNode(props: PlanetoidProps) {
     // Trail management
     let trailCount = 0;
     const TRAIL_SPACING = 0.25; // min distance between trail points
-    const TRAIL_LIFETIME = 2.5; // seconds before trail fully fades
+    const TRAIL_LIFETIME = 4.5; // seconds before trail fully fades
     const lastTrailPos = new THREE.Vector3();
     let hasLastPos = false;
 
