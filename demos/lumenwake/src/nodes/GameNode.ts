@@ -62,25 +62,37 @@ export function GameNode(props?: Readonly<GameNodeProps>) {
     // Spawn local player at their spawn point
     const spawnCoord = map.playerSpawns[playerIndex % map.playerSpawns.length];
     const spawnPos = sphereToWorld(spawnCoord, map.sphereRadius);
-    const startPosition = new THREE.Vector3(spawnPos[0], spawnPos[1], spawnPos[2]);
+    const startPosition = new THREE.Vector3(
+        spawnPos[0],
+        spawnPos[1],
+        spawnPos[2],
+    );
 
     useChild(LocalPlayerNode, {
         classDef,
         playerIndex,
         sphereRadius: map.sphereRadius,
         startPosition,
+        getScreenAxes: () => ({
+            right: camera.getScreenRight(),
+            up: camera.getScreenUp(),
+        }),
         onShoot: (origin, direction) => {
-            world.mount(ProjectileNode, {
-                origin,
-                direction,
-                speed: classDef.projectileSpeed,
-                damage: classDef.primaryDamage,
-                color: PLAYER_COLORS[playerIndex % PLAYER_COLORS.length],
-                sphereRadius: map.sphereRadius,
-            }, { parent: parentNode });
+            world.mount(
+                ProjectileNode,
+                {
+                    origin,
+                    direction,
+                    speed: classDef.projectileSpeed,
+                    damage: classDef.primaryDamage,
+                    color: PLAYER_COLORS[playerIndex % PLAYER_COLORS.length],
+                    sphereRadius: map.sphereRadius,
+                },
+                { parent: parentNode },
+            );
         },
-        onPositionUpdate: (position, forward) => {
-            camera.setPlayerTransform(position, forward);
+        onPositionUpdate: (position) => {
+            camera.setPlayerTransform(position);
         },
     });
 }

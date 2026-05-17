@@ -14,10 +14,10 @@ import type { ClassDef } from '../../config/classes';
 import { PLAYER_COLORS } from '../../config/classes';
 import {
     moveSpherePosition,
-    getTangentFrame,
     orientOnSphere,
     raycastSphere,
     geodesicDirection,
+    projectToTangent,
 } from '../../utils/sphereMovement';
 
 export interface LocalPlayerProps {
@@ -25,6 +25,7 @@ export interface LocalPlayerProps {
     playerIndex: number;
     sphereRadius: number;
     startPosition: THREE.Vector3;
+    getScreenAxes?: () => { right: THREE.Vector3; up: THREE.Vector3 };
     onShoot?: (origin: THREE.Vector3, direction: THREE.Vector3) => void;
     onPositionUpdate?: (
         position: THREE.Vector3,
@@ -146,27 +147,31 @@ export function LocalPlayerNode(props: LocalPlayerProps) {
     let trailAccumulator = 0;
     const TRAIL_RATE = 30; // particles per second while moving
 
-    // Tangent frame at player position
-    const frame = {
-        forward: new THREE.Vector3(),
-        right: new THREE.Vector3(),
-        up: new THREE.Vector3(),
-    };
-
     useFrameUpdate((dt) => {
         if (!state.alive) return;
 
-        // Get tangent frame at current position
-        getTangentFrame(position, frame);
-
-        // Movement input → tangent velocity
+        // Movement input → screen-relative velocity projected onto tangent plane
         const input = moveInput();
         velocity.set(0, 0, 0);
         if (input.x !== 0 || input.y !== 0) {
-            velocity
-                .addScaledVector(frame.right, input.x)
-                .addScaledVector(frame.forward, -input.y);
-            velocity.normalize().multiplyScalar(classDef.moveSpeed);
+            const axes = props.getScreenAxes?.();
+            if (axes) {
+                // Project camera screen axes onto the sphere tangent plane
+                const screenRight = axes.right.clone();
+                projectToTangent(screenRight, position);
+                const screenUp = axes.up.clone();
+                projectToTangent(screenUp, position);
+
+                if (screenRight.lengthSq() > 1e-6) screenRight.normalize();
+                if (screenUp.lengthSq() > 1e-6) screenUp.normalize();
+
+                velocity
+                    .addScaledVector(screenRight, input.x)
+                    .addScaledVector(screenUp, input.y);
+            }
+            if (velocity.lengthSq() > 0) {
+                velocity.normalize().multiplyScalar(classDef.moveSpeed);
+            }
         }
 
         // Move along sphere surface
