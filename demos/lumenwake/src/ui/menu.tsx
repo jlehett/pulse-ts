@@ -37,7 +37,6 @@ export function showMainMenu(container: HTMLElement): Promise<MenuChoice> {
                 </div>
                 <Column gap={12}>
                     <Button
-                        label="Solo"
                         onClick={() => {
                             container.removeChild(root);
                             resolve({ mode: 'solo' });
@@ -52,9 +51,10 @@ export function showMainMenu(container: HTMLElement): Promise<MenuChoice> {
                             borderRadius: '4px',
                             cursor: 'pointer',
                         }}
-                    />
+                    >
+                        Solo
+                    </Button>
                     <Button
-                        label="Online Co-op"
                         onClick={() => {
                             container.removeChild(root);
                             resolve({ mode: 'online' });
@@ -69,7 +69,9 @@ export function showMainMenu(container: HTMLElement): Promise<MenuChoice> {
                             borderRadius: '4px',
                             cursor: 'pointer',
                         }}
-                    />
+                    >
+                        Online Co-op
+                    </Button>
                 </Column>
             </div>,
         );

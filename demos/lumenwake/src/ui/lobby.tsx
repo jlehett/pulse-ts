@@ -42,7 +42,6 @@ export function showLobby(
                 </div>
                 <Column gap={12}>
                     <Button
-                        label="Back"
                         onClick={() => {
                             container.removeChild(root);
                             resolve('back');
@@ -56,7 +55,9 @@ export function showLobby(
                             borderRadius: '4px',
                             cursor: 'pointer',
                         }}
-                    />
+                    >
+                        Back
+                    </Button>
                 </Column>
             </div>,
         );
