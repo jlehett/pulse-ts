@@ -1,7 +1,7 @@
 ---
 id: TICKET-155
 title: Local player movement & combat
-status: todo
+status: in-progress
 priority: high
 created: 2026-05-16
 updated: 2026-05-16
@@ -10,6 +10,7 @@ depends_on:
 labels:
   - lumenwake
   - gameplay
+branch: ticket-155-local-player-movement-and-combat
 ---
 
 ## Description
