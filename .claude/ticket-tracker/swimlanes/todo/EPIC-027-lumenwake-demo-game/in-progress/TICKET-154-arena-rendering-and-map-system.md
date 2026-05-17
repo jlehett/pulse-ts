@@ -1,7 +1,7 @@
 ---
 id: TICKET-154
 title: Arena rendering & map system
-status: todo
+status: in-progress
 priority: high
 created: 2026-05-16
 updated: 2026-05-16
@@ -10,6 +10,7 @@ depends_on:
 labels:
   - lumenwake
   - rendering
+branch: ticket-154-arena-rendering-and-map-system
 ---
 
 ## Description
@@ -32,3 +33,4 @@ Build the data-driven arena/map system with 3 distinct map variants, hex-grid fl
 ## Notes
 
 - 2026-05-16: Created. Depends on TICKET-153 (scaffold).
+- 2026-05-16: Starting implementation.
