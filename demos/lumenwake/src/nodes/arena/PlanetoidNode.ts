@@ -78,7 +78,7 @@ const SURFACE_FRAGMENT = /* glsl */ `
         float edge = worleyEdge(pos, 0.8);
         float grid = 1.0 - smoothstep(0.03, 0.08, edge);
 
-        // Player proximity glow (bright area immediately around player)
+        // Player proximity glow (tight halo directly under player)
         float playerGlow = 0.0;
         vec3 playerGlowColor = vec3(0.2, 0.6, 0.9);
         for (int i = 0; i < 4; i++) {
@@ -86,13 +86,12 @@ const SURFACE_FRAGMENT = /* glsl */ `
             vec3 pPos = uPlayerPositions[i];
             float cosAngle = dot(normalize(pos), normalize(pPos));
             float arcDist = acos(clamp(cosAngle, -1.0, 1.0)) * uSphereRadius;
-            float glow = 1.0 / (1.0 + arcDist * arcDist * 0.08);
+            float glow = exp(-arcDist * arcDist * 0.8);
             if (glow > playerGlow) {
                 playerGlow = glow;
                 playerGlowColor = uPlayerColors[i];
             }
         }
-        playerGlow = min(playerGlow, 1.0);
 
         // Wake trail — spreading luminous wake like a boat in water
         // Newer points are bright and narrow; older points spread wider as they fade
