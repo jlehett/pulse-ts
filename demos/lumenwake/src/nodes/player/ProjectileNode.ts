@@ -13,7 +13,6 @@ export interface ProjectileProps {
     color: number;
     sphereRadius: number;
     onPositionUpdate?: (position: THREE.Vector3) => void;
-    onDestroy?: () => void;
 }
 
 /**
@@ -54,7 +53,6 @@ export function ProjectileNode(props: ProjectileProps) {
 
         if (lifetime >= MAX_LIFETIME) {
             destroyed = true;
-            props.onDestroy?.();
             world.remove(node);
             return;
         }

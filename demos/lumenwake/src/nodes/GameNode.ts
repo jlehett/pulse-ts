@@ -66,10 +66,6 @@ export function GameNode(props?: Readonly<GameNodeProps>) {
     const world = useWorld();
     const parentNode = useNode();
 
-    // Track active projectiles for planetoid lighting
-    const MAX_LIT_PROJECTILES = 8;
-    const activeProjectiles: { position: THREE.Vector3; color: THREE.Color }[] =
-        [];
     const projectileColor = new THREE.Color(
         PLAYER_COLORS[playerIndex % PLAYER_COLORS.length],
     );
@@ -93,12 +89,6 @@ export function GameNode(props?: Readonly<GameNodeProps>) {
             up: camera.getScreenUp(),
         }),
         onShoot: (origin, direction) => {
-            const entry = {
-                position: origin.clone(),
-                color: projectileColor,
-            };
-            activeProjectiles.push(entry);
-
             world.mount(
                 ProjectileNode,
                 {
@@ -109,32 +99,11 @@ export function GameNode(props?: Readonly<GameNodeProps>) {
                     color: PLAYER_COLORS[playerIndex % PLAYER_COLORS.length],
                     sphereRadius: map.sphereRadius,
                     onPositionUpdate: (pos) => {
-                        entry.position.copy(pos);
-                        // Update planetoid lighting
-                        const count = Math.min(
-                            activeProjectiles.length,
-                            MAX_LIT_PROJECTILES,
-                        );
-                        planetoid.setProjectileCount(count);
-                        for (let i = 0; i < count; i++) {
-                            const p = activeProjectiles[i];
-                            planetoid.setProjectile(
-                                i,
-                                p.position.x,
-                                p.position.y,
-                                p.position.z,
-                                p.color,
-                            );
-                        }
-                    },
-                    onDestroy: () => {
-                        const idx = activeProjectiles.indexOf(entry);
-                        if (idx !== -1) activeProjectiles.splice(idx, 1);
-                        planetoid.setProjectileCount(
-                            Math.min(
-                                activeProjectiles.length,
-                                MAX_LIT_PROJECTILES,
-                            ),
+                        planetoid.addTrailPoint(
+                            pos.x,
+                            pos.y,
+                            pos.z,
+                            projectileColor,
                         );
                     },
                 },
