@@ -30,34 +30,47 @@ const SURFACE_FRAGMENT = /* glsl */ `
     varying vec3 vWorldPos;
     varying vec2 vUv;
 
-    // Hex grid on sphere surface using world-space normals
-    float hexGrid(vec3 pos, float scale) {
-        // Project to 2D using equirectangular-ish mapping
-        float theta = acos(clamp(normalize(pos).y, -1.0, 1.0));
-        float phi = atan(pos.z, pos.x);
-        vec2 uv = vec2(phi / 6.2832, theta / 3.14159) * scale;
-
+    // Hex distance for a single 2D coordinate
+    float hexDist(vec2 uv) {
         vec2 h = vec2(1.0, 1.732);
         vec2 a = mod(uv, h) - h * 0.5;
         vec2 b = mod(uv - h * 0.5, h) - h * 0.5;
         vec2 g = length(a) < length(b) ? a : b;
-        float d = length(g);
+        return length(g);
+    }
+
+    float hexLine(vec2 uv) {
+        float d = hexDist(uv);
         return smoothstep(0.02, 0.05, abs(d - 0.4));
+    }
+
+    // Tri-planar hex grid — projects from 3 planes, blends by normal weight
+    float hexGridTriplanar(vec3 pos, float scale) {
+        vec3 n = abs(normalize(pos));
+        // Sharpen blending weights
+        vec3 w = pow(n, vec3(4.0));
+        w /= (w.x + w.y + w.z);
+
+        // Project onto each plane
+        float hXY = hexLine(pos.xy * scale);
+        float hXZ = hexLine(pos.xz * scale);
+        float hYZ = hexLine(pos.yz * scale);
+
+        return hXY * w.z + hXZ * w.y + hYZ * w.x;
     }
 
     void main() {
         vec3 pos = vWorldPos;
         vec3 normal = normalize(pos);
 
-        // Hex grid pattern
-        float grid = 1.0 - hexGrid(pos, 12.0);
+        // Hex grid pattern via tri-planar projection (no pole stretching)
+        float grid = 1.0 - hexGridTriplanar(pos, 1.0);
 
         // Player proximity glow
         float playerGlow = 0.0;
         for (int i = 0; i < 4; i++) {
             if (i >= uPlayerCount) break;
             vec3 pPos = uPlayerPositions[i];
-            // Great-circle distance on sphere surface
             float cosAngle = dot(normalize(pos), normalize(pPos));
             float arcDist = acos(clamp(cosAngle, -1.0, 1.0)) * uSphereRadius;
             playerGlow += 0.4 / (1.0 + arcDist * arcDist * 0.08);
@@ -65,7 +78,6 @@ const SURFACE_FRAGMENT = /* glsl */ `
         playerGlow = min(playerGlow, 1.0);
 
         // Darkness consumes from south pole upward
-        // normal.y ranges from -1 (south) to +1 (north)
         float darknessThreshold = mix(-1.0, 1.0, uDarknessLevel);
         float darkness = smoothstep(darknessThreshold + 0.1, darknessThreshold - 0.1, normal.y);
 
