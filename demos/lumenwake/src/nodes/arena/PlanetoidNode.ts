@@ -107,8 +107,8 @@ const SURFACE_FRAGMENT = /* glsl */ `
             float cosAngle = dot(normalize(pos), normalize(tPos));
             float arcDist = acos(clamp(cosAngle, -1.0, 1.0)) * uSphereRadius;
 
-            // Tight per-point radius that grows slightly with age
-            float pointRadius = 1.2 + age * 1.5;
+            // Per-point radius that grows slightly with age
+            float pointRadius = 2.5 + age * 1.5;
             float falloff = exp(-arcDist * arcDist / (pointRadius * pointRadius));
             // Fade intensity with age
             float fade = 1.0 - age;
