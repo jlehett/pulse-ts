@@ -12,6 +12,8 @@ export interface ProjectileProps {
     damage: number;
     color: number;
     sphereRadius: number;
+    onPositionUpdate?: (position: THREE.Vector3) => void;
+    onDestroy?: () => void;
 }
 
 /**
@@ -52,6 +54,7 @@ export function ProjectileNode(props: ProjectileProps) {
 
         if (lifetime >= MAX_LIFETIME) {
             destroyed = true;
+            props.onDestroy?.();
             world.remove(node);
             return;
         }
@@ -70,11 +73,16 @@ export function ProjectileNode(props: ProjectileProps) {
         const surfaceNormal = position.clone().normalize();
         root.position.addScaledVector(surfaceNormal, 0.6);
 
+        // Report position for lighting
+        props.onPositionUpdate?.(position);
+
         // Fade out near end of life
         const fadeStart = MAX_LIFETIME * 0.7;
         if (lifetime > fadeStart) {
-            const fade = 1 - (lifetime - fadeStart) / (MAX_LIFETIME - fadeStart);
-            (material as THREE.MeshStandardMaterial).emissiveIntensity = 2.0 * fade;
+            const fade =
+                1 - (lifetime - fadeStart) / (MAX_LIFETIME - fadeStart);
+            (material as THREE.MeshStandardMaterial).emissiveIntensity =
+                2.0 * fade;
         }
     });
 

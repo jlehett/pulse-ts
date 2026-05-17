@@ -28,6 +28,9 @@ const SURFACE_FRAGMENT = /* glsl */ `
     uniform float uTrailAges[${TRAIL_LENGTH}];
     uniform vec3 uTrailColors[${TRAIL_LENGTH}];
     uniform int uTrailCount;
+    uniform vec3 uProjectilePositions[8];
+    uniform vec3 uProjectileColors[8];
+    uniform int uProjectileCount;
 
     varying vec3 vWorldPos;
 
@@ -124,8 +127,20 @@ const SURFACE_FRAGMENT = /* glsl */ `
         }
         wakeGlow = min(wakeGlow, 1.0);
 
-        // Total illumination from player + wake
-        float illumination = max(playerGlow, wakeGlow);
+        // Projectile glow — small bright spots that light up the surface
+        float projectileGlow = 0.0;
+        for (int i = 0; i < 8; i++) {
+            if (i >= uProjectileCount) break;
+            vec3 pjPos = uProjectilePositions[i];
+            float cosAngle = dot(normalize(pos), normalize(pjPos));
+            float arcDist = acos(clamp(cosAngle, -1.0, 1.0)) * uSphereRadius;
+            float glow = exp(-arcDist * arcDist / 2.0);
+            projectileGlow += glow * 0.4;
+        }
+        projectileGlow = min(projectileGlow, 0.8);
+
+        // Total illumination from player + wake + projectiles
+        float illumination = max(max(playerGlow, wakeGlow), projectileGlow);
 
         // Darkness consumes from south pole upward
         float darknessThreshold = mix(-1.0, 1.0, uDarknessLevel);
@@ -203,6 +218,13 @@ export function PlanetoidNode(props: PlanetoidProps) {
         uTrailAges: { value: trailAges },
         uTrailColors: { value: trailColors },
         uTrailCount: { value: 0 },
+        uProjectilePositions: {
+            value: Array.from({ length: 8 }, () => new THREE.Vector3()),
+        },
+        uProjectileColors: {
+            value: Array.from({ length: 8 }, () => new THREE.Vector3()),
+        },
+        uProjectileCount: { value: 0 },
     };
 
     useCustomMesh({
@@ -280,6 +302,23 @@ export function PlanetoidNode(props: PlanetoidProps) {
             trailColors[0].set(color.r, color.g, color.b);
             trailCount = Math.min(trailCount + 1, TRAIL_LENGTH);
             uniforms.uTrailCount.value = trailCount;
+        },
+        setProjectile(
+            index: number,
+            x: number,
+            y: number,
+            z: number,
+            color: THREE.Color,
+        ) {
+            uniforms.uProjectilePositions.value[index].set(x, y, z);
+            uniforms.uProjectileColors.value[index].set(
+                color.r,
+                color.g,
+                color.b,
+            );
+        },
+        setProjectileCount(count: number) {
+            uniforms.uProjectileCount.value = count;
         },
     };
 }
