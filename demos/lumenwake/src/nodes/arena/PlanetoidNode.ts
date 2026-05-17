@@ -111,7 +111,7 @@ export function PlanetoidNode(props: PlanetoidProps) {
         uSphereRadius: { value: map.sphereRadius },
     };
 
-    const { root } = useCustomMesh({
+    useCustomMesh({
         geometry: () => new THREE.SphereGeometry(map.sphereRadius, 64, 48),
         material: () =>
             new THREE.ShaderMaterial({

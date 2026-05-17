@@ -26,7 +26,10 @@ export interface LocalPlayerProps {
     sphereRadius: number;
     startPosition: THREE.Vector3;
     onShoot?: (origin: THREE.Vector3, direction: THREE.Vector3) => void;
-    onPositionUpdate?: (position: THREE.Vector3, forward: THREE.Vector3) => void;
+    onPositionUpdate?: (
+        position: THREE.Vector3,
+        forward: THREE.Vector3,
+    ) => void;
 }
 
 export interface PlayerState {
@@ -48,17 +51,39 @@ export interface PlayerState {
 export function LocalPlayerNode(props: LocalPlayerProps) {
     const { classDef, playerIndex, sphereRadius, startPosition } = props;
     const three = useService(ThreeService);
-    const game = useContext(GameCtx);
+    useContext(GameCtx);
     const color = PLAYER_COLORS[playerIndex % PLAYER_COLORS.length];
 
     // Mesh setup based on class shape
-    const meshType = classDef.shape === 'cube' ? 'box' as const :
-        classDef.shape === 'octahedron' ? 'octahedron' as const :
-        'icosahedron' as const;
+    const meshType =
+        classDef.shape === 'cube'
+            ? ('box' as const)
+            : classDef.shape === 'octahedron'
+              ? ('octahedron' as const)
+              : ('icosahedron' as const);
 
-    const meshOpts = meshType === 'box'
-        ? { size: [classDef.radius * 1.6, classDef.radius * 1.6, classDef.radius * 1.6] as [number, number, number], color, emissive: color, emissiveIntensity: 1.2, roughness: 0.2, metalness: 0.8 }
-        : { radius: classDef.radius, color, emissive: color, emissiveIntensity: 1.2, roughness: 0.2, metalness: 0.8 };
+    const meshOpts =
+        meshType === 'box'
+            ? {
+                  size: [
+                      classDef.radius * 1.6,
+                      classDef.radius * 1.6,
+                      classDef.radius * 1.6,
+                  ] as [number, number, number],
+                  color,
+                  emissive: color,
+                  emissiveIntensity: 1.2,
+                  roughness: 0.2,
+                  metalness: 0.8,
+              }
+            : {
+                  radius: classDef.radius,
+                  color,
+                  emissive: color,
+                  emissiveIntensity: 1.2,
+                  roughness: 0.2,
+                  metalness: 0.8,
+              };
 
     const { root, mesh, material } = useMesh(meshType, meshOpts as any);
 
@@ -115,7 +140,7 @@ export function LocalPlayerNode(props: LocalPlayerProps) {
         },
         update: (p) => {
             p.opacity = 0.7 * (1 - p.age / p.lifetime);
-            p.size = 0.12 * (1 - p.age / p.lifetime * 0.5);
+            p.size = 0.12 * (1 - (p.age / p.lifetime) * 0.5);
         },
     });
     let trailAccumulator = 0;
@@ -154,7 +179,9 @@ export function LocalPlayerNode(props: LocalPlayerProps) {
             trailAccumulator -= toSpawn;
             if (toSpawn > 0) {
                 const n = position.clone().normalize();
-                const trailPos = position.clone().addScaledVector(n, classDef.radius * 0.3);
+                const trailPos = position
+                    .clone()
+                    .addScaledVector(n, classDef.radius * 0.3);
                 trail.burst(toSpawn, [trailPos.x, trailPos.y, trailPos.z]);
             }
         }
@@ -235,7 +262,9 @@ export function LocalPlayerNode(props: LocalPlayerProps) {
         // Process active ability states
         if (state.dashTimer > 0) {
             const dashSpeed = classDef.moveSpeed * 3;
-            const dashVel = state.dashDirection.clone().multiplyScalar(dashSpeed);
+            const dashVel = state.dashDirection
+                .clone()
+                .multiplyScalar(dashSpeed);
             moveSpherePosition(position, dashVel, dt, sphereRadius);
             state.dashTimer -= dt;
         }

@@ -1,7 +1,11 @@
 import * as THREE from 'three';
 import { useMesh } from '@pulse-ts/three';
 import { useFrameUpdate } from '@pulse-ts/core';
-import { sphereToWorld, sphereNormal, type ObstacleConfig } from '../../config/maps';
+import {
+    sphereToWorld,
+    sphereNormal,
+    type ObstacleConfig,
+} from '../../config/maps';
 
 /**
  * A single obstacle placed on the planetoid surface.
@@ -65,7 +69,6 @@ export function ObstacleNode(
     );
 
     // Orient so "up" aligns with surface normal
-    const up = new THREE.Vector3(normal[0], normal[1], normal[2]);
     const target = new THREE.Vector3(
         surfacePos[0] + normal[0] * 10,
         surfacePos[1] + normal[1] * 10,
