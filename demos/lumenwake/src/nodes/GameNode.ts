@@ -53,7 +53,15 @@ export function GameNode(props?: Readonly<GameNodeProps>) {
     useAmbientLight({ color: 0x112244, intensity: 0.4 });
 
     const camera = CameraNode({ sphereRadius: map.sphereRadius });
-    useChild(ArenaNode, { map });
+    const arena = useChild(ArenaNode, { map });
+    const { planetoid } = arena;
+
+    // Set up player color for the planetoid shader
+    const playerColor = new THREE.Color(
+        PLAYER_COLORS[playerIndex % PLAYER_COLORS.length],
+    );
+    planetoid.setPlayerCount(1);
+    planetoid.setPlayerColor(0, playerColor);
 
     // Get world and parent node for dynamic spawning
     const world = useWorld();
@@ -93,6 +101,13 @@ export function GameNode(props?: Readonly<GameNodeProps>) {
         },
         onPositionUpdate: (position) => {
             camera.setPlayerTransform(position);
+            planetoid.setPlayerPosition(0, position.x, position.y, position.z);
+            planetoid.addTrailPoint(
+                position.x,
+                position.y,
+                position.z,
+                playerColor,
+            );
         },
     });
 }

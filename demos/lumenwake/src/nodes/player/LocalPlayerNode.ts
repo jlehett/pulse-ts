@@ -7,7 +7,6 @@ import {
 } from '@pulse-ts/core';
 import { useMesh } from '@pulse-ts/three';
 import { ThreeService } from '@pulse-ts/three';
-import { useParticles } from '@pulse-ts/effects';
 import { useAxis2D, useAction, usePointer } from '@pulse-ts/input';
 import { GameCtx } from '../../contexts';
 import type { ClassDef } from '../../config/classes';
@@ -123,30 +122,6 @@ export function LocalPlayerNode(props: LocalPlayerProps) {
     const ability1Cooldown = useCooldown(classDef.ability1.cooldown);
     const ability2Cooldown = useCooldown(classDef.ability2.cooldown);
 
-    // Lumenwake trail — glowing particles left on the sphere surface
-    const trailColor = new THREE.Color(color);
-    const trail = useParticles({
-        maxCount: 128,
-        size: 0.12,
-        blending: 'additive',
-        init: (p) => {
-            p.lifetime = 0.8;
-            p.velocity.x = 0;
-            p.velocity.y = 0;
-            p.velocity.z = 0;
-            p.color.r = trailColor.r;
-            p.color.g = trailColor.g;
-            p.color.b = trailColor.b;
-            p.opacity = 0.7;
-        },
-        update: (p) => {
-            p.opacity = 0.7 * (1 - p.age / p.lifetime);
-            p.size = 0.12 * (1 - (p.age / p.lifetime) * 0.5);
-        },
-    });
-    let trailAccumulator = 0;
-    const TRAIL_RATE = 30; // particles per second while moving
-
     useFrameUpdate((dt) => {
         if (!state.alive) return;
 
@@ -177,18 +152,6 @@ export function LocalPlayerNode(props: LocalPlayerProps) {
         // Move along sphere surface
         if (velocity.lengthSq() > 0) {
             moveSpherePosition(position, velocity, dt, sphereRadius);
-
-            // Emit trail particles while moving
-            trailAccumulator += TRAIL_RATE * dt;
-            const toSpawn = Math.floor(trailAccumulator);
-            trailAccumulator -= toSpawn;
-            if (toSpawn > 0) {
-                const n = position.clone().normalize();
-                const trailPos = position
-                    .clone()
-                    .addScaledVector(n, classDef.radius * 0.3);
-                trail.burst(toSpawn, [trailPos.x, trailPos.y, trailPos.z]);
-            }
         }
 
         // Aiming — raycast mouse position onto sphere

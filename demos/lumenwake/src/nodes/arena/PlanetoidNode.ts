@@ -3,16 +3,14 @@ import { useFrameUpdate } from '@pulse-ts/core';
 import { useCustomMesh } from '@pulse-ts/three';
 import type { MapConfig } from '../../config/maps';
 
+const TRAIL_LENGTH = 32;
+
 const SURFACE_VERTEX = /* glsl */ `
-    varying vec3 vNormal;
     varying vec3 vWorldPos;
-    varying vec2 vUv;
 
     void main() {
-        vNormal = normalize(normalMatrix * normal);
         vec4 worldPos = modelMatrix * vec4(position, 1.0);
         vWorldPos = worldPos.xyz;
-        vUv = uv;
         gl_Position = projectionMatrix * viewMatrix * worldPos;
     }
 `;
@@ -23,59 +21,96 @@ const SURFACE_FRAGMENT = /* glsl */ `
     uniform vec3 uSurfaceColor;
     uniform vec3 uEmissiveColor;
     uniform vec3 uPlayerPositions[4];
+    uniform vec3 uPlayerColors[4];
     uniform int uPlayerCount;
     uniform float uSphereRadius;
+    uniform vec3 uTrailPositions[${TRAIL_LENGTH}];
+    uniform float uTrailAges[${TRAIL_LENGTH}];
+    uniform vec3 uTrailColors[${TRAIL_LENGTH}];
+    uniform int uTrailCount;
 
-    varying vec3 vNormal;
     varying vec3 vWorldPos;
-    varying vec2 vUv;
 
-    // Hex distance for a single 2D coordinate
-    float hexDist(vec2 uv) {
-        vec2 h = vec2(1.0, 1.732);
-        vec2 a = mod(uv, h) - h * 0.5;
-        vec2 b = mod(uv - h * 0.5, h) - h * 0.5;
-        vec2 g = length(a) < length(b) ? a : b;
-        return length(g);
+    // 3D hash for cell seed positions
+    vec3 hash3(vec3 p) {
+        p = vec3(
+            dot(p, vec3(127.1, 311.7, 74.7)),
+            dot(p, vec3(269.5, 183.3, 246.1)),
+            dot(p, vec3(113.5, 271.9, 124.6))
+        );
+        return fract(sin(p) * 43758.5453) - 0.5;
     }
 
-    float hexLine(vec2 uv) {
-        float d = hexDist(uv);
-        return smoothstep(0.02, 0.05, abs(d - 0.4));
-    }
+    // 3D Worley noise — returns distance to nearest cell edge (seamless on sphere)
+    float worleyEdge(vec3 pos, float scale) {
+        vec3 p = pos * scale;
+        vec3 cell = floor(p);
+        vec3 local = fract(p);
 
-    // Tri-planar hex grid — projects from 3 planes, blends by normal weight
-    float hexGridTriplanar(vec3 pos, float scale) {
-        vec3 n = abs(normalize(pos));
-        // Sharpen blending weights
-        vec3 w = pow(n, vec3(4.0));
-        w /= (w.x + w.y + w.z);
+        float dist1 = 10.0;
+        float dist2 = 10.0;
 
-        // Project onto each plane
-        float hXY = hexLine(pos.xy * scale);
-        float hXZ = hexLine(pos.xz * scale);
-        float hYZ = hexLine(pos.yz * scale);
+        for (int x = -1; x <= 1; x++) {
+            for (int y = -1; y <= 1; y++) {
+                for (int z = -1; z <= 1; z++) {
+                    vec3 offset = vec3(float(x), float(y), float(z));
+                    vec3 neighbor = cell + offset;
+                    vec3 seed = offset + hash3(neighbor) * 0.8;
+                    float d = length(local - seed);
+                    if (d < dist1) {
+                        dist2 = dist1;
+                        dist1 = d;
+                    } else if (d < dist2) {
+                        dist2 = d;
+                    }
+                }
+            }
+        }
 
-        return hXY * w.z + hXZ * w.y + hYZ * w.x;
+        return dist2 - dist1;
     }
 
     void main() {
         vec3 pos = vWorldPos;
         vec3 normal = normalize(pos);
 
-        // Hex grid pattern via tri-planar projection (no pole stretching)
-        float grid = 1.0 - hexGridTriplanar(pos, 1.0);
+        // Cellular grid pattern
+        float edge = worleyEdge(pos, 0.8);
+        float grid = 1.0 - smoothstep(0.03, 0.08, edge);
 
-        // Player proximity glow
+        // Player proximity glow (immediate area around each player)
         float playerGlow = 0.0;
+        vec3 playerGlowColor = vec3(0.2, 0.6, 0.9);
         for (int i = 0; i < 4; i++) {
             if (i >= uPlayerCount) break;
             vec3 pPos = uPlayerPositions[i];
             float cosAngle = dot(normalize(pos), normalize(pPos));
             float arcDist = acos(clamp(cosAngle, -1.0, 1.0)) * uSphereRadius;
-            playerGlow += 0.4 / (1.0 + arcDist * arcDist * 0.08);
+            float glow = 0.6 / (1.0 + arcDist * arcDist * 0.15);
+            if (glow > playerGlow) {
+                playerGlow = glow;
+                playerGlowColor = uPlayerColors[i];
+            }
         }
         playerGlow = min(playerGlow, 1.0);
+
+        // Wake trail — fading glow from recent player movement
+        float wakeGlow = 0.0;
+        vec3 wakeColor = vec3(0.0);
+        for (int i = 0; i < ${TRAIL_LENGTH}; i++) {
+            if (i >= uTrailCount) break;
+            vec3 tPos = uTrailPositions[i];
+            float age = uTrailAges[i];
+            float cosAngle = dot(normalize(pos), normalize(tPos));
+            float arcDist = acos(clamp(cosAngle, -1.0, 1.0)) * uSphereRadius;
+            // Narrow wake that fades with age
+            float intensity = (1.0 - age) * 0.5 / (1.0 + arcDist * arcDist * 0.8);
+            if (intensity > wakeGlow) {
+                wakeGlow = intensity;
+                wakeColor = uTrailColors[i];
+            }
+        }
+        wakeGlow = min(wakeGlow, 0.8);
 
         // Darkness consumes from south pole upward
         float darknessThreshold = mix(-1.0, 1.0, uDarknessLevel);
@@ -84,10 +119,11 @@ const SURFACE_FRAGMENT = /* glsl */ `
         // Combine
         float pulse = sin(uTime * 0.4) * 0.05 + 0.95;
         vec3 gridColor = uEmissiveColor * grid * 0.6 * pulse;
-        vec3 glowColor = vec3(0.2, 0.6, 0.9) * playerGlow;
+        vec3 glowContrib = playerGlowColor * playerGlow;
+        vec3 wakeContrib = wakeColor * wakeGlow;
         vec3 baseColor = uSurfaceColor;
 
-        vec3 litColor = baseColor + gridColor + glowColor;
+        vec3 litColor = baseColor + gridColor + glowContrib + wakeContrib;
         vec3 darkColor = vec3(0.0, 0.0, 0.005);
 
         vec3 finalColor = mix(litColor, darkColor, darkness);
@@ -100,11 +136,21 @@ export interface PlanetoidProps {
 }
 
 /**
- * The main spherical arena surface with hex-grid shader,
- * player-reactive glow, and darkness consumption effect.
+ * The main spherical arena surface with cellular grid shader,
+ * player-reactive glow, wake trail, and darkness consumption.
  */
 export function PlanetoidNode(props: PlanetoidProps) {
     const { map } = props;
+
+    const trailPositions = Array.from(
+        { length: TRAIL_LENGTH },
+        () => new THREE.Vector3(),
+    );
+    const trailAges = new Float32Array(TRAIL_LENGTH);
+    const trailColors = Array.from(
+        { length: TRAIL_LENGTH },
+        () => new THREE.Vector3(),
+    );
 
     const uniforms = {
         uTime: { value: 0 },
@@ -119,8 +165,20 @@ export function PlanetoidNode(props: PlanetoidProps) {
                 new THREE.Vector3(),
             ],
         },
+        uPlayerColors: {
+            value: [
+                new THREE.Vector3(),
+                new THREE.Vector3(),
+                new THREE.Vector3(),
+                new THREE.Vector3(),
+            ],
+        },
         uPlayerCount: { value: 0 },
         uSphereRadius: { value: map.sphereRadius },
+        uTrailPositions: { value: trailPositions },
+        uTrailAges: { value: trailAges },
+        uTrailColors: { value: trailColors },
+        uTrailCount: { value: 0 },
     };
 
     useCustomMesh({
@@ -133,8 +191,27 @@ export function PlanetoidNode(props: PlanetoidProps) {
             }),
     });
 
+    // Trail management
+    let trailCount = 0;
+    const TRAIL_SPACING = 0.4; // min distance between trail points
+    const TRAIL_LIFETIME = 2.0; // seconds before trail fully fades
+    const lastTrailPos = new THREE.Vector3();
+    let hasLastPos = false;
+
     useFrameUpdate((dt) => {
         uniforms.uTime.value += dt;
+
+        // Age existing trail points
+        for (let i = 0; i < trailCount; i++) {
+            trailAges[i] += dt / TRAIL_LIFETIME;
+        }
+
+        // Remove fully faded points from the end
+        while (trailCount > 0 && trailAges[trailCount - 1] >= 1.0) {
+            trailCount--;
+        }
+
+        uniforms.uTrailCount.value = trailCount;
     });
 
     return {
@@ -145,8 +222,40 @@ export function PlanetoidNode(props: PlanetoidProps) {
         setPlayerPosition(index: number, x: number, y: number, z: number) {
             uniforms.uPlayerPositions.value[index].set(x, y, z);
         },
+        setPlayerColor(index: number, color: THREE.Color) {
+            uniforms.uPlayerColors.value[index].set(color.r, color.g, color.b);
+        },
         setPlayerCount(count: number) {
             uniforms.uPlayerCount.value = count;
+        },
+        addTrailPoint(x: number, y: number, z: number, color: THREE.Color) {
+            if (hasLastPos) {
+                const dx = x - lastTrailPos.x;
+                const dy = y - lastTrailPos.y;
+                const dz = z - lastTrailPos.z;
+                if (
+                    dx * dx + dy * dy + dz * dz <
+                    TRAIL_SPACING * TRAIL_SPACING
+                ) {
+                    return;
+                }
+            }
+            lastTrailPos.set(x, y, z);
+            hasLastPos = true;
+
+            // Shift existing points back (oldest fall off the end)
+            for (let i = Math.min(trailCount, TRAIL_LENGTH - 1); i > 0; i--) {
+                trailPositions[i].copy(trailPositions[i - 1]);
+                trailAges[i] = trailAges[i - 1];
+                trailColors[i].copy(trailColors[i - 1]);
+            }
+
+            // Insert new point at front
+            trailPositions[0].set(x, y, z);
+            trailAges[0] = 0;
+            trailColors[0].set(color.r, color.g, color.b);
+            trailCount = Math.min(trailCount + 1, TRAIL_LENGTH);
+            uniforms.uTrailCount.value = trailCount;
         },
     };
 }
