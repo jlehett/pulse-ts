@@ -78,7 +78,8 @@ const SURFACE_FRAGMENT = /* glsl */ `
         float edge = worleyEdge(pos, 0.8);
         float grid = 1.0 - smoothstep(0.03, 0.08, edge);
 
-        // Player proximity glow (tight halo directly under player)
+        // Player proximity glow (soft radial light around player)
+        float playerRadius = 1.8;
         float playerGlow = 0.0;
         vec3 playerGlowColor = vec3(0.2, 0.6, 0.9);
         for (int i = 0; i < 4; i++) {
@@ -86,15 +87,14 @@ const SURFACE_FRAGMENT = /* glsl */ `
             vec3 pPos = uPlayerPositions[i];
             float cosAngle = dot(normalize(pos), normalize(pPos));
             float arcDist = acos(clamp(cosAngle, -1.0, 1.0)) * uSphereRadius;
-            float glow = exp(-arcDist * arcDist * 0.8);
+            float glow = exp(-arcDist * arcDist / (playerRadius * playerRadius));
             if (glow > playerGlow) {
                 playerGlow = glow;
                 playerGlowColor = uPlayerColors[i];
             }
         }
 
-        // Wake trail — spreading luminous wake like a boat in water
-        // Newer points are bright and narrow; older points spread wider as they fade
+        // Wake trail — starts at same size as player glow, grows larger while fading
         float wakeGlow = 0.0;
         vec3 wakeColor = vec3(0.0);
         for (int i = 0; i < ${TRAIL_LENGTH}; i++) {
@@ -104,12 +104,12 @@ const SURFACE_FRAGMENT = /* glsl */ `
             float cosAngle = dot(normalize(pos), normalize(tPos));
             float arcDist = acos(clamp(cosAngle, -1.0, 1.0)) * uSphereRadius;
 
-            // Wake spreads wider as it ages (narrow core → wide dissipation)
-            float spread = 0.3 + age * 1.5;
+            // Starts at playerRadius, grows to ~3x as it ages
+            float spread = playerRadius * (1.0 + age * 2.0);
             float falloff = exp(-arcDist * arcDist / (spread * spread));
-            // Intensity fades with age but maintains soft outer glow
-            float fade = (1.0 - age * age);
-            float intensity = falloff * fade * 0.7;
+            // Fade out with age
+            float fade = 1.0 - age * age;
+            float intensity = falloff * fade * 0.6;
 
             if (intensity > wakeGlow) {
                 wakeGlow = intensity;
