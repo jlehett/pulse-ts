@@ -1,4 +1,5 @@
 import { createContext } from '@pulse-ts/core';
+import type { MapConfig } from './config/maps';
 
 export type GamePhase =
     | 'waiting'
@@ -15,6 +16,7 @@ export interface GameState {
     wave: number;
     playerCount: number;
     isHost: boolean;
+    map: MapConfig;
 }
 
 export const GameCtx = createContext<GameState>('GameState');

@@ -1,113 +1,155 @@
-export type BoundaryShape = 'circle' | 'rectangle' | 'hexagon';
+/**
+ * Spherical coordinates for placing things on the planetoid surface.
+ * theta = polar angle from north pole (0 = top, PI = bottom)
+ * phi = azimuthal angle around the equator (0 to 2PI)
+ */
+export interface SphereCoord {
+    theta: number;
+    phi: number;
+}
 
 export interface ObstacleConfig {
-    position: [x: number, z: number];
-    type: 'pillar' | 'wall';
+    coord: SphereCoord;
+    type: 'pillar' | 'wall' | 'crystal';
+    height?: number;
     radius?: number;
     width?: number;
-    depth?: number;
-    height?: number;
 }
 
 export interface SpawnPoint {
-    position: [x: number, z: number];
-    direction: [x: number, z: number];
+    coord: SphereCoord;
 }
 
 export interface MapConfig {
     id: string;
     name: string;
-    boundaryShape: BoundaryShape;
-    boundaryRadius: number;
+    sphereRadius: number;
+    surfaceColor: number;
+    emissiveColor: number;
     obstacles: ObstacleConfig[];
     enemySpawns: SpawnPoint[];
-    playerSpawns: [x: number, z: number][];
+    playerSpawns: SphereCoord[];
 }
+
+/**
+ * Convert sphere coordinates to a 3D position on the sphere surface.
+ */
+export function sphereToWorld(
+    coord: SphereCoord,
+    radius: number,
+): [x: number, y: number, z: number] {
+    const x = radius * Math.sin(coord.theta) * Math.cos(coord.phi);
+    const y = radius * Math.cos(coord.theta);
+    const z = radius * Math.sin(coord.theta) * Math.sin(coord.phi);
+    return [x, y, z];
+}
+
+/**
+ * Get the surface normal (outward) at a point on the sphere.
+ */
+export function sphereNormal(
+    coord: SphereCoord,
+): [x: number, y: number, z: number] {
+    const x = Math.sin(coord.theta) * Math.cos(coord.phi);
+    const y = Math.cos(coord.theta);
+    const z = Math.sin(coord.theta) * Math.sin(coord.phi);
+    return [x, y, z];
+}
+
+const PI = Math.PI;
+const TAU = PI * 2;
 
 export const MAP_NEXUS: MapConfig = {
     id: 'nexus',
     name: 'Nexus',
-    boundaryShape: 'circle',
-    boundaryRadius: 18,
+    sphereRadius: 12,
+    surfaceColor: 0x0a0a1f,
+    emissiveColor: 0x1a3355,
     obstacles: [
-        { position: [0, 0], type: 'pillar', radius: 1.2, height: 4 },
-        { position: [6, 0], type: 'pillar', radius: 0.6, height: 2.5 },
-        { position: [-6, 0], type: 'pillar', radius: 0.6, height: 2.5 },
-        { position: [0, 6], type: 'pillar', radius: 0.6, height: 2.5 },
-        { position: [0, -6], type: 'pillar', radius: 0.6, height: 2.5 },
+        { coord: { theta: PI * 0.5, phi: 0 }, type: 'pillar', height: 2, radius: 0.8 },
+        { coord: { theta: PI * 0.5, phi: PI }, type: 'pillar', height: 2, radius: 0.8 },
+        { coord: { theta: PI * 0.5, phi: PI * 0.5 }, type: 'pillar', height: 2, radius: 0.8 },
+        { coord: { theta: PI * 0.5, phi: PI * 1.5 }, type: 'pillar', height: 2, radius: 0.8 },
+        { coord: { theta: PI * 0.3, phi: 0 }, type: 'crystal', height: 1.5, radius: 0.5 },
+        { coord: { theta: PI * 0.3, phi: PI }, type: 'crystal', height: 1.5, radius: 0.5 },
+        { coord: { theta: PI * 0.7, phi: PI * 0.5 }, type: 'crystal', height: 1.5, radius: 0.5 },
+        { coord: { theta: PI * 0.7, phi: PI * 1.5 }, type: 'crystal', height: 1.5, radius: 0.5 },
     ],
     enemySpawns: [
-        { position: [17, 0], direction: [-1, 0] },
-        { position: [-17, 0], direction: [1, 0] },
-        { position: [0, 17], direction: [0, -1] },
-        { position: [0, -17], direction: [0, 1] },
-        { position: [12, 12], direction: [-1, -1] },
-        { position: [-12, 12], direction: [1, -1] },
-        { position: [12, -12], direction: [-1, 1] },
-        { position: [-12, -12], direction: [1, 1] },
+        { coord: { theta: PI * 0.2, phi: 0 } },
+        { coord: { theta: PI * 0.2, phi: TAU * 0.25 } },
+        { coord: { theta: PI * 0.2, phi: TAU * 0.5 } },
+        { coord: { theta: PI * 0.2, phi: TAU * 0.75 } },
+        { coord: { theta: PI * 0.8, phi: 0 } },
+        { coord: { theta: PI * 0.8, phi: TAU * 0.25 } },
+        { coord: { theta: PI * 0.8, phi: TAU * 0.5 } },
+        { coord: { theta: PI * 0.8, phi: TAU * 0.75 } },
     ],
     playerSpawns: [
-        [-3, -3],
-        [3, -3],
-        [-3, 3],
-        [3, 3],
+        { theta: PI * 0.5, phi: TAU * 0.125 },
+        { theta: PI * 0.5, phi: TAU * 0.375 },
+        { theta: PI * 0.5, phi: TAU * 0.625 },
+        { theta: PI * 0.5, phi: TAU * 0.875 },
     ],
 };
 
 export const MAP_FRACTURE: MapConfig = {
     id: 'fracture',
     name: 'Fracture',
-    boundaryShape: 'rectangle',
-    boundaryRadius: 20,
+    sphereRadius: 10,
+    surfaceColor: 0x0f0a1a,
+    emissiveColor: 0x442255,
     obstacles: [
-        { position: [-8, -4], type: 'wall', width: 3, depth: 0.4, height: 2.5 },
-        { position: [8, 4], type: 'wall', width: 3, depth: 0.4, height: 2.5 },
-        { position: [-4, 6], type: 'pillar', radius: 0.8, height: 3 },
-        { position: [4, -6], type: 'pillar', radius: 0.8, height: 3 },
-        { position: [0, 0], type: 'wall', width: 5, depth: 0.4, height: 2 },
+        { coord: { theta: PI * 0.4, phi: 0 }, type: 'wall', height: 2, width: 3 },
+        { coord: { theta: PI * 0.4, phi: PI }, type: 'wall', height: 2, width: 3 },
+        { coord: { theta: PI * 0.6, phi: PI * 0.5 }, type: 'wall', height: 2, width: 3 },
+        { coord: { theta: PI * 0.6, phi: PI * 1.5 }, type: 'wall', height: 2, width: 3 },
+        { coord: { theta: PI * 0.5, phi: PI * 0.25 }, type: 'pillar', height: 2.5, radius: 0.6 },
+        { coord: { theta: PI * 0.5, phi: PI * 1.25 }, type: 'pillar', height: 2.5, radius: 0.6 },
     ],
     enemySpawns: [
-        { position: [19, 0], direction: [-1, 0] },
-        { position: [-19, 0], direction: [1, 0] },
-        { position: [0, 13], direction: [0, -1] },
-        { position: [0, -13], direction: [0, 1] },
-        { position: [19, 10], direction: [-1, -1] },
-        { position: [-19, -10], direction: [1, 1] },
+        { coord: { theta: PI * 0.15, phi: 0 } },
+        { coord: { theta: PI * 0.15, phi: TAU * 0.33 } },
+        { coord: { theta: PI * 0.15, phi: TAU * 0.67 } },
+        { coord: { theta: PI * 0.85, phi: TAU * 0.17 } },
+        { coord: { theta: PI * 0.85, phi: TAU * 0.5 } },
+        { coord: { theta: PI * 0.85, phi: TAU * 0.83 } },
     ],
     playerSpawns: [
-        [-5, 0],
-        [5, 0],
-        [0, -4],
-        [0, 4],
+        { theta: PI * 0.5, phi: 0 },
+        { theta: PI * 0.5, phi: TAU * 0.25 },
+        { theta: PI * 0.5, phi: TAU * 0.5 },
+        { theta: PI * 0.5, phi: TAU * 0.75 },
     ],
 };
 
 export const MAP_CONVERGENCE: MapConfig = {
     id: 'convergence',
     name: 'Convergence',
-    boundaryShape: 'hexagon',
-    boundaryRadius: 18,
+    sphereRadius: 15,
+    surfaceColor: 0x0a1a0f,
+    emissiveColor: 0x225544,
     obstacles: [
-        { position: [9, 0], type: 'pillar', radius: 0.9, height: 3.5 },
-        { position: [-9, 0], type: 'pillar', radius: 0.9, height: 3.5 },
-        { position: [4.5, 7.8], type: 'pillar', radius: 0.9, height: 3.5 },
-        { position: [-4.5, 7.8], type: 'pillar', radius: 0.9, height: 3.5 },
-        { position: [4.5, -7.8], type: 'pillar', radius: 0.9, height: 3.5 },
-        { position: [-4.5, -7.8], type: 'pillar', radius: 0.9, height: 3.5 },
+        { coord: { theta: PI * 0.35, phi: 0 }, type: 'crystal', height: 3, radius: 1.0 },
+        { coord: { theta: PI * 0.35, phi: TAU / 3 }, type: 'crystal', height: 3, radius: 1.0 },
+        { coord: { theta: PI * 0.35, phi: TAU * 2 / 3 }, type: 'crystal', height: 3, radius: 1.0 },
+        { coord: { theta: PI * 0.65, phi: TAU / 6 }, type: 'crystal', height: 3, radius: 1.0 },
+        { coord: { theta: PI * 0.65, phi: TAU * 3 / 6 }, type: 'crystal', height: 3, radius: 1.0 },
+        { coord: { theta: PI * 0.65, phi: TAU * 5 / 6 }, type: 'crystal', height: 3, radius: 1.0 },
     ],
     enemySpawns: [
-        { position: [17, 0], direction: [-1, 0] },
-        { position: [-17, 0], direction: [1, 0] },
-        { position: [8.5, 14.7], direction: [-0.5, -0.87] },
-        { position: [-8.5, 14.7], direction: [0.5, -0.87] },
-        { position: [8.5, -14.7], direction: [-0.5, 0.87] },
-        { position: [-8.5, -14.7], direction: [0.5, 0.87] },
+        { coord: { theta: PI * 0.1, phi: 0 } },
+        { coord: { theta: PI * 0.1, phi: TAU * 0.5 } },
+        { coord: { theta: PI * 0.9, phi: TAU * 0.25 } },
+        { coord: { theta: PI * 0.9, phi: TAU * 0.75 } },
+        { coord: { theta: PI * 0.5, phi: TAU * 0.125 } },
+        { coord: { theta: PI * 0.5, phi: TAU * 0.625 } },
     ],
     playerSpawns: [
-        [-2, -2],
-        [2, -2],
-        [-2, 2],
-        [2, 2],
+        { theta: PI * 0.45, phi: 0 },
+        { theta: PI * 0.45, phi: TAU * 0.25 },
+        { theta: PI * 0.55, phi: TAU * 0.5 },
+        { theta: PI * 0.55, phi: TAU * 0.75 },
     ],
 };
 

@@ -15,7 +15,7 @@ labels:
 
 ## Description
 
-Implement the wave state machine that drives match progression: 8 regular waves + 1 boss wave, difficulty scaling, darkness contraction, and win/lose conditions.
+Implement the wave state machine that drives match progression: 8 regular waves + 1 boss wave, difficulty scaling, darkness consumption (south pole upward), and win/lose conditions.
 
 ## Acceptance Criteria
 
@@ -23,7 +23,7 @@ Implement the wave state machine that drives match progression: 8 regular waves 
 - [ ] Wave composition config: enemy types, counts, spawn timing per wave
 - [ ] Difficulty scaling: enemies × (0.7 + 0.3 × playerCount)
 - [ ] Progressive difficulty curve: harder enemy types introduced in later waves
-- [ ] Darkness boundary contracts slightly each wave (DarknessEdgeNode integration)
+- [ ] Darkness consumption: PlanetoidNode.setDarknessLevel() increases each wave (south pole darkness rises)
 - [ ] Wave transition: brief pause after clear, then Refraction pick phase
 - [ ] Win condition: survive all 9 waves (8 regular + boss)
 - [ ] Lose condition: all players dead simultaneously
@@ -33,3 +33,4 @@ Implement the wave state machine that drives match progression: 8 regular waves 
 ## Notes
 
 - 2026-05-16: Created. Depends on TICKET-155 (player) and TICKET-156 (enemies) being functional.
+- 2026-05-16: Updated — darkness now consumes sphere from south pole upward instead of flat boundary contraction.
