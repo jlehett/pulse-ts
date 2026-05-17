@@ -20,7 +20,8 @@
     "docs:preview": "vitepress preview apps/docs",
     "api:build": "typedoc",
     "demo:platformer": "npm run dev -w demos/platformer",
-    "demo:arena": "npm run dev -w demos/arena"
+    "demo:arena": "npm run dev -w demos/arena",
+    "demo:lumenwake": "npm run dev -w demos/lumenwake"
   },
   "devDependencies": {
     "@babel/plugin-transform-react-jsx": "^7.25.0",

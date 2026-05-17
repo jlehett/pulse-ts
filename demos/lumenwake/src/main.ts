@@ -1,0 +1,111 @@
+import { World, installDefaults } from '@pulse-ts/core';
+import { installAudio } from '@pulse-ts/audio';
+import { installInput } from '@pulse-ts/input';
+import { installPhysics } from '@pulse-ts/physics';
+import { installThree } from '@pulse-ts/three';
+import type { ThreeService } from '@pulse-ts/three';
+import { installNetwork, TransportService } from '@pulse-ts/network';
+import type { Transport } from '@pulse-ts/network';
+import { GameNode } from './nodes/GameNode';
+import { showMainMenu, type MenuChoice } from './ui/menu';
+import { showLobby, type LobbyResult } from './ui/lobby';
+import { allBindings } from './config/bindings';
+import { setupPostProcessing } from './rendering/setupPostProcessing';
+
+const canvas = document.getElementById('lumenwake') as HTMLCanvasElement;
+const container = canvas.parentElement ?? document.body;
+
+interface GameWorldResult {
+    world: World;
+    three: ThreeService;
+    cleanup: () => void;
+}
+
+function createGameWorld(): GameWorldResult {
+    const world = new World();
+
+    installDefaults(world);
+    installPhysics(world, { gravity: { x: 0, y: 0, z: 0 } });
+
+    const three = installThree(world, {
+        canvas,
+        clearColor: 0x020206,
+    });
+
+    setupPostProcessing(three);
+
+    const cleanup = () => {
+        three.renderer.clear();
+        world.destroy();
+    };
+
+    return { world, three, cleanup };
+}
+
+function startSoloGame(playerCount: number): Promise<void> {
+    return new Promise((resolve) => {
+        const { world, cleanup } = createGameWorld();
+
+        installAudio(world);
+        installInput(world, { preventDefault: true, bindings: allBindings });
+
+        world.mount(GameNode, {
+            playerCount,
+            onRequestMenu: () => {
+                cleanup();
+                resolve();
+            },
+        });
+
+        world.start();
+    });
+}
+
+async function startOnlineGame(lobby: LobbyResult): Promise<void> {
+    return new Promise((resolve) => {
+        const setup = async () => {
+            const { world, cleanup } = createGameWorld();
+
+            installAudio(world);
+            installInput(world, {
+                preventDefault: true,
+                bindings: allBindings,
+            });
+
+            await installNetwork(world, {
+                replication: { sendHz: 60 },
+            });
+
+            world.mount(GameNode, {
+                playerCount: lobby.playerCount,
+                playerId: lobby.playerId,
+                transport: lobby.transport,
+                isHost: lobby.mode === 'host',
+                onRequestMenu: () => {
+                    lobby.transport.disconnect();
+                    cleanup();
+                    resolve();
+                },
+            });
+
+            world.start();
+        };
+        setup();
+    });
+}
+
+async function start() {
+    while (true) {
+        const choice = await showMainMenu(container);
+
+        if (choice.mode === 'solo') {
+            await startSoloGame(1);
+        } else if (choice.mode === 'online') {
+            const lobby = await showLobby(container);
+            if (lobby === 'back') continue;
+            await startOnlineGame(lobby);
+        }
+    }
+}
+
+start();
