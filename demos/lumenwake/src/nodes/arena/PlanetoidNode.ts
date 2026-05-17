@@ -104,8 +104,8 @@ const SURFACE_FRAGMENT = /* glsl */ `
             float cosAngle = dot(normalize(pos), normalize(tPos));
             float arcDist = acos(clamp(cosAngle, -1.0, 1.0)) * uSphereRadius;
 
-            // Starts at playerRadius, grows to ~3x as it ages
-            float spread = playerRadius * (1.0 + age * 2.0);
+            // Starts at playerRadius, grows to ~1.6x as it ages
+            float spread = playerRadius * (1.0 + age * 0.6);
             float falloff = exp(-arcDist * arcDist / (spread * spread));
             // Fade out with age
             float fade = 1.0 - age * age;
