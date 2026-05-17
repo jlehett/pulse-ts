@@ -1,8 +1,7 @@
 import { useChild } from '@pulse-ts/core';
 import { usePointLight } from '@pulse-ts/three';
 import type { MapConfig } from '../../config/maps';
-import { GridFloorNode } from './GridFloorNode';
-import { DarknessEdgeNode } from './DarknessEdgeNode';
+import { PlanetoidNode } from './PlanetoidNode';
 import { ObstacleNode } from './ObstacleNode';
 
 export interface ArenaNodeProps {
@@ -10,28 +9,33 @@ export interface ArenaNodeProps {
 }
 
 /**
- * Top-level arena scene node. Composes the grid floor, darkness edge,
- * obstacles, and ambient lighting for a given map configuration.
+ * Top-level arena node. Composes the planetoid sphere,
+ * surface obstacles, and ambient lighting.
  */
 export function ArenaNode(props: ArenaNodeProps) {
     const { map } = props;
 
-    const floor = useChild(GridFloorNode, { map });
-    const darknessEdge = useChild(DarknessEdgeNode, { map });
+    const planetoid = useChild(PlanetoidNode, { map });
 
     for (const obstacle of map.obstacles) {
-        useChild(ObstacleNode, obstacle);
+        useChild(ObstacleNode, { ...obstacle, sphereRadius: map.sphereRadius });
     }
 
+    // Key light from above
     usePointLight({
-        color: 0x4488ff,
-        intensity: 2.0,
-        distance: 40,
-        position: [0, 10, 0],
+        color: 0x6688ff,
+        intensity: 3.0,
+        distance: map.sphereRadius * 4,
+        position: [0, map.sphereRadius * 2, 0],
     });
 
-    return {
-        floor,
-        darknessEdge,
-    };
+    // Fill light from below
+    usePointLight({
+        color: 0x223344,
+        intensity: 1.0,
+        distance: map.sphereRadius * 3,
+        position: [0, -map.sphereRadius * 1.5, 0],
+    });
+
+    return { planetoid };
 }

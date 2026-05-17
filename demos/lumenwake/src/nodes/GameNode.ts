@@ -20,7 +20,7 @@ export interface GameNodeProps {
 
 /**
  * Top-level orchestrator node for Lumenwake.
- * Sets up lighting, camera, networking, arena, and shared game context.
+ * Sets up lighting, camera, networking, planetoid arena, and shared game context.
  */
 export function GameNode(props?: Readonly<GameNodeProps>) {
     const online = props?.transport != null && props?.playerId != null;
@@ -35,14 +35,15 @@ export function GameNode(props?: Readonly<GameNodeProps>) {
         wave: 0,
         playerCount: props?.playerCount ?? 1,
         isHost: props?.isHost ?? true,
+        map,
     };
 
     useProvideContext(GameCtx, gameState);
 
     installParticles({ maxPerPool: 4096 });
 
-    useAmbientLight({ color: 0x2233aa, intensity: 0.3 });
+    useAmbientLight({ color: 0x112244, intensity: 0.4 });
 
-    CameraNode();
+    CameraNode({ sphereRadius: map.sphereRadius });
     useChild(ArenaNode, { map });
 }
