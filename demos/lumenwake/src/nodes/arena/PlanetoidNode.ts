@@ -78,7 +78,7 @@ const SURFACE_FRAGMENT = /* glsl */ `
         float edge = worleyEdge(pos, 0.8);
         float grid = 1.0 - smoothstep(0.03, 0.08, edge);
 
-        // Player proximity glow (immediate area around each player)
+        // Player proximity glow (bright area immediately around player)
         float playerGlow = 0.0;
         vec3 playerGlowColor = vec3(0.2, 0.6, 0.9);
         for (int i = 0; i < 4; i++) {
@@ -86,7 +86,7 @@ const SURFACE_FRAGMENT = /* glsl */ `
             vec3 pPos = uPlayerPositions[i];
             float cosAngle = dot(normalize(pos), normalize(pPos));
             float arcDist = acos(clamp(cosAngle, -1.0, 1.0)) * uSphereRadius;
-            float glow = 0.6 / (1.0 + arcDist * arcDist * 0.15);
+            float glow = 1.0 / (1.0 + arcDist * arcDist * 0.08);
             if (glow > playerGlow) {
                 playerGlow = glow;
                 playerGlowColor = uPlayerColors[i];
@@ -94,7 +94,8 @@ const SURFACE_FRAGMENT = /* glsl */ `
         }
         playerGlow = min(playerGlow, 1.0);
 
-        // Wake trail — fading glow from recent player movement
+        // Wake trail — spreading luminous wake like a boat in water
+        // Newer points are bright and narrow; older points spread wider as they fade
         float wakeGlow = 0.0;
         vec3 wakeColor = vec3(0.0);
         for (int i = 0; i < ${TRAIL_LENGTH}; i++) {
@@ -103,30 +104,45 @@ const SURFACE_FRAGMENT = /* glsl */ `
             float age = uTrailAges[i];
             float cosAngle = dot(normalize(pos), normalize(tPos));
             float arcDist = acos(clamp(cosAngle, -1.0, 1.0)) * uSphereRadius;
-            // Narrow wake that fades with age
-            float intensity = (1.0 - age) * 0.5 / (1.0 + arcDist * arcDist * 0.8);
+
+            // Wake spreads wider as it ages (narrow core → wide dissipation)
+            float spread = 0.3 + age * 1.5;
+            float falloff = exp(-arcDist * arcDist / (spread * spread));
+            // Intensity fades with age but maintains soft outer glow
+            float fade = (1.0 - age * age);
+            float intensity = falloff * fade * 0.7;
+
             if (intensity > wakeGlow) {
                 wakeGlow = intensity;
                 wakeColor = uTrailColors[i];
             }
         }
-        wakeGlow = min(wakeGlow, 0.8);
+        wakeGlow = min(wakeGlow, 1.0);
+
+        // Total illumination from player + wake
+        float illumination = max(playerGlow, wakeGlow);
 
         // Darkness consumes from south pole upward
         float darknessThreshold = mix(-1.0, 1.0, uDarknessLevel);
         float darkness = smoothstep(darknessThreshold + 0.1, darknessThreshold - 0.1, normal.y);
 
-        // Combine
+        // Combine — surface is very dark unless illuminated
         float pulse = sin(uTime * 0.4) * 0.05 + 0.95;
-        vec3 gridColor = uEmissiveColor * grid * 0.6 * pulse;
-        vec3 glowContrib = playerGlowColor * playerGlow;
-        vec3 wakeContrib = wakeColor * wakeGlow;
-        vec3 baseColor = uSurfaceColor;
+        vec3 gridColor = uEmissiveColor * grid * 0.5 * pulse;
+        vec3 glowContrib = playerGlowColor * playerGlow * 0.8;
+        vec3 wakeContrib = wakeColor * wakeGlow * 0.6;
 
-        vec3 litColor = baseColor + gridColor + glowContrib + wakeContrib;
-        vec3 darkColor = vec3(0.0, 0.0, 0.005);
+        // Dark base that only reveals with illumination
+        vec3 darkSurface = uSurfaceColor * 0.05;
+        vec3 litSurface = uSurfaceColor * 0.4 + gridColor + glowContrib + wakeContrib;
+        vec3 surfaceColor = mix(darkSurface, litSurface, illumination);
 
-        vec3 finalColor = mix(litColor, darkColor, darkness);
+        // The grid lines themselves glow faintly even in darkness
+        vec3 dimGrid = uEmissiveColor * grid * 0.04;
+        surfaceColor += dimGrid;
+
+        vec3 voidColor = vec3(0.0, 0.0, 0.003);
+        vec3 finalColor = mix(surfaceColor, voidColor, darkness);
         gl_FragColor = vec4(finalColor, 1.0);
     }
 `;
