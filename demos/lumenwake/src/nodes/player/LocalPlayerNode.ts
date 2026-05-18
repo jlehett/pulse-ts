@@ -206,7 +206,7 @@ export function LocalPlayerNode(props: LocalPlayerProps) {
         depthWrite: false,
         toneMapped: false,
     });
-    const barrierGeo = new THREE.BoxGeometry(3.0, 2.0, 0.08);
+    const barrierGeo = new THREE.BoxGeometry(3.0, 2.0, 0.35);
     const barrierMesh = new THREE.Mesh(barrierGeo, barrierMat);
     barrierMesh.visible = false;
     root.add(barrierMesh);
