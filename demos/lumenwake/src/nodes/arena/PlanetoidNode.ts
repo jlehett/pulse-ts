@@ -567,6 +567,7 @@ export function PlanetoidNode(props: PlanetoidProps) {
         for (let i = 0; i < playerCount; i++) {
             const p = playerPositions[i];
             const c = playerColors[i];
+            if (!p || !c) continue;
             addIdx = addInstance(
                 addIdx,
                 p.x,

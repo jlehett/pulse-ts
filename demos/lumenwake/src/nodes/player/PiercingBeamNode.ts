@@ -18,6 +18,7 @@ export interface PiercingBeamProps {
     color: number;
     sphereRadius: number;
     onPositionUpdate?: (position: THREE.Vector3) => void;
+    onExpired?: () => void;
 }
 
 /**
@@ -59,6 +60,7 @@ export function PiercingBeamNode(props: PiercingBeamProps) {
 
         if (lifetime >= MAX_LIFETIME) {
             destroyed = true;
+            props.onExpired?.();
             world.remove(node);
             return;
         }
@@ -103,5 +105,12 @@ export function PiercingBeamNode(props: PiercingBeamProps) {
         }
     });
 
-    return { position, damage: props.damage, piercing: true };
+    return {
+        position,
+        damage: props.damage,
+        piercing: true,
+        get alive() {
+            return !destroyed;
+        },
+    };
 }

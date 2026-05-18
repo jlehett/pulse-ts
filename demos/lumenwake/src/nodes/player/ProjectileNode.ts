@@ -15,6 +15,7 @@ export interface ProjectileProps {
     meshRadius?: number;
     emissiveIntensity?: number;
     onPositionUpdate?: (position: THREE.Vector3) => void;
+    onExpired?: () => void;
 }
 
 /**
@@ -57,6 +58,7 @@ export function ProjectileNode(props: ProjectileProps) {
 
         if (lifetime >= MAX_LIFETIME) {
             destroyed = true;
+            props.onExpired?.();
             world.remove(node);
             return;
         }
@@ -96,5 +98,16 @@ export function ProjectileNode(props: ProjectileProps) {
             baseEmissive * fade * flicker;
     });
 
-    return { position, damage: props.damage };
+    return {
+        position,
+        damage: props.damage,
+        get alive() {
+            return !destroyed;
+        },
+        destroy() {
+            if (destroyed) return;
+            destroyed = true;
+            world.remove(node);
+        },
+    };
 }

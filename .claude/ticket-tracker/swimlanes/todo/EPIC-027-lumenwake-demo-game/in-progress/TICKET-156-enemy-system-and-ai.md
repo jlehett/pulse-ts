@@ -1,16 +1,17 @@
 ---
 id: TICKET-156
 title: Enemy system & AI
-status: todo
+status: in-progress
 priority: high
 created: 2026-05-16
-updated: 2026-05-16
+updated: 2026-05-18
 depends_on:
   - TICKET-154
 labels:
   - lumenwake
   - gameplay
   - ai
+branch: ticket-156-enemy-system-and-ai
 ---
 
 ## Description
@@ -34,3 +35,4 @@ Implement the enemy (voidform) system with 3 enemy types, AI steering on sphere 
 
 - 2026-05-16: Created. Depends on TICKET-154 (arena rendering). Can be built in parallel with TICKET-155.
 - 2026-05-16: Updated for planetoid design — enemies move on sphere surface via great-circle paths.
+- 2026-05-18: Starting implementation.

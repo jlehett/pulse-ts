@@ -1,5 +1,12 @@
 import * as THREE from 'three';
-import { useProvideContext, useChild, useWorld, useNode } from '@pulse-ts/core';
+import {
+    useProvideContext,
+    useChild,
+    useWorld,
+    useNode,
+    useFrameUpdate,
+} from '@pulse-ts/core';
+import { Node } from '@pulse-ts/core';
 import { useAmbientLight } from '@pulse-ts/three';
 import type { Transport } from '@pulse-ts/network';
 import { useConnection } from '@pulse-ts/network';
@@ -14,10 +21,23 @@ import { PiercingBeamNode } from './player/PiercingBeamNode';
 import { PulseNode } from './player/PulseNode';
 import { SanctuaryNode } from './player/SanctuaryNode';
 import { SlowFieldNode } from './player/SlowFieldNode';
+import { EnemySpawnerNode } from './enemies/EnemySpawnerNode';
+import { geodesicDirection } from '../utils/sphereMovement';
 import type { MapConfig } from '../config/maps';
 import { DEFAULT_MAP, sphereToWorld } from '../config/maps';
 import { CLASS_SHARD } from '../config/classes';
 import type { ClassDef } from '../config/classes';
+
+interface ProjectileEntry {
+    position: THREE.Vector3;
+    damage: number;
+    alive: boolean;
+    piercing: boolean;
+    isAoE: boolean;
+    aoeRadius: number;
+    hitEnemies: Set<object>;
+    node: Node;
+}
 
 export interface GameNodeProps {
     playerCount: number;
@@ -31,7 +51,8 @@ export interface GameNodeProps {
 
 /**
  * Top-level orchestrator node for Lumenwake.
- * Sets up lighting, camera, networking, planetoid arena, player, and shared game context.
+ * Sets up lighting, camera, networking, planetoid arena, player,
+ * enemy spawner, projectile-enemy collision, and shared game context.
  */
 export function GameNode(props?: Readonly<GameNodeProps>) {
     const online = props?.transport != null && props?.playerId != null;
@@ -60,16 +81,14 @@ export function GameNode(props?: Readonly<GameNodeProps>) {
     const camera = CameraNode({ sphereRadius: map.sphereRadius });
     const { planetoid } = ArenaNode({ map });
 
-    // Use class color for player and projectiles
     const classColor = new THREE.Color(classDef.color);
     planetoid.setPlayerCount(1);
     planetoid.setPlayerColor(0, classColor);
 
-    // Get world and parent node for dynamic spawning
     const world = useWorld();
     const parentNode = useNode();
 
-    // Spawn local player at their spawn point
+    // Player setup
     const spawnCoord = map.playerSpawns[playerIndex % map.playerSpawns.length];
     const spawnPos = sphereToWorld(spawnCoord, map.sphereRadius);
     const startPosition = new THREE.Vector3(
@@ -92,7 +111,92 @@ export function GameNode(props?: Readonly<GameNodeProps>) {
         ability2Cooldown: null,
     };
 
+    // Projectile registry for collision detection
+    const projectiles: ProjectileEntry[] = [];
+
+    function registerProjectile(
+        node: Node,
+        damage: number,
+        opts?: { piercing?: boolean; isAoE?: boolean; aoeRadius?: number },
+    ): ProjectileEntry {
+        const entry: ProjectileEntry = {
+            position: new THREE.Vector3(),
+            damage,
+            alive: true,
+            piercing: opts?.piercing ?? false,
+            isAoE: opts?.isAoE ?? false,
+            aoeRadius: opts?.aoeRadius ?? 0,
+            hitEnemies: new Set(),
+            node,
+        };
+        projectiles.push(entry);
+        return entry;
+    }
+
     useChild(HudNode, { playerState, classDef });
+
+    // Enemy spawner
+    const spawner = EnemySpawnerNode({
+        map,
+        getPlayerPositions: () =>
+            playerState.alive ? [playerState.position] : [],
+        onContactDamage: (damage) => {
+            if (!playerState.alive || playerState.invulnerable) return;
+            playerState.health = Math.max(0, playerState.health - damage);
+            if (playerState.health <= 0) {
+                playerState.alive = false;
+            }
+        },
+    });
+
+    // Projectile-enemy collision detection
+    useFrameUpdate(() => {
+        const enemies = spawner.getEnemies();
+
+        // Clean up dead projectiles
+        for (let i = projectiles.length - 1; i >= 0; i--) {
+            if (!projectiles[i].alive) {
+                projectiles.splice(i, 1);
+            }
+        }
+
+        for (const proj of projectiles) {
+            if (!proj.alive) continue;
+
+            for (const enemy of enemies) {
+                if (!enemy.state.alive) continue;
+                if (proj.piercing && proj.hitEnemies.has(enemy)) continue;
+
+                const pn = proj.position.clone().normalize();
+                const en = enemy.state.position.clone().normalize();
+                const cosAngle = pn.dot(en);
+                const arcDist =
+                    Math.acos(Math.min(1, Math.max(-1, cosAngle))) *
+                    map.sphereRadius;
+
+                const hitRange = proj.isAoE
+                    ? proj.aoeRadius
+                    : enemy.state.enemyDef.radius + 0.5;
+
+                if (arcDist < hitRange) {
+                    const fromDir = geodesicDirection(
+                        enemy.state.position,
+                        proj.position,
+                    );
+
+                    enemy.takeDamage(proj.damage, fromDir);
+
+                    if (proj.piercing) {
+                        proj.hitEnemies.add(enemy);
+                    } else if (!proj.isAoE) {
+                        proj.alive = false;
+                        world.remove(proj.node);
+                        break;
+                    }
+                }
+            }
+        }
+    });
 
     useChild(LocalPlayerNode, {
         classDef,
@@ -105,7 +209,12 @@ export function GameNode(props?: Readonly<GameNodeProps>) {
             up: camera.getScreenUp(),
         }),
         onPulse: (origin) => {
-            world.mount(
+            const entry = registerProjectile(null!, classDef.primaryDamage, {
+                isAoE: true,
+                aoeRadius: classDef.projectileVisual.radius * 20,
+            });
+            entry.position.copy(origin);
+            entry.node = world.mount(
                 PulseNode,
                 {
                     origin,
@@ -121,6 +230,9 @@ export function GameNode(props?: Readonly<GameNodeProps>) {
                             classColor,
                         );
                     },
+                    onExpired: () => {
+                        entry.alive = false;
+                    },
                 },
                 { parent: parentNode },
             );
@@ -128,7 +240,11 @@ export function GameNode(props?: Readonly<GameNodeProps>) {
         onChargedShot: (origin, direction, charge) => {
             const chargeScale = 1 + charge * 2;
             const trailIntensity = 1 + charge * 3;
-            world.mount(
+            const entry = registerProjectile(
+                null!,
+                classDef.primaryDamage * chargeScale,
+            );
+            entry.node = world.mount(
                 ProjectileNode,
                 {
                     origin,
@@ -142,6 +258,7 @@ export function GameNode(props?: Readonly<GameNodeProps>) {
                         classDef.projectileVisual.emissiveIntensity *
                         (1 + charge * 2),
                     onPositionUpdate: (pos) => {
+                        entry.position.copy(pos);
                         planetoid.addProjectileTrailPoint(
                             pos.x,
                             pos.y,
@@ -150,12 +267,16 @@ export function GameNode(props?: Readonly<GameNodeProps>) {
                             trailIntensity,
                         );
                     },
+                    onExpired: () => {
+                        entry.alive = false;
+                    },
                 },
                 { parent: parentNode },
             );
         },
         onShoot: (origin, direction) => {
-            world.mount(
+            const entry = registerProjectile(null!, classDef.primaryDamage);
+            entry.node = world.mount(
                 ProjectileNode,
                 {
                     origin,
@@ -168,6 +289,7 @@ export function GameNode(props?: Readonly<GameNodeProps>) {
                     emissiveIntensity:
                         classDef.projectileVisual.emissiveIntensity,
                     onPositionUpdate: (pos) => {
+                        entry.position.copy(pos);
                         planetoid.addProjectileTrailPoint(
                             pos.x,
                             pos.y,
@@ -175,12 +297,20 @@ export function GameNode(props?: Readonly<GameNodeProps>) {
                             classColor,
                         );
                     },
+                    onExpired: () => {
+                        entry.alive = false;
+                    },
                 },
                 { parent: parentNode },
             );
         },
         onBeam: (origin, direction) => {
-            world.mount(
+            const entry = registerProjectile(
+                null!,
+                classDef.primaryDamage * 4,
+                { piercing: true },
+            );
+            entry.node = world.mount(
                 PiercingBeamNode,
                 {
                     origin,
@@ -190,6 +320,7 @@ export function GameNode(props?: Readonly<GameNodeProps>) {
                     color: classDef.color,
                     sphereRadius: map.sphereRadius,
                     onPositionUpdate: (pos) => {
+                        entry.position.copy(pos);
                         planetoid.addProjectileTrailPoint(
                             pos.x,
                             pos.y,
@@ -197,6 +328,9 @@ export function GameNode(props?: Readonly<GameNodeProps>) {
                             classColor,
                             1.4,
                         );
+                    },
+                    onExpired: () => {
+                        entry.alive = false;
                     },
                 },
                 { parent: parentNode },

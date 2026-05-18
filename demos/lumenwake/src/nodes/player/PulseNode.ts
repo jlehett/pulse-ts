@@ -11,6 +11,7 @@ export interface PulseProps {
     color: number;
     sphereRadius: number;
     onPositionUpdate?: (position: THREE.Vector3) => void;
+    onExpired?: () => void;
 }
 
 /**
@@ -104,6 +105,7 @@ export function PulseNode(props: PulseProps) {
 
         if (lifetime >= PULSE_LIFETIME) {
             destroyed = true;
+            props.onExpired?.();
             world.remove(node);
             return;
         }
@@ -114,5 +116,15 @@ export function PulseNode(props: PulseProps) {
         props.onPositionUpdate?.(origin);
     });
 
-    return { position: origin, damage: props.damage };
+    return {
+        position: origin,
+        damage: props.damage,
+        get radius() {
+            const progress = Math.min(lifetime / PULSE_LIFETIME, 1);
+            return props.maxRadius * progress;
+        },
+        get alive() {
+            return !destroyed;
+        },
+    };
 }
