@@ -17,11 +17,14 @@ export function setupPostProcessing(three: ThreeService): void {
     const w = canvas.clientWidth;
     const h = canvas.clientHeight;
 
+    const bloomRes = new THREE.Vector2(Math.floor(w / 2), Math.floor(h / 2));
+    const bloom = new UnrealBloomPass(bloomRes, 0.5, 0.4, 0.85);
+    bloom.renderToScreen = false;
+
     const composer = new EffectComposer(three.renderer);
+    composer.setPixelRatio(window.devicePixelRatio);
     composer.addPass(new RenderPass(three.scene, three.camera));
-    composer.addPass(
-        new UnrealBloomPass(new THREE.Vector2(w, h), 0.8, 0.4, 0.7),
-    );
+    composer.addPass(bloom);
     composer.addPass(new OutputPass());
 
     three.setComposer(composer);

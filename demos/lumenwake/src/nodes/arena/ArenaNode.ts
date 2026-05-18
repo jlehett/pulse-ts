@@ -1,25 +1,19 @@
-import { useChild } from '@pulse-ts/core';
 import { usePointLight } from '@pulse-ts/three';
 import type { MapConfig } from '../../config/maps';
 import { PlanetoidNode } from './PlanetoidNode';
-import { ObstacleNode } from './ObstacleNode';
 
 export interface ArenaNodeProps {
     map: MapConfig;
 }
 
 /**
- * Top-level arena node. Composes the planetoid sphere,
- * surface obstacles, and ambient lighting.
+ * Top-level arena node. Composes the planetoid sphere
+ * and ambient lighting.
  */
 export function ArenaNode(props: ArenaNodeProps) {
     const { map } = props;
 
     const planetoid = PlanetoidNode({ map });
-
-    for (const obstacle of map.obstacles) {
-        useChild(ObstacleNode, { ...obstacle, sphereRadius: map.sphereRadius });
-    }
 
     // Key light from above
     usePointLight({

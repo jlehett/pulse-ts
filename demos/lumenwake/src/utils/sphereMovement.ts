@@ -41,9 +41,10 @@ export function getTangentFrame(
     const normal = out.up.copy(position).normalize();
 
     // Choose a reference vector that isn't parallel to normal
-    const ref = Math.abs(normal.y) < 0.99
-        ? _tempVec.set(0, 1, 0)
-        : _tempVec.set(1, 0, 0);
+    const ref =
+        Math.abs(normal.y) < 0.99
+            ? _tempVec.set(0, 1, 0)
+            : _tempVec.set(1, 0, 0);
 
     // Right = cross(normal, ref), then normalize
     out.right.crossVectors(normal, ref).normalize();
@@ -63,11 +64,17 @@ export function orientOnSphere(
     const up = _tempVec.copy(position).normalize();
     // Ensure facing is tangent
     const tangentFacing = _tempVec2.copy(facing);
-    tangentFacing.sub(up.clone().multiplyScalar(tangentFacing.dot(up))).normalize();
+    tangentFacing
+        .sub(up.clone().multiplyScalar(tangentFacing.dot(up)))
+        .normalize();
 
     // Build rotation matrix
-    const right = new THREE.Vector3().crossVectors(tangentFacing, up).normalize();
-    const correctedForward = new THREE.Vector3().crossVectors(up, right).normalize();
+    const right = new THREE.Vector3()
+        .crossVectors(tangentFacing, up)
+        .normalize();
+    const correctedForward = new THREE.Vector3()
+        .crossVectors(up, right)
+        .normalize();
 
     const m = new THREE.Matrix4().makeBasis(right, up, correctedForward);
     quaternion.setFromRotationMatrix(m);

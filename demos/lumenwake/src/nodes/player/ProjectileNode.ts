@@ -12,6 +12,8 @@ export interface ProjectileProps {
     damage: number;
     color: number;
     sphereRadius: number;
+    meshRadius?: number;
+    emissiveIntensity?: number;
     onPositionUpdate?: (position: THREE.Vector3) => void;
 }
 
@@ -21,15 +23,17 @@ export interface ProjectileProps {
  */
 export function ProjectileNode(props: ProjectileProps) {
     const { origin, direction, speed, color, sphereRadius } = props;
+    const meshRadius = props.meshRadius ?? 0.15;
+    const baseEmissive = props.emissiveIntensity ?? 2.0;
 
     const world = useWorld();
     const node = useNode();
 
-    const { root, material } = useMesh('sphere', {
-        radius: 0.15,
+    const { root, mesh, material } = useMesh('sphere', {
+        radius: meshRadius,
         color,
         emissive: color,
-        emissiveIntensity: 2.0,
+        emissiveIntensity: baseEmissive,
         roughness: 0,
         metalness: 1,
     });
@@ -74,14 +78,22 @@ export function ProjectileNode(props: ProjectileProps) {
         // Report position for lighting
         props.onPositionUpdate?.(position);
 
+        // Animated glow — gentle pulse
+        const flicker =
+            1.0 +
+            0.15 * Math.sin(lifetime * 12) +
+            0.1 * Math.sin(lifetime * 19);
+        const sizePulse = 1.0 + 0.08 * Math.sin(lifetime * 10);
+        mesh.scale.setScalar(sizePulse);
+
         // Fade out near end of life
         const fadeStart = MAX_LIFETIME * 0.7;
-        if (lifetime > fadeStart) {
-            const fade =
-                1 - (lifetime - fadeStart) / (MAX_LIFETIME - fadeStart);
-            (material as THREE.MeshStandardMaterial).emissiveIntensity =
-                2.0 * fade;
-        }
+        const fade =
+            lifetime > fadeStart
+                ? 1 - (lifetime - fadeStart) / (MAX_LIFETIME - fadeStart)
+                : 1.0;
+        (material as THREE.MeshStandardMaterial).emissiveIntensity =
+            baseEmissive * fade * flicker;
     });
 
     return { position, damage: props.damage };
