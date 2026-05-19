@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { useFrameUpdate, useWorld, useNode } from '@pulse-ts/core';
 import { useCustomMesh } from '@pulse-ts/three';
+import { useParticleBurst } from '@pulse-ts/effects';
 import type { EnemyDef } from '../../config/enemies';
 import {
     moveSpherePosition,
@@ -19,11 +20,18 @@ export interface EnemyState {
     enemyDef: EnemyDef;
     /** Nullcube shield facing direction (unit tangent vector on sphere). */
     shieldDirection: THREE.Vector3;
+    /** World position of the shield center (null if no shield or broken). */
+    shieldPosition: THREE.Vector3 | null;
+    /** Half-width of the shield for collision (arc distance). */
+    shieldRadius: number;
+    shieldHealth: number;
+    shieldMaxHealth: number;
 }
 
 export interface EnemyHandle {
     state: EnemyState;
     takeDamage: (amount: number, fromDirection?: THREE.Vector3) => void;
+    damageShield: (amount: number) => void;
 }
 
 export interface EnemyNodeProps {
@@ -152,7 +160,7 @@ export function EnemyNode(props: EnemyNodeProps) {
                         float darknessThreshold = mix(-1.0, 1.0, uDarknessLevel);
                         float darkness = smoothstep(darknessThreshold + 0.1, darknessThreshold - 0.1, sphereNormal.y);
 
-                        float lightAmount = max(0.05, illumination * 0.85) * (1.0 - darkness * 0.95);
+                        float lightAmount = min(max(0.05, illumination * 0.85) * (1.0 - darkness * 0.95), 1.5);
                         vec3 keyDir = normalize(vec3(0.0, uSphereRadius * 2.0, 0.0) - vWorldPos);
 
                         vec3 rayDir = normalize(vRayDir);
@@ -317,7 +325,7 @@ export function EnemyNode(props: EnemyNodeProps) {
                 float aDarkThresh = mix(-1.0, 1.0, uDarknessLevel);
                 float aDarkness = smoothstep(aDarkThresh + 0.1, aDarkThresh - 0.1, sphNorm.y);
 
-                float auraLight = max(0.05, aIllum * 0.85) * (1.0 - aDarkness * 0.95);
+                float auraLight = min(max(0.05, aIllum * 0.85) * (1.0 - aDarkness * 0.95), 1.5);
 
                 vec3 rayDir = normalize(vRayDir);
                 float outerR = length(vLocalPos);
@@ -363,9 +371,194 @@ export function EnemyNode(props: EnemyNodeProps) {
     const auraMesh = new THREE.Mesh(auraGeo, auraMat);
     mesh.add(auraMesh);
 
+    // Nullcube shield — translucent hex-grid energy barrier
+    let shieldMesh: THREE.Mesh | null = null;
+    const SHIELD_BREAK_DURATION = 0.6;
+    let shieldBreaking = false;
+    let shieldBreakTimer = 0;
+    const shieldBreakBurst = useParticleBurst({
+        count: 32,
+        lifetime: 0.7,
+        color: enemyDef.glowColor,
+        speed: [4, 10],
+        gravity: 2,
+        size: 0.3,
+        shrink: true,
+        opacity: 0.9,
+        blending: 'additive',
+    });
+    if (enemyDef.type === 'nullcube') {
+        const shieldWidth = enemyDef.radius * 3.5;
+        const shieldHeight = enemyDef.radius * 3.0;
+        const shieldDepth = enemyDef.radius * 0.15;
+        const shieldGeo = new THREE.BoxGeometry(shieldWidth, shieldHeight, shieldDepth);
+        const shieldMat = new THREE.ShaderMaterial({
+            uniforms: {
+                uGlowColor: uniforms.uGlowColor,
+                uTime: uniforms.uTime,
+                uSpawnProgress: uniforms.uSpawnProgress,
+                uShieldFlash: { value: 0.0 },
+                uShieldHealth: { value: 1.0 },
+                uBreakProgress: { value: 0.0 },
+                uSphereRadius: uniforms.uSphereRadius,
+                uGlowMap: uniforms.uGlowMap,
+                uDarknessLevel: uniforms.uDarknessLevel,
+            },
+            vertexShader: /* glsl */ `
+                varying vec2 vUv;
+                varying vec3 vLocalPos;
+                varying vec3 vWorldPos;
+                varying vec3 vNormal;
+                void main() {
+                    vUv = uv;
+                    vLocalPos = position;
+                    vNormal = normalize(normalMatrix * normal);
+                    vec4 worldPos = modelMatrix * vec4(position, 1.0);
+                    vWorldPos = worldPos.xyz;
+                    gl_Position = projectionMatrix * viewMatrix * worldPos;
+                }
+            `,
+            fragmentShader: /* glsl */ `
+                uniform vec3 uGlowColor;
+                uniform float uTime;
+                uniform float uSpawnProgress;
+                uniform float uShieldFlash;
+                uniform float uShieldHealth;
+                uniform float uBreakProgress;
+                uniform float uSphereRadius;
+                uniform sampler2D uGlowMap;
+                uniform float uDarknessLevel;
+
+                varying vec2 vUv;
+                varying vec3 vLocalPos;
+                varying vec3 vWorldPos;
+                varying vec3 vNormal;
+
+                // Hex grid — returns (cell center distance, edge distance)
+                vec2 hexGrid(vec2 p, float scale) {
+                    p *= scale;
+                    vec2 h = vec2(1.0, sqrt(3.0));
+                    vec2 a = mod(p, h) - h * 0.5;
+                    vec2 b = mod(p - h * 0.5, h) - h * 0.5;
+                    vec2 g = dot(a, a) < dot(b, b) ? a : b;
+                    float cellDist = length(g);
+                    float edgeDist = 0.5 * min(
+                        dot(abs(g), normalize(h)),
+                        g.y > 0.0 ? g.y : -g.y
+                    );
+                    return vec2(cellDist, edgeDist);
+                }
+
+                float shHash(vec2 p) {
+                    p = fract(p * vec2(443.897, 441.423));
+                    p += dot(p, p.yx + 19.19);
+                    return fract(p.x * p.y);
+                }
+
+                void main() {
+                    // Planetoid occlusion
+                    vec3 camToFrag = vWorldPos - cameraPosition;
+                    float fragDist = length(camToFrag);
+                    vec3 rd = camToFrag / fragDist;
+                    float bVal = dot(cameraPosition, rd);
+                    float cVal = dot(cameraPosition, cameraPosition) - uSphereRadius * uSphereRadius;
+                    float disc = bVal * bVal - cVal;
+                    if (disc > 0.0) {
+                        float tHit = -bVal - sqrt(disc);
+                        if (tHit > 0.0 && tHit < fragDist) discard;
+                    }
+
+                    // Lighting from glow map
+                    vec3 sn = normalize(vWorldPos);
+                    float theta = atan(sn.x, sn.z);
+                    float phi = asin(clamp(sn.y, -1.0, 1.0));
+                    vec2 guv = vec2(theta / (2.0 * 3.14159) + 0.5, phi / 3.14159 + 0.5);
+                    float illum = min(texture2D(uGlowMap, guv).a, 2.5);
+                    float dThresh = mix(-1.0, 1.0, uDarknessLevel);
+                    float dark = smoothstep(dThresh + 0.1, dThresh - 0.1, sn.y);
+                    float light = max(0.05, illum * 0.85) * (1.0 - dark * 0.95);
+                    float selfLight = max(light, 0.25);
+
+                    // Edge fade — soft falloff near rectangle edges
+                    vec2 centered = abs(vUv - 0.5) * 2.0;
+                    float edgeX = 1.0 - smoothstep(0.6, 1.0, centered.x);
+                    float edgeY = 1.0 - smoothstep(0.6, 1.0, centered.y);
+                    float edgeFade = edgeX * edgeY;
+
+                    // Hex grid pattern
+                    vec2 hexUV = (vUv - 0.5) * vec2(4.0, 3.5);
+                    vec2 hex = hexGrid(hexUV, 3.0);
+                    float hexEdge = smoothstep(0.02, 0.05, hex.y);
+                    float hexLine = 1.0 - hexEdge;
+
+                    // Animated energy flow — scan lines sweeping upward
+                    float scanY = fract(vUv.y * 2.0 - uTime * 0.4);
+                    float scanLine = smoothstep(0.0, 0.05, scanY) * (1.0 - smoothstep(0.05, 0.12, scanY));
+
+                    // Slow horizontal pulse wave from center
+                    float waveDist = length(vUv - 0.5);
+                    float wave = sin(waveDist * 20.0 - uTime * 2.5) * 0.5 + 0.5;
+                    wave *= smoothstep(0.5, 0.2, waveDist);
+
+                    // Per-hex shimmer using cell position as seed
+                    vec2 hexCell = floor(hexUV * 3.0);
+                    float cellShimmer = shHash(hexCell) * 0.5 + 0.5;
+                    float shimmer = sin(uTime * 1.5 + cellShimmer * 6.28) * 0.5 + 0.5;
+
+                    // Fresnel glow
+                    vec3 viewDir = normalize(cameraPosition - vWorldPos);
+                    float fresnel = pow(1.0 - max(0.0, abs(dot(vNormal, viewDir))), 2.0);
+
+                    // Damage cracks — appear as health drops
+                    float damage = 1.0 - uShieldHealth;
+                    float crackNoise = shHash(hexCell * 7.13 + vec2(3.7, 1.2));
+                    float crackThreshold = damage * 1.5;
+                    float cracks = step(crackNoise, crackThreshold) * damage;
+
+                    // Compose
+                    float pattern = hexLine * 0.6 + scanLine * 0.25 + wave * 0.15 + shimmer * hexLine * 0.15;
+                    float baseAlpha = (0.06 + pattern * 0.2 + fresnel * 0.35) * edgeFade * selfLight * uSpawnProgress;
+                    vec3 baseColor = uGlowColor * (0.3 + pattern * 0.4 + fresnel * 0.5) * selfLight;
+
+                    // Damage crack glow
+                    baseColor += vec3(1.0, 0.5, 0.2) * cracks * 0.4;
+                    baseAlpha += cracks * 0.3 * edgeFade;
+
+                    // Flash on hit
+                    baseAlpha += uShieldFlash * 0.6 * edgeFade;
+                    baseColor = mix(baseColor, vec3(1.0), uShieldFlash * 0.7);
+
+                    // Break dissolve — expand from center, hexes dissolve outward
+                    if (uBreakProgress > 0.0) {
+                        float breakWave = uBreakProgress * 1.2;
+                        float distFromCenter = length(vUv - 0.5) * 2.0;
+                        float dissolve = smoothstep(breakWave - 0.3, breakWave, distFromCenter);
+                        float breakGlow = (1.0 - dissolve) * (1.0 - uBreakProgress);
+                        baseColor += vec3(1.0, 0.7, 0.3) * breakGlow * 2.0;
+                        baseAlpha *= dissolve;
+                        baseAlpha += breakGlow * 0.5 * edgeFade;
+                    }
+
+                    if (baseAlpha < 0.01) discard;
+                    gl_FragColor = vec4(baseColor, baseAlpha);
+                }
+            `,
+            transparent: true,
+            side: THREE.DoubleSide,
+            depthWrite: false,
+            depthTest: false,
+            toneMapped: false,
+        });
+        shieldMesh = new THREE.Mesh(shieldGeo, shieldMat);
+        shieldMesh.position.z = enemyDef.radius * 2.0;
+        root.add(shieldMesh);
+    }
+
     const position = startPosition.clone();
     const forward = new THREE.Vector3(0, 0, 1);
     let hitFlashTimer = 0;
+    let shieldFlashTimer = 0;
+    const SHIELD_FLASH_DURATION = 0.2;
     let destroyed = false;
     let spawning = true;
     let spawnTimer = 0;
@@ -383,6 +576,7 @@ export function EnemyNode(props: EnemyNodeProps) {
     }
     const fragments: ShatterFragment[] = [];
 
+    const shieldOffset = enemyDef.radius * 2.0;
     const state: EnemyState = {
         health: enemyDef.health,
         maxHealth: enemyDef.health,
@@ -392,6 +586,10 @@ export function EnemyNode(props: EnemyNodeProps) {
         forward,
         enemyDef,
         shieldDirection: new THREE.Vector3(0, 0, 1),
+        shieldPosition: enemyDef.type === 'nullcube' ? new THREE.Vector3() : null,
+        shieldRadius: enemyDef.type === 'nullcube' ? enemyDef.radius * 1.75 : 0,
+        shieldHealth: enemyDef.type === 'nullcube' ? 250 : 0,
+        shieldMaxHealth: enemyDef.type === 'nullcube' ? 250 : 0,
     };
 
     const hoverHeight = enemyDef.radius + 0.3;
@@ -650,7 +848,10 @@ export function EnemyNode(props: EnemyNodeProps) {
         if (nearestDir) {
             forward.lerp(nearestDir, Math.min(1, dt * 5));
             forward.normalize();
-            state.shieldDirection.copy(forward);
+
+            // Shield tracks player independently and much slower
+            state.shieldDirection.lerp(nearestDir, Math.min(1, dt * 0.8));
+            state.shieldDirection.normalize();
 
             const velocity = forward.clone().multiplyScalar(enemyDef.moveSpeed);
             moveSpherePosition(position, velocity, dt, sphereRadius);
@@ -667,9 +868,40 @@ export function EnemyNode(props: EnemyNodeProps) {
         } else if (enemyDef.type === 'nullcube') {
             mesh.rotation.y += dt * 0.6;
             mesh.rotation.x += dt * 0.3;
-        } else if (enemyDef.type === 'eclipser') {
-            mesh.rotation.y += dt * 0.4;
-            mesh.rotation.x += dt * 0.2;
+        }
+
+        // Shield break animation
+        if (shieldMesh && shieldBreaking) {
+            shieldBreakTimer += dt;
+            const mat = shieldMesh.material as THREE.ShaderMaterial;
+            const progress = Math.min(1, shieldBreakTimer / SHIELD_BREAK_DURATION);
+            mat.uniforms.uBreakProgress.value = progress;
+            if (progress >= 1) {
+                shieldBreaking = false;
+                shieldMesh.visible = false;
+            }
+        }
+
+        // Orient shield to face toward the player (uses slow-tracking shieldDirection)
+        if (shieldMesh && state.shieldPosition) {
+            const normal = position.clone().normalize();
+            const shieldFwd = state.shieldDirection.clone();
+            const shieldUp = normal;
+            const shieldRight = new THREE.Vector3().crossVectors(shieldUp, shieldFwd).normalize();
+            const correctedFwd = new THREE.Vector3().crossVectors(shieldRight, shieldUp).normalize();
+            const shieldMatrix = new THREE.Matrix4().makeBasis(shieldRight, shieldUp, correctedFwd);
+            shieldMesh.quaternion.setFromRotationMatrix(shieldMatrix);
+            shieldMesh.position.copy(correctedFwd.multiplyScalar(shieldOffset));
+
+            // Update shield world position for collision detection
+            state.shieldPosition.copy(root.position).add(shieldMesh.position);
+
+            // Shield flash decay
+            if (shieldFlashTimer > 0) {
+                shieldFlashTimer -= dt;
+                const mat = shieldMesh.material as THREE.ShaderMaterial;
+                mat.uniforms.uShieldFlash.value = Math.max(0, shieldFlashTimer / SHIELD_FLASH_DURATION);
+            }
         }
 
         // Pulsing glow
@@ -689,19 +921,32 @@ export function EnemyNode(props: EnemyNodeProps) {
         }
     });
 
-    function takeDamage(amount: number, fromDirection?: THREE.Vector3) {
-        if (!state.alive || destroyed || spawning) return;
+    function damageShield(amount: number) {
+        if (state.shieldHealth <= 0 || shieldBreaking) return;
+        shieldFlashTimer = SHIELD_FLASH_DURATION;
+        state.shieldHealth -= amount;
 
-        // Nullcube shield check: absorb damage from the front face
-        if (enemyDef.type === 'nullcube' && fromDirection) {
-            const dot = fromDirection.dot(state.shieldDirection);
-            // If the projectile is coming from the front (dot < 0 means
-            // projectile direction opposes shield facing), absorb it
-            if (dot < -0.3) {
-                hitFlashTimer = HIT_FLASH_DURATION * 0.5;
-                return;
+        if (shieldMesh) {
+            const mat = shieldMesh.material as THREE.ShaderMaterial;
+            mat.uniforms.uShieldHealth.value = state.shieldHealth / state.shieldMaxHealth;
+        }
+
+        if (state.shieldHealth <= 0) {
+            state.shieldHealth = 0;
+            state.shieldPosition = null;
+            shieldBreaking = true;
+            shieldBreakTimer = 0;
+
+            if (shieldMesh) {
+                const worldPos = new THREE.Vector3();
+                shieldMesh.getWorldPosition(worldPos);
+                shieldBreakBurst([worldPos.x, worldPos.y, worldPos.z]);
             }
         }
+    }
+
+    function takeDamage(amount: number, _fromDirection?: THREE.Vector3) {
+        if (!state.alive || destroyed || spawning) return;
 
         state.health -= amount;
         hitFlashTimer = HIT_FLASH_DURATION;
@@ -711,9 +956,10 @@ export function EnemyNode(props: EnemyNodeProps) {
             state.alive = false;
             props.onDeath?.(position.clone(), enemyDef);
 
-            // Start shatter: hide main mesh + aura, spawn fragments
+            // Start shatter: hide main mesh + aura + shield, spawn fragments
             mesh.visible = false;
             auraMesh.visible = false;
+            if (shieldMesh) shieldMesh.visible = false;
             shattering = true;
 
             const geo = mesh.geometry;
@@ -1024,9 +1270,9 @@ export function EnemyNode(props: EnemyNodeProps) {
         }
     }
 
-    props.onReady?.({ state, takeDamage });
+    props.onReady?.({ state, takeDamage, damageShield });
 
-    return { state, takeDamage };
+    return { state, takeDamage, damageShield };
 }
 
 function createGeometry(def: EnemyDef): THREE.BufferGeometry {
@@ -1039,8 +1285,6 @@ function createGeometry(def: EnemyDef): THREE.BufferGeometry {
                 def.radius * 1.4,
                 def.radius * 1.4,
             );
-        case 'eclipser':
-            return new THREE.DodecahedronGeometry(def.radius, 0);
     }
 }
 

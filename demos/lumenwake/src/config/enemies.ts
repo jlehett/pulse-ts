@@ -1,4 +1,4 @@
-export type EnemyType = 'shard' | 'nullcube' | 'eclipser';
+export type EnemyType = 'shard' | 'nullcube';
 
 export interface EnemyDef {
     type: EnemyType;
@@ -42,21 +42,7 @@ export const ENEMY_NULLCUBE: EnemyDef = {
     pulseAmount: 0.2,
 };
 
-export const ENEMY_ECLIPSER: EnemyDef = {
-    type: 'eclipser',
-    name: 'Eclipser',
-    health: 60,
-    moveSpeed: 2.0,
-    contactDamage: 10,
-    radius: 0.6,
-    color: 0x080510,
-    glowColor: 0x7744cc,
-    pulseSpeed: 1.0,
-    pulseAmount: 0.35,
-};
-
 export const ALL_ENEMIES: EnemyDef[] = [
     ENEMY_SHARD,
     ENEMY_NULLCUBE,
-    ENEMY_ECLIPSER,
 ];

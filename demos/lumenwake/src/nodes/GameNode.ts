@@ -163,6 +163,10 @@ export function GameNode(props?: Readonly<GameNodeProps>) {
         },
     });
 
+    const _shieldBaseColor = new THREE.Color(0x6622aa);
+    const _shieldDamageColor = new THREE.Color(0.9, 0.25, 0.35);
+    const _shieldGlowColor = new THREE.Color();
+
     // Projectile-enemy collision detection
     useFrameUpdate(() => {
         const enemies = spawner.getEnemies();
@@ -182,6 +186,36 @@ export function GameNode(props?: Readonly<GameNodeProps>) {
                 if (proj.piercing && proj.hitEnemies.has(enemy)) continue;
 
                 const pn = proj.position.clone().normalize();
+
+                // Piercing projectiles pass through shields; others check shield first
+                if (!proj.piercing && enemy.state.shieldPosition) {
+                    const sn = enemy.state.shieldPosition.clone().normalize();
+                    const shieldCos = pn.dot(sn);
+                    const shieldArcDist =
+                        Math.acos(Math.min(1, Math.max(-1, shieldCos))) *
+                        map.sphereRadius;
+
+                    if (shieldArcDist < enemy.state.shieldRadius) {
+                        enemy.damageShield(proj.damage);
+                        const sp = enemy.state.shieldPosition ?? enemy.state.position;
+                        planetoid.addImpactSplat(
+                            sp.x, sp.y, sp.z, classColor,
+                        );
+                        hitSparks([
+                            proj.position.x,
+                            proj.position.y,
+                            proj.position.z,
+                        ]);
+
+                        if (!proj.isAoE) {
+                            proj.alive = false;
+                            world.remove(proj.node);
+                            break;
+                        }
+                        continue;
+                    }
+                }
+
                 const en = enemy.state.position.clone().normalize();
                 const cosAngle = pn.dot(en);
                 const arcDist =
@@ -193,12 +227,7 @@ export function GameNode(props?: Readonly<GameNodeProps>) {
                     : enemy.state.enemyDef.radius + 0.5;
 
                 if (arcDist < hitRange) {
-                    const fromDir = geodesicDirection(
-                        enemy.state.position,
-                        proj.position,
-                    );
-
-                    enemy.takeDamage(proj.damage, fromDir);
+                    enemy.takeDamage(proj.damage);
                     const hitPos = enemy.state.position;
                     planetoid.addImpactSplat(
                         hitPos.x,
@@ -221,6 +250,20 @@ export function GameNode(props?: Readonly<GameNodeProps>) {
                     }
                 }
             }
+        }
+
+        // Shield glow — active shields emit lumenwake on the surface below
+        for (const enemy of enemies) {
+            if (!enemy.state.alive || !enemy.state.shieldPosition) continue;
+            const sp = enemy.state.shieldPosition;
+            const surfacePos = sp.clone().normalize().multiplyScalar(map.sphereRadius);
+            const healthRatio = enemy.state.shieldMaxHealth > 0
+                ? enemy.state.shieldHealth / enemy.state.shieldMaxHealth
+                : 1;
+            _shieldGlowColor.copy(_shieldBaseColor).lerp(_shieldDamageColor, 1 - healthRatio);
+            planetoid.addProjectileTrailPoint(
+                surfacePos.x, surfacePos.y, surfacePos.z, _shieldGlowColor, 1.5,
+            );
         }
     });
 
