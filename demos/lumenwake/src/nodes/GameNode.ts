@@ -10,7 +10,7 @@ import { Node } from '@pulse-ts/core';
 import { useAmbientLight } from '@pulse-ts/three';
 import type { Transport } from '@pulse-ts/network';
 import { useConnection } from '@pulse-ts/network';
-import { installParticles } from '@pulse-ts/effects';
+import { installParticles, useParticleBurst } from '@pulse-ts/effects';
 import { GameCtx, type GameState } from '../contexts';
 import { CameraNode } from './CameraNode';
 import { ArenaNode } from './arena/ArenaNode';
@@ -88,6 +88,18 @@ export function GameNode(props?: Readonly<GameNodeProps>) {
     const world = useWorld();
     const parentNode = useNode();
 
+    const hitSparks = useParticleBurst({
+        count: 16,
+        lifetime: 0.6,
+        color: classDef.color,
+        speed: [5, 12],
+        gravity: 3,
+        size: 0.4,
+        shrink: true,
+        opacity: 1.0,
+        blending: 'additive',
+    });
+
     // Player setup
     const spawnCoord = map.playerSpawns[playerIndex % map.playerSpawns.length];
     const spawnPos = sphereToWorld(spawnCoord, map.sphereRadius);
@@ -138,6 +150,8 @@ export function GameNode(props?: Readonly<GameNodeProps>) {
     // Enemy spawner
     const spawner = EnemySpawnerNode({
         map,
+        glowTexture: planetoid.glowTexture,
+        getDarknessLevel: () => planetoid.getDarknessLevel(),
         getPlayerPositions: () =>
             playerState.alive ? [playerState.position] : [],
         onContactDamage: (damage) => {
@@ -164,7 +178,7 @@ export function GameNode(props?: Readonly<GameNodeProps>) {
             if (!proj.alive) continue;
 
             for (const enemy of enemies) {
-                if (!enemy.state.alive) continue;
+                if (!enemy.state.alive || enemy.state.spawning) continue;
                 if (proj.piercing && proj.hitEnemies.has(enemy)) continue;
 
                 const pn = proj.position.clone().normalize();
@@ -185,6 +199,18 @@ export function GameNode(props?: Readonly<GameNodeProps>) {
                     );
 
                     enemy.takeDamage(proj.damage, fromDir);
+                    const hitPos = enemy.state.position;
+                    planetoid.addImpactSplat(
+                        hitPos.x,
+                        hitPos.y,
+                        hitPos.z,
+                        classColor,
+                    );
+                    hitSparks([
+                        proj.position.x,
+                        proj.position.y,
+                        proj.position.z,
+                    ]);
 
                     if (proj.piercing) {
                         proj.hitEnemies.add(enemy);

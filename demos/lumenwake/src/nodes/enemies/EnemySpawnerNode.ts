@@ -15,6 +15,8 @@ export type { EnemyHandle } from './EnemyNode';
 
 export interface EnemySpawnerProps {
     map: MapConfig;
+    glowTexture: THREE.Texture;
+    getDarknessLevel: () => number;
     getPlayerPositions: () => THREE.Vector3[];
     onContactDamage?: (damage: number) => void;
 }
@@ -58,6 +60,8 @@ export function EnemySpawnerNode(props: EnemySpawnerProps) {
                 enemyDef,
                 sphereRadius: map.sphereRadius,
                 startPosition,
+                glowTexture: props.glowTexture,
+                getDarknessLevel: props.getDarknessLevel,
                 getPlayerPositions: props.getPlayerPositions,
                 onReady: (h) => {
                     handle = h;
@@ -94,7 +98,7 @@ export function EnemySpawnerNode(props: EnemySpawnerProps) {
         if (contactDamageCooldown <= 0) {
             const players = props.getPlayerPositions();
             for (const enemy of enemies) {
-                if (!enemy.state.alive) continue;
+                if (!enemy.state.alive || enemy.state.spawning) continue;
                 for (const playerPos of players) {
                     const cosAngle = enemy.state.position
                         .clone()

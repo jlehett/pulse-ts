@@ -8,7 +8,7 @@ const PROJ_TRAIL_LENGTH = 2048;
 const GLOW_WIDTH = 2048;
 const GLOW_HEIGHT = 1024;
 const MAX_TRAIL_SPLATS = PLAYER_TRAIL_LENGTH * 2;
-const MAX_ADD_SPLATS = (8 + PROJ_TRAIL_LENGTH) * 2;
+const MAX_ADD_SPLATS = (8 + PROJ_TRAIL_LENGTH + 32) * 2;
 
 const SURFACE_VERTEX = /* glsl */ `
     varying vec3 vWorldPos;
@@ -136,6 +136,14 @@ export function PlanetoidNode(props: PlanetoidProps) {
     // Projectile trail stored in flat arrays
     const projTrailData = new Float32Array(PROJ_TRAIL_LENGTH * 5); // x, y, z, age, intensity
     const projTrailColorData = new Float32Array(PROJ_TRAIL_LENGTH * 3);
+
+    // Impact splats — longer-lived glow at projectile hit locations
+    const IMPACT_MAX = 32;
+    const IMPACT_LIFETIME = 3.5;
+    const IMPACT_RADIUS = 4.5;
+    let impactCount = 0;
+    const impactData = new Float32Array(IMPACT_MAX * 4); // x, y, z, age
+    const impactColorData = new Float32Array(IMPACT_MAX * 3);
 
     // GPU splat render target
     const glowRT = new THREE.WebGLRenderTarget(GLOW_WIDTH, GLOW_HEIGHT, {
@@ -522,6 +530,17 @@ export function PlanetoidNode(props: PlanetoidProps) {
             projTrailCount--;
         }
 
+        // Age impact splats
+        for (let i = 0; i < impactCount; i++) {
+            impactData[i * 4 + 3] += dt;
+        }
+        while (
+            impactCount > 0 &&
+            impactData[(impactCount - 1) * 4 + 3] >= IMPACT_LIFETIME
+        ) {
+            impactCount--;
+        }
+
         // Fill trail splat instances (MAX blending — no stacking)
         let trailIdx = 0;
         const tCenters = trailSplat.center.array as Float32Array;
@@ -606,6 +625,26 @@ export function PlanetoidNode(props: PlanetoidProps) {
             );
         }
 
+        for (let i = 0; i < impactCount; i++) {
+            const age = impactData[i * 4 + 3];
+            const fade = 1 - age / IMPACT_LIFETIME;
+            addIdx = addInstance(
+                addIdx,
+                impactData[i * 4],
+                impactData[i * 4 + 1],
+                impactData[i * 4 + 2],
+                impactColorData[i * 3],
+                impactColorData[i * 3 + 1],
+                impactColorData[i * 3 + 2],
+                IMPACT_RADIUS,
+                0.5 * fade * fade,
+                aCenters,
+                aColors,
+                aRS,
+                aUO,
+            );
+        }
+
         addSplat.geo.instanceCount = addIdx;
         addSplat.center.needsUpdate = true;
         addSplat.colorFade.needsUpdate = true;
@@ -634,6 +673,10 @@ export function PlanetoidNode(props: PlanetoidProps) {
 
     return {
         uniforms,
+        glowTexture: glowRT.texture,
+        getDarknessLevel() {
+            return uniforms.uDarknessLevel.value as number;
+        },
         setDarknessLevel(level: number) {
             uniforms.uDarknessLevel.value = Math.max(0, Math.min(1, level));
         },
@@ -693,6 +736,31 @@ export function PlanetoidNode(props: PlanetoidProps) {
                 playerTrailCount + 1,
                 PLAYER_TRAIL_LENGTH,
             );
+        },
+        addImpactSplat(x: number, y: number, z: number, color: THREE.Color) {
+            if (impactCount >= IMPACT_MAX) return;
+            const lastIdx = Math.min(impactCount, IMPACT_MAX - 1);
+            for (let i = lastIdx; i > 0; i--) {
+                const dst4 = i * 4;
+                const src4 = (i - 1) * 4;
+                impactData[dst4] = impactData[src4];
+                impactData[dst4 + 1] = impactData[src4 + 1];
+                impactData[dst4 + 2] = impactData[src4 + 2];
+                impactData[dst4 + 3] = impactData[src4 + 3];
+                const dst3 = i * 3;
+                const src3 = (i - 1) * 3;
+                impactColorData[dst3] = impactColorData[src3];
+                impactColorData[dst3 + 1] = impactColorData[src3 + 1];
+                impactColorData[dst3 + 2] = impactColorData[src3 + 2];
+            }
+            impactData[0] = x;
+            impactData[1] = y;
+            impactData[2] = z;
+            impactData[3] = 0;
+            impactColorData[0] = color.r;
+            impactColorData[1] = color.g;
+            impactColorData[2] = color.b;
+            impactCount = Math.min(impactCount + 1, IMPACT_MAX);
         },
         addProjectileTrailPoint(
             x: number,
