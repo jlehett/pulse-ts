@@ -60,12 +60,6 @@ function abilityIcon(name: string, color: string): string {
     )}`;
 }
 
-function formatTime(seconds: number): string {
-    const m = Math.floor(seconds / 60);
-    const s = Math.floor(seconds % 60);
-    return `${m}:${s.toString().padStart(2, '0')}`;
-}
-
 export function HudNode(props: HudProps) {
     const { playerState, classDef, gameState } = props;
     const color = '#' + classDef.color.toString(16).padStart(6, '0');
@@ -79,6 +73,10 @@ export function HudNode(props: HudProps) {
         @keyframes lw-low-pulse {
             0%, 100% { opacity: 0.6; }
             50% { opacity: 1.0; }
+        }
+        @keyframes lw-timer-blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.2; }
         }
         @keyframes lw-countdown-pop {
             0% { transform: translate(-50%, -50%) scale(1.4); opacity: 0.5; }
@@ -146,15 +144,21 @@ export function HudNode(props: HudProps) {
                     gap: '16px',
                     opacity: () => {
                         const p = gameState.phase;
-                        return p === 'countdown' || p === 'wave_clear'
-                            || p === 'victory' || p === 'defeat'
-                            ? '1' : '0';
+                        return p === 'countdown' ||
+                            p === 'wave_clear' ||
+                            p === 'victory' ||
+                            p === 'defeat'
+                            ? '1'
+                            : '0';
                     },
                     visibility: () => {
                         const p = gameState.phase;
-                        return p === 'countdown' || p === 'wave_clear'
-                            || p === 'victory' || p === 'defeat'
-                            ? 'visible' : 'hidden';
+                        return p === 'countdown' ||
+                            p === 'wave_clear' ||
+                            p === 'victory' ||
+                            p === 'defeat'
+                            ? 'visible'
+                            : 'hidden';
                     },
                     transition: 'opacity 0.3s ease',
                     filter: 'drop-shadow(0 4px 30px rgba(0,0,0,0.8))',
@@ -168,13 +172,17 @@ export function HudNode(props: HudProps) {
                         color: () => {
                             if (gameState.phase === 'victory') return '#44ff88';
                             if (gameState.phase === 'defeat') return '#ff3333';
-                            if (gameState.phase === 'wave_clear') return '#88bbff';
+                            if (gameState.phase === 'wave_clear')
+                                return '#88bbff';
                             return '#ffcc44';
                         },
                         textShadow: () => {
-                            if (gameState.phase === 'victory') return '0 0 30px #44ff8866';
-                            if (gameState.phase === 'defeat') return '0 0 30px #ff333366';
-                            if (gameState.phase === 'wave_clear') return '0 0 30px #88bbff44';
+                            if (gameState.phase === 'victory')
+                                return '0 0 30px #44ff8866';
+                            if (gameState.phase === 'defeat')
+                                return '0 0 30px #ff333366';
+                            if (gameState.phase === 'wave_clear')
+                                return '0 0 30px #88bbff44';
                             return '0 0 30px #ffcc4444';
                         },
                     }}
@@ -182,7 +190,8 @@ export function HudNode(props: HudProps) {
                     {() => {
                         if (gameState.phase === 'victory') return 'VICTORY';
                         if (gameState.phase === 'defeat') return 'DEFEATED';
-                        if (gameState.phase === 'wave_clear') return 'WAVE CLEAR';
+                        if (gameState.phase === 'wave_clear')
+                            return 'WAVE CLEAR';
                         return 'GET READY';
                     }}
                 </div>
@@ -196,14 +205,17 @@ export function HudNode(props: HudProps) {
                             return 'rgba(255, 255, 255, 0.9)';
                         },
                         textShadow: () => {
-                            if (gameState.phase === 'victory') return '0 0 60px #44ff8844';
-                            if (gameState.phase === 'defeat') return '0 0 60px #ff333344';
+                            if (gameState.phase === 'victory')
+                                return '0 0 60px #44ff8844';
+                            if (gameState.phase === 'defeat')
+                                return '0 0 60px #ff333344';
                             return '0 0 60px rgba(255,255,255,0.15)';
                         },
                         visibility: () => {
                             const p = gameState.phase;
                             return p === 'countdown' || p === 'wave_clear'
-                                ? 'visible' : 'hidden';
+                                ? 'visible'
+                                : 'hidden';
                         },
                     }}
                 >
@@ -215,7 +227,9 @@ export function HudNode(props: HudProps) {
                         letterSpacing: '5px',
                         color: 'rgba(255, 255, 255, 0.4)',
                         visibility: () =>
-                            gameState.phase === 'wave_clear' ? 'visible' : 'hidden',
+                            gameState.phase === 'wave_clear'
+                                ? 'visible'
+                                : 'hidden',
                     }}
                 >
                     {() => `NEXT: WAVE ${gameState.wave + 1}`}
@@ -251,7 +265,8 @@ export function HudNode(props: HudProps) {
                             return 'rgba(255, 255, 255, 0.7)';
                         },
                         textShadow: () => {
-                            if (gameState.phase === 'boss') return '0 0 20px #ff664488';
+                            if (gameState.phase === 'boss')
+                                return '0 0 20px #ff664488';
                             return '0 0 10px rgba(255,255,255,0.1)';
                         },
                     }}
@@ -274,7 +289,8 @@ export function HudNode(props: HudProps) {
                                 width: '24px',
                                 height: '6px',
                                 background: () => {
-                                    if (i < gameState.wave - 1) return 'rgba(68, 255, 136, 0.7)';
+                                    if (i < gameState.wave - 1)
+                                        return 'rgba(68, 255, 136, 0.7)';
                                     if (i === gameState.wave - 1) return color;
                                     return 'rgba(255, 255, 255, 0.15)';
                                 },
@@ -307,7 +323,9 @@ export function HudNode(props: HudProps) {
                         },
                         visibility: () => {
                             const p = gameState.phase;
-                            return p === 'playing' || p === 'boss' ? 'visible' : 'hidden';
+                            return p === 'playing' || p === 'boss'
+                                ? 'visible'
+                                : 'hidden';
                         },
                     }}
                 >
@@ -319,15 +337,53 @@ export function HudNode(props: HudProps) {
             <div
                 style={{
                     position: 'absolute',
-                    top: '24px',
+                    top: '20px',
                     right: '28px',
-                    font: '13px monospace',
-                    color: 'rgba(255, 255, 255, 0.5)',
-                    letterSpacing: '2px',
-                    filter: 'drop-shadow(0 1px 4px rgba(0,0,0,0.5))',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '2px',
+                    filter: 'drop-shadow(0 2px 12px rgba(0,0,0,0.7))',
                 }}
             >
-                {() => formatTime(gameState.matchTime)}
+                {/* Minutes */}
+                <div
+                    style={{
+                        font: 'bold 28px monospace',
+                        color: 'rgba(255, 255, 255, 0.75)',
+                        letterSpacing: '2px',
+                        textShadow: '0 0 12px rgba(255,255,255,0.1)',
+                    }}
+                >
+                    {() => {
+                        const m = Math.floor(gameState.matchTime / 60);
+                        return m.toString();
+                    }}
+                </div>
+                {/* Pulsing colon separator */}
+                <div
+                    style={{
+                        font: 'bold 26px monospace',
+                        color: 'rgba(255, 255, 255, 0.5)',
+                        animation: 'lw-timer-blink 1s steps(2, start) infinite',
+                        marginBottom: '2px',
+                    }}
+                >
+                    :
+                </div>
+                {/* Seconds */}
+                <div
+                    style={{
+                        font: 'bold 28px monospace',
+                        color: 'rgba(255, 255, 255, 0.75)',
+                        letterSpacing: '2px',
+                        textShadow: '0 0 12px rgba(255,255,255,0.1)',
+                    }}
+                >
+                    {() => {
+                        const s = Math.floor(gameState.matchTime % 60);
+                        return s.toString().padStart(2, '0');
+                    }}
+                </div>
             </div>
 
             {/* Damage vignette */}

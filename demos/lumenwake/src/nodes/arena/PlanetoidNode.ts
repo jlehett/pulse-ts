@@ -642,7 +642,7 @@ export function PlanetoidNode(props: PlanetoidProps) {
         uSunStrength: { value: 1.0 },
     };
 
-    const planetoidMesh = useCustomMesh({
+    useCustomMesh({
         geometry: () => new THREE.SphereGeometry(map.sphereRadius, 384, 256),
         material: () =>
             new THREE.ShaderMaterial({
@@ -655,7 +655,8 @@ export function PlanetoidNode(props: PlanetoidProps) {
     // Atmospheric corona — Fresnel rim glow, sun-tinted on lit side
     const coronaScale = 1.5;
     const coronaMesh = useCustomMesh({
-        geometry: () => new THREE.SphereGeometry(map.sphereRadius * coronaScale, 128, 64),
+        geometry: () =>
+            new THREE.SphereGeometry(map.sphereRadius * coronaScale, 128, 64),
         material: () =>
             new THREE.ShaderMaterial({
                 uniforms: {
@@ -824,8 +825,10 @@ export function PlanetoidNode(props: PlanetoidProps) {
         const lerpFactor = 1 - Math.exp(-LIGHTING_LERP_SPEED * dt);
         const curLumen = uniforms.uBaseLumenwake.value as number;
         const curSun = uniforms.uSunStrength.value as number;
-        uniforms.uBaseLumenwake.value = curLumen + (targetBaseLumenwake - curLumen) * lerpFactor;
-        uniforms.uSunStrength.value = curSun + (targetSunStrength - curSun) * lerpFactor;
+        uniforms.uBaseLumenwake.value =
+            curLumen + (targetBaseLumenwake - curLumen) * lerpFactor;
+        uniforms.uSunStrength.value =
+            curSun + (targetSunStrength - curSun) * lerpFactor;
 
         // Slowly orbit the sun — creates shifting light/dark hemispheres
         _sunRotQ.setFromAxisAngle(orbitAxis, SUN_ORBIT_SPEED * dt);
@@ -1092,7 +1095,8 @@ export function PlanetoidNode(props: PlanetoidProps) {
             impactColorData[1] = color.g;
             impactColorData[2] = color.b;
             impactCount = Math.min(impactCount + 1, IMPACT_MAX);
-        },        addProjectileTrailPoint(
+        },
+        addProjectileTrailPoint(
             x: number,
             y: number,
             z: number,

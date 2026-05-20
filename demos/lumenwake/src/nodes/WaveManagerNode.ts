@@ -44,7 +44,6 @@ export function WaveManagerNode(props: WaveManagerProps) {
     let spawnTimer = 0;
     let totalSpawned = 0;
     let totalToSpawn = 0;
-    let totalKilled = 0;
 
     gameState.phase = 'countdown';
     gameState.wave = 1;
@@ -81,7 +80,8 @@ export function WaveManagerNode(props: WaveManagerProps) {
         spawnTimer = 0.1;
 
         phase = 'spawning';
-        gameState.phase = currentWaveIndex === TOTAL_WAVES - 1 ? 'boss' : 'playing';
+        gameState.phase =
+            currentWaveIndex === TOTAL_WAVES - 1 ? 'boss' : 'playing';
         gameState.wave = index + 1;
         gameState.enemiesTotal = totalToSpawn;
         gameState.enemiesRemaining = totalToSpawn;
@@ -95,7 +95,11 @@ export function WaveManagerNode(props: WaveManagerProps) {
         gameState.matchTime += dt;
 
         // Lose condition: player dead
-        if (phase !== 'defeat' && phase !== 'victory' && !props.isPlayerAlive()) {
+        if (
+            phase !== 'defeat' &&
+            phase !== 'victory' &&
+            !props.isPlayerAlive()
+        ) {
             phase = 'defeat';
             gameState.phase = 'defeat';
             return;
