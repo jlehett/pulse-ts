@@ -76,7 +76,6 @@ export function WaveManagerNode(props: WaveManagerProps) {
         spawnQueue = buildSpawnQueue(scaledWave);
         totalToSpawn = spawnQueue.length;
         totalSpawned = 0;
-        totalKilled = 0;
         spawnTimer = 0.1;
 
         phase = 'spawning';
@@ -85,10 +84,6 @@ export function WaveManagerNode(props: WaveManagerProps) {
         gameState.wave = index + 1;
         gameState.enemiesTotal = totalToSpawn;
         gameState.enemiesRemaining = totalToSpawn;
-    }
-
-    function onEnemyKilled() {
-        totalKilled++;
     }
 
     useFrameUpdate((dt) => {
@@ -168,7 +163,7 @@ export function WaveManagerNode(props: WaveManagerProps) {
     });
 
     return {
-        onEnemyKilled,
+        onEnemyKilled() {},
         getWavePhase(): WavePhase {
             return phase;
         },
