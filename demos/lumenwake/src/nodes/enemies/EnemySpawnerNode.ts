@@ -6,6 +6,7 @@ import { ALL_ENEMIES } from '../../config/enemies';
 import { EnemyNode, type EnemyHandle } from './EnemyNode';
 import type { MapConfig, SpawnPoint } from '../../config/maps';
 import { sphereToWorld } from '../../config/maps';
+import { geodesicDirection } from '../../utils/sphereMovement';
 
 const SPAWN_INTERVAL = 3.0;
 const MAX_ENEMIES = 20;
@@ -16,9 +17,10 @@ export type { EnemyHandle } from './EnemyNode';
 export interface EnemySpawnerProps {
     map: MapConfig;
     glowTexture: THREE.Texture;
+    playerRadius: number;
     getDarknessLevel: () => number;
     getPlayerPositions: () => THREE.Vector3[];
-    onContactDamage?: (damage: number) => void;
+    onContactDamage?: (damage: number, enemyPosition: THREE.Vector3) => void;
 }
 
 /**
@@ -100,17 +102,52 @@ export function EnemySpawnerNode(props: EnemySpawnerProps) {
             for (const enemy of enemies) {
                 if (!enemy.state.alive || enemy.state.spawning) continue;
                 for (const playerPos of players) {
-                    const cosAngle = enemy.state.position
-                        .clone()
-                        .normalize()
-                        .dot(playerPos.clone().normalize());
-                    const arcDist =
-                        Math.acos(Math.min(1, Math.max(-1, cosAngle))) *
-                        map.sphereRadius;
-                    const contactRange = enemy.state.enemyDef.radius + 0.6;
-                    if (arcDist < contactRange) {
+                    let hit = false;
+                    const pn = playerPos.clone().normalize();
+
+                    // Check shield collision first
+                    if (enemy.state.shieldPosition) {
+                        const sn = enemy.state.shieldPosition
+                            .clone()
+                            .normalize();
+                        const shieldCos = pn.dot(sn);
+                        const shieldArcDist =
+                            Math.acos(Math.min(1, Math.max(-1, shieldCos))) *
+                            map.sphereRadius;
+                        if (
+                            shieldArcDist <
+                            enemy.state.shieldRadius * 0.6 + props.playerRadius
+                        ) {
+                            hit = true;
+                        }
+                    }
+
+                    // Check body collision
+                    if (!hit) {
+                        const en = enemy.state.position.clone().normalize();
+                        const cosAngle = pn.dot(en);
+                        const arcDist =
+                            Math.acos(Math.min(1, Math.max(-1, cosAngle))) *
+                            map.sphereRadius;
+                        const contactRange =
+                            enemy.state.enemyDef.radius + props.playerRadius;
+                        if (arcDist < contactRange) {
+                            hit = true;
+                        }
+                    }
+
+                    if (hit) {
                         props.onContactDamage?.(
                             enemy.state.enemyDef.contactDamage,
+                            enemy.state.position,
+                        );
+                        const knockDir = geodesicDirection(
+                            playerPos,
+                            enemy.state.position,
+                        );
+                        enemy.applyKnockback(
+                            knockDir,
+                            enemy.state.enemyDef.moveSpeed * 4,
                         );
                         contactDamageCooldown = CONTACT_DAMAGE_COOLDOWN;
                         break;

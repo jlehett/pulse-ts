@@ -117,6 +117,17 @@ export function HudNode(props: HudProps) {
                 pointerEvents: 'none',
             }}
         >
+            {/* Damage vignette */}
+            <div
+                style={{
+                    position: 'absolute',
+                    inset: '0',
+                    background:
+                        'radial-gradient(ellipse at center, transparent 40%, rgba(180, 20, 10, 0.6) 100%)',
+                    opacity: () => `${playerState.damageFlash}`,
+                    transition: 'opacity 0.05s linear',
+                }}
+            />
             {/* Health bar — bottom center */}
             <div
                 style={{

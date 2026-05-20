@@ -32,6 +32,7 @@ export interface EnemyHandle {
     state: EnemyState;
     takeDamage: (amount: number, fromDirection?: THREE.Vector3) => void;
     damageShield: (amount: number) => void;
+    applyKnockback: (direction: THREE.Vector3, strength: number) => void;
 }
 
 export interface EnemyNodeProps {
@@ -391,7 +392,11 @@ export function EnemyNode(props: EnemyNodeProps) {
         const shieldWidth = enemyDef.radius * 3.5;
         const shieldHeight = enemyDef.radius * 3.0;
         const shieldDepth = enemyDef.radius * 0.15;
-        const shieldGeo = new THREE.BoxGeometry(shieldWidth, shieldHeight, shieldDepth);
+        const shieldGeo = new THREE.BoxGeometry(
+            shieldWidth,
+            shieldHeight,
+            shieldDepth,
+        );
         const shieldMat = new THREE.ShaderMaterial({
             uniforms: {
                 uGlowColor: uniforms.uGlowColor,
@@ -559,6 +564,14 @@ export function EnemyNode(props: EnemyNodeProps) {
     let hitFlashTimer = 0;
     let shieldFlashTimer = 0;
     const SHIELD_FLASH_DURATION = 0.2;
+    const knockbackVelocity = new THREE.Vector3();
+    const KNOCKBACK_FRICTION = 5.0;
+    let wanderTimer = Math.random() * 2;
+    const wanderDir = new THREE.Vector3(
+        Math.random() - 0.5,
+        Math.random() - 0.5,
+        Math.random() - 0.5,
+    ).normalize();
     let destroyed = false;
     let spawning = true;
     let spawnTimer = 0;
@@ -586,7 +599,8 @@ export function EnemyNode(props: EnemyNodeProps) {
         forward,
         enemyDef,
         shieldDirection: new THREE.Vector3(0, 0, 1),
-        shieldPosition: enemyDef.type === 'nullcube' ? new THREE.Vector3() : null,
+        shieldPosition:
+            enemyDef.type === 'nullcube' ? new THREE.Vector3() : null,
         shieldRadius: enemyDef.type === 'nullcube' ? enemyDef.radius * 1.75 : 0,
         shieldHealth: enemyDef.type === 'nullcube' ? 250 : 0,
         shieldMaxHealth: enemyDef.type === 'nullcube' ? 250 : 0,
@@ -764,9 +778,11 @@ export function EnemyNode(props: EnemyNodeProps) {
                 return;
             }
 
-            const fadeProgress = shatterTimer > SHATTER_FADE_START
-                ? (shatterTimer - SHATTER_FADE_START) / (SHATTER_DURATION - SHATTER_FADE_START)
-                : 0;
+            const fadeProgress =
+                shatterTimer > SHATTER_FADE_START
+                    ? (shatterTimer - SHATTER_FADE_START) /
+                      (SHATTER_DURATION - SHATTER_FADE_START)
+                    : 0;
             const opacity = 1 - fadeProgress;
             const gravity = 15;
             const bounce = 0.4;
@@ -775,7 +791,6 @@ export function EnemyNode(props: EnemyNodeProps) {
             for (const frag of fragments) {
                 // World position of fragment
                 const worldPos = frag.mesh.position.clone().add(root.position);
-                const dist = worldPos.length();
 
                 // Gravity toward sphere center
                 const gravDir = worldPos.clone().normalize().negate();
@@ -788,18 +803,26 @@ export function EnemyNode(props: EnemyNodeProps) {
                 frag.mesh.rotation.z += frag.angularVel.z * dt;
 
                 // Bounce off planetoid surface
-                const newWorldPos = frag.mesh.position.clone().add(root.position);
+                const newWorldPos = frag.mesh.position
+                    .clone()
+                    .add(root.position);
                 const newDist = newWorldPos.length();
                 if (newDist < sphereRadius + 0.05) {
                     const surfaceNormal = newWorldPos.clone().normalize();
                     // Push back to surface
                     const correction = sphereRadius + 0.05 - newDist;
-                    frag.mesh.position.addScaledVector(surfaceNormal, correction);
+                    frag.mesh.position.addScaledVector(
+                        surfaceNormal,
+                        correction,
+                    );
 
                     // Reflect velocity across surface normal
                     const velDotN = frag.velocity.dot(surfaceNormal);
                     if (velDotN < 0) {
-                        frag.velocity.addScaledVector(surfaceNormal, -velDotN * (1 + bounce));
+                        frag.velocity.addScaledVector(
+                            surfaceNormal,
+                            -velDotN * (1 + bounce),
+                        );
                         frag.velocity.multiplyScalar(friction);
                         frag.angularVel.multiplyScalar(0.7);
                     }
@@ -844,7 +867,7 @@ export function EnemyNode(props: EnemyNodeProps) {
             }
         }
 
-        // Steer toward nearest player
+        // Steer toward nearest player, or wander idly
         if (nearestDir) {
             forward.lerp(nearestDir, Math.min(1, dt * 5));
             forward.normalize();
@@ -854,7 +877,41 @@ export function EnemyNode(props: EnemyNodeProps) {
             state.shieldDirection.normalize();
 
             const velocity = forward.clone().multiplyScalar(enemyDef.moveSpeed);
+            velocity.add(knockbackVelocity);
             moveSpherePosition(position, velocity, dt, sphereRadius);
+        } else {
+            // Idle wander — gentle random drift
+            wanderTimer -= dt;
+            if (wanderTimer <= 0) {
+                wanderTimer = 2 + Math.random() * 3;
+                const normal = position.clone().normalize();
+                const randDir = new THREE.Vector3(
+                    Math.random() - 0.5,
+                    Math.random() - 0.5,
+                    Math.random() - 0.5,
+                );
+                randDir
+                    .sub(normal.clone().multiplyScalar(randDir.dot(normal)))
+                    .normalize();
+                wanderDir.copy(randDir);
+            }
+            forward.lerp(wanderDir, Math.min(1, dt * 1.5));
+            forward.normalize();
+
+            const velocity = forward
+                .clone()
+                .multiplyScalar(enemyDef.moveSpeed * 0.3);
+            velocity.add(knockbackVelocity);
+            moveSpherePosition(position, velocity, dt, sphereRadius);
+        }
+
+        // Decay knockback
+        if (knockbackVelocity.lengthSq() > 0.01) {
+            knockbackVelocity.multiplyScalar(
+                Math.max(0, 1 - KNOCKBACK_FRICTION * dt),
+            );
+        } else {
+            knockbackVelocity.set(0, 0, 0);
         }
 
         const normal = position.clone().normalize();
@@ -874,7 +931,10 @@ export function EnemyNode(props: EnemyNodeProps) {
         if (shieldMesh && shieldBreaking) {
             shieldBreakTimer += dt;
             const mat = shieldMesh.material as THREE.ShaderMaterial;
-            const progress = Math.min(1, shieldBreakTimer / SHIELD_BREAK_DURATION);
+            const progress = Math.min(
+                1,
+                shieldBreakTimer / SHIELD_BREAK_DURATION,
+            );
             mat.uniforms.uBreakProgress.value = progress;
             if (progress >= 1) {
                 shieldBreaking = false;
@@ -887,9 +947,17 @@ export function EnemyNode(props: EnemyNodeProps) {
             const normal = position.clone().normalize();
             const shieldFwd = state.shieldDirection.clone();
             const shieldUp = normal;
-            const shieldRight = new THREE.Vector3().crossVectors(shieldUp, shieldFwd).normalize();
-            const correctedFwd = new THREE.Vector3().crossVectors(shieldRight, shieldUp).normalize();
-            const shieldMatrix = new THREE.Matrix4().makeBasis(shieldRight, shieldUp, correctedFwd);
+            const shieldRight = new THREE.Vector3()
+                .crossVectors(shieldUp, shieldFwd)
+                .normalize();
+            const correctedFwd = new THREE.Vector3()
+                .crossVectors(shieldRight, shieldUp)
+                .normalize();
+            const shieldMatrix = new THREE.Matrix4().makeBasis(
+                shieldRight,
+                shieldUp,
+                correctedFwd,
+            );
             shieldMesh.quaternion.setFromRotationMatrix(shieldMatrix);
             shieldMesh.position.copy(correctedFwd.multiplyScalar(shieldOffset));
 
@@ -900,7 +968,10 @@ export function EnemyNode(props: EnemyNodeProps) {
             if (shieldFlashTimer > 0) {
                 shieldFlashTimer -= dt;
                 const mat = shieldMesh.material as THREE.ShaderMaterial;
-                mat.uniforms.uShieldFlash.value = Math.max(0, shieldFlashTimer / SHIELD_FLASH_DURATION);
+                mat.uniforms.uShieldFlash.value = Math.max(
+                    0,
+                    shieldFlashTimer / SHIELD_FLASH_DURATION,
+                );
             }
         }
 
@@ -928,7 +999,8 @@ export function EnemyNode(props: EnemyNodeProps) {
 
         if (shieldMesh) {
             const mat = shieldMesh.material as THREE.ShaderMaterial;
-            mat.uniforms.uShieldHealth.value = state.shieldHealth / state.shieldMaxHealth;
+            mat.uniforms.uShieldHealth.value =
+                state.shieldHealth / state.shieldMaxHealth;
         }
 
         if (state.shieldHealth <= 0) {
@@ -945,7 +1017,7 @@ export function EnemyNode(props: EnemyNodeProps) {
         }
     }
 
-    function takeDamage(amount: number, _fromDirection?: THREE.Vector3) {
+    function takeDamage(amount: number) {
         if (!state.alive || destroyed || spawning) return;
 
         state.health -= amount;
@@ -965,9 +1037,7 @@ export function EnemyNode(props: EnemyNodeProps) {
             const geo = mesh.geometry;
             const posAttr = geo.getAttribute('position');
             const index = geo.getIndex();
-            const triCount = index
-                ? index.count / 3
-                : posAttr.count / 3;
+            const triCount = index ? index.count / 3 : posAttr.count / 3;
 
             const glowColor = new THREE.Color(enemyDef.glowColor);
             const thickness = enemyDef.radius * 0.15;
@@ -976,7 +1046,10 @@ export function EnemyNode(props: EnemyNodeProps) {
             const surfaceNormal = position.clone().normalize();
             const smokeHeight = enemyDef.radius * 10.0;
             const smokeWidth = enemyDef.radius * 3.0;
-            const smokeGeo = new THREE.IcosahedronGeometry(smokeHeight * 0.55, 3);
+            const smokeGeo = new THREE.IcosahedronGeometry(
+                smokeHeight * 0.55,
+                3,
+            );
             const smokeMat = new THREE.ShaderMaterial({
                 uniforms: {
                     uGlowColor: uniforms.uGlowColor,
@@ -1136,9 +1209,9 @@ export function EnemyNode(props: EnemyNodeProps) {
             });
             smokeMesh = new THREE.Mesh(smokeGeo, smokeMat);
             // Offset so the sphere's bottom is near the planetoid surface
-            const smokeOffset = surfaceNormal.clone().multiplyScalar(
-                -hoverHeight + smokeHeight * 0.1,
-            );
+            const smokeOffset = surfaceNormal
+                .clone()
+                .multiplyScalar(-hoverHeight + smokeHeight * 0.1);
             smokeMesh.position.copy(smokeOffset);
             root.add(smokeMesh);
 
@@ -1161,27 +1234,43 @@ export function EnemyNode(props: EnemyNodeProps) {
                 const edge1 = verts[1].clone().sub(verts[0]);
                 const edge2 = verts[2].clone().sub(verts[0]);
                 const faceNormal = edge1.cross(edge2).normalize();
-                const halfThick = faceNormal.clone().multiplyScalar(thickness * 0.5);
+                const halfThick = faceNormal
+                    .clone()
+                    .multiplyScalar(thickness * 0.5);
 
                 // Build extruded prism: 2 caps + 3 side quads = 8 triangles = 24 verts
                 const p = new Float32Array(24 * 3);
-                const frontVerts = verts.map((v) => v.clone().sub(centroid).add(halfThick));
-                const backVerts = verts.map((v) => v.clone().sub(centroid).sub(halfThick));
+                const frontVerts = verts.map((v) =>
+                    v.clone().sub(centroid).add(halfThick),
+                );
+                const backVerts = verts.map((v) =>
+                    v.clone().sub(centroid).sub(halfThick),
+                );
 
                 let vi = 0;
                 function pushVert(v: THREE.Vector3) {
-                    p[vi++] = v.x; p[vi++] = v.y; p[vi++] = v.z;
+                    p[vi++] = v.x;
+                    p[vi++] = v.y;
+                    p[vi++] = v.z;
                 }
 
                 // Front cap
-                pushVert(frontVerts[0]); pushVert(frontVerts[1]); pushVert(frontVerts[2]);
+                pushVert(frontVerts[0]);
+                pushVert(frontVerts[1]);
+                pushVert(frontVerts[2]);
                 // Back cap
-                pushVert(backVerts[2]); pushVert(backVerts[1]); pushVert(backVerts[0]);
+                pushVert(backVerts[2]);
+                pushVert(backVerts[1]);
+                pushVert(backVerts[0]);
                 // Side quads (3 sides, 2 triangles each)
                 for (let s = 0; s < 3; s++) {
                     const s2 = (s + 1) % 3;
-                    pushVert(frontVerts[s]); pushVert(backVerts[s]); pushVert(frontVerts[s2]);
-                    pushVert(frontVerts[s2]); pushVert(backVerts[s]); pushVert(backVerts[s2]);
+                    pushVert(frontVerts[s]);
+                    pushVert(backVerts[s]);
+                    pushVert(frontVerts[s2]);
+                    pushVert(frontVerts[s2]);
+                    pushVert(backVerts[s]);
+                    pushVert(backVerts[s2]);
                 }
 
                 const fragGeo = new THREE.BufferGeometry();
@@ -1270,9 +1359,13 @@ export function EnemyNode(props: EnemyNodeProps) {
         }
     }
 
-    props.onReady?.({ state, takeDamage, damageShield });
+    function applyKnockback(direction: THREE.Vector3, strength: number) {
+        knockbackVelocity.copy(direction).multiplyScalar(strength);
+    }
 
-    return { state, takeDamage, damageShield };
+    props.onReady?.({ state, takeDamage, damageShield, applyKnockback });
+
+    return { state, takeDamage, damageShield, applyKnockback };
 }
 
 function createGeometry(def: EnemyDef): THREE.BufferGeometry {

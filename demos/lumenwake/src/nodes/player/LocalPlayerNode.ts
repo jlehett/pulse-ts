@@ -48,8 +48,10 @@ export interface PlayerState {
     alive: boolean;
     position: THREE.Vector3;
     forward: THREE.Vector3;
+    damageFlash: number;
     invulnerable: boolean;
     invulnerableTimer: number;
+    barrierPosition: THREE.Vector3 | null;
     dashTimer: number;
     dashDirection: THREE.Vector3;
     ability1Cooldown: CooldownHandle | null;
@@ -91,6 +93,7 @@ export function LocalPlayerNode(props: LocalPlayerProps) {
         uniforms: {
             uColor: { value: threeColor.clone() },
             uIntensity: { value: 1.0 },
+            uDamageFlash: { value: 0.0 },
         },
         vertexShader: /* glsl */ `
             varying vec3 vNormal;
@@ -110,6 +113,7 @@ export function LocalPlayerNode(props: LocalPlayerProps) {
         fragmentShader: /* glsl */ `
             uniform vec3 uColor;
             uniform float uIntensity;
+            uniform float uDamageFlash;
 
             varying vec3 vNormal;
             varying vec3 vViewDir;
@@ -147,10 +151,14 @@ export function LocalPlayerNode(props: LocalPlayerProps) {
                 rim = pow(rim, 2.0);
                 finalColor += uColor * rim * 1.2 * uIntensity;
 
+                // Damage flash — shift toward red/white
+                finalColor = mix(finalColor, vec3(1.0, 0.2, 0.1) * 2.0, uDamageFlash);
+
                 // Alpha: soft/blurry falloff, overall more opaque
                 float alpha = (0.5 + centerGlow * 0.4) * facet * sideFactor;
                 alpha *= 0.85 + facing * 0.15;
                 alpha += rim * 0.3;
+                alpha = max(alpha, uDamageFlash * 0.6);
 
                 gl_FragColor = vec4(finalColor, clamp(alpha, 0.0, 0.9));
             }
@@ -239,8 +247,99 @@ export function LocalPlayerNode(props: LocalPlayerProps) {
     let chargeTime = 0;
     let isCharging = false;
 
+    // Death ragdoll state
+    let dead = false;
+    let deathTimer = 0;
+    const deathAngularVel = new THREE.Vector3();
+    const deathVelocity = new THREE.Vector3();
+    let deathBounceCount = 0;
+    const DEATH_DIM_DURATION = 1.5;
+
     useFrameUpdate((dt) => {
-        if (!state.alive) return;
+        if (!state.alive && !dead) {
+            dead = true;
+            deathTimer = 0;
+            barrierMesh.visible = false;
+            deathAngularVel.set(
+                (Math.random() - 0.5) * 12,
+                (Math.random() - 0.5) * 12,
+                (Math.random() - 0.5) * 12,
+            );
+            const normal = position.clone().normalize();
+            const tangent = new THREE.Vector3(
+                Math.random() - 0.5,
+                Math.random() - 0.5,
+                Math.random() - 0.5,
+            );
+            tangent
+                .sub(normal.clone().multiplyScalar(tangent.dot(normal)))
+                .normalize();
+            deathVelocity.copy(
+                normal.clone().multiplyScalar(3).add(tangent.multiplyScalar(2)),
+            );
+        }
+
+        if (dead) {
+            deathTimer += dt;
+
+            // Dim intensity — desaturate toward pale white with gentle pulse
+            const dimProgress = Math.min(1, deathTimer / DEATH_DIM_DURATION);
+            const pulse = 0.5 + 0.5 * Math.sin(deathTimer * 2.5);
+            const baseIntensity = Math.max(0.4, 1.0 - dimProgress * 0.6);
+            crystalMat.uniforms.uIntensity.value =
+                baseIntensity * (0.8 + pulse * 0.2);
+            crystalMat.uniforms.uColor.value
+                .copy(threeColor)
+                .lerp(new THREE.Color(0.7, 0.75, 0.9), dimProgress * 0.7);
+            state.damageFlash = pulse * 0.08;
+            crystalMat.uniforms.uDamageFlash.value = Math.max(
+                0,
+                1.0 - deathTimer * 5,
+            );
+
+            // Gravity toward sphere center
+            const gravDir = root.position.clone().normalize().negate();
+            deathVelocity.addScaledVector(gravDir, 20 * dt);
+
+            // Move
+            root.position.addScaledVector(deathVelocity, dt);
+
+            // Bounce off planetoid surface
+            const dist = root.position.length();
+            const surfaceHeight = sphereRadius + classDef.radius * 1.8;
+            if (dist < surfaceHeight) {
+                const surfNorm = root.position.clone().normalize();
+                root.position.copy(
+                    surfNorm.clone().multiplyScalar(surfaceHeight),
+                );
+                const velDotN = deathVelocity.dot(surfNorm);
+                if (velDotN < 0) {
+                    const bounce = deathBounceCount < 3 ? 0.3 : 0.0;
+                    deathVelocity.addScaledVector(
+                        surfNorm,
+                        -velDotN * (1 + bounce),
+                    );
+                    deathVelocity.multiplyScalar(0.6);
+                    deathAngularVel.multiplyScalar(0.5);
+                    deathBounceCount++;
+                }
+            }
+
+            // Tumble
+            mesh.rotation.x += deathAngularVel.x * dt;
+            mesh.rotation.y += deathAngularVel.y * dt;
+            mesh.rotation.z += deathAngularVel.z * dt;
+
+            // Keep reporting position for camera
+            position.copy(
+                root.position.clone().normalize().multiplyScalar(sphereRadius),
+            );
+            props.onPositionUpdate?.(position, forward);
+            return;
+        }
+
+        // Damage flash decay
+        crystalMat.uniforms.uDamageFlash.value = state.damageFlash;
 
         // Movement input → screen-relative velocity projected onto tangent plane
         const input = moveInput();
@@ -248,7 +347,6 @@ export function LocalPlayerNode(props: LocalPlayerProps) {
         if (input.x !== 0 || input.y !== 0) {
             const axes = props.getScreenAxes?.();
             if (axes) {
-                // Project camera screen axes onto the sphere tangent plane
                 const screenRight = axes.right.clone();
                 projectToTangent(screenRight, position);
                 const screenUp = axes.up.clone();
@@ -303,10 +401,10 @@ export function LocalPlayerNode(props: LocalPlayerProps) {
         root.position.copy(position);
         root.position.addScaledVector(normal, classDef.radius * 1.3);
 
-        // Tumble the crystal on multiple axes at different rates
+        // Gentle upright spin with a slight wobble
         mesh.rotation.y += dt * 1.2;
-        mesh.rotation.x += dt * 0.7;
-        mesh.rotation.z += dt * 0.4;
+        mesh.rotation.x = Math.sin(mesh.rotation.y * 0.7) * 0.15;
+        mesh.rotation.z = Math.cos(mesh.rotation.y * 0.5) * 0.1;
 
         // Primary fire — class-specific behavior
         const fire = fireAction();
@@ -354,8 +452,9 @@ export function LocalPlayerNode(props: LocalPlayerProps) {
                 // Prism Split — 3-way spread
                 const spreadAngle = Math.PI / 8;
                 const up = position.clone().normalize();
+                const shootDir = forward.clone();
                 for (let i = -1; i <= 1; i++) {
-                    const dir = forward.clone();
+                    const dir = shootDir.clone();
                     if (i !== 0) {
                         dir.applyAxisAngle(up, spreadAngle * i);
                     }
@@ -364,7 +463,7 @@ export function LocalPlayerNode(props: LocalPlayerProps) {
             }
             if (classDef.id === 'ward') {
                 state.invulnerable = true;
-                state.invulnerableTimer = 2.0;
+                state.invulnerableTimer = 3.0;
                 barrierMesh.visible = true;
                 barrierMat.uniforms.uOpacity.value = 0.8;
                 barrierMat.uniforms.uTime.value = 0;
@@ -426,12 +525,27 @@ export function LocalPlayerNode(props: LocalPlayerProps) {
             barrierMesh.position.set(localFwdX * dist, 0.6, localFwdZ * dist);
             barrierMesh.rotation.y =
                 -Math.atan2(localFwdZ, localFwdX) + Math.PI / 2;
+
+            // Expose barrier world position for collision
+            const bNorm = position.clone().normalize();
+            const bWorldFwd = forward
+                .clone()
+                .sub(bNorm.clone().multiplyScalar(forward.dot(bNorm)))
+                .normalize();
+            const angle = dist / sphereRadius;
+            state.barrierPosition = bNorm
+                .clone()
+                .multiplyScalar(Math.cos(angle))
+                .addScaledVector(bWorldFwd, Math.sin(angle))
+                .multiplyScalar(sphereRadius);
+
             if (state.invulnerableTimer < 0.5) {
                 barrierMat.uniforms.uOpacity.value =
                     (state.invulnerableTimer / 0.5) * 0.8;
             }
             if (state.invulnerableTimer <= 0) {
                 state.invulnerable = false;
+                state.barrierPosition = null;
                 barrierMesh.visible = false;
             }
         }

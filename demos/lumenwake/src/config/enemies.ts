@@ -42,7 +42,4 @@ export const ENEMY_NULLCUBE: EnemyDef = {
     pulseAmount: 0.2,
 };
 
-export const ALL_ENEMIES: EnemyDef[] = [
-    ENEMY_SHARD,
-    ENEMY_NULLCUBE,
-];
+export const ALL_ENEMIES: EnemyDef[] = [ENEMY_SHARD, ENEMY_NULLCUBE];
