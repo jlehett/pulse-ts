@@ -10,36 +10,113 @@ const GLOW_HEIGHT = 1024;
 const MAX_TRAIL_SPLATS = PLAYER_TRAIL_LENGTH * 2;
 const MAX_ADD_SPLATS = (8 + PROJ_TRAIL_LENGTH + 32) * 2;
 
+const WATER_DEPTH = 0.45;
+
 const SURFACE_VERTEX = /* glsl */ `
+    uniform sampler2D uWorleyMap;
+    uniform float uSphereRadius;
+    uniform float uTime;
     varying vec3 vWorldPos;
+    varying vec3 vSphereNormal;
+    varying float vWaterDepth;
 
     void main() {
-        vec4 worldPos = modelMatrix * vec4(position, 1.0);
+        vec3 n = normalize(position);
+        // Equirectangular UV to sample biome from Worley texture
+        float theta = atan(n.x, n.z);
+        float phi = asin(n.y);
+        vec2 eqUV = vec2(theta / 6.28318 + 0.5, phi / 3.14159 + 0.5);
+        float biome = texture2D(uWorleyMap, eqUV).b;
+
+        // Water weight — matches fragment shader thresholds
+        float waterWeight = smoothstep(0.52, 0.42, biome);
+        float landWeight = 1.0 - waterWeight;
+
+        // Sample terrain data for land displacement
+        vec4 worley = texture2D(uWorleyMap, eqUV);
+        float edge = worley.r;
+        float rough = worley.a;
+
+        // Land: smooth rolling hills from roughness noise + soft cell influence
+        float cellHeight = smoothstep(0.0, 0.5, edge);
+        float terrain = cellHeight * 0.08 + rough * 0.12;
+        float landDisp = terrain * landWeight;
+
+        // Water: sink below land + animated ripples
+        float depth = waterWeight * ${WATER_DEPTH.toFixed(1)};
+        float wave1 = sin(n.x * 8.0 + uTime * 1.2) * cos(n.z * 6.0 + uTime * 0.9);
+        float wave2 = sin(n.y * 10.0 - uTime * 0.7) * cos(n.x * 5.0 + uTime * 1.5);
+        float wave3 = sin((n.x + n.z) * 12.0 + uTime * 2.0) * 0.5;
+        float ripple = (wave1 + wave2 + wave3) * 0.11 * waterWeight;
+
+        vec3 displaced = position + n * (landDisp - depth + ripple);
+
+        vec4 worldPos = modelMatrix * vec4(displaced, 1.0);
         vWorldPos = worldPos.xyz;
+        vSphereNormal = n;
+        vWaterDepth = depth;
         gl_Position = projectionMatrix * viewMatrix * worldPos;
     }
 `;
 
 const SURFACE_FRAGMENT = /* glsl */ `
     uniform float uTime;
-    uniform float uDarknessLevel;
+    uniform float uBaseLumenwake;
     uniform vec3 uSurfaceColor;
     uniform vec3 uEmissiveColor;
     uniform float uSphereRadius;
     uniform sampler2D uGlowMap;
     uniform sampler2D uWorleyMap;
+    uniform vec3 uSunDir;
+    uniform vec3 uSunColor;
+    uniform float uSunStrength;
     varying vec3 vWorldPos;
+    varying vec3 vSphereNormal;
+
+    // Ocean wave function adapted from NLIBS "Alien ocean" (Shadertoy wldBRf)
+    const mat2 waveRot = mat2(cos(12.0), sin(12.0), -sin(12.0), cos(12.0));
+
+    vec3 oceanSrf(vec2 p, float time) {
+        p *= 2.2;
+        float freq = 0.6;
+        float t = 1.4 * time;
+        float weight = 1.0;
+        float w = 0.0;
+        vec2 dx = vec2(0.0);
+        vec2 dir = vec2(1.0, 0.0);
+        for (int i = 0; i < 11; i++) {
+            dir = waveRot * dir;
+            float x = dot(dir, p) * freq + t;
+            float wave = exp(sin(x) - 1.0);
+            vec2 res = vec2(wave, wave * cos(x)) * weight;
+            p -= dir * res.y * 0.48;
+            w += res.x;
+            dx += res.y * dir / pow(weight, 0.75);
+            weight *= 0.8;
+            freq *= 1.2;
+            t *= 1.08;
+        }
+        float ws = (pow(0.8, 11.0) - 1.0) * -5.0;
+        return vec3(w / ws, dx / pow(ws, 0.25));
+    }
+
+    float oceanFresnel(vec3 rd, vec3 N) {
+        float cosI = abs(dot(rd, N));
+        float r0 = pow((1.0 - 1.333) / (1.0 + 1.333), 2.0);
+        return r0 + (1.0 - r0) * pow(1.0 - cosI, 5.0);
+    }
+    varying float vWaterDepth;
 
     void main() {
         vec3 pos = vWorldPos;
-        vec3 normal = normalize(pos);
+        vec3 normal = vSphereNormal;
 
         // Equirectangular UV for texture lookups
         float theta = atan(pos.x, pos.z);
         float phi = asin(normal.y);
         vec2 eqUV = vec2(theta / 6.28318 + 0.5, phi / 3.14159 + 0.5);
 
-        // Sample Worley texture (R = cell edges, G = pebble noise)
+        // Sample Worley texture (R = cell edges, G = pebble, B = biome, A = roughness)
         vec2 texel = vec2(4.0 / 4096.0, 4.0 / 2048.0);
         vec4 wCenter = texture2D(uWorleyMap, eqUV);
         vec4 wR = texture2D(uWorleyMap, eqUV + vec2(texel.x, 0.0));
@@ -48,30 +125,95 @@ const SURFACE_FRAGMENT = /* glsl */ `
         vec4 wD = texture2D(uWorleyMap, eqUV - vec2(0.0, texel.y));
 
         float edge = wCenter.r;
-        float grid = 1.0 - smoothstep(0.03, 0.08, edge);
+        float pebble = wCenter.g;
+        float biome = wCenter.b;
+        float rough = wCenter.a;
 
-        // Cell height: 0 in cracks, 1 on raised surfaces
+        // Shared tangent frame
+        vec3 up = abs(normal.y) < 0.99 ? vec3(0.0, 1.0, 0.0) : vec3(1.0, 0.0, 0.0);
+        vec3 T = normalize(cross(up, normal));
+        vec3 btan = normalize(cross(normal, T));
+
+        // --- Biome weights (rock is a narrow transition band) ---
+        float waterWeight = smoothstep(0.52, 0.42, biome);
+        float grassWeight = smoothstep(0.48, 0.58, biome);
+        float rockWeight  = max(0.0, 1.0 - waterWeight - grassWeight);
+
+        // --- WATER biome: ocean waves (exp-sin technique) ---
+        vec3 waterDeepColor = vec3(0.002, 0.006, 0.02);
+        vec3 waterSSS       = vec3(0.01, 0.03, 0.07);
+        vec3 waterEmit      = vec3(0.02, 0.06, 0.18);
+
+        float normDepth = vWaterDepth / ${WATER_DEPTH.toFixed(1)};
+
+        // Tri-planar wave projection (no seam, no banding)
+        vec3 blend = abs(normal);
+        blend = blend * blend * blend;
+        blend /= blend.x + blend.y + blend.z;
+        vec3 waveSrf = oceanSrf(pos.yz * 0.5 + 3.7, uTime) * blend.x
+                     + oceanSrf(pos.xz * 0.47 + 1.3, uTime * 1.05) * blend.y
+                     + oceanSrf(pos.xy * 0.53 + 5.1, uTime * 0.95) * blend.z;
+        float waveHeight = waveSrf.x;
+
+        // Build water normal from wave gradient in tangent frame
+        vec3 waterNormal = normalize(normal - T * waveSrf.y * 0.18 - btan * waveSrf.z * 0.18);
+
+        // Sea floor visible through shallow water
+        float floorVis = (1.0 - normDepth) * (1.0 - normDepth);
+        vec3 seaFloorColor = vec3(0.02, 0.03, 0.05);
+        float floorPattern = smoothstep(0.0, 0.15, edge) * 0.6 + 0.4;
+        vec3 seaFloor = seaFloorColor * floorPattern;
+
+        // Subsurface water body color — darker with depth
+        vec3 waterBase = mix(seaFloor * floorVis, waterDeepColor, normDepth * 0.8 + 0.2);
+
+
+        float waterAO = 0.8 + 0.2 * waveHeight;
+
+        // --- ROCK biome: craggy cell grid ---
+        vec3 rockBase = vec3(0.02, 0.018, 0.015);
+        vec3 rockEmit = vec3(0.09, 0.07, 0.05);
+
+        float grid = 1.0 - smoothstep(0.03, 0.08, edge);
         float height = smoothstep(0.0, 0.12, edge);
         float hR = smoothstep(0.0, 0.12, wR.r);
         float hL = smoothstep(0.0, 0.12, wL.r);
         float hU = smoothstep(0.0, 0.12, wU.r);
         float hD = smoothstep(0.0, 0.12, wD.r);
+        float rdx = hR - hL;
+        float rdy = hU - hD;
+        vec3 rockNormal = normalize(normal - T * rdx * 0.7 - btan * rdy * 0.7);
+        float rockAO = 0.4 + 0.6 * height;
 
-        // Cell height gradient only
-        float dx = hR - hL;
-        float dy = hU - hD;
+        // --- GRASS biome: soft rolling meadow ---
+        vec3 grassBase = vec3(0.012, 0.025, 0.012);
+        vec3 grassEmit = vec3(0.04, 0.1, 0.045);
 
-        vec3 up = abs(normal.y) < 0.99 ? vec3(0.0, 1.0, 0.0) : vec3(1.0, 0.0, 0.0);
-        vec3 T = normalize(cross(up, normal));
-        vec3 B = normalize(cross(normal, T));
-        vec3 perturbedNormal = normalize(normal - T * dx * 15.0 - B * dy * 15.0);
+        // Smooth variation from simplex roughness with a hint of pebble detail
+        float grassVar = rough * 0.8 + pebble * 0.2;
+        float grassDx = (wR.a - wL.a) * 0.8 + (wR.g - wL.g) * 0.2;
+        float grassDy = (wU.a - wD.a) * 0.8 + (wU.g - wD.g) * 0.2;
+        vec3 grassNormal = normalize(normal - T * grassDx * 2.5 - btan * grassDy * 2.5);
+        float grassAO = 0.75 + 0.25 * grassVar;
+        // Subtle sway animation
+        float sway = sin(pos.x * 2.0 + uTime * 1.2) * sin(pos.z * 1.8 + uTime * 0.9) * 0.04;
 
-        // All illumination from pre-computed glow map
+        // --- Blend land biome properties ---
+        vec3 localSurface = rockBase * rockWeight + grassBase * grassWeight;
+        vec3 perturbedNormal = normalize(
+            rockNormal * rockWeight + grassNormal * grassWeight + waterNormal * waterWeight
+        );
+        float ao = waterAO * waterWeight + rockAO * rockWeight + grassAO * grassWeight;
+
+        // Water detail: crest highlights
+        vec3 waterDetail = waterEmit * pow(max(0.0, waveHeight), 3.0) * 0.1 * waterWeight;
+
+        // Glow map illumination (dynamic player/projectile light)
         vec4 glowSample = texture2D(uGlowMap, eqUV);
-        float illumination = glowSample.a;
+        float illumination = min(glowSample.a, 1.0);
         vec3 glowColor = glowSample.a > 0.0 ? glowSample.rgb / glowSample.a : vec3(0.0);
 
-        // Derive light direction from glow gradient (points toward light source)
+        // Derive light direction from glow gradient
         vec2 glowTexel = vec2(8.0 / 2048.0, 8.0 / 1024.0);
         float glR = texture2D(uGlowMap, eqUV + vec2(glowTexel.x, 0.0)).a;
         float glL = texture2D(uGlowMap, eqUV - vec2(glowTexel.x, 0.0)).a;
@@ -80,40 +222,93 @@ const SURFACE_FRAGMENT = /* glsl */ `
         float glowDx = glR - glL;
         float glowDy = glU - glD;
 
-        // Light direction: from surface toward glow source, slightly grazing
-        vec3 glowLightDir = normalize(normal + T * glowDx * 10.0 + B * glowDy * 10.0);
+        vec3 glowLightDir = normalize(normal + T * glowDx * 10.0 + btan * glowDy * 10.0);
         float NdotL = max(dot(perturbedNormal, glowLightDir), 0.0);
 
-        // Ambient occlusion — cracks are recessed and receive less glow
-        float ao = 0.15 + 0.85 * height;
-
-        // Combine flat illumination with directional normal-mapped lighting
         float directional = mix(1.0, NdotL, 0.5);
         float litAmount = illumination * ao * directional;
 
-        // View-dependent shading on raised surfaces
+        // --- Final compositing ---
         vec3 viewDir = normalize(cameraPosition - pos);
-        float NdotV = max(dot(perturbedNormal, viewDir), 0.0);
-        float viewShade = 0.85 + 0.15 * NdotV;
 
-        // Darkness consumes from south pole upward
-        float darknessThreshold = mix(-1.0, 1.0, uDarknessLevel);
-        float darkness = smoothstep(darknessThreshold + 0.1, darknessThreshold - 0.1, normal.y);
+        // Sun directional light (always active — creates light/dark hemisphere)
+        float sunDot = dot(perturbedNormal, uSunDir);
+        float sunNdotL = max(sunDot, 0.0);
+        float sunNdotL_water = max(dot(waterNormal, uSunDir), 0.0);
+        // Soft wrap lighting — smooth terminator instead of hard edge
+        float sunWrap = smoothstep(-0.3, 0.6, sunDot);
 
-        // Combine
+        // Land surface (rock + grass)
+        float landWeight = rockWeight + grassWeight;
+        float NdotV_land = max(dot(perturbedNormal, viewDir), 0.0);
+        float landViewShade = 0.85 + 0.15 * NdotV_land;
+
+        vec3 landSurface = localSurface * (0.85 + rough * 0.3);
         float pulse = sin(uTime * 0.4) * 0.05 + 0.95;
-        vec3 gridColor = uEmissiveColor * grid * 0.5 * pulse;
+        vec3 rockDetail = rockEmit * grid * 0.6 * pulse * rockWeight;
+        sway = sin(pos.x * 2.0 + uTime * 1.2) * sin(pos.z * 1.8 + uTime * 0.9) * 0.04;
+        vec3 grassDetail = grassEmit * grassVar * 0.3 * grassWeight * (1.0 + sway);
 
-        vec3 fullSurface = (uSurfaceColor * 0.8 + gridColor) * viewShade;
-        vec3 darkSurface = uSurfaceColor * 0.03;
-        vec3 surfaceColor = mix(darkSurface, fullSurface, litAmount);
+        // Sun-lit land (scaled by sun strength per wave)
+        vec3 landEmit = rockEmit * rockWeight + grassEmit * grassWeight;
+        vec3 landLit = landSurface * uSunColor * sunWrap * ao * 1.8 * uSunStrength
+                     + (rockDetail + grassDetail) * sunWrap * 1.5 * uSunStrength
+                     + landEmit * 0.4 * ao * sunNdotL * uSunStrength;
+        landLit *= landViewShade;
+        // Ambient light — uniform sun-colored fill across entire planetoid
+        vec3 landAmbient = landSurface * uSunColor * 1.4 * ao * uSunStrength;
+        vec3 landColor = landAmbient + landLit;
 
-        surfaceColor += glowColor * litAmount * 0.08;
-        surfaceColor += uEmissiveColor * grid * 0.04;
+        // Lumenwake glow on land — soft diffuse wash
+        vec3 landGlow = landSurface * glowColor * ao * 1.5
+                      + landEmit * litAmount * 0.4;
+        landGlow = landGlow / (1.0 + landGlow);
+        landColor += landGlow * litAmount;
 
-        vec3 voidColor = vec3(0.0, 0.0, 0.003);
-        vec3 finalColor = mix(surfaceColor, voidColor, darkness);
-        gl_FragColor = vec4(finalColor, 1.0);
+        // Water surface — Fresnel + volumetric absorption
+        float fr = oceanFresnel(viewDir, waterNormal);
+
+        // Volumetric view-depth: head-on sees deep blue, glancing sees dark/transparent
+        float NdotV_water = max(dot(waterNormal, viewDir), 0.0);
+        float viewDepth = pow(NdotV_water, 4.0) * normDepth;
+        vec3 deepBlue = vec3(0.004, 0.012, 0.055);
+        vec3 shallowDark = vec3(0.003, 0.003, 0.004);
+        // Water volume color — ambient fill everywhere + brighter on sun side
+        float waterSunFactor = smoothstep(-0.2, 0.5, dot(waterNormal, uSunDir));
+        vec3 waterAmbientColor = deepBlue * uSunColor * 1.4 * viewDepth * uSunStrength;
+        vec3 volumeColor = mix(shallowDark, deepBlue, viewDepth) * waterSunFactor * uSunStrength + waterAmbientColor;
+
+        // Sun on water — diffuse + specular glint
+        vec3 sunHalf = normalize(uSunDir + viewDir);
+        float sunSpec = pow(max(dot(waterNormal, sunHalf), 0.0), 128.0);
+        vec3 waterSun = deepBlue * uSunColor * sunNdotL_water * 2.0 * waterAO * uSunStrength;
+
+        // Lumenwake glow on water — wave-aware illumination
+        float glowNdotW = max(dot(waterNormal, glowLightDir), 0.0);
+        float waveShade = 0.3 + 0.7 * waveHeight;
+        vec3 glowWaterBase = deepBlue * glowColor * 3.0 * waterAO * waveShade;
+        vec3 glowWaterDir = deepBlue * glowColor * glowNdotW * 2.5;
+        vec3 totalGlow = (glowWaterBase + glowWaterDir) * illumination;
+        totalGlow = totalGlow / (1.0 + totalGlow * 3.0);
+
+        // Reflection — only visible on sun-facing side
+        vec3 reflDir = reflect(-viewDir, waterNormal);
+        float reflUp = max(reflDir.y, 0.0);
+        vec3 reflColor = mix(vec3(0.004, 0.005, 0.007), vec3(0.01, 0.015, 0.025), reflUp);
+        reflColor *= waterSunFactor * uSunStrength;
+        reflColor += vec3(0.005, 0.008, 0.015) * sunNdotL_water * uSunStrength;
+
+        // Compose water: dark ambient + sun + glow
+        vec3 waterBody = volumeColor + waterSun + totalGlow;
+        waterBody += waterBase * (1.0 - fr) * 0.15 * waterSunFactor;
+        vec3 waterColor = mix(waterBody, reflColor, fr);
+        waterColor += waterDetail;
+
+        // Blend land and water by biome weight
+        vec3 surfaceColor = landColor * landWeight + waterColor * waterWeight;
+
+
+        gl_FragColor = vec4(surfaceColor, 1.0);
     }
 `;
 
@@ -205,14 +400,50 @@ export function PlanetoidNode(props: PlanetoidProps) {
                     return dist2 - dist1;
                 }
 
+                // Simplex-like noise for biome regions
+                float snoise(vec3 v) {
+                    vec3 i = floor(v + dot(v, vec3(1.0/3.0)));
+                    vec3 x0 = v - i + dot(i, vec3(1.0/6.0));
+                    vec3 g = step(x0.yzx, x0.xyz);
+                    vec3 l = 1.0 - g;
+                    vec3 i1 = min(g, l.zxy);
+                    vec3 i2 = max(g, l.zxy);
+                    vec3 x1 = x0 - i1 + 1.0/6.0;
+                    vec3 x2 = x0 - i2 + 1.0/3.0;
+                    vec3 x3 = x0 - 0.5;
+                    vec4 w;
+                    w.x = dot(x0, x0); w.y = dot(x1, x1);
+                    w.z = dot(x2, x2); w.w = dot(x3, x3);
+                    w = max(0.6 - w, 0.0);
+                    w *= w; w *= w;
+                    float n = dot(w, vec4(
+                        dot(x0, hash3(i)),
+                        dot(x1, hash3(i + i1)),
+                        dot(x2, hash3(i + i2)),
+                        dot(x3, hash3(i + 1.0))
+                    ));
+                    return n * 52.0;
+                }
+
                 void main() {
                     float theta = (vUV.x - 0.5) * 6.28318;
                     float phi = (vUV.y - 0.5) * 3.14159;
                     float cPhi = cos(phi);
                     vec3 pos = vec3(cPhi * sin(theta), sin(phi), cPhi * cos(theta)) * uSphereRadius;
-                    float edge = worleyEdge(pos, 0.8);
+                    vec3 dir = normalize(pos);
+                    float edge = worleyEdge(pos, 1.5);
                     float pebble = worleyEdge(pos, 3.0);
-                    gl_FragColor = vec4(edge, pebble, 0.0, 1.0);
+
+                    // Biome blend: large continental regions + subtle latitude
+                    float n1 = snoise(dir * 0.8) * 0.5 + 0.5;
+                    float n2 = snoise(dir * 1.6 + 7.0) * 0.5 + 0.5;
+                    float lat = abs(dir.y);
+                    float biome = clamp(n1 * 0.7 + n2 * 0.15 + lat * 0.2 - 0.1, 0.0, 1.0);
+
+                    // Terrain roughness variation
+                    float rough = snoise(dir * 8.0 + 20.0) * 0.5 + 0.5;
+
+                    gl_FragColor = vec4(edge, pebble, biome, rough);
                 }
             `,
             uniforms: { uSphereRadius: { value: map.sphereRadius } },
@@ -396,18 +627,23 @@ export function PlanetoidNode(props: PlanetoidProps) {
     const PLAYER_GLOW_RADIUS = 6.5;
     const _savedClearColor = new THREE.Color();
 
+    const sunDir = new THREE.Vector3(-0.7, -0.5, -0.4).normalize();
+
     const uniforms = {
         uTime: { value: 0 },
-        uDarknessLevel: { value: 0 },
+        uBaseLumenwake: { value: 1.0 },
         uSurfaceColor: { value: new THREE.Color(map.surfaceColor) },
         uEmissiveColor: { value: new THREE.Color(map.emissiveColor) },
         uSphereRadius: { value: map.sphereRadius },
         uGlowMap: { value: glowRT.texture },
         uWorleyMap: { value: worleyRT.texture },
+        uSunDir: { value: sunDir },
+        uSunColor: { value: new THREE.Color(1.0, 0.65, 0.3) },
+        uSunStrength: { value: 1.0 },
     };
 
-    useCustomMesh({
-        geometry: () => new THREE.SphereGeometry(map.sphereRadius, 48, 32),
+    const planetoidMesh = useCustomMesh({
+        geometry: () => new THREE.SphereGeometry(map.sphereRadius, 384, 256),
         material: () =>
             new THREE.ShaderMaterial({
                 vertexShader: SURFACE_VERTEX,
@@ -415,6 +651,74 @@ export function PlanetoidNode(props: PlanetoidProps) {
                 uniforms,
             }),
     });
+
+    // Atmospheric corona — Fresnel rim glow, sun-tinted on lit side
+    const coronaScale = 1.5;
+    const coronaMesh = useCustomMesh({
+        geometry: () => new THREE.SphereGeometry(map.sphereRadius * coronaScale, 128, 64),
+        material: () =>
+            new THREE.ShaderMaterial({
+                uniforms: {
+                    uSunDir: uniforms.uSunDir,
+                    uSunColor: uniforms.uSunColor,
+                    uSphereRadius: uniforms.uSphereRadius,
+                    uSunStrength: uniforms.uSunStrength,
+                },
+                vertexShader: /* glsl */ `
+                    varying vec3 vWorldPos;
+                    void main() {
+                        vec4 worldPos = modelMatrix * vec4(position, 1.0);
+                        vWorldPos = worldPos.xyz;
+                        gl_Position = projectionMatrix * viewMatrix * worldPos;
+                    }
+                `,
+                fragmentShader: /* glsl */ `
+                    uniform vec3 uSunDir;
+                    uniform vec3 uSunColor;
+                    uniform float uSphereRadius;
+                    uniform float uSunStrength;
+                    varying vec3 vWorldPos;
+
+                    void main() {
+                        // Ray from camera through this fragment
+                        vec3 rayDir = normalize(vWorldPos - cameraPosition);
+
+                        // Closest approach of view ray to sphere center (origin)
+                        float tClosest = -dot(cameraPosition, rayDir);
+                        vec3 closest = cameraPosition + rayDir * tClosest;
+                        float minDist = length(closest);
+
+                        // Skip fragments where ray hits the planetoid
+                        // Account for water displacement below sphere radius
+                        if (minDist < uSphereRadius - ${WATER_DEPTH.toFixed(1)}) discard;
+
+                        // Smooth falloff from planetoid surface outward
+                        float coronaThickness = uSphereRadius * ${(coronaScale - 1.0).toFixed(2)};
+                        float distFromSurface = minDist - uSphereRadius;
+                        float glow = 1.0 - smoothstep(0.0, coronaThickness, distFromSurface);
+
+                        // Sun-side coloring based on closest point direction
+                        vec3 closestDir = normalize(closest);
+                        float sunFacing = dot(closestDir, uSunDir);
+                        float sunSide = smoothstep(-0.3, 0.6, sunFacing);
+
+                        vec3 warmColor = uSunColor * 0.8;
+                        vec3 coolColor = vec3(0.2, 0.35, 0.7);
+                        vec3 coronaColor = mix(coolColor, warmColor, sunSide);
+
+                        float intensity = mix(0.35, 0.5, sunSide) * uSunStrength;
+                        float alpha = glow * intensity * 0.35;
+                        if (alpha < 0.005) discard;
+                        gl_FragColor = vec4(coronaColor * alpha, alpha);
+                    }
+                `,
+                transparent: true,
+                depthWrite: false,
+                side: THREE.BackSide,
+                blending: THREE.AdditiveBlending,
+            }),
+    });
+    coronaMesh.object.frustumCulled = false;
 
     // Player trail management
     let playerTrailCount = 0;
@@ -504,8 +808,28 @@ export function PlanetoidNode(props: PlanetoidProps) {
         return idx;
     }
 
+    const SUN_ORBIT_SPEED = 0.05;
+    const LIGHTING_LERP_SPEED = 0.8;
+    const orbitAxis = new THREE.Vector3()
+        .crossVectors(sunDir, new THREE.Vector3(0, 1, 0))
+        .normalize();
+    const _sunRotQ = new THREE.Quaternion();
+    let targetBaseLumenwake = 1.0;
+    let targetSunStrength = 1.0;
+
     useFrameUpdate((dt) => {
         uniforms.uTime.value += dt;
+
+        // Smoothly lerp lighting toward wave targets
+        const lerpFactor = 1 - Math.exp(-LIGHTING_LERP_SPEED * dt);
+        const curLumen = uniforms.uBaseLumenwake.value as number;
+        const curSun = uniforms.uSunStrength.value as number;
+        uniforms.uBaseLumenwake.value = curLumen + (targetBaseLumenwake - curLumen) * lerpFactor;
+        uniforms.uSunStrength.value = curSun + (targetSunStrength - curSun) * lerpFactor;
+
+        // Slowly orbit the sun — creates shifting light/dark hemispheres
+        _sunRotQ.setFromAxisAngle(orbitAxis, SUN_ORBIT_SPEED * dt);
+        sunDir.applyQuaternion(_sunRotQ).normalize();
 
         // Age player trail points
         for (let i = 0; i < playerTrailCount; i++) {
@@ -673,12 +997,19 @@ export function PlanetoidNode(props: PlanetoidProps) {
 
     return {
         uniforms,
+        sunDir,
         glowTexture: glowRT.texture,
         getDarknessLevel() {
-            return uniforms.uDarknessLevel.value as number;
+            return 1.0 - (uniforms.uBaseLumenwake.value as number);
         },
         setDarknessLevel(level: number) {
-            uniforms.uDarknessLevel.value = Math.max(0, Math.min(1, level));
+            targetBaseLumenwake = Math.max(0, Math.min(1, 1.0 - level));
+        },
+        setSunStrength(strength: number) {
+            targetSunStrength = Math.max(0, Math.min(1, strength));
+        },
+        getSunStrength() {
+            return uniforms.uSunStrength.value as number;
         },
         setPlayerPosition(index: number, x: number, y: number, z: number) {
             if (!playerPositions[index]) {
@@ -761,8 +1092,7 @@ export function PlanetoidNode(props: PlanetoidProps) {
             impactColorData[1] = color.g;
             impactColorData[2] = color.b;
             impactCount = Math.min(impactCount + 1, IMPACT_MAX);
-        },
-        addProjectileTrailPoint(
+        },        addProjectileTrailPoint(
             x: number,
             y: number,
             z: number,

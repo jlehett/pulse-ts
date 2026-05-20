@@ -14,6 +14,14 @@ export type GamePhase =
 export interface GameState {
     phase: GamePhase;
     wave: number;
+    totalWaves: number;
+    matchTime: number;
+    /** Enemies still alive + yet to spawn in current wave. */
+    enemiesRemaining: number;
+    /** Total enemies in current wave (for display as denominator). */
+    enemiesTotal: number;
+    /** Countdown seconds remaining (pre-match or between waves). */
+    countdownTimer: number;
     playerCount: number;
     isHost: boolean;
     map: MapConfig;

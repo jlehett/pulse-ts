@@ -22,11 +22,13 @@ import { PulseNode } from './player/PulseNode';
 import { SanctuaryNode } from './player/SanctuaryNode';
 import { SlowFieldNode } from './player/SlowFieldNode';
 import { EnemySpawnerNode } from './enemies/EnemySpawnerNode';
+import { WaveManagerNode } from './WaveManagerNode';
 import { geodesicDirection } from '../utils/sphereMovement';
 import type { MapConfig } from '../config/maps';
 import { DEFAULT_MAP, sphereToWorld } from '../config/maps';
 import { CLASS_SHARD } from '../config/classes';
 import type { ClassDef } from '../config/classes';
+import { TOTAL_WAVES } from '../config/waves';
 
 interface ProjectileEntry {
     position: THREE.Vector3;
@@ -66,8 +68,13 @@ export function GameNode(props?: Readonly<GameNodeProps>) {
     }
 
     const gameState: GameState = {
-        phase: 'playing',
+        phase: 'countdown',
         wave: 0,
+        totalWaves: TOTAL_WAVES,
+        matchTime: 0,
+        enemiesRemaining: 0,
+        enemiesTotal: 0,
+        countdownTimer: 0,
         playerCount: props?.playerCount ?? 1,
         isHost: props?.isHost ?? true,
         map,
@@ -155,16 +162,25 @@ export function GameNode(props?: Readonly<GameNodeProps>) {
         return entry;
     }
 
-    useChild(HudNode, { playerState, classDef });
+    useChild(HudNode, { playerState, classDef, gameState });
+
+    // Wave manager ref — set after spawner is created
+    let waveManager: ReturnType<typeof WaveManagerNode> | null = null;
 
     // Enemy spawner
     const spawner = EnemySpawnerNode({
         map,
         glowTexture: planetoid.glowTexture,
+        sunDir: planetoid.sunDir,
+        sunColor: new THREE.Color(1.0, 0.65, 0.3),
+        getSunStrength: () => planetoid.getSunStrength(),
         playerRadius: classDef.radius,
         getDarknessLevel: () => planetoid.getDarknessLevel(),
         getPlayerPositions: () =>
             playerState.alive ? [playerState.position] : [],
+        onEnemyDeath: () => {
+            waveManager?.onEnemyKilled();
+        },
         onContactDamage: (damage, enemyPosition) => {
             if (!playerState.alive) return;
 
@@ -187,6 +203,15 @@ export function GameNode(props?: Readonly<GameNodeProps>) {
                 playerState.alive = false;
             }
         },
+    });
+
+    waveManager = WaveManagerNode({
+        gameState,
+        getAliveEnemyCount: () => spawner.getAliveCount(),
+        spawnEnemy: (enemyDef) => spawner.spawnEnemy(enemyDef),
+        setDarknessLevel: (level) => planetoid.setDarknessLevel(level),
+        setSunStrength: (strength) => planetoid.setSunStrength(strength),
+        isPlayerAlive: () => playerState.alive,
     });
 
     const _shieldBaseColor = new THREE.Color(0x6622aa);

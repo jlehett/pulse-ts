@@ -1,15 +1,20 @@
 import { useOverlay } from '@pulse-ts/dom';
 import type { PlayerState } from './player/LocalPlayerNode';
 import type { ClassDef } from '../config/classes';
+import type { GameState } from '../contexts';
 
 export interface HudProps {
     playerState: PlayerState;
     classDef: ClassDef;
+    gameState: GameState;
 }
+
+import { TOTAL_WAVES } from '../config/waves';
 
 const SEGMENT_COUNT = 20;
 const BAR_WIDTH = 400;
 const ICON_SIZE = 60;
+const TOTAL_WAVE_PIPS = TOTAL_WAVES;
 
 const ABILITY_ICONS: Record<string, string> = {
     'Piercing Beam':
@@ -55,8 +60,14 @@ function abilityIcon(name: string, color: string): string {
     )}`;
 }
 
+function formatTime(seconds: number): string {
+    const m = Math.floor(seconds / 60);
+    const s = Math.floor(seconds % 60);
+    return `${m}:${s.toString().padStart(2, '0')}`;
+}
+
 export function HudNode(props: HudProps) {
-    const { playerState, classDef } = props;
+    const { playerState, classDef, gameState } = props;
     const color = '#' + classDef.color.toString(16).padStart(6, '0');
 
     const style = document.createElement('style');
@@ -68,6 +79,11 @@ export function HudNode(props: HudProps) {
         @keyframes lw-low-pulse {
             0%, 100% { opacity: 0.6; }
             50% { opacity: 1.0; }
+        }
+        @keyframes lw-countdown-pop {
+            0% { transform: translate(-50%, -50%) scale(1.4); opacity: 0.5; }
+            30% { transform: translate(-50%, -50%) scale(1.0); opacity: 1.0; }
+            100% { transform: translate(-50%, -50%) scale(0.95); opacity: 0.7; }
         }
     `;
     document.head.appendChild(style);
@@ -117,6 +133,203 @@ export function HudNode(props: HudProps) {
                 pointerEvents: 'none',
             }}
         >
+            {/* Big center countdown — visible during countdown and wave_clear */}
+            <div
+                style={{
+                    position: 'absolute',
+                    top: '38%',
+                    left: '50%',
+                    transform: 'translate(-50%, -50%)',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    gap: '16px',
+                    opacity: () => {
+                        const p = gameState.phase;
+                        return p === 'countdown' || p === 'wave_clear'
+                            || p === 'victory' || p === 'defeat'
+                            ? '1' : '0';
+                    },
+                    visibility: () => {
+                        const p = gameState.phase;
+                        return p === 'countdown' || p === 'wave_clear'
+                            || p === 'victory' || p === 'defeat'
+                            ? 'visible' : 'hidden';
+                    },
+                    transition: 'opacity 0.3s ease',
+                    filter: 'drop-shadow(0 4px 30px rgba(0,0,0,0.8))',
+                }}
+            >
+                <div
+                    style={{
+                        font: 'bold 28px monospace',
+                        letterSpacing: '10px',
+                        textTransform: 'uppercase',
+                        color: () => {
+                            if (gameState.phase === 'victory') return '#44ff88';
+                            if (gameState.phase === 'defeat') return '#ff3333';
+                            if (gameState.phase === 'wave_clear') return '#88bbff';
+                            return '#ffcc44';
+                        },
+                        textShadow: () => {
+                            if (gameState.phase === 'victory') return '0 0 30px #44ff8866';
+                            if (gameState.phase === 'defeat') return '0 0 30px #ff333366';
+                            if (gameState.phase === 'wave_clear') return '0 0 30px #88bbff44';
+                            return '0 0 30px #ffcc4444';
+                        },
+                    }}
+                >
+                    {() => {
+                        if (gameState.phase === 'victory') return 'VICTORY';
+                        if (gameState.phase === 'defeat') return 'DEFEATED';
+                        if (gameState.phase === 'wave_clear') return 'WAVE CLEAR';
+                        return 'GET READY';
+                    }}
+                </div>
+                <div
+                    style={{
+                        font: 'bold 120px monospace',
+                        lineHeight: '1',
+                        color: () => {
+                            if (gameState.phase === 'victory') return '#44ff88';
+                            if (gameState.phase === 'defeat') return '#ff3333';
+                            return 'rgba(255, 255, 255, 0.9)';
+                        },
+                        textShadow: () => {
+                            if (gameState.phase === 'victory') return '0 0 60px #44ff8844';
+                            if (gameState.phase === 'defeat') return '0 0 60px #ff333344';
+                            return '0 0 60px rgba(255,255,255,0.15)';
+                        },
+                        visibility: () => {
+                            const p = gameState.phase;
+                            return p === 'countdown' || p === 'wave_clear'
+                                ? 'visible' : 'hidden';
+                        },
+                    }}
+                >
+                    {() => Math.ceil(gameState.countdownTimer).toString()}
+                </div>
+                <div
+                    style={{
+                        font: '18px monospace',
+                        letterSpacing: '5px',
+                        color: 'rgba(255, 255, 255, 0.4)',
+                        visibility: () =>
+                            gameState.phase === 'wave_clear' ? 'visible' : 'hidden',
+                    }}
+                >
+                    {() => `NEXT: WAVE ${gameState.wave + 1}`}
+                </div>
+            </div>
+
+            {/* Wave counter — top center */}
+            <div
+                style={{
+                    position: 'absolute',
+                    top: '20px',
+                    left: '50%',
+                    transform: 'translateX(-50%)',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    gap: '8px',
+                    filter: 'drop-shadow(0 2px 16px rgba(0,0,0,0.7))',
+                    opacity: () => {
+                        const p = gameState.phase;
+                        return p === 'playing' || p === 'boss' ? '1' : '0.3';
+                    },
+                    transition: 'opacity 0.3s ease',
+                }}
+            >
+                <div
+                    style={{
+                        font: 'bold 22px monospace',
+                        letterSpacing: '6px',
+                        textTransform: 'uppercase',
+                        color: () => {
+                            if (gameState.phase === 'boss') return '#ff6644';
+                            return 'rgba(255, 255, 255, 0.7)';
+                        },
+                        textShadow: () => {
+                            if (gameState.phase === 'boss') return '0 0 20px #ff664488';
+                            return '0 0 10px rgba(255,255,255,0.1)';
+                        },
+                    }}
+                >
+                    {() => {
+                        if (gameState.phase === 'boss') return 'BOSS WAVE';
+                        return `WAVE ${gameState.wave} / ${gameState.totalWaves}`;
+                    }}
+                </div>
+                {/* Wave progress pips */}
+                <div
+                    style={{
+                        display: 'flex',
+                        gap: '4px',
+                    }}
+                >
+                    {Array.from({ length: TOTAL_WAVE_PIPS }, (_, i) => (
+                        <div
+                            style={{
+                                width: '24px',
+                                height: '6px',
+                                background: () => {
+                                    if (i < gameState.wave - 1) return 'rgba(68, 255, 136, 0.7)';
+                                    if (i === gameState.wave - 1) return color;
+                                    return 'rgba(255, 255, 255, 0.15)';
+                                },
+                                transition: 'background 0.3s ease',
+                            }}
+                        />
+                    ))}
+                </div>
+                {/* Enemies remaining */}
+                <div
+                    style={{
+                        font: 'bold 16px monospace',
+                        letterSpacing: '3px',
+                        color: () => {
+                            const r = gameState.enemiesRemaining;
+                            const t = gameState.enemiesTotal;
+                            if (t === 0) return 'rgba(255, 255, 255, 0.3)';
+                            const ratio = r / t;
+                            if (ratio <= 0.15) return '#44ff88';
+                            if (ratio <= 0.4) return '#ffcc44';
+                            return 'rgba(255, 255, 255, 0.55)';
+                        },
+                        textShadow: () => {
+                            const r = gameState.enemiesRemaining;
+                            const t = gameState.enemiesTotal;
+                            if (t === 0) return 'none';
+                            const ratio = r / t;
+                            if (ratio <= 0.15) return '0 0 10px #44ff8844';
+                            return 'none';
+                        },
+                        visibility: () => {
+                            const p = gameState.phase;
+                            return p === 'playing' || p === 'boss' ? 'visible' : 'hidden';
+                        },
+                    }}
+                >
+                    {() => `${gameState.enemiesRemaining} REMAINING`}
+                </div>
+            </div>
+
+            {/* Match timer — top right */}
+            <div
+                style={{
+                    position: 'absolute',
+                    top: '24px',
+                    right: '28px',
+                    font: '13px monospace',
+                    color: 'rgba(255, 255, 255, 0.5)',
+                    letterSpacing: '2px',
+                    filter: 'drop-shadow(0 1px 4px rgba(0,0,0,0.5))',
+                }}
+            >
+                {() => formatTime(gameState.matchTime)}
+            </div>
+
             {/* Damage vignette */}
             <div
                 style={{

@@ -42,8 +42,8 @@ export const MAP_CONVERGENCE: MapConfig = {
     id: 'convergence',
     name: 'Convergence',
     sphereRadius: 15,
-    surfaceColor: 0x0a1a0f,
-    emissiveColor: 0x225544,
+    surfaceColor: 0x0e0e11,
+    emissiveColor: 0x334455,
     enemySpawns: [
         { coord: { theta: PI * 0.1, phi: 0 } },
         { coord: { theta: PI * 0.1, phi: TAU * 0.5 } },
