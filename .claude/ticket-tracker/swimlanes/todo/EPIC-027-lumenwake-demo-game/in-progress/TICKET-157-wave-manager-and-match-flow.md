@@ -1,16 +1,17 @@
 ---
 id: TICKET-157
 title: Wave manager & match flow
-status: todo
+status: in-progress
 priority: high
 created: 2026-05-16
-updated: 2026-05-16
+updated: 2026-05-19
 depends_on:
   - TICKET-155
   - TICKET-156
 labels:
   - lumenwake
   - gameplay
+branch: ticket-157-wave-manager-and-match-flow
 ---
 
 ## Description
@@ -34,3 +35,4 @@ Implement the wave state machine that drives match progression: 8 regular waves 
 
 - 2026-05-16: Created. Depends on TICKET-155 (player) and TICKET-156 (enemies) being functional.
 - 2026-05-16: Updated — darkness now consumes sphere from south pole upward instead of flat boundary contraction.
+- 2026-05-19: Starting implementation.
