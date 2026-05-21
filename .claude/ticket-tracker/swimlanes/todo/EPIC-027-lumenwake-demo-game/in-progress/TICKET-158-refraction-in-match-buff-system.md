@@ -1,7 +1,7 @@
 ---
 id: TICKET-158
 title: Refraction (in-match buff) system
-status: todo
+status: in-progress
 priority: medium
 created: 2026-05-16
 updated: 2026-05-20
@@ -45,3 +45,4 @@ Implement the roguelite-style in-match buff system where players choose 1 of 3 r
 ## Notes
 
 - 2026-05-16: Created. Depends on TICKET-157 (wave manager provides the between-wave timing).
+- 2026-05-20: Starting implementation.
