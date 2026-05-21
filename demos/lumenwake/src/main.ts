@@ -61,7 +61,11 @@ function createGameWorld(): GameWorldResult {
     return { world, three, cleanup };
 }
 
-function startSoloGame(map: MapConfig, classDef: ClassDef): Promise<void> {
+function startSoloGame(
+    map: MapConfig,
+    classDef: ClassDef,
+    debugMode = false,
+): Promise<void> {
     return new Promise((resolve) => {
         const { world, cleanup } = createGameWorld();
 
@@ -72,6 +76,7 @@ function startSoloGame(map: MapConfig, classDef: ClassDef): Promise<void> {
             playerCount: 1,
             map,
             classDef,
+            debugMode,
             onRequestMenu: () => {
                 cleanup();
                 resolve();
@@ -125,8 +130,12 @@ async function start() {
     while (true) {
         const choice = await showMainMenu(container);
 
-        if (choice.mode === 'solo') {
-            await startSoloGame(choice.map, choice.classDef);
+        if (choice.mode === 'solo' || choice.mode === 'debug') {
+            await startSoloGame(
+                choice.map,
+                choice.classDef,
+                choice.mode === 'debug',
+            );
         } else if (choice.mode === 'online') {
             const lobby = await showLobby(container);
             if (lobby === 'back') continue;

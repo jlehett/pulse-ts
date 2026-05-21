@@ -3,7 +3,7 @@ import { DEFAULT_MAP, type MapConfig } from '../config/maps';
 import { ALL_CLASSES, type ClassDef } from '../config/classes';
 
 export interface MenuChoice {
-    mode: 'solo' | 'online';
+    mode: 'solo' | 'online' | 'debug';
     map: MapConfig;
     classDef: ClassDef;
 }
@@ -162,6 +162,21 @@ export function showMainMenu(container: HTMLElement): Promise<MenuChoice> {
                         }}
                     >
                         Online Co-op
+                    </Button>
+                    <Button
+                        onClick={() => pick('debug')}
+                        style={{
+                            padding: '10px 48px',
+                            font: 'bold 14px monospace',
+                            color: 'rgba(255,255,255,0.5)',
+                            background: 'rgba(255,255,255,0.03)',
+                            border: '1px solid rgba(255,255,255,0.1)',
+                            borderRadius: '4px',
+                            cursor: 'pointer',
+                            marginTop: '8px',
+                        }}
+                    >
+                        Debug Mode
                     </Button>
                 </Column>
             </div>,

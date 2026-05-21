@@ -9,6 +9,7 @@ const GLOW_WIDTH = 2048;
 const GLOW_HEIGHT = 1024;
 const MAX_TRAIL_SPLATS = PLAYER_TRAIL_LENGTH * 2;
 const MAX_ADD_SPLATS = (8 + PROJ_TRAIL_LENGTH + 32) * 2;
+const MAX_ZONE_SPLATS = 64;
 
 const SURFACE_VERTEX = /* glsl */ `
     uniform sampler2D uWorleyMap;
@@ -363,6 +364,41 @@ export function PlanetoidNode(props: PlanetoidProps) {
         }
     `;
 
+    const zoneFragSrc = /* glsl */ `
+        varying vec3 vCenter;
+        varying vec3 vColorFade;
+        varying float vRadius;
+        varying float vStrength;
+        varying vec2 vUV;
+
+        uniform float uSphereRadius;
+
+        void main() {
+            float theta = (vUV.x - 0.5) * 2.0 * 3.14159265;
+            float phi = (vUV.y - 0.5) * 3.14159265;
+            float cPhi = cos(phi);
+            vec3 fragDir = vec3(cPhi * sin(theta), sin(phi), cPhi * cos(theta));
+
+            vec3 centerDir = normalize(vCenter);
+            float d = dot(fragDir, centerDir);
+            float dist2 = 2.0 * (1.0 - d) * uSphereRadius * uSphereRadius;
+            float dist = sqrt(dist2);
+            float t = dist / vRadius;
+
+            if (t > 1.05) discard;
+
+            // Solid interior fill, brighter at center
+            float fill = (1.0 - t * t * 0.4) * 0.9;
+
+            // Hard bright ring at boundary
+            float ring = smoothstep(0.82, 0.90, t) * (1.0 - smoothstep(0.93, 1.02, t));
+
+            float intensity = (fill + ring * 2.2) * vStrength;
+            float i2 = intensity * intensity;
+            gl_FragColor = vec4(vColorFade * i2, i2);
+        }
+    `;
+
     // Helper to create instanced splat geometry
     const quadVerts = new Float32Array([
         -1, -1, 0, 1, -1, 0, 1, 1, 0, -1, -1, 0, 1, 1, 0, -1, 1, 0,
@@ -439,9 +475,30 @@ export function PlanetoidNode(props: PlanetoidProps) {
     addSplatMesh.frustumCulled = false;
     addSplatMesh.renderOrder = 1;
 
+    // Zone splats rendered LAST with REPLACE so they overwrite all other lighting
+    const zoneSplat = createSplatGeo(MAX_ZONE_SPLATS);
+
+    const zoneSplatMat = new THREE.ShaderMaterial({
+        vertexShader: splatVertSrc,
+        fragmentShader: zoneFragSrc,
+        uniforms: { uSphereRadius: { value: map.sphereRadius } },
+        blending: THREE.CustomBlending,
+        blendEquation: THREE.MaxEquation,
+        blendSrc: THREE.OneFactor,
+        blendDst: THREE.OneFactor,
+        depthTest: false,
+        depthWrite: false,
+        transparent: true,
+    });
+
+    const zoneSplatMesh = new THREE.Mesh(zoneSplat.geo, zoneSplatMat);
+    zoneSplatMesh.frustumCulled = false;
+    zoneSplatMesh.renderOrder = 2;
+
     const splatScene = new THREE.Scene();
     splatScene.add(trailSplatMesh);
     splatScene.add(addSplatMesh);
+    splatScene.add(zoneSplatMesh);
     const splatCamera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
 
     // Player live positions for splatting each frame
@@ -449,6 +506,19 @@ export function PlanetoidNode(props: PlanetoidProps) {
     const playerColors: THREE.Color[] = [];
     let playerCount = 0;
     const PLAYER_GLOW_RADIUS = 6.5;
+
+    // Per-frame zone splat buffer (filled each frame, cleared after upload)
+    const zoneData: {
+        x: number;
+        y: number;
+        z: number;
+        r: number;
+        g: number;
+        b: number;
+        radius: number;
+        strength: number;
+    }[] = [];
+
     const _savedClearColor = new THREE.Color();
 
     const sunDir = new THREE.Vector3(-0.7, -0.5, -0.4).normalize();
@@ -802,6 +872,39 @@ export function PlanetoidNode(props: PlanetoidProps) {
         addSplat.radiusStrength.needsUpdate = true;
         addSplat.uOffset.needsUpdate = true;
 
+        // Fill zone splat instances (per-frame, replace blending)
+        let zoneIdx = 0;
+        const zCenters = zoneSplat.center.array as Float32Array;
+        const zColors = zoneSplat.colorFade.array as Float32Array;
+        const zRS = zoneSplat.radiusStrength.array as Float32Array;
+        const zUO = zoneSplat.uOffset.array as Float32Array;
+
+        for (let i = 0; i < zoneData.length; i++) {
+            const z = zoneData[i];
+            zoneIdx = addInstance(
+                zoneIdx,
+                z.x,
+                z.y,
+                z.z,
+                z.r,
+                z.g,
+                z.b,
+                z.radius,
+                z.strength,
+                zCenters,
+                zColors,
+                zRS,
+                zUO,
+            );
+        }
+        zoneData.length = 0;
+
+        zoneSplat.geo.instanceCount = zoneIdx;
+        zoneSplat.center.needsUpdate = true;
+        zoneSplat.colorFade.needsUpdate = true;
+        zoneSplat.radiusStrength.needsUpdate = true;
+        zoneSplat.uOffset.needsUpdate = true;
+
         // Render splats to glow map render target.
         // resetState() after rendering ensures the EffectComposer gets a
         // clean GL state — our custom blending and instanced draws can
@@ -953,6 +1056,25 @@ export function PlanetoidNode(props: PlanetoidProps) {
             projTrailColorData[1] = color.g;
             projTrailColorData[2] = color.b;
             projTrailCount = Math.min(projTrailCount + 1, PROJ_TRAIL_LENGTH);
+        },
+        addZoneSplat(
+            x: number,
+            y: number,
+            z: number,
+            color: THREE.Color,
+            radius: number,
+            strength = 1,
+        ) {
+            zoneData.push({
+                x,
+                y,
+                z,
+                r: color.r,
+                g: color.g,
+                b: color.b,
+                radius,
+                strength,
+            });
         },
     };
 }

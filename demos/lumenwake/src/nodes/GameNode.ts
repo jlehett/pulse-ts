@@ -24,6 +24,7 @@ import { SanctuaryNode } from './player/SanctuaryNode';
 import { SlowFieldNode } from './player/SlowFieldNode';
 import { EnemySpawnerNode } from './enemies/EnemySpawnerNode';
 import { WaveManagerNode } from './WaveManagerNode';
+import { DebugMenuNode } from './DebugMenuNode';
 import { geodesicDirection } from '../utils/sphereMovement';
 import type { MapConfig } from '../config/maps';
 import { DEFAULT_MAP, sphereToWorld } from '../config/maps';
@@ -52,6 +53,7 @@ export interface GameNodeProps {
     isHost?: boolean;
     map?: MapConfig;
     classDef?: ClassDef;
+    debugMode?: boolean;
     onRequestMenu?: () => void;
 }
 
@@ -62,6 +64,7 @@ export interface GameNodeProps {
  */
 export function GameNode(props?: Readonly<GameNodeProps>) {
     const online = props?.transport != null && props?.playerId != null;
+    const debugMode = props?.debugMode ?? false;
     const map = props?.map ?? DEFAULT_MAP;
     const classDef = props?.classDef ?? CLASS_SHARD;
     const playerIndex = props?.playerId ?? 0;
@@ -76,7 +79,7 @@ export function GameNode(props?: Readonly<GameNodeProps>) {
     };
 
     const gameState: GameState = {
-        phase: 'countdown',
+        phase: debugMode ? 'waiting' : 'countdown',
         wave: 0,
         totalWaves: TOTAL_WAVES,
         matchTime: 0,
@@ -312,6 +315,31 @@ export function GameNode(props?: Readonly<GameNodeProps>) {
         waveManager!.advancePastRefractionPick();
     }
 
+    function debugApplyRefraction(def: RefractionDef) {
+        const current = refractions.active.get(def.id) ?? 0;
+        if (current >= 3) return;
+        const next = current + 1;
+        refractions.active.set(def.id, next);
+
+        if (def.id === 'void_resistance') {
+            const bonus = Math.round(
+                classDef.maxHealth * def.tiers[next - 1].value,
+            );
+            const prevBonus =
+                current > 0
+                    ? Math.round(
+                          classDef.maxHealth * def.tiers[current - 1].value,
+                      )
+                    : 0;
+            const hpGain = bonus - prevBonus;
+            playerState.maxHealth = classDef.maxHealth + bonus;
+            playerState.health = Math.min(
+                playerState.maxHealth,
+                playerState.health + hpGain,
+            );
+        }
+    }
+
     waveManager = WaveManagerNode({
         gameState,
         getAliveEnemyCount: () => spawner.getAliveCount(),
@@ -319,7 +347,16 @@ export function GameNode(props?: Readonly<GameNodeProps>) {
         setDarknessLevel: (level) => planetoid.setDarknessLevel(level),
         setSunStrength: (strength) => planetoid.setSunStrength(strength),
         isPlayerAlive: () => playerState.alive,
+        debugMode,
     });
+
+    if (debugMode) {
+        DebugMenuNode({
+            gameState,
+            onApplyRefraction: debugApplyRefraction,
+            onStartWave: (index) => waveManager!.debugStartWave(index),
+        });
+    }
 
     const _shieldBaseColor = new THREE.Color(0x6622aa);
     const _shieldDamageColor = new THREE.Color(0.9, 0.25, 0.35);
@@ -693,8 +730,8 @@ export function GameNode(props?: Readonly<GameNodeProps>) {
         }
 
         // Afterglow pools — damage nearby enemies and decay
-        const _afterglowColor = new THREE.Color(0xff8844);
-        const _afterglowCore = new THREE.Color(0xffcc66);
+        const _afterglowZone = new THREE.Color(0xff6633);
+        const poolRadius = 2.5;
         for (let i = afterglowPools.length - 1; i >= 0; i--) {
             const pool = afterglowPools[i];
             pool.timer -= dt;
@@ -703,55 +740,17 @@ export function GameNode(props?: Readonly<GameNodeProps>) {
                 continue;
             }
             const pn = pool.position.clone().normalize();
-            const poolRadius = 2.5;
             const fade = pool.timer / 4.0;
-            const pulse = 0.8 + 0.4 * Math.sin(gameState.matchTime * 6 + i * 2);
+            const pulse =
+                0.85 + 0.15 * Math.sin(gameState.matchTime * 6 + i * 2);
 
-            // Bright center glow
-            planetoid.addProjectileTrailPoint(
+            planetoid.addZoneSplat(
                 pool.position.x,
                 pool.position.y,
                 pool.position.z,
-                _afterglowCore,
-                fade * pulse * 2.5,
-            );
-
-            // Ring of glow points around the pool
-            const up = pn;
-            const ref =
-                Math.abs(up.y) < 0.99
-                    ? new THREE.Vector3(0, 1, 0)
-                    : new THREE.Vector3(1, 0, 0);
-            const tx = new THREE.Vector3().crossVectors(up, ref).normalize();
-            const tz = new THREE.Vector3().crossVectors(tx, up).normalize();
-            const ringCount = 6;
-            for (let r = 0; r < ringCount; r++) {
-                const angle =
-                    (r / ringCount) * Math.PI * 2 + gameState.matchTime * 0.5;
-                const offset = tx
-                    .clone()
-                    .multiplyScalar(Math.cos(angle) * 1.2)
-                    .addScaledVector(tz, Math.sin(angle) * 1.2);
-                const ringPos = pool.position
-                    .clone()
-                    .add(offset)
-                    .normalize()
-                    .multiplyScalar(map.sphereRadius);
-                planetoid.addProjectileTrailPoint(
-                    ringPos.x,
-                    ringPos.y,
-                    ringPos.z,
-                    _afterglowColor,
-                    fade * pulse * 1.5,
-                );
-            }
-
-            // Impact splat for persistent glow footprint
-            planetoid.addImpactSplat(
-                pool.position.x,
-                pool.position.y,
-                pool.position.z,
-                _afterglowColor,
+                _afterglowZone,
+                poolRadius,
+                fade * pulse * 2.0,
             );
 
             for (const enemy of enemies) {

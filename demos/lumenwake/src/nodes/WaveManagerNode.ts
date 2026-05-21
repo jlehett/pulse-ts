@@ -29,6 +29,7 @@ export interface WaveManagerProps {
     setSunStrength: (strength: number) => void;
     isPlayerAlive: () => boolean;
     onRefractionPicked?: () => void;
+    debugMode?: boolean;
 }
 
 /**
@@ -38,8 +39,10 @@ export interface WaveManagerProps {
 export function WaveManagerNode(props: WaveManagerProps) {
     const { gameState } = props;
 
-    let phase: WavePhase = 'countdown';
-    let phaseTimer = COUNTDOWN_DURATION;
+    const debug = props.debugMode ?? false;
+
+    let phase: WavePhase = debug ? 'wave_clear' : 'countdown';
+    let phaseTimer = debug ? 0 : COUNTDOWN_DURATION;
     let currentWaveIndex = 0;
 
     let scaledWave: WaveConfig | null = null;
@@ -48,8 +51,8 @@ export function WaveManagerNode(props: WaveManagerProps) {
     let totalSpawned = 0;
     let totalToSpawn = 0;
 
-    gameState.phase = 'countdown';
-    gameState.wave = 1;
+    gameState.phase = debug ? 'waiting' : 'countdown';
+    gameState.wave = 0;
     gameState.totalWaves = TOTAL_WAVES;
     gameState.matchTime = 0;
 
@@ -105,6 +108,7 @@ export function WaveManagerNode(props: WaveManagerProps) {
 
         switch (phase) {
             case 'countdown': {
+                if (debug) break;
                 phaseTimer -= dt;
                 gameState.countdownTimer = Math.max(0, phaseTimer);
                 if (phaseTimer <= 0) {
@@ -150,6 +154,7 @@ export function WaveManagerNode(props: WaveManagerProps) {
             }
 
             case 'wave_clear': {
+                if (debug) break;
                 phaseTimer -= dt;
                 gameState.countdownTimer = Math.max(0, phaseTimer);
                 if (phaseTimer <= 0) {
@@ -192,6 +197,9 @@ export function WaveManagerNode(props: WaveManagerProps) {
         advancePastRefractionPick() {
             if (phase !== 'refraction_pick') return;
             startWave(currentWaveIndex + 1);
+        },
+        debugStartWave(index: number) {
+            startWave(index);
         },
     };
 }
