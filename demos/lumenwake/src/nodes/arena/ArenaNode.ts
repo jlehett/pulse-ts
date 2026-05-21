@@ -9,7 +9,7 @@ export interface ArenaNodeProps {
     map: MapConfig;
 }
 
-const SUN_DISTANCE = 180;
+const SUN_DISTANCE = 160;
 
 /**
  * Top-level arena node. Composes the planetoid sphere,
@@ -20,7 +20,11 @@ export function ArenaNode(props: ArenaNodeProps) {
 
     const planetoid = PlanetoidNode({ map });
     StarfieldNode();
-    SunNode({ direction: planetoid.sunDir, getSunStrength: () => planetoid.getSunStrength() });
+    SunNode({
+        direction: planetoid.sunDir,
+        sphereRadius: map.sphereRadius,
+        getSunStrength: () => planetoid.getSunStrength(),
+    });
 
     // Key light from above
     usePointLight({
@@ -43,6 +47,7 @@ export function ArenaNode(props: ArenaNodeProps) {
 
 interface SunNodeProps {
     direction: THREE.Vector3;
+    sphereRadius: number;
     getSunStrength: () => number;
 }
 
@@ -51,8 +56,10 @@ function SunNode(props: SunNodeProps) {
         uSunScale: { value: 1.0 },
     };
 
+    const BILLBOARD_SIZE = 14;
+
     const { object } = useCustomMesh({
-        geometry: () => new THREE.PlaneGeometry(14, 14),
+        geometry: () => new THREE.PlaneGeometry(BILLBOARD_SIZE, BILLBOARD_SIZE),
         material: () =>
             new THREE.ShaderMaterial({
                 uniforms: sunUniforms,
@@ -62,7 +69,7 @@ function SunNode(props: SunNodeProps) {
                     void main() {
                         vUV = uv;
                         vec4 mvPos = modelViewMatrix * vec4(0.0, 0.0, 0.0, 1.0);
-                        mvPos.xy += position.xy * 14.0 * uSunScale;
+                        mvPos.xy += position.xy * ${BILLBOARD_SIZE.toFixed(1)} * uSunScale;
                         gl_Position = projectionMatrix * mvPos;
                     }
                 `,
@@ -71,11 +78,12 @@ function SunNode(props: SunNodeProps) {
                     varying vec2 vUV;
                     void main() {
                         float d = length(vUV - 0.5) * 2.3;
-                        float core = exp(-d * d * 8.0);
-                        float glow = exp(-d * d * 1.5) * 0.4;
-                        float intensity = (core + glow) * uSunScale;
+                        float core = exp(-d * d * 7.0);
+                        float glow = exp(-d * d * 1.5) * 0.35;
+                        float bloom = exp(-d * d * 0.4) * 0.025;
+                        float intensity = (core + glow + bloom) * uSunScale;
                         vec3 color = mix(vec3(1.0, 0.65, 0.3), vec3(1.0, 0.88, 0.7), core);
-                        if (intensity < 0.03) discard;
+                        if (intensity < 0.008) discard;
                         gl_FragColor = vec4(color * intensity, intensity);
                     }
                 `,

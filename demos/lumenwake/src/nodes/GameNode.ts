@@ -337,7 +337,7 @@ export function GameNode(props?: Readonly<GameNodeProps>) {
                 surfacePos.y,
                 surfacePos.z,
                 _shieldGlowColor,
-                1.5,
+                3.0,
             );
         }
 

@@ -549,8 +549,8 @@ export function EnemyNode(props: EnemyNodeProps) {
 
                     // Compose
                     float pattern = hexLine * 0.6 + scanLine * 0.25 + wave * 0.15 + shimmer * hexLine * 0.15;
-                    float baseAlpha = (0.06 + pattern * 0.2 + fresnel * 0.35) * edgeFade * selfLight * uSpawnProgress;
-                    vec3 baseColor = uGlowColor * (0.3 + pattern * 0.4 + fresnel * 0.5) * selfLight;
+                    float baseAlpha = (0.12 + pattern * 0.35 + fresnel * 0.5) * edgeFade * selfLight * uSpawnProgress;
+                    vec3 baseColor = uGlowColor * (0.5 + pattern * 0.6 + fresnel * 0.7) * selfLight;
 
                     // Damage crack glow
                     baseColor += vec3(1.0, 0.5, 0.2) * cracks * 0.4;
