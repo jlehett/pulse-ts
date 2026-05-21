@@ -4,7 +4,8 @@ title: Refraction (in-match buff) system
 status: todo
 priority: medium
 created: 2026-05-16
-updated: 2026-05-16
+updated: 2026-05-20
+branch: ticket-158-refraction-in-match-buff-system
 depends_on:
   - TICKET-157
 labels:
