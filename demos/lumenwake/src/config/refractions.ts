@@ -101,9 +101,9 @@ export const REFRACTION_POOL: RefractionDef[] = [
         icon: `<polyline points="8,12 16,24 24,10 30,22" stroke-width="2.5" fill="none"/><circle cx="8" cy="12" r="2" stroke-width="1"/><circle cx="30" cy="22" r="2" stroke-width="1"/>`,
         color: 0xffee44,
         tiers: [
-            { value: 1, description: 'Kills chain to 1 nearby enemy' },
-            { value: 2, description: 'Kills chain to 2 nearby enemies' },
-            { value: 3, description: 'Kills chain to 3 nearby enemies' },
+            { value: 1, description: 'Projectiles bounce 1 time (-50% dmg)' },
+            { value: 2, description: 'Projectiles bounce 2 times (-50% dmg)' },
+            { value: 3, description: 'Projectiles bounce 3 times (-50% dmg)' },
         ],
     },
     {
@@ -112,9 +112,9 @@ export const REFRACTION_POOL: RefractionDef[] = [
         icon: `<circle cx="18" cy="18" r="8" stroke-width="1.5" fill="none"/><circle cx="18" cy="18" r="4" stroke-width="2" fill="none" opacity="0.6"/><circle cx="18" cy="18" r="12" stroke-width="1" fill="none" opacity="0.3"/>`,
         color: 0xff8844,
         tiers: [
-            { value: 5, description: 'Kill pools deal 5 damage/sec' },
-            { value: 10, description: 'Kill pools deal 10 damage/sec' },
-            { value: 18, description: 'Kill pools deal 18 damage/sec' },
+            { value: 12, description: 'Kill pools deal 12 damage/sec' },
+            { value: 25, description: 'Kill pools deal 25 damage/sec' },
+            { value: 45, description: 'Kill pools deal 45 damage/sec' },
         ],
     },
     {
@@ -148,17 +148,6 @@ export const REFRACTION_POOL: RefractionDef[] = [
             { value: 0.2, description: '20% max health increase' },
             { value: 0.4, description: '40% max health increase' },
             { value: 0.65, description: '65% max health increase' },
-        ],
-    },
-    {
-        id: 'lux_magnet',
-        name: 'Lux Magnet',
-        icon: `<circle cx="18" cy="18" r="10" stroke-width="1.5" fill="none" opacity="0.4"/><circle cx="18" cy="18" r="6" stroke-width="1.5" fill="none" opacity="0.6"/><circle cx="18" cy="18" r="2" stroke-width="2"/>`,
-        color: 0xeedd44,
-        tiers: [
-            { value: 2, description: 'Heal 2 HP per wave survived' },
-            { value: 5, description: 'Heal 5 HP per wave survived' },
-            { value: 10, description: 'Heal 10 HP per wave survived' },
         ],
     },
     {

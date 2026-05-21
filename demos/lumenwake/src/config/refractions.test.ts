@@ -2,8 +2,8 @@ import { describe, it, expect } from 'vitest';
 import { REFRACTION_POOL, pickRandomRefractions } from './refractions';
 
 describe('REFRACTION_POOL', () => {
-    it('contains 15 refractions', () => {
-        expect(REFRACTION_POOL).toHaveLength(15);
+    it('contains 14 refractions', () => {
+        expect(REFRACTION_POOL).toHaveLength(14);
     });
 
     it('has unique IDs', () => {
@@ -59,14 +59,14 @@ describe('pickRandomRefractions', () => {
     it('excludes only maxed refractions, not partial tiers', () => {
         const partialTiers = new Map<string, number>();
         partialTiers.set(REFRACTION_POOL[0].id, 2);
-        const picks = pickRandomRefractions(15, partialTiers);
-        expect(picks).toHaveLength(15);
+        const picks = pickRandomRefractions(14, partialTiers);
+        expect(picks).toHaveLength(14);
         expect(picks.some((r) => r.id === REFRACTION_POOL[0].id)).toBe(true);
     });
 
     it('returns fewer if not enough available', () => {
         const mostMaxed = new Map<string, number>();
-        for (let i = 0; i < 14; i++) {
+        for (let i = 0; i < 13; i++) {
             mostMaxed.set(REFRACTION_POOL[i].id, 3);
         }
         const picks = pickRandomRefractions(3, mostMaxed);
