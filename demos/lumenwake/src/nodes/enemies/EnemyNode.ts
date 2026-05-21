@@ -40,6 +40,9 @@ export interface EnemyNodeProps {
     sphereRadius: number;
     startPosition: THREE.Vector3;
     glowTexture: THREE.Texture;
+    sunDir: THREE.Vector3;
+    sunColor: THREE.Color;
+    getSunStrength: () => number;
     getDarknessLevel: () => number;
     getPlayerPositions: () => THREE.Vector3[];
     onReady?: (handle: EnemyHandle) => void;
@@ -66,8 +69,11 @@ export function EnemyNode(props: EnemyNodeProps) {
         uFlash: { value: 0.0 },
         uSphereRadius: { value: sphereRadius },
         uGlowMap: { value: props.glowTexture },
-        uDarknessLevel: { value: 0.0 },
+        uBaseLumenwake: { value: 1.0 },
         uSpawnProgress: { value: 0.0 },
+        uSunDir: { value: props.sunDir },
+        uSunColor: { value: props.sunColor },
+        uSunStrength: { value: 1.0 },
     };
 
     const { root, object } = useCustomMesh({
@@ -101,8 +107,11 @@ export function EnemyNode(props: EnemyNodeProps) {
                     uniform float uFlash;
                     uniform float uSphereRadius;
                     uniform sampler2D uGlowMap;
-                    uniform float uDarknessLevel;
+                    uniform float uBaseLumenwake;
                     uniform float uSpawnProgress;
+                    uniform vec3 uSunDir;
+                    uniform vec3 uSunColor;
+                    uniform float uSunStrength;
 
                     varying vec3 vNormal;
                     varying vec3 vLocalPos;
@@ -155,14 +164,19 @@ export function EnemyNode(props: EnemyNodeProps) {
                         float theta = atan(sphereNormal.x, sphereNormal.z);
                         float phi = asin(clamp(sphereNormal.y, -1.0, 1.0));
                         vec2 glowUV = vec2(theta / (2.0 * 3.14159) + 0.5, phi / 3.14159 + 0.5);
-                        float illumination = min(texture2D(uGlowMap, glowUV).a, 2.5);
+                        float illumination = min(texture2D(uGlowMap, glowUV).a, 1.0);
 
-                        // Darkness level (consumes from south pole upward)
-                        float darknessThreshold = mix(-1.0, 1.0, uDarknessLevel);
-                        float darkness = smoothstep(darknessThreshold + 0.1, darknessThreshold - 0.1, sphereNormal.y);
+                        // Sun hemisphere lighting (matches planetoid soft terminator)
+                        float sunDot = dot(sphereNormal, uSunDir);
+                        float sunWrap = smoothstep(-0.3, 0.6, sunDot);
+                        float sunAmbient = 0.06 * uSunStrength;
+                        float sunLight = sunAmbient + sunWrap * 0.94 * uSunStrength;
 
-                        float lightAmount = min(max(0.05, illumination * 0.85) * (1.0 - darkness * 0.95), 1.5);
-                        vec3 keyDir = normalize(vec3(0.0, uSphereRadius * 2.0, 0.0) - vWorldPos);
+                        // Lumenwake glow — additive on top of sun
+                        float glowAmount = illumination * 1.4;
+
+                        float lightAmount = min(sunLight + glowAmount, 1.5);
+                        vec3 keyDir = uSunDir;
 
                         vec3 rayDir = normalize(vRayDir);
                         float stepSize = uRadius * 0.12;
@@ -194,23 +208,21 @@ export function EnemyNode(props: EnemyNodeProps) {
                         float fresnel = 1.0 - max(0.0, dot(vNormal, viewDir));
                         fresnel = pow(fresnel, 1.8);
 
-                        // Face shading from glow direction
+                        // Face shading from sun direction
                         float NdotL = max(0.0, dot(vNormal, keyDir));
 
-                        // Edge highlight to define faces
-                        float edgeGlow = fresnel * 0.5 * lightAmount;
+                        // Edge highlight — subtle, tinted by sun
+                        float edgeGlow = fresnel * 0.3 * lightAmount;
 
-                        // Per-face shading variation
-                        float faceShade = NdotL * 0.3 * lightAmount;
+                        // Per-face shading
+                        float faceShade = NdotL * 0.25 * sunLight;
 
-                        // Specular reflections colored by glow light
+                        // Sun-colored specular
                         vec3 halfVec = normalize(viewDir + keyDir);
-                        float spec = pow(max(0.0, dot(vNormal, halfVec)), 20.0) * 0.8 * lightAmount;
-                        vec3 reflectDir = reflect(-viewDir, vNormal);
-                        float envReflect = pow(max(0.0, dot(reflectDir, keyDir)), 8.0) * 0.4 * lightAmount;
+                        float spec = pow(max(0.0, dot(vNormal, halfVec)), 24.0) * 0.5 * sunWrap;
 
-                        float glassAlpha = (0.05 + edgeGlow + faceShade) * lightAmount;
-                        vec3 glassColor = uGlowColor * (0.1 + faceShade) + vec3(spec + envReflect) + uGlowColor * edgeGlow * 0.4;
+                        float glassAlpha = (0.04 + edgeGlow + faceShade) * lightAmount;
+                        vec3 glassColor = uGlowColor * (0.08 + faceShade * 0.5) + uSunColor * spec * 0.6 + uGlowColor * edgeGlow * 0.3;
 
                         accum = accum + glassColor * glassAlpha * (1.0 - alpha);
                         alpha = alpha + glassAlpha * (1.0 - alpha);
@@ -241,7 +253,10 @@ export function EnemyNode(props: EnemyNodeProps) {
         uInnerRadius: { value: enemyDef.radius },
         uSphereRadius: uniforms.uSphereRadius,
         uGlowMap: uniforms.uGlowMap,
-        uDarknessLevel: uniforms.uDarknessLevel,
+        uBaseLumenwake: uniforms.uBaseLumenwake,
+        uSunDir: uniforms.uSunDir,
+        uSunColor: uniforms.uSunColor,
+        uSunStrength: uniforms.uSunStrength,
     };
     const auraGeo = createAuraGeometry(enemyDef);
     const auraMat = new THREE.ShaderMaterial({
@@ -270,7 +285,10 @@ export function EnemyNode(props: EnemyNodeProps) {
             uniform float uInnerRadius;
             uniform float uSphereRadius;
             uniform sampler2D uGlowMap;
-            uniform float uDarknessLevel;
+            uniform float uBaseLumenwake;
+            uniform vec3 uSunDir;
+            uniform vec3 uSunColor;
+            uniform float uSunStrength;
 
             varying vec3 vLocalPos;
             varying vec3 vRayDir;
@@ -316,17 +334,18 @@ export function EnemyNode(props: EnemyNodeProps) {
                     if (t > 0.0 && t < fragDist) discard;
                 }
 
-                // Glow map + darkness lighting
+                // Sun hemisphere + lumenwake lighting
                 vec3 sphNorm = normalize(vWorldPos);
                 float aTheta = atan(sphNorm.x, sphNorm.z);
                 float aPhi = asin(clamp(sphNorm.y, -1.0, 1.0));
                 vec2 aGlowUV = vec2(aTheta / (2.0 * 3.14159) + 0.5, aPhi / 3.14159 + 0.5);
-                float aIllum = min(texture2D(uGlowMap, aGlowUV).a, 2.5);
+                float aIllum = min(texture2D(uGlowMap, aGlowUV).a, 1.0);
 
-                float aDarkThresh = mix(-1.0, 1.0, uDarknessLevel);
-                float aDarkness = smoothstep(aDarkThresh + 0.1, aDarkThresh - 0.1, sphNorm.y);
-
-                float auraLight = min(max(0.05, aIllum * 0.85) * (1.0 - aDarkness * 0.95), 1.5);
+                float aSunDot = dot(sphNorm, uSunDir);
+                float aSunWrap = smoothstep(-0.3, 0.6, aSunDot);
+                float aSunLight = 0.06 * uSunStrength + aSunWrap * 0.94 * uSunStrength;
+                float aGlow = aIllum * 1.4;
+                float auraLight = min(aSunLight + aGlow, 1.5);
 
                 vec3 rayDir = normalize(vRayDir);
                 float outerR = length(vLocalPos);
@@ -407,7 +426,10 @@ export function EnemyNode(props: EnemyNodeProps) {
                 uBreakProgress: { value: 0.0 },
                 uSphereRadius: uniforms.uSphereRadius,
                 uGlowMap: uniforms.uGlowMap,
-                uDarknessLevel: uniforms.uDarknessLevel,
+                uBaseLumenwake: uniforms.uBaseLumenwake,
+                uSunDir: uniforms.uSunDir,
+                uSunColor: uniforms.uSunColor,
+                uSunStrength: uniforms.uSunStrength,
             },
             vertexShader: /* glsl */ `
                 varying vec2 vUv;
@@ -432,7 +454,10 @@ export function EnemyNode(props: EnemyNodeProps) {
                 uniform float uBreakProgress;
                 uniform float uSphereRadius;
                 uniform sampler2D uGlowMap;
-                uniform float uDarknessLevel;
+                uniform float uBaseLumenwake;
+                uniform vec3 uSunDir;
+                uniform vec3 uSunColor;
+                uniform float uSunStrength;
 
                 varying vec2 vUv;
                 varying vec3 vLocalPos;
@@ -473,15 +498,17 @@ export function EnemyNode(props: EnemyNodeProps) {
                         if (tHit > 0.0 && tHit < fragDist) discard;
                     }
 
-                    // Lighting from glow map
+                    // Sun hemisphere + lumenwake lighting
                     vec3 sn = normalize(vWorldPos);
                     float theta = atan(sn.x, sn.z);
                     float phi = asin(clamp(sn.y, -1.0, 1.0));
                     vec2 guv = vec2(theta / (2.0 * 3.14159) + 0.5, phi / 3.14159 + 0.5);
-                    float illum = min(texture2D(uGlowMap, guv).a, 2.5);
-                    float dThresh = mix(-1.0, 1.0, uDarknessLevel);
-                    float dark = smoothstep(dThresh + 0.1, dThresh - 0.1, sn.y);
-                    float light = max(0.05, illum * 0.85) * (1.0 - dark * 0.95);
+                    float illum = min(texture2D(uGlowMap, guv).a, 1.0);
+                    float sSunDot = dot(sn, uSunDir);
+                    float sSunWrap = smoothstep(-0.3, 0.6, sSunDot);
+                    float sSunLight = 0.06 * uSunStrength + sSunWrap * 0.94 * uSunStrength;
+                    float sGlow = illum * 1.4;
+                    float light = min(sSunLight + sGlow, 1.5);
                     float selfLight = max(light, 0.25);
 
                     // Edge fade — soft falloff near rectangle edges
@@ -522,8 +549,8 @@ export function EnemyNode(props: EnemyNodeProps) {
 
                     // Compose
                     float pattern = hexLine * 0.6 + scanLine * 0.25 + wave * 0.15 + shimmer * hexLine * 0.15;
-                    float baseAlpha = (0.06 + pattern * 0.2 + fresnel * 0.35) * edgeFade * selfLight * uSpawnProgress;
-                    vec3 baseColor = uGlowColor * (0.3 + pattern * 0.4 + fresnel * 0.5) * selfLight;
+                    float baseAlpha = (0.12 + pattern * 0.35 + fresnel * 0.5) * edgeFade * selfLight * uSpawnProgress;
+                    vec3 baseColor = uGlowColor * (0.5 + pattern * 0.6 + fresnel * 0.7) * selfLight;
 
                     // Damage crack glow
                     baseColor += vec3(1.0, 0.5, 0.2) * cracks * 0.4;
@@ -623,7 +650,10 @@ export function EnemyNode(props: EnemyNodeProps) {
             uEnemyRadius: uniforms.uRadius,
             uSphereRadius: uniforms.uSphereRadius,
             uGlowMap: uniforms.uGlowMap,
-            uDarknessLevel: uniforms.uDarknessLevel,
+            uBaseLumenwake: uniforms.uBaseLumenwake,
+            uSunDir: uniforms.uSunDir,
+            uSunColor: uniforms.uSunColor,
+            uSunStrength: uniforms.uSunStrength,
         },
         vertexShader: /* glsl */ `
             varying vec3 vLocalPos;
@@ -646,7 +676,10 @@ export function EnemyNode(props: EnemyNodeProps) {
             uniform float uEnemyRadius;
             uniform float uSphereRadius;
             uniform sampler2D uGlowMap;
-            uniform float uDarknessLevel;
+            uniform float uBaseLumenwake;
+            uniform vec3 uSunDir;
+            uniform vec3 uSunColor;
+            uniform float uSunStrength;
 
             varying vec3 vLocalPos;
             varying vec3 vRayDir;
@@ -684,15 +717,17 @@ export function EnemyNode(props: EnemyNodeProps) {
                     if (tHit > 0.0 && tHit < fragDist) discard;
                 }
 
-                // Lighting
+                // Sun hemisphere + lumenwake lighting
                 vec3 sn = normalize(vWorldPos);
                 float theta = atan(sn.x, sn.z);
                 float phi = asin(clamp(sn.y, -1.0, 1.0));
                 vec2 guv = vec2(theta / (2.0 * 3.14159) + 0.5, phi / 3.14159 + 0.5);
-                float illum = min(texture2D(uGlowMap, guv).a, 2.5);
-                float dThresh = mix(-1.0, 1.0, uDarknessLevel);
-                float dark = smoothstep(dThresh + 0.1, dThresh - 0.1, sn.y);
-                float light = max(0.05, illum * 0.85) * (1.0 - dark * 0.95);
+                float illum = min(texture2D(uGlowMap, guv).a, 1.0);
+                float spSunDot = dot(sn, uSunDir);
+                float spSunWrap = smoothstep(-0.3, 0.6, spSunDot);
+                float spSunLight = 0.06 * uSunStrength + spSunWrap * 0.94 * uSunStrength;
+                float spGlow = illum * 1.4;
+                float light = min(spSunLight + spGlow, 1.5);
 
                 // Smoke contracts from outer radius to enemy radius
                 float outerR = mix(uSmokeRadius, uEnemyRadius * 0.5, uSpawnProgress);
@@ -843,7 +878,8 @@ export function EnemyNode(props: EnemyNodeProps) {
 
         elapsed += dt;
         uniforms.uTime.value += dt;
-        uniforms.uDarknessLevel.value = props.getDarknessLevel();
+        uniforms.uBaseLumenwake.value = 1.0 - props.getDarknessLevel();
+        uniforms.uSunStrength.value = props.getSunStrength();
 
         if (spawning) return;
 
@@ -1060,7 +1096,10 @@ export function EnemyNode(props: EnemyNodeProps) {
                     uSmokeHeight: { value: smokeHeight },
                     uSphereRadius: uniforms.uSphereRadius,
                     uGlowMap: uniforms.uGlowMap,
-                    uDarknessLevel: uniforms.uDarknessLevel,
+                    uBaseLumenwake: uniforms.uBaseLumenwake,
+                    uSunDir: uniforms.uSunDir,
+                    uSunColor: uniforms.uSunColor,
+                    uSunStrength: uniforms.uSunStrength,
                 },
                 vertexShader: /* glsl */ `
                     uniform vec3 uUpDir;
@@ -1086,7 +1125,10 @@ export function EnemyNode(props: EnemyNodeProps) {
                     uniform float uSmokeHeight;
                     uniform float uSphereRadius;
                     uniform sampler2D uGlowMap;
-                    uniform float uDarknessLevel;
+                    uniform float uBaseLumenwake;
+                    uniform vec3 uSunDir;
+                    uniform vec3 uSunColor;
+                    uniform float uSunStrength;
 
                     varying vec3 vLocalPos;
                     varying vec3 vRayDir;
@@ -1125,15 +1167,17 @@ export function EnemyNode(props: EnemyNodeProps) {
                             if (tHit > 0.0 && tHit < fragDist) discard;
                         }
 
-                        // Lighting
+                        // Sun hemisphere + lumenwake lighting
                         vec3 sn = normalize(vWorldPos);
                         float theta = atan(sn.x, sn.z);
                         float phi = asin(clamp(sn.y, -1.0, 1.0));
                         vec2 guv = vec2(theta / (2.0 * 3.14159) + 0.5, phi / 3.14159 + 0.5);
-                        float illum = min(texture2D(uGlowMap, guv).a, 2.5);
-                        float dThresh = mix(-1.0, 1.0, uDarknessLevel);
-                        float dark = smoothstep(dThresh + 0.1, dThresh - 0.1, sn.y);
-                        float light = max(0.05, illum * 0.85) * (1.0 - dark * 0.95);
+                        float illum = min(texture2D(uGlowMap, guv).a, 1.0);
+                        float dSunDot = dot(sn, uSunDir);
+                        float dSunWrap = smoothstep(-0.3, 0.6, dSunDot);
+                        float dSunLight = 0.06 * uSunStrength + dSunWrap * 0.94 * uSunStrength;
+                        float dGlow = illum * 1.4;
+                        float light = min(dSunLight + dGlow, 1.5);
 
                         vec3 localUp = normalize(vLocalUp);
 
@@ -1286,7 +1330,10 @@ export function EnemyNode(props: EnemyNodeProps) {
                         uOpacity: { value: 1.0 },
                         uSphereRadius: uniforms.uSphereRadius,
                         uGlowMap: uniforms.uGlowMap,
-                        uDarknessLevel: uniforms.uDarknessLevel,
+                        uBaseLumenwake: uniforms.uBaseLumenwake,
+                        uSunDir: uniforms.uSunDir,
+                        uSunColor: uniforms.uSunColor,
+                        uSunStrength: uniforms.uSunStrength,
                     },
                     vertexShader: /* glsl */ `
                         varying vec3 vWorldPos;
@@ -1303,7 +1350,10 @@ export function EnemyNode(props: EnemyNodeProps) {
                         uniform float uOpacity;
                         uniform float uSphereRadius;
                         uniform sampler2D uGlowMap;
-                        uniform float uDarknessLevel;
+                        uniform float uBaseLumenwake;
+                        uniform vec3 uSunDir;
+                        uniform vec3 uSunColor;
+                        uniform float uSunStrength;
                         varying vec3 vWorldPos;
                         varying vec3 vNormal;
                         void main() {
@@ -1311,20 +1361,21 @@ export function EnemyNode(props: EnemyNodeProps) {
                             float theta = atan(sn.x, sn.z);
                             float phi = asin(clamp(sn.y, -1.0, 1.0));
                             vec2 guv = vec2(theta / (2.0 * 3.14159) + 0.5, phi / 3.14159 + 0.5);
-                            float illum = min(texture2D(uGlowMap, guv).a, 2.5);
-                            float dThresh = mix(-1.0, 1.0, uDarknessLevel);
-                            float dark = smoothstep(dThresh + 0.1, dThresh - 0.1, sn.y);
-                            float light = max(0.05, illum * 0.85) * (1.0 - dark * 0.95);
+                            float illum = min(texture2D(uGlowMap, guv).a, 1.0);
+                            float fSunDot = dot(sn, uSunDir);
+                            float fSunWrap = smoothstep(-0.3, 0.6, fSunDot);
+                            float fSunLight = 0.06 * uSunStrength + fSunWrap * 0.94 * uSunStrength;
+                            float fGlow = illum * 1.4;
+                            float light = min(fSunLight + fGlow, 1.5);
 
                             vec3 viewDir = normalize(cameraPosition - vWorldPos);
                             float fresnel = pow(1.0 - max(0.0, dot(vNormal, viewDir)), 2.0);
 
-                            vec3 keyDir = normalize(vec3(0.0, uSphereRadius * 2.0, 0.0) - vWorldPos);
-                            vec3 halfVec = normalize(viewDir + keyDir);
-                            float spec = pow(max(0.0, dot(vNormal, halfVec)), 24.0) * 0.6 * light;
+                            vec3 halfVec = normalize(viewDir + uSunDir);
+                            float spec = pow(max(0.0, dot(vNormal, halfVec)), 24.0) * 0.4 * fSunWrap;
 
-                            vec3 col = uColor * 0.15 * light + vec3(spec) + uColor * fresnel * 0.3 * light;
-                            float a = (0.08 + fresnel * 0.25 + spec * 0.5) * uOpacity;
+                            vec3 col = uColor * 0.12 * light + uSunColor * spec * 0.4 + uColor * fresnel * 0.25 * light;
+                            float a = (0.06 + fresnel * 0.2 + spec * 0.3) * uOpacity;
                             gl_FragColor = vec4(col, a);
                         }
                     `,

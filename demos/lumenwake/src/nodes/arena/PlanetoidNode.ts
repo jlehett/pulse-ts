@@ -11,35 +11,47 @@ const MAX_TRAIL_SPLATS = PLAYER_TRAIL_LENGTH * 2;
 const MAX_ADD_SPLATS = (8 + PROJ_TRAIL_LENGTH + 32) * 2;
 
 const SURFACE_VERTEX = /* glsl */ `
+    uniform sampler2D uWorleyMap;
+    uniform float uSphereRadius;
+    uniform float uTime;
     varying vec3 vWorldPos;
+    varying vec3 vSphereNormal;
 
     void main() {
+        vec3 n = normalize(position);
+        float theta = atan(n.x, n.z);
+        float phi = asin(n.y);
+        vec2 eqUV = vec2(theta / 6.28318 + 0.5, phi / 3.14159 + 0.5);
+
         vec4 worldPos = modelMatrix * vec4(position, 1.0);
         vWorldPos = worldPos.xyz;
+        vSphereNormal = n;
         gl_Position = projectionMatrix * viewMatrix * worldPos;
     }
 `;
 
 const SURFACE_FRAGMENT = /* glsl */ `
     uniform float uTime;
-    uniform float uDarknessLevel;
+    uniform float uBaseLumenwake;
     uniform vec3 uSurfaceColor;
     uniform vec3 uEmissiveColor;
     uniform float uSphereRadius;
     uniform sampler2D uGlowMap;
     uniform sampler2D uWorleyMap;
+    uniform vec3 uSunDir;
+    uniform vec3 uSunColor;
+    uniform float uSunStrength;
     varying vec3 vWorldPos;
+    varying vec3 vSphereNormal;
 
     void main() {
         vec3 pos = vWorldPos;
-        vec3 normal = normalize(pos);
+        vec3 normal = vSphereNormal;
 
-        // Equirectangular UV for texture lookups
         float theta = atan(pos.x, pos.z);
         float phi = asin(normal.y);
         vec2 eqUV = vec2(theta / 6.28318 + 0.5, phi / 3.14159 + 0.5);
 
-        // Sample Worley texture (R = cell edges, G = pebble noise)
         vec2 texel = vec2(4.0 / 4096.0, 4.0 / 2048.0);
         vec4 wCenter = texture2D(uWorleyMap, eqUV);
         vec4 wR = texture2D(uWorleyMap, eqUV + vec2(texel.x, 0.0));
@@ -48,72 +60,79 @@ const SURFACE_FRAGMENT = /* glsl */ `
         vec4 wD = texture2D(uWorleyMap, eqUV - vec2(0.0, texel.y));
 
         float edge = wCenter.r;
-        float grid = 1.0 - smoothstep(0.03, 0.08, edge);
+        float biome = wCenter.b;
+        float rough = wCenter.a;
 
-        // Cell height: 0 in cracks, 1 on raised surfaces
-        float height = smoothstep(0.0, 0.12, edge);
+        vec3 up = abs(normal.y) < 0.99 ? vec3(0.0, 1.0, 0.0) : vec3(1.0, 0.0, 0.0);
+        vec3 T = normalize(cross(up, normal));
+        vec3 btan = normalize(cross(normal, T));
+
+        // Normal perturbation from height field
         float hR = smoothstep(0.0, 0.12, wR.r);
         float hL = smoothstep(0.0, 0.12, wL.r);
         float hU = smoothstep(0.0, 0.12, wU.r);
         float hD = smoothstep(0.0, 0.12, wD.r);
+        float rdx = hR - hL;
+        float rdy = hU - hD;
+        vec3 perturbedNormal = normalize(normal - T * rdx * 0.3 - btan * rdy * 0.3);
 
-        // Cell height gradient only
-        float dx = hR - hL;
-        float dy = hU - hD;
+        // Rock surface with subtle warm/cool variation
+        vec3 rockWarm = vec3(0.012, 0.012, 0.012);
+        vec3 rockCool = vec3(0.010, 0.011, 0.012);
+        vec3 rockBase = mix(rockWarm, rockCool, biome) * (0.85 + rough * 0.3);
 
-        vec3 up = abs(normal.y) < 0.99 ? vec3(0.0, 1.0, 0.0) : vec3(1.0, 0.0, 0.0);
-        vec3 T = normalize(cross(up, normal));
-        vec3 B = normalize(cross(normal, T));
-        vec3 perturbedNormal = normalize(normal - T * dx * 15.0 - B * dy * 15.0);
+        vec3 emitWarm = vec3(0.045, 0.045, 0.045);
+        vec3 emitCool = vec3(0.04, 0.042, 0.045);
+        vec3 rockEmit = mix(emitWarm, emitCool, biome);
 
-        // All illumination from pre-computed glow map
+        float grid = 1.0 - smoothstep(0.02, 0.05, edge);
+        float height = smoothstep(0.0, 0.12, edge);
+        float ao = 0.4 + 0.6 * height;
+
+        // Glow map illumination (dynamic player/projectile light)
         vec4 glowSample = texture2D(uGlowMap, eqUV);
-        float illumination = glowSample.a;
+        float illumination = min(glowSample.a, 1.0);
         vec3 glowColor = glowSample.a > 0.0 ? glowSample.rgb / glowSample.a : vec3(0.0);
 
-        // Derive light direction from glow gradient (points toward light source)
+        // Derive glow light direction from gradient
         vec2 glowTexel = vec2(8.0 / 2048.0, 8.0 / 1024.0);
         float glR = texture2D(uGlowMap, eqUV + vec2(glowTexel.x, 0.0)).a;
         float glL = texture2D(uGlowMap, eqUV - vec2(glowTexel.x, 0.0)).a;
         float glU = texture2D(uGlowMap, eqUV + vec2(0.0, glowTexel.y)).a;
         float glD = texture2D(uGlowMap, eqUV - vec2(0.0, glowTexel.y)).a;
-        float glowDx = glR - glL;
-        float glowDy = glU - glD;
+        vec3 glowLightDir = normalize(normal + T * (glR - glL) * 10.0 + btan * (glU - glD) * 10.0);
 
-        // Light direction: from surface toward glow source, slightly grazing
-        vec3 glowLightDir = normalize(normal + T * glowDx * 10.0 + B * glowDy * 10.0);
-        float NdotL = max(dot(perturbedNormal, glowLightDir), 0.0);
+        float glowNdotL = max(dot(perturbedNormal, glowLightDir), 0.0);
+        float glowWrap = smoothstep(-0.2, 0.8, dot(perturbedNormal, glowLightDir));
+        float litAmount = pow(illumination, 1.3) * mix(0.4, 1.0, glowWrap) * (0.7 + 0.3 * ao);
+        float litHot = pow(illumination, 0.6) * illumination;
+        litAmount = mix(litAmount, litHot, illumination);
 
-        // Ambient occlusion — cracks are recessed and receive less glow
-        float ao = 0.15 + 0.85 * height;
-
-        // Combine flat illumination with directional normal-mapped lighting
-        float directional = mix(1.0, NdotL, 0.5);
-        float litAmount = illumination * ao * directional;
-
-        // View-dependent shading on raised surfaces
+        // Sun directional light
         vec3 viewDir = normalize(cameraPosition - pos);
+        float sunDot = dot(perturbedNormal, uSunDir);
+        float sunNdotL = max(sunDot, 0.0);
+        float sunWrap = smoothstep(-0.3, 0.6, sunDot);
+
         float NdotV = max(dot(perturbedNormal, viewDir), 0.0);
         float viewShade = 0.85 + 0.15 * NdotV;
 
-        // Darkness consumes from south pole upward
-        float darknessThreshold = mix(-1.0, 1.0, uDarknessLevel);
-        float darkness = smoothstep(darknessThreshold + 0.1, darknessThreshold - 0.1, normal.y);
+        float crackDarken = 1.0 - grid * 0.08;
 
-        // Combine
-        float pulse = sin(uTime * 0.4) * 0.05 + 0.95;
-        vec3 gridColor = uEmissiveColor * grid * 0.5 * pulse;
+        vec3 surfaceLit = rockBase * crackDarken * uSunColor * sunWrap * ao * 1.8 * uSunStrength
+                        + rockEmit * 0.4 * ao * sunNdotL * uSunStrength;
+        surfaceLit *= viewShade;
 
-        vec3 fullSurface = (uSurfaceColor * 0.8 + gridColor) * viewShade;
-        vec3 darkSurface = uSurfaceColor * 0.03;
-        vec3 surfaceColor = mix(darkSurface, fullSurface, litAmount);
+        vec3 surfaceAmbient = rockBase * crackDarken * uSunColor * 1.4 * ao * uSunStrength;
+        vec3 surfaceColor = surfaceAmbient + surfaceLit;
 
-        surfaceColor += glowColor * litAmount * 0.08;
-        surfaceColor += uEmissiveColor * grid * 0.04;
+        // Lumenwake glow — acts as a light source illuminating the rock
+        vec3 glowTint = mix(glowColor, vec3(1.0), illumination * 0.12);
+        vec3 glowLit = rockBase * glowTint * glowWrap * ao * illumination * 12.0
+                     + rockEmit * glowTint * glowNdotL * illumination * 3.0;
+        surfaceColor += glowLit;
 
-        vec3 voidColor = vec3(0.0, 0.0, 0.003);
-        vec3 finalColor = mix(surfaceColor, voidColor, darkness);
-        gl_FragColor = vec4(finalColor, 1.0);
+        gl_FragColor = vec4(surfaceColor, 1.0);
     }
 `;
 
@@ -205,14 +224,50 @@ export function PlanetoidNode(props: PlanetoidProps) {
                     return dist2 - dist1;
                 }
 
+                // Simplex-like noise for biome regions
+                float snoise(vec3 v) {
+                    vec3 i = floor(v + dot(v, vec3(1.0/3.0)));
+                    vec3 x0 = v - i + dot(i, vec3(1.0/6.0));
+                    vec3 g = step(x0.yzx, x0.xyz);
+                    vec3 l = 1.0 - g;
+                    vec3 i1 = min(g, l.zxy);
+                    vec3 i2 = max(g, l.zxy);
+                    vec3 x1 = x0 - i1 + 1.0/6.0;
+                    vec3 x2 = x0 - i2 + 1.0/3.0;
+                    vec3 x3 = x0 - 0.5;
+                    vec4 w;
+                    w.x = dot(x0, x0); w.y = dot(x1, x1);
+                    w.z = dot(x2, x2); w.w = dot(x3, x3);
+                    w = max(0.6 - w, 0.0);
+                    w *= w; w *= w;
+                    float n = dot(w, vec4(
+                        dot(x0, hash3(i)),
+                        dot(x1, hash3(i + i1)),
+                        dot(x2, hash3(i + i2)),
+                        dot(x3, hash3(i + 1.0))
+                    ));
+                    return n * 52.0;
+                }
+
                 void main() {
                     float theta = (vUV.x - 0.5) * 6.28318;
                     float phi = (vUV.y - 0.5) * 3.14159;
                     float cPhi = cos(phi);
                     vec3 pos = vec3(cPhi * sin(theta), sin(phi), cPhi * cos(theta)) * uSphereRadius;
-                    float edge = worleyEdge(pos, 0.8);
+                    vec3 dir = normalize(pos);
+                    float edge = worleyEdge(pos, 1.5);
                     float pebble = worleyEdge(pos, 3.0);
-                    gl_FragColor = vec4(edge, pebble, 0.0, 1.0);
+
+                    // Biome blend: large continental regions + subtle latitude
+                    float n1 = snoise(dir * 0.8) * 0.5 + 0.5;
+                    float n2 = snoise(dir * 1.6 + 7.0) * 0.5 + 0.5;
+                    float lat = abs(dir.y);
+                    float biome = clamp(n1 * 0.7 + n2 * 0.15 + lat * 0.2 - 0.1, 0.0, 1.0);
+
+                    // Terrain roughness variation
+                    float rough = snoise(dir * 8.0 + 20.0) * 0.5 + 0.5;
+
+                    gl_FragColor = vec4(edge, pebble, biome, rough);
                 }
             `,
             uniforms: { uSphereRadius: { value: map.sphereRadius } },
@@ -299,7 +354,7 @@ export function PlanetoidNode(props: PlanetoidProps) {
             float dist = sqrt(dist2);
             float t = dist / vRadius;
 
-            float falloff = t < 0.3 ? 1.0 : t < 1.0 ? (1.0 - (t - 0.3) / 0.7) : 0.0;
+            float falloff = exp(-t * t * 3.0);
             if (falloff < 0.001) discard;
 
             float intensity = falloff * vStrength;
@@ -396,18 +451,23 @@ export function PlanetoidNode(props: PlanetoidProps) {
     const PLAYER_GLOW_RADIUS = 6.5;
     const _savedClearColor = new THREE.Color();
 
+    const sunDir = new THREE.Vector3(-0.7, -0.5, -0.4).normalize();
+
     const uniforms = {
         uTime: { value: 0 },
-        uDarknessLevel: { value: 0 },
+        uBaseLumenwake: { value: 1.0 },
         uSurfaceColor: { value: new THREE.Color(map.surfaceColor) },
         uEmissiveColor: { value: new THREE.Color(map.emissiveColor) },
         uSphereRadius: { value: map.sphereRadius },
         uGlowMap: { value: glowRT.texture },
         uWorleyMap: { value: worleyRT.texture },
+        uSunDir: { value: sunDir },
+        uSunColor: { value: new THREE.Color(0.9, 0.88, 0.85) },
+        uSunStrength: { value: 1.0 },
     };
 
     useCustomMesh({
-        geometry: () => new THREE.SphereGeometry(map.sphereRadius, 48, 32),
+        geometry: () => new THREE.SphereGeometry(map.sphereRadius, 384, 256),
         material: () =>
             new THREE.ShaderMaterial({
                 vertexShader: SURFACE_VERTEX,
@@ -416,10 +476,79 @@ export function PlanetoidNode(props: PlanetoidProps) {
             }),
     });
 
+    // Atmospheric corona — Fresnel rim glow, sun-tinted on lit side
+    const coronaScale = 1.5;
+    const coronaMesh = useCustomMesh({
+        geometry: () =>
+            new THREE.SphereGeometry(map.sphereRadius * coronaScale, 128, 64),
+        material: () =>
+            new THREE.ShaderMaterial({
+                uniforms: {
+                    uSunDir: uniforms.uSunDir,
+                    uSunColor: uniforms.uSunColor,
+                    uSphereRadius: uniforms.uSphereRadius,
+                    uSunStrength: uniforms.uSunStrength,
+                },
+                vertexShader: /* glsl */ `
+                    varying vec3 vWorldPos;
+                    void main() {
+                        vec4 worldPos = modelMatrix * vec4(position, 1.0);
+                        vWorldPos = worldPos.xyz;
+                        gl_Position = projectionMatrix * viewMatrix * worldPos;
+                    }
+                `,
+                fragmentShader: /* glsl */ `
+                    uniform vec3 uSunDir;
+                    uniform vec3 uSunColor;
+                    uniform float uSphereRadius;
+                    uniform float uSunStrength;
+                    varying vec3 vWorldPos;
+
+                    void main() {
+                        // Ray from camera through this fragment
+                        vec3 rayDir = normalize(vWorldPos - cameraPosition);
+
+                        // Closest approach of view ray to sphere center (origin)
+                        float tClosest = -dot(cameraPosition, rayDir);
+                        vec3 closest = cameraPosition + rayDir * tClosest;
+                        float minDist = length(closest);
+
+                        // Skip fragments where ray hits the planetoid
+                        // Account for water displacement below sphere radius
+                        if (minDist < uSphereRadius) discard;
+
+                        // Smooth falloff from planetoid surface outward
+                        float coronaThickness = uSphereRadius * ${(coronaScale - 1.0).toFixed(2)};
+                        float distFromSurface = minDist - uSphereRadius;
+                        float glow = 1.0 - smoothstep(0.0, coronaThickness, distFromSurface);
+
+                        // Sun-side coloring based on closest point direction
+                        vec3 closestDir = normalize(closest);
+                        float sunFacing = dot(closestDir, uSunDir);
+                        float sunSide = smoothstep(-0.3, 0.6, sunFacing);
+
+                        vec3 warmColor = uSunColor * 0.8;
+                        vec3 coolColor = vec3(0.2, 0.35, 0.7);
+                        vec3 coronaColor = mix(coolColor, warmColor, sunSide);
+
+                        float intensity = mix(0.35, 0.5, sunSide) * uSunStrength;
+                        float alpha = glow * intensity * 0.35;
+                        if (alpha < 0.005) discard;
+                        gl_FragColor = vec4(coronaColor * alpha, alpha);
+                    }
+                `,
+                transparent: true,
+                depthWrite: false,
+                side: THREE.BackSide,
+                blending: THREE.AdditiveBlending,
+            }),
+    });
+    coronaMesh.object.frustumCulled = false;
+
     // Player trail management
     let playerTrailCount = 0;
     const PLAYER_TRAIL_LIFETIME = 4.5;
-    const PLAYER_TRAIL_RADIUS = 4.0;
+    const PLAYER_TRAIL_RADIUS = 3.8;
     const PLAYER_TRAIL_SPACING = 0.25;
     const lastTrailPos = new THREE.Vector3();
     let hasLastPos = false;
@@ -504,8 +633,30 @@ export function PlanetoidNode(props: PlanetoidProps) {
         return idx;
     }
 
+    const SUN_ORBIT_SPEED = 0.05;
+    const LIGHTING_LERP_SPEED = 0.8;
+    const orbitAxis = new THREE.Vector3()
+        .crossVectors(sunDir, new THREE.Vector3(0, 1, 0))
+        .normalize();
+    const _sunRotQ = new THREE.Quaternion();
+    let targetBaseLumenwake = 1.0;
+    let targetSunStrength = 1.0;
+
     useFrameUpdate((dt) => {
         uniforms.uTime.value += dt;
+
+        // Smoothly lerp lighting toward wave targets
+        const lerpFactor = 1 - Math.exp(-LIGHTING_LERP_SPEED * dt);
+        const curLumen = uniforms.uBaseLumenwake.value as number;
+        const curSun = uniforms.uSunStrength.value as number;
+        uniforms.uBaseLumenwake.value =
+            curLumen + (targetBaseLumenwake - curLumen) * lerpFactor;
+        uniforms.uSunStrength.value =
+            curSun + (targetSunStrength - curSun) * lerpFactor;
+
+        // Slowly orbit the sun — creates shifting light/dark hemispheres
+        _sunRotQ.setFromAxisAngle(orbitAxis, SUN_ORBIT_SPEED * dt);
+        sunDir.applyQuaternion(_sunRotQ).normalize();
 
         // Age player trail points
         for (let i = 0; i < playerTrailCount; i++) {
@@ -562,7 +713,28 @@ export function PlanetoidNode(props: PlanetoidProps) {
                 playerTrailColorData[i * 3 + 1],
                 playerTrailColorData[i * 3 + 2],
                 PLAYER_TRAIL_RADIUS,
-                1.5 * fade,
+                0.7 * fade,
+                tCenters,
+                tColors,
+                tRS,
+                tUO,
+            );
+        }
+
+        for (let i = 0; i < projTrailCount; i++) {
+            const age = projTrailData[i * 5 + 3];
+            const intensity = projTrailData[i * 5 + 4];
+            const fade = 1 - age / PROJ_TRAIL_LIFETIME;
+            trailIdx = addInstance(
+                trailIdx,
+                projTrailData[i * 5],
+                projTrailData[i * 5 + 1],
+                projTrailData[i * 5 + 2],
+                projTrailColorData[i * 3],
+                projTrailColorData[i * 3 + 1],
+                projTrailColorData[i * 3 + 2],
+                PROJ_TRAIL_RADIUS * intensity,
+                0.6 * fade * intensity,
                 tCenters,
                 tColors,
                 tRS,
@@ -576,7 +748,7 @@ export function PlanetoidNode(props: PlanetoidProps) {
         trailSplat.radiusStrength.needsUpdate = true;
         trailSplat.uOffset.needsUpdate = true;
 
-        // Fill additive splat instances (player base + projectiles)
+        // Fill additive splat instances (player base + impacts)
         let addIdx = 0;
         const aCenters = addSplat.center.array as Float32Array;
         const aColors = addSplat.colorFade.array as Float32Array;
@@ -597,27 +769,6 @@ export function PlanetoidNode(props: PlanetoidProps) {
                 c.b,
                 PLAYER_GLOW_RADIUS,
                 1.2,
-                aCenters,
-                aColors,
-                aRS,
-                aUO,
-            );
-        }
-
-        for (let i = 0; i < projTrailCount; i++) {
-            const age = projTrailData[i * 5 + 3];
-            const intensity = projTrailData[i * 5 + 4];
-            const fade = 1 - age / PROJ_TRAIL_LIFETIME;
-            addIdx = addInstance(
-                addIdx,
-                projTrailData[i * 5],
-                projTrailData[i * 5 + 1],
-                projTrailData[i * 5 + 2],
-                projTrailColorData[i * 3],
-                projTrailColorData[i * 3 + 1],
-                projTrailColorData[i * 3 + 2],
-                PROJ_TRAIL_RADIUS * intensity,
-                0.6 * fade * intensity,
                 aCenters,
                 aColors,
                 aRS,
@@ -673,12 +824,19 @@ export function PlanetoidNode(props: PlanetoidProps) {
 
     return {
         uniforms,
+        sunDir,
         glowTexture: glowRT.texture,
         getDarknessLevel() {
-            return uniforms.uDarknessLevel.value as number;
+            return 1.0 - (uniforms.uBaseLumenwake.value as number);
         },
         setDarknessLevel(level: number) {
-            uniforms.uDarknessLevel.value = Math.max(0, Math.min(1, level));
+            targetBaseLumenwake = Math.max(0, Math.min(1, 1.0 - level));
+        },
+        setSunStrength(strength: number) {
+            targetSunStrength = Math.max(0, Math.min(1, strength));
+        },
+        getSunStrength() {
+            return uniforms.uSunStrength.value as number;
         },
         setPlayerPosition(index: number, x: number, y: number, z: number) {
             if (!playerPositions[index]) {
