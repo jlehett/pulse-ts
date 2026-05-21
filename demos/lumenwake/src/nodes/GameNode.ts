@@ -11,11 +11,12 @@ import { useAmbientLight } from '@pulse-ts/three';
 import type { Transport } from '@pulse-ts/network';
 import { useConnection } from '@pulse-ts/network';
 import { installParticles, useParticleBurst } from '@pulse-ts/effects';
-import { GameCtx, type GameState } from '../contexts';
+import { GameCtx, type GameState, type RefractionState } from '../contexts';
 import { CameraNode } from './CameraNode';
 import { ArenaNode } from './arena/ArenaNode';
 import { LocalPlayerNode, type PlayerState } from './player/LocalPlayerNode';
 import { HudNode } from './HudNode';
+import { RefractionPickNode } from './RefractionPickNode';
 import { ProjectileNode } from './player/ProjectileNode';
 import { PiercingBeamNode } from './player/PiercingBeamNode';
 import { PulseNode } from './player/PulseNode';
@@ -29,6 +30,7 @@ import { DEFAULT_MAP, sphereToWorld } from '../config/maps';
 import { CLASS_SHARD } from '../config/classes';
 import type { ClassDef } from '../config/classes';
 import { TOTAL_WAVES } from '../config/waves';
+import { REFRACTION_POOL, type RefractionDef } from '../config/refractions';
 
 interface ProjectileEntry {
     position: THREE.Vector3;
@@ -67,6 +69,11 @@ export function GameNode(props?: Readonly<GameNodeProps>) {
         useConnection(props!.transport!, { disconnectOnCleanup: false });
     }
 
+    const refractions: RefractionState = {
+        active: new Map(),
+        choices: [],
+    };
+
     const gameState: GameState = {
         phase: 'countdown',
         wave: 0,
@@ -78,6 +85,7 @@ export function GameNode(props?: Readonly<GameNodeProps>) {
         playerCount: props?.playerCount ?? 1,
         isHost: props?.isHost ?? true,
         map,
+        refractions,
     };
 
     useProvideContext(GameCtx, gameState);
@@ -137,6 +145,17 @@ export function GameNode(props?: Readonly<GameNodeProps>) {
     // Projectile registry for collision detection
     const projectiles: ProjectileEntry[] = [];
 
+    // Afterglow damage pools
+    interface AfterglowPool {
+        position: THREE.Vector3;
+        dps: number;
+        timer: number;
+    }
+    const afterglowPools: AfterglowPool[] = [];
+
+    // Luminous Overload timer
+    let novaTimer = 0;
+
     function registerProjectile(
         node: Node,
         damage: number,
@@ -163,6 +182,7 @@ export function GameNode(props?: Readonly<GameNodeProps>) {
     }
 
     useChild(HudNode, { playerState, classDef, gameState });
+    useChild(RefractionPickNode, { gameState, onPick: handleRefractionPick });
 
     // Wave manager ref — set after spawner is created
     let waveManager: ReturnType<typeof WaveManagerNode> | null = null;
@@ -178,8 +198,91 @@ export function GameNode(props?: Readonly<GameNodeProps>) {
         getDarknessLevel: () => planetoid.getDarknessLevel(),
         getPlayerPositions: () =>
             playerState.alive ? [playerState.position] : [],
-        onEnemyDeath: () => {
+        onEnemyDeath: (deathPosition: THREE.Vector3) => {
             waveManager?.onEnemyKilled();
+
+            if (!playerState.alive) return;
+
+            // Refracted Healing
+            const healOnKill = getRefractionValue('refracted_healing');
+            if (healOnKill > 0) {
+                playerState.health = Math.min(
+                    playerState.maxHealth,
+                    playerState.health + healOnKill,
+                );
+            }
+
+            // Chain Light: fire chain projectile toward nearest enemy
+            if (deathPosition) {
+                const chainCount = getRefractionValue('chain_light');
+                if (chainCount > 0) {
+                    const enemies = spawner.getEnemies();
+                    const nearby = enemies
+                        .filter(
+                            (e) =>
+                                e.state.alive &&
+                                !e.state.spawning &&
+                                e.state.position !== deathPosition,
+                        )
+                        .map((e) => ({
+                            enemy: e,
+                            dist: deathPosition
+                                .clone()
+                                .normalize()
+                                .dot(e.state.position.clone().normalize()),
+                        }))
+                        .sort((a, b) => b.dist - a.dist)
+                        .slice(0, chainCount);
+
+                    for (const { enemy } of nearby) {
+                        const dir = geodesicDirection(
+                            deathPosition,
+                            enemy.state.position,
+                        );
+                        const entry = registerProjectile(
+                            null!,
+                            classDef.primaryDamage * 0.5,
+                        );
+                        entry.node = world.mount(
+                            ProjectileNode,
+                            {
+                                origin: deathPosition.clone(),
+                                direction: dir,
+                                speed: classDef.projectileSpeed * 1.5,
+                                damage: classDef.primaryDamage * 0.5,
+                                color: 0xffee44,
+                                sphereRadius: map.sphereRadius,
+                                meshRadius: 0.1,
+                                emissiveIntensity: 3.0,
+                                onPositionUpdate: (pos) => {
+                                    entry.position.copy(pos);
+                                    planetoid.addProjectileTrailPoint(
+                                        pos.x,
+                                        pos.y,
+                                        pos.z,
+                                        new THREE.Color(0xffee44),
+                                        1.2,
+                                    );
+                                },
+                                onExpired: () => {
+                                    entry.alive = false;
+                                },
+                            },
+                            { parent: parentNode },
+                        );
+                    }
+                }
+
+                // Afterglow: leave damaging light pool at death position
+                const afterglowDps = getRefractionValue('afterglow');
+                if (afterglowDps > 0) {
+                    afterglowPools.push({
+                        position: deathPosition.clone(),
+                        dps: afterglowDps,
+                        timer: 3.0,
+                    });
+                }
+            }
         },
         onContactDamage: (damage, enemyPosition) => {
             if (!playerState.alive) return;
@@ -197,13 +300,66 @@ export function GameNode(props?: Readonly<GameNodeProps>) {
                 if (toEnemy.dot(toBarrier) > 0.3) return;
             }
 
-            playerState.health = Math.max(0, playerState.health - damage);
+            // Photon Shield: chance to fully block
+            const shieldChance = getRefractionValue('photon_shield');
+            if (shieldChance > 0 && Math.random() < shieldChance) return;
+
+            // Radiant Armor: flat damage reduction
+            const armorReduction = getRefractionValue('radiant_armor');
+            const finalDamage = damage * (1 - armorReduction);
+
+            playerState.health = Math.max(0, playerState.health - finalDamage);
             playerState.damageFlash = 1.0;
             if (playerState.health <= 0) {
                 playerState.alive = false;
             }
         },
     });
+
+    function getRefractionValue(id: string): number {
+        const tier = refractions.active.get(id);
+        if (tier == null) return 0;
+        const def = REFRACTION_POOL.find((r) => r.id === id);
+        if (!def) return 0;
+        return def.tiers[tier - 1].value;
+    }
+
+    function handleRefractionPick(def: RefractionDef) {
+        const current = refractions.active.get(def.id) ?? 0;
+        const next = Math.min(current + 1, 3);
+        refractions.active.set(def.id, next);
+        refractions.choices = [];
+
+        // Void Resistance: increase max health (and heal the bonus)
+        if (def.id === 'void_resistance') {
+            const bonus = Math.round(
+                classDef.maxHealth * def.tiers[next - 1].value,
+            );
+            const prevBonus =
+                current > 0
+                    ? Math.round(
+                          classDef.maxHealth * def.tiers[current - 1].value,
+                      )
+                    : 0;
+            const hpGain = bonus - prevBonus;
+            playerState.maxHealth = classDef.maxHealth + bonus;
+            playerState.health = Math.min(
+                playerState.maxHealth,
+                playerState.health + hpGain,
+            );
+        }
+
+        // Lux Magnet: heal on pick (wave survival bonus)
+        if (def.id === 'lux_magnet') {
+            const healAmount = def.tiers[next - 1].value;
+            playerState.health = Math.min(
+                playerState.maxHealth,
+                playerState.health + healAmount,
+            );
+        }
+
+        waveManager!.advancePastRefractionPick();
+    }
 
     waveManager = WaveManagerNode({
         gameState,
@@ -527,7 +683,79 @@ export function GameNode(props?: Readonly<GameNodeProps>) {
                 }
             }
         }
+
+        // Afterglow pools — damage nearby enemies and decay
+        for (let i = afterglowPools.length - 1; i >= 0; i--) {
+            const pool = afterglowPools[i];
+            pool.timer -= dt;
+            if (pool.timer <= 0) {
+                afterglowPools.splice(i, 1);
+                continue;
+            }
+            const pn = pool.position.clone().normalize();
+            const poolRadius = 2.5;
+            const afterglowColor = new THREE.Color(0xff8844);
+            planetoid.addProjectileTrailPoint(
+                pool.position.x,
+                pool.position.y,
+                pool.position.z,
+                afterglowColor,
+                pool.timer / 3.0,
+            );
+            for (const enemy of enemies) {
+                if (!enemy.state.alive || enemy.state.spawning) continue;
+                const en = enemy.state.position.clone().normalize();
+                const cosAngle = pn.dot(en);
+                const arcDist =
+                    Math.acos(Math.min(1, Math.max(-1, cosAngle))) *
+                    map.sphereRadius;
+                if (arcDist < poolRadius) {
+                    enemy.takeDamage(pool.dps * dt);
+                }
+            }
+        }
+
+        // Luminous Overload — periodic damage nova
+        const novaInterval = getRefractionValue('luminous_overload');
+        if (novaInterval > 0 && playerState.alive) {
+            novaTimer += dt;
+            if (novaTimer >= novaInterval) {
+                novaTimer -= novaInterval;
+                const novaRadius = 5.0;
+                const novaDamage = 20;
+                const ppn = playerState.position.clone().normalize();
+                for (const enemy of enemies) {
+                    if (!enemy.state.alive || enemy.state.spawning) continue;
+                    const en = enemy.state.position.clone().normalize();
+                    const cosAngle = ppn.dot(en);
+                    const arcDist =
+                        Math.acos(Math.min(1, Math.max(-1, cosAngle))) *
+                        map.sphereRadius;
+                    if (arcDist < novaRadius) {
+                        enemy.takeDamage(novaDamage);
+                    }
+                }
+                hitSparks([
+                    playerState.position.x,
+                    playerState.position.y,
+                    playerState.position.z,
+                ]);
+            }
+        }
     });
+
+    function getDamageMult(): number {
+        let mult = 1 + getRefractionValue('searing_beam');
+        const focusBonus = getRefractionValue('convergent_focus');
+        if (focusBonus > 0 && playerIsStationary) {
+            mult *= 1 + focusBonus;
+        }
+        return mult;
+    }
+
+    let playerIsStationary = false;
+    const lastPlayerPos = new THREE.Vector3();
+    let stationaryCheckTimer = 0;
 
     useChild(LocalPlayerNode, {
         classDef,
@@ -535,12 +763,15 @@ export function GameNode(props?: Readonly<GameNodeProps>) {
         sphereRadius: map.sphereRadius,
         startPosition,
         playerState,
+        refractions,
         getScreenAxes: () => ({
             right: camera.getScreenRight(),
             up: camera.getScreenUp(),
         }),
         onPulse: (origin) => {
-            const entry = registerProjectile(null!, classDef.primaryDamage, {
+            const dmgMult = getDamageMult();
+            const dmg = classDef.primaryDamage * dmgMult;
+            const entry = registerProjectile(null!, dmg, {
                 isAoE: true,
                 aoeRadius: classDef.projectileVisual.radius * 20,
             });
@@ -550,7 +781,7 @@ export function GameNode(props?: Readonly<GameNodeProps>) {
                 {
                     origin,
                     maxRadius: classDef.projectileVisual.radius * 20,
-                    damage: classDef.primaryDamage,
+                    damage: dmg,
                     color: classDef.color,
                     sphereRadius: map.sphereRadius,
                     onPositionUpdate: (pos) => {
@@ -569,20 +800,20 @@ export function GameNode(props?: Readonly<GameNodeProps>) {
             );
         },
         onChargedShot: (origin, direction, charge) => {
+            const dmgMult = getDamageMult();
             const chargeScale = 1 + charge * 2;
             const trailIntensity = 1 + charge * 3;
-            const entry = registerProjectile(
-                null!,
-                classDef.primaryDamage * chargeScale,
-                { shieldDamageMultiplier: 1 + charge * 2 },
-            );
+            const dmg = classDef.primaryDamage * chargeScale * dmgMult;
+            const entry = registerProjectile(null!, dmg, {
+                shieldDamageMultiplier: 1 + charge * 2,
+            });
             entry.node = world.mount(
                 ProjectileNode,
                 {
                     origin,
                     direction,
                     speed: classDef.projectileSpeed * (0.8 + charge * 0.7),
-                    damage: classDef.primaryDamage * chargeScale,
+                    damage: dmg,
                     color: classDef.color,
                     sphereRadius: map.sphereRadius,
                     meshRadius: classDef.projectileVisual.radius * chargeScale,
@@ -607,14 +838,16 @@ export function GameNode(props?: Readonly<GameNodeProps>) {
             );
         },
         onShoot: (origin, direction) => {
-            const entry = registerProjectile(null!, classDef.primaryDamage);
+            const dmgMult = getDamageMult();
+            const dmg = classDef.primaryDamage * dmgMult;
+            const entry = registerProjectile(null!, dmg);
             entry.node = world.mount(
                 ProjectileNode,
                 {
                     origin,
                     direction,
                     speed: classDef.projectileSpeed,
-                    damage: classDef.primaryDamage,
+                    damage: dmg,
                     color: classDef.color,
                     sphereRadius: map.sphereRadius,
                     meshRadius: classDef.projectileVisual.radius,
@@ -637,18 +870,16 @@ export function GameNode(props?: Readonly<GameNodeProps>) {
             );
         },
         onBeam: (origin, direction) => {
-            const entry = registerProjectile(
-                null!,
-                classDef.primaryDamage * 4,
-                { piercing: true },
-            );
+            const dmgMult = getDamageMult();
+            const dmg = classDef.primaryDamage * 4 * dmgMult;
+            const entry = registerProjectile(null!, dmg, { piercing: true });
             entry.node = world.mount(
                 PiercingBeamNode,
                 {
                     origin,
                     direction,
                     speed: classDef.projectileSpeed * 2.5,
-                    damage: classDef.primaryDamage * 4,
+                    damage: dmg,
                     color: classDef.color,
                     sphereRadius: map.sphereRadius,
                     onPositionUpdate: (pos) => {
@@ -659,6 +890,36 @@ export function GameNode(props?: Readonly<GameNodeProps>) {
                             pos.z,
                             classColor,
                             1.4,
+                        );
+                    },
+                    onExpired: () => {
+                        entry.alive = false;
+                    },
+                },
+                { parent: parentNode },
+            );
+        },
+        onPrismaticBurst: (origin, damage) => {
+            const entry = registerProjectile(null!, damage, {
+                isAoE: true,
+                aoeRadius: 4.0,
+            });
+            entry.position.copy(origin);
+            entry.node = world.mount(
+                PulseNode,
+                {
+                    origin,
+                    maxRadius: 4.0,
+                    damage,
+                    color: 0xdd66ff,
+                    sphereRadius: map.sphereRadius,
+                    onPositionUpdate: (pos) => {
+                        planetoid.addProjectileTrailPoint(
+                            pos.x,
+                            pos.y,
+                            pos.z,
+                            new THREE.Color(0xdd66ff),
+                            1.5,
                         );
                     },
                     onExpired: () => {
@@ -701,6 +962,13 @@ export function GameNode(props?: Readonly<GameNodeProps>) {
             );
         },
         onPositionUpdate: (position) => {
+            stationaryCheckTimer += 0.016;
+            if (stationaryCheckTimer >= 0.1) {
+                const dist = lastPlayerPos.distanceTo(position);
+                playerIsStationary = dist < 0.05;
+                lastPlayerPos.copy(position);
+                stationaryCheckTimer = 0;
+            }
             camera.setPlayerTransform(position);
             if (playerState.alive) {
                 planetoid.setPlayerCount(1);

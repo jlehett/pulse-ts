@@ -7,12 +7,14 @@ import {
     scaleWaveForPlayers,
 } from '../config/waves';
 import type { GameState } from '../contexts';
+import { pickRandomRefractions } from '../config/refractions';
 
 type WavePhase =
     | 'countdown'
     | 'spawning'
     | 'active'
     | 'wave_clear'
+    | 'refraction_pick'
     | 'victory'
     | 'defeat';
 
@@ -26,6 +28,7 @@ export interface WaveManagerProps {
     setDarknessLevel: (level: number) => void;
     setSunStrength: (strength: number) => void;
     isPlayerAlive: () => boolean;
+    onRefractionPicked?: () => void;
 }
 
 /**
@@ -151,10 +154,23 @@ export function WaveManagerNode(props: WaveManagerProps) {
                 gameState.countdownTimer = Math.max(0, phaseTimer);
                 if (phaseTimer <= 0) {
                     gameState.countdownTimer = 0;
-                    startWave(currentWaveIndex + 1);
+                    const choices = pickRandomRefractions(
+                        3,
+                        gameState.refractions.active,
+                    );
+                    if (choices.length === 0) {
+                        startWave(currentWaveIndex + 1);
+                    } else {
+                        phase = 'refraction_pick';
+                        gameState.phase = 'refraction_pick';
+                        gameState.refractions.choices = choices;
+                    }
                 }
                 break;
             }
+
+            case 'refraction_pick':
+                break;
 
             case 'victory':
             case 'defeat':
@@ -172,6 +188,10 @@ export function WaveManagerNode(props: WaveManagerProps) {
         },
         getWaveClearTimer(): number {
             return phase === 'wave_clear' ? phaseTimer : 0;
+        },
+        advancePastRefractionPick() {
+            if (phase !== 'refraction_pick') return;
+            startWave(currentWaveIndex + 1);
         },
     };
 }

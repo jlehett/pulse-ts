@@ -1,5 +1,6 @@
 import { createContext } from '@pulse-ts/core';
 import type { MapConfig } from './config/maps';
+import type { RefractionDef } from './config/refractions';
 
 export type GamePhase =
     | 'waiting'
@@ -10,6 +11,13 @@ export type GamePhase =
     | 'boss'
     | 'victory'
     | 'defeat';
+
+export interface RefractionState {
+    /** Active refractions: id → current tier (1, 2, or 3). */
+    active: Map<string, number>;
+    /** The 3 choices presented during refraction_pick phase. */
+    choices: RefractionDef[];
+}
 
 export interface GameState {
     phase: GamePhase;
@@ -25,6 +33,7 @@ export interface GameState {
     playerCount: number;
     isHost: boolean;
     map: MapConfig;
+    refractions: RefractionState;
 }
 
 export const GameCtx = createContext<GameState>('GameState');

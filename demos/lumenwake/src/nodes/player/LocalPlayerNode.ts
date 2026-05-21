@@ -9,8 +9,9 @@ import {
 import { useThreeRoot, useObject3D } from '@pulse-ts/three';
 import { ThreeService } from '@pulse-ts/three';
 import { useAxis2D, useAction, usePointer } from '@pulse-ts/input';
-import { GameCtx } from '../../contexts';
+import { GameCtx, type RefractionState } from '../../contexts';
 import type { ClassDef } from '../../config/classes';
+import { REFRACTION_POOL } from '../../config/refractions';
 import {
     moveSpherePosition,
     projectToTangent,
@@ -24,6 +25,7 @@ export interface LocalPlayerProps {
     sphereRadius: number;
     startPosition: THREE.Vector3;
     playerState: PlayerState;
+    refractions: RefractionState;
     getScreenAxes?: () => { right: THREE.Vector3; up: THREE.Vector3 };
     onShoot?: (origin: THREE.Vector3, direction: THREE.Vector3) => void;
     onChargedShot?: (
@@ -35,6 +37,7 @@ export interface LocalPlayerProps {
     onBeam?: (origin: THREE.Vector3, direction: THREE.Vector3) => void;
     onSanctuary?: (origin: THREE.Vector3) => void;
     onSlowField?: (origin: THREE.Vector3) => void;
+    onPrismaticBurst?: (origin: THREE.Vector3, damage: number) => void;
     onDashTrail?: (position: THREE.Vector3) => void;
     onPositionUpdate?: (
         position: THREE.Vector3,
@@ -64,8 +67,16 @@ const MAX_CHARGE_TIME = 1.0;
  * Local player node — handles input, sphere-surface movement,
  * directional aiming, and primary fire.
  */
+function getRefVal(refractions: RefractionState, id: string): number {
+    const tier = refractions.active.get(id);
+    if (tier == null) return 0;
+    const def = REFRACTION_POOL.find((r) => r.id === id);
+    if (!def) return 0;
+    return def.tiers[tier - 1].value;
+}
+
 export function LocalPlayerNode(props: LocalPlayerProps) {
-    const { classDef, sphereRadius, startPosition } = props;
+    const { classDef, sphereRadius, startPosition, refractions } = props;
     const three = useService(ThreeService);
     useContext(GameCtx);
     const color = classDef.color;
@@ -360,13 +371,48 @@ export function LocalPlayerNode(props: LocalPlayerProps) {
                     .addScaledVector(screenUp, input.y);
             }
             if (velocity.lengthSq() > 0) {
-                velocity.normalize().multiplyScalar(classDef.moveSpeed);
+                const speedBonus = getRefVal(refractions, 'swift_light');
+                velocity
+                    .normalize()
+                    .multiplyScalar(classDef.moveSpeed * (1 + speedBonus));
             }
         }
 
         // Move along sphere surface
         if (velocity.lengthSq() > 0) {
             moveSpherePosition(position, velocity, dt, sphereRadius);
+        }
+
+        // Overcharge: cut off the tail end of ability cooldowns
+        const cdr = getRefVal(refractions, 'overcharge');
+        if (cdr > 0) {
+            const threshold1 = classDef.ability1.cooldown * cdr;
+            if (
+                !ability1Cooldown.ready &&
+                ability1Cooldown.remaining <= threshold1
+            ) {
+                ability1Cooldown.reset();
+            }
+            const threshold2 = classDef.ability2.cooldown * cdr;
+            if (
+                !ability2Cooldown.ready &&
+                ability2Cooldown.remaining <= threshold2
+            ) {
+                ability2Cooldown.reset();
+            }
+        }
+
+        // Resonance: cut off tail end of fire cooldown
+        const fireRateBonus = getRefVal(refractions, 'resonance');
+        if (fireRateBonus > 0) {
+            const fireThreshold =
+                (1 / classDef.primaryFireRate) * fireRateBonus;
+            if (
+                !fireCooldown.ready &&
+                fireCooldown.remaining <= fireThreshold
+            ) {
+                fireCooldown.reset();
+            }
         }
 
         // Aiming — raycast mouse onto planetoid sphere
@@ -468,6 +514,18 @@ export function LocalPlayerNode(props: LocalPlayerProps) {
                 barrierMat.uniforms.uOpacity.value = 0.8;
                 barrierMat.uniforms.uTime.value = 0;
             }
+
+            // Prismatic Burst: AoE on ability use
+            const burstDmg = getRefVal(refractions, 'prismatic_burst');
+            if (burstDmg > 0) {
+                props.onPrismaticBurst?.(position.clone(), burstDmg);
+            }
+
+            // Cascade: chance to reset this ability's cooldown
+            const cascadeChance = getRefVal(refractions, 'cascade');
+            if (cascadeChance > 0 && Math.random() < cascadeChance) {
+                ability1Cooldown.reset();
+            }
         }
 
         // Ability 2
@@ -482,6 +540,18 @@ export function LocalPlayerNode(props: LocalPlayerProps) {
                 props.onSanctuary?.(position.clone());
             } else if (classDef.id === 'lens') {
                 props.onSlowField?.(position.clone());
+            }
+
+            // Prismatic Burst: AoE on ability use
+            const burstDmg = getRefVal(refractions, 'prismatic_burst');
+            if (burstDmg > 0) {
+                props.onPrismaticBurst?.(position.clone(), burstDmg);
+            }
+
+            // Cascade: chance to reset this ability's cooldown
+            const cascadeChance = getRefVal(refractions, 'cascade');
+            if (cascadeChance > 0 && Math.random() < cascadeChance) {
+                ability2Cooldown.reset();
             }
         }
 

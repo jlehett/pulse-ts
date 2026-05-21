@@ -2,6 +2,7 @@ import { useOverlay } from '@pulse-ts/dom';
 import type { PlayerState } from './player/LocalPlayerNode';
 import type { ClassDef } from '../config/classes';
 import type { GameState } from '../contexts';
+import { REFRACTION_POOL } from '../config/refractions';
 
 export interface HudProps {
     playerState: PlayerState;
@@ -153,6 +154,7 @@ export function HudNode(props: HudProps) {
                     },
                     visibility: () => {
                         const p = gameState.phase;
+                        if (p === 'refraction_pick') return 'hidden';
                         return p === 'countdown' ||
                             p === 'wave_clear' ||
                             p === 'victory' ||
@@ -519,6 +521,70 @@ export function HudNode(props: HudProps) {
                         },
                     }}
                 />
+            </div>
+
+            {/* Active refractions — bottom left */}
+            <div
+                style={{
+                    position: 'absolute',
+                    bottom: '28px',
+                    left: '28px',
+                    display: 'flex',
+                    flexWrap: 'wrap',
+                    gap: '4px',
+                    maxWidth: '200px',
+                    filter: 'drop-shadow(0 2px 8px rgba(0,0,0,0.6))',
+                }}
+            >
+                {REFRACTION_POOL.map((def) => {
+                    const hex = '#' + def.color.toString(16).padStart(6, '0');
+                    const iconSvg = `data:image/svg+xml,${encodeURIComponent(
+                        `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 36 36" stroke="${hex}" fill="none">${def.icon}</svg>`,
+                    )}`;
+                    return (
+                        <div
+                            style={{
+                                position: 'relative',
+                                width: '36px',
+                                height: '36px',
+                                background: 'rgba(5, 5, 15, 0.85)',
+                                border: `1px solid ${hex}44`,
+                                display: () =>
+                                    gameState.refractions.active.has(def.id)
+                                        ? 'block'
+                                        : 'none',
+                            }}
+                        >
+                            <img
+                                src={iconSvg}
+                                style={{
+                                    position: 'absolute',
+                                    inset: '4px',
+                                    width: '28px',
+                                    height: '28px',
+                                }}
+                            />
+                            <div
+                                style={{
+                                    position: 'absolute',
+                                    bottom: '1px',
+                                    right: '2px',
+                                    font: 'bold 9px monospace',
+                                    color: hex,
+                                    textShadow: '0 0 4px rgba(0,0,0,0.8)',
+                                }}
+                            >
+                                {() => {
+                                    const tier =
+                                        gameState.refractions.active.get(
+                                            def.id,
+                                        ) ?? 0;
+                                    return tier > 0 ? `T${tier}` : '';
+                                }}
+                            </div>
+                        </div>
+                    );
+                })}
             </div>
 
             {/* Ability icons — bottom right */}
