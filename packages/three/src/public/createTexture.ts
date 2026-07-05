@@ -46,9 +46,11 @@ const WRAP_MAP: Record<NonNullable<TextureOptions['wrap']>, THREE.Wrapping> = {
     mirror: THREE.MirroredRepeatWrapping,
 };
 
+// Typed as MagnificationTextureFilter (the narrower union) so entries are
+// assignable to both `minFilter` and `magFilter`.
 const FILTER_MAP: Record<
     NonNullable<TextureOptions['filter']>,
-    THREE.TextureFilter
+    THREE.MagnificationTextureFilter
 > = {
     linear: THREE.LinearFilter,
     nearest: THREE.NearestFilter,

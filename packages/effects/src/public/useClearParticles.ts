@@ -18,5 +18,10 @@ import { ParticlesService } from '../domain/ParticlesService';
 export function useClearParticles(): () => void {
     const world = useWorld();
     const service = world.getService(ParticlesService);
+    if (!service) {
+        throw new Error(
+            'useClearParticles: ParticlesService not found. Call installParticles() first.',
+        );
+    }
     return () => service.clearAll();
 }

@@ -42,7 +42,7 @@ export interface StateMachineConfig<S extends string> {
     /** Initial state. */
     initial: S;
     /** State definitions with optional lifecycle hooks. */
-    states: Record<S, StateConfig<S>>;
+    states: Record<S, StateConfig>;
     /** Automatic transitions evaluated each fixed tick in declaration order. */
     transitions?: Array<TransitionConfig<S>>;
 }

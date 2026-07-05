@@ -23,7 +23,7 @@ export function useThreeContext(): {
     service: ThreeService;
     renderer: THREE.WebGLRenderer;
     scene: THREE.Scene;
-    camera: THREE.Camera;
+    camera: THREE.PerspectiveCamera;
 } {
     const world = __fcCurrent().world;
     const service = world.getService(ThreeService);
