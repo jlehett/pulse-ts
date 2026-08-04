@@ -1,7 +1,7 @@
 import type { RunState } from './runState';
 
 const STORAGE_KEY = 'pulse-overclock-run';
-const SAVE_VERSION = 1;
+const SAVE_VERSION = 3;
 
 interface SaveEnvelope {
     version: number;

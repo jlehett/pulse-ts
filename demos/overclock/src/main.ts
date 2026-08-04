@@ -6,7 +6,8 @@ import { BINDINGS } from './config/bindings';
 import { EVENT_BY_ID } from './config/events';
 import { THEME } from './config/theme';
 import { BattleNode } from './nodes/BattleNode';
-import { setupPostProcessing } from './rendering/setupPostProcessing';
+import { preloadCustomModels } from './nodes/units/customModel';
+import { setupRenderer } from './rendering/setupRenderer';
 import { clearRun, loadRun, saveRun } from './run/persistence';
 import type { MapNode } from './run/mapGen';
 import {
@@ -37,7 +38,7 @@ function playBattle(run: RunState, node: MapNode): Promise<void> {
             canvas,
             clearColor: THEME.bgNum,
         });
-        setupPostProcessing(three);
+        setupRenderer(three);
         installInput(world, { bindings: BINDINGS });
         installAudio(world, { masterVolume: 0.9 });
 
@@ -121,4 +122,13 @@ async function start(): Promise<void> {
     }
 }
 
-void start();
+// Start fetching custom unit models before the first board render.
+preloadCustomModels();
+
+const fxlab = new URLSearchParams(location.search).get('fxlab');
+if (import.meta.env.DEV && fxlab) {
+    // Dev-only ability-VFX inspection loop; see src/dev/fxLab.ts.
+    void import('./dev/fxLab').then((m) => m.startFxLab(fxlab));
+} else {
+    void start();
+}

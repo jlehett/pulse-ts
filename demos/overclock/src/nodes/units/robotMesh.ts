@@ -1,28 +1,33 @@
 import * as THREE from 'three';
+import { CUSTOM_MODELS } from '../../config/models';
 import { TRAIT_BY_ID } from '../../config/traits';
 import type { UnitDef } from '../../config/types';
 import type { Team } from '../../sim/types';
+import { customModelInstance, loadCustomModel } from './customModel';
 
 /**
  * Procedural construct meshes. Differentiation works on both trait axes:
  * the ROLE drives the silhouette (bulk, stance, weapon), while the
  * MANUFACTURER drives the accent color and a signature attachment
- * (tesla coil, armor slabs, sensor dish, junk pack, coolant tanks).
+ * (armor slabs, thrusters, sensor dish, shell rack, light panels).
+ * Primes have neither axis and get their own imposing silhouette; trait-less
+ * scrap fodder gets a hunched junk-walker look instead.
  */
 
 /** Base hull colors per team — bright enough to read against the board. */
-const HULL: Record<Team, number> = { player: 0xc2d8e8, enemy: 0x9a6a72 };
-const HULL_DARK: Record<Team, number> = { player: 0x60788c, enemy: 0x5e3d45 };
+const HULL: Record<Team, number> = { player: 0xd4e6f2, enemy: 0xc98a94 };
+const HULL_DARK: Record<Team, number> = { player: 0x6e8aa0, enemy: 0x7a4e58 };
 
 /** Parses a CSS hex color string to a number. */
 export function cssHex(color: string): number {
     return parseInt(color.replace('#', ''), 16);
 }
 
-/** Accent color for a unit (its manufacturer's trait color). */
+/** Accent color for a unit (manufacturer color, prime gold, scrap rust). */
 export function accentOf(def: UnitDef): number {
-    const trait = TRAIT_BY_ID.get(def.manufacturer);
-    return trait ? cssHex(trait.color) : 0x38e8ff;
+    const id = def.manufacturer ?? def.prime ?? def.role;
+    const trait = id ? TRAIT_BY_ID.get(id) : undefined;
+    return trait ? cssHex(trait.color) : 0xc97b3d;
 }
 
 interface Kit {
@@ -32,12 +37,14 @@ interface Kit {
 }
 
 function metal(color: number): THREE.MeshStandardMaterial {
+    // Low metalness on purpose: there is no environment map, so high
+    // metalness renders near-black and units vanish into the board.
     return new THREE.MeshStandardMaterial({
         color,
-        metalness: 0.6,
-        roughness: 0.42,
+        metalness: 0.25,
+        roughness: 0.55,
         emissive: color,
-        emissiveIntensity: 0.06,
+        emissiveIntensity: 0.16,
     });
 }
 
@@ -66,8 +73,10 @@ function box(
 }
 
 /**
- * Builds a procedural robot mesh for a construct. Origin at ground level,
- * facing -Z.
+ * Builds the mesh for a construct. Origin at ground level, facing -Z.
+ * Units registered in `config/models.ts` use their custom model (swapped
+ * in asynchronously on first load); everything else gets a procedural
+ * robot whose ROLE drives the silhouette and MANUFACTURER the attachments.
  *
  * @param def - Unit definition (role → silhouette, manufacturer → kit).
  * @param team - Which side (drives hull tint).
@@ -75,7 +84,7 @@ function box(
  * @returns A THREE.Group roughly 1.3-1.9 units tall.
  *
  * @example
- * const mesh = buildRobot(UNIT_BY_ID.get('piton')!, 'player', 1);
+ * const mesh = buildRobot(UNIT_BY_ID.get('tripod')!, 'player', 1);
  * group.add(mesh);
  */
 export function buildRobot(
@@ -90,28 +99,75 @@ export function buildRobot(
         core: glow(accentOf(def), 1.6 + star * 0.4),
     };
 
-    switch (def.role) {
-        case 'vanguard':
-            buildVanguard(g, kit);
-            break;
-        case 'breacher':
-            buildBreacher(g, kit);
-            break;
-        case 'gunner':
-            buildGunner(g, kit);
-            break;
-        case 'longshot':
-            buildLongshot(g, kit);
-            break;
-        case 'swarm':
-            buildSwarm(g, kit);
-            break;
-        case 'catalyst':
-            buildCatalyst(g, kit);
-            break;
+    // All visible body parts live in one sub-group so a custom model can
+    // replace them wholesale while the hit proxy / scaling stay intact.
+    const body = new THREE.Group();
+    body.name = 'construct-body';
+    g.add(body);
+
+    if (def.prime) {
+        buildPrime(body, kit);
+    } else {
+        switch (def.role) {
+            case 'bulwark':
+                buildBulwark(body, kit);
+                break;
+            case 'flanker':
+                buildFlanker(body, kit);
+                break;
+            case 'turret':
+                buildTurret(body, kit);
+                break;
+            case 'bombardier':
+                buildBombardier(body, kit);
+                break;
+            case 'medic':
+                buildMedic(body, kit);
+                break;
+            case 'amplifier':
+                buildAmplifier(body, kit);
+                break;
+            case 'juggernaut':
+                buildJuggernaut(body, kit);
+                break;
+            case 'breaker':
+                buildBreaker(body, kit);
+                break;
+            case 'reaper':
+                buildReaper(body, kit);
+                break;
+            default:
+                // No role and no prime: trait-less scrap fodder.
+                buildScrap(body, kit);
+                break;
+        }
     }
 
-    addManufacturerKit(g, def.manufacturer, kit);
+    addManufacturerKit(body, def.manufacturer, kit);
+
+    if (CUSTOM_MODELS[def.id]) {
+        // The animator rides on userData so UnitsNode can drive clips
+        // even though the swap may land after this group is returned.
+        const swapIn = (custom: {
+            root: THREE.Group;
+            animator: unknown;
+        }): void => {
+            body.clear();
+            body.add(custom.root);
+            g.userData.animator = custom.animator;
+        };
+        const custom = customModelInstance(def.id, team);
+        if (custom) {
+            swapIn(custom);
+        } else {
+            // Not loaded yet: keep the procedural robot as a placeholder
+            // and swap when the model arrives.
+            void loadCustomModel(def.id).then(() => {
+                const late = customModelInstance(def.id, team);
+                if (late) swapIn(late);
+            });
+        }
+    }
 
     // Invisible-but-raycastable hit proxy so pointer picking is forgiving
     // (the robot bodies are thin; opacity 0 still intersects rays).
@@ -139,7 +195,7 @@ export function buildRobot(
     return g;
 }
 
-/** Two-eye visor head. `mono` swaps in a single round optic (longshot). */
+/** Two-eye visor head. `mono` swaps in a single round optic. */
 function addHead(
     g: THREE.Group,
     kit: Kit,
@@ -189,8 +245,8 @@ function addLegs(
 
 // ── Role silhouettes ────────────────────────────────────────────────────
 
-/** Vanguard: squat and WIDE, hiding behind a huge tower shield. */
-function buildVanguard(g: THREE.Group, kit: Kit): void {
+/** Bulwark: squat and WIDE, hiding behind a huge tower shield. */
+function buildBulwark(g: THREE.Group, kit: Kit): void {
     addLegs(g, kit, 0.3, 0.3, 0.22);
     const torso = box(kit.hull, 0.95, 0.6, 0.55, 0, 0.62, 0.05);
     g.add(torso);
@@ -205,13 +261,13 @@ function buildVanguard(g: THREE.Group, kit: Kit): void {
     addHead(g, kit, 1.12, 0.34);
 }
 
-/** Breacher: lean, crouched forward, twin circular saw discs. */
-function buildBreacher(g: THREE.Group, kit: Kit): void {
+/** Flanker: lean, crouched forward, twin circular blade discs. */
+function buildFlanker(g: THREE.Group, kit: Kit): void {
     addLegs(g, kit, 0.2, 0.42);
     const torso = box(kit.hull, 0.5, 0.55, 0.5, 0, 0.75, -0.06);
     torso.rotation.x = -0.22;
     g.add(torso);
-    // Twin saw discs, big and unmistakable.
+    // Twin blade discs, big and unmistakable.
     for (const side of [-1, 1]) {
         const arm = box(kit.dark, 0.12, 0.14, 0.5, side * 0.38, 0.72, -0.3);
         g.add(arm);
@@ -234,8 +290,8 @@ function buildBreacher(g: THREE.Group, kit: Kit): void {
     addHead(g, kit, 1.18, 0.28);
 }
 
-/** Gunner: broad chest and an obvious tri-barrel rotary cannon. */
-function buildGunner(g: THREE.Group, kit: Kit): void {
+/** Turret: broad chest and an obvious tri-barrel rotary cannon. */
+function buildTurret(g: THREE.Group, kit: Kit): void {
     addLegs(g, kit, 0.24, 0.36);
     g.add(box(kit.hull, 0.68, 0.55, 0.5, 0, 0.68, 0));
     // Rotary cannon: 3 barrels around a hub.
@@ -266,21 +322,32 @@ function buildGunner(g: THREE.Group, kit: Kit): void {
     addHead(g, kit, 1.12, 0.3);
 }
 
-/** Longshot: tall stilt legs and an extremely long rail rifle. */
-function buildLongshot(g: THREE.Group, kit: Kit): void {
-    addLegs(g, kit, 0.2, 0.66, 0.12);
-    g.add(box(kit.hull, 0.42, 0.5, 0.34, 0, 0.95, 0));
-    // The rail: longer than the robot is tall.
-    g.add(box(kit.dark, 0.09, 0.11, 1.7, 0.26, 1.18, -0.35));
-    g.add(box(kit.core, 0.035, 0.045, 1.5, 0.26, 1.26, -0.35));
-    // Muzzle brake + rear stock.
-    g.add(box(kit.dark, 0.14, 0.18, 0.12, 0.26, 1.18, -1.22));
-    g.add(box(kit.dark, 0.12, 0.2, 0.18, 0.26, 1.12, 0.48));
-    addHead(g, kit, 1.42, 0.28, true);
+/** Bombardier: squat carriage with a fat mortar tube angled skyward. */
+function buildBombardier(g: THREE.Group, kit: Kit): void {
+    addLegs(g, kit, 0.28, 0.3, 0.2);
+    g.add(box(kit.hull, 0.8, 0.5, 0.6, 0, 0.58, 0.04));
+    // Mortar tube over the right shoulder, angled up and forward.
+    const tube = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.16, 0.2, 0.95, 10),
+        kit.dark,
+    );
+    tube.rotation.x = -Math.PI / 3.2;
+    tube.position.set(0.3, 1.05, -0.05);
+    g.add(tube);
+    const mouth = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.19, 0.16, 0.12, 10),
+        kit.core,
+    );
+    mouth.rotation.x = -Math.PI / 3.2;
+    mouth.position.set(0.3, 1.46, -0.29);
+    g.add(mouth);
+    // Recoil brace down to the carriage.
+    g.add(box(kit.dark, 0.1, 0.4, 0.1, 0.3, 0.75, 0.22));
+    addHead(g, kit, 1.02, 0.3);
 }
 
-/** Swarm: small hovering tri-rotor drone (no legs). */
-function buildSwarm(g: THREE.Group, kit: Kit): void {
+/** Medic: small hovering tri-rotor drone (no legs). */
+function buildMedic(g: THREE.Group, kit: Kit): void {
     const body = new THREE.Mesh(new THREE.OctahedronGeometry(0.3, 0), kit.hull);
     body.position.y = 0.72;
     body.rotation.y = Math.PI / 4;
@@ -288,6 +355,9 @@ function buildSwarm(g: THREE.Group, kit: Kit): void {
     const eye = new THREE.Mesh(new THREE.SphereGeometry(0.1, 10, 10), kit.core);
     eye.position.set(0, 0.72, -0.26);
     g.add(eye);
+    // Glowing cross on the belly.
+    g.add(box(kit.core, 0.26, 0.06, 0.05, 0, 0.5, -0.05));
+    g.add(box(kit.core, 0.06, 0.26, 0.05, 0, 0.5, -0.05));
     // Three rotor pods on arms, 120° apart.
     for (let i = 0; i < 3; i++) {
         const a = (i / 3) * Math.PI * 2 + Math.PI / 6;
@@ -312,8 +382,8 @@ function buildSwarm(g: THREE.Group, kit: Kit): void {
     }
 }
 
-/** Catalyst: hovering monolith — orb core, twin rings, no head or legs. */
-function buildCatalyst(g: THREE.Group, kit: Kit): void {
+/** Amplifier: hovering monolith — orb core, twin rings, no head or legs. */
+function buildAmplifier(g: THREE.Group, kit: Kit): void {
     const base = new THREE.Mesh(
         new THREE.CylinderGeometry(0.34, 0.46, 0.28, 6),
         kit.dark,
@@ -345,6 +415,153 @@ function buildCatalyst(g: THREE.Group, kit: Kit): void {
     }
 }
 
+/** Juggernaut: hulking barrel torso, hanging fists, exposed glowing core. */
+function buildJuggernaut(g: THREE.Group, kit: Kit): void {
+    addLegs(g, kit, 0.32, 0.32, 0.24);
+    // Massive rounded torso leaning forward.
+    const torso = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.42, 0.5, 0.7, 10),
+        kit.hull,
+    );
+    torso.position.set(0, 0.78, 0.02);
+    torso.rotation.x = 0.12;
+    g.add(torso);
+    // Exposed reactor heart on the chest.
+    const heart = new THREE.Mesh(
+        new THREE.SphereGeometry(0.14, 10, 10),
+        kit.core,
+    );
+    heart.position.set(0, 0.88, -0.42);
+    heart.name = 'catalyst-orb';
+    g.add(heart);
+    // Huge shoulder balls and hanging fists.
+    for (const side of [-1, 1]) {
+        const shoulder = new THREE.Mesh(
+            new THREE.SphereGeometry(0.22, 10, 10),
+            kit.dark,
+        );
+        shoulder.position.set(side * 0.56, 1.06, 0.02);
+        g.add(shoulder);
+        g.add(box(kit.dark, 0.18, 0.5, 0.2, side * 0.62, 0.66, 0));
+        g.add(box(kit.hull, 0.24, 0.24, 0.26, side * 0.62, 0.36, -0.04));
+    }
+    // Welded repair plates.
+    g.add(box(kit.dark, 0.34, 0.2, 0.06, -0.14, 1.0, -0.36));
+    addHead(g, kit, 1.3, 0.3);
+}
+
+/** Breaker: industrial wrecker with one oversized piston hammer arm. */
+function buildBreaker(g: THREE.Group, kit: Kit): void {
+    addLegs(g, kit, 0.26, 0.36, 0.2);
+    g.add(box(kit.hull, 0.7, 0.55, 0.5, 0, 0.68, 0.02));
+    // Counterweight pack on the left.
+    g.add(box(kit.dark, 0.26, 0.34, 0.34, -0.42, 0.86, 0.14));
+    // The hammer arm: piston housing, ram and a glowing crusher head.
+    const housing = box(kit.dark, 0.3, 0.3, 0.55, 0.5, 0.82, -0.16);
+    g.add(housing);
+    const ram = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.09, 0.09, 0.4, 8),
+        kit.hull,
+    );
+    ram.rotation.x = Math.PI / 2;
+    ram.position.set(0.5, 0.82, -0.55);
+    g.add(ram);
+    const head = box(kit.core, 0.34, 0.34, 0.18, 0.5, 0.82, -0.82);
+    g.add(head);
+    // Warning chevrons on the housing.
+    g.add(box(kit.core, 0.04, 0.2, 0.04, 0.38, 0.9, -0.4));
+    addHead(g, kit, 1.14, 0.3, true);
+}
+
+/** Reaper: gaunt hooded frame with a single crescent scythe blade. */
+function buildReaper(g: THREE.Group, kit: Kit): void {
+    addLegs(g, kit, 0.18, 0.44, 0.12);
+    // Narrow hunched torso.
+    const torso = box(kit.hull, 0.4, 0.6, 0.34, 0, 0.78, -0.02);
+    torso.rotation.x = -0.16;
+    g.add(torso);
+    // Tattered hood: cone over a mono eye.
+    const hood = new THREE.Mesh(
+        new THREE.ConeGeometry(0.24, 0.42, 8),
+        kit.dark,
+    );
+    hood.position.set(0, 1.32, 0.02);
+    g.add(hood);
+    const eye = new THREE.Mesh(new THREE.SphereGeometry(0.06, 8, 8), kit.core);
+    eye.position.set(0, 1.22, -0.18);
+    g.add(eye);
+    // Scythe: haft across the body, crescent blade out the right side.
+    const haft = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.035, 0.035, 1.15, 6),
+        kit.dark,
+    );
+    haft.rotation.z = 0.5;
+    haft.position.set(0.3, 0.9, -0.18);
+    g.add(haft);
+    const blade = new THREE.Mesh(
+        new THREE.TorusGeometry(0.34, 0.045, 6, 20, Math.PI * 0.9),
+        kit.core,
+    );
+    blade.position.set(0.72, 1.28, -0.18);
+    blade.rotation.z = -1.9;
+    blade.name = 'spin-z';
+    g.add(blade);
+    // Vertebrae studs down the back.
+    for (let i = 0; i < 3; i++) {
+        g.add(box(kit.dark, 0.1, 0.08, 0.08, 0, 0.62 + i * 0.22, 0.18));
+    }
+}
+
+/** Scrap fodder: hunched junk walker with mismatched patch plates. */
+function buildScrap(g: THREE.Group, kit: Kit): void {
+    addLegs(g, kit, 0.22, 0.28, 0.14);
+    const torso = box(kit.hull, 0.55, 0.45, 0.45, 0, 0.52, 0);
+    torso.rotation.x = 0.18;
+    g.add(torso);
+    // Mismatched salvage plates riveted on wherever they fit.
+    g.add(box(kit.dark, 0.3, 0.2, 0.06, 0.16, 0.6, -0.24));
+    g.add(box(kit.dark, 0.2, 0.28, 0.06, -0.2, 0.48, -0.23));
+    // One loose cable arm.
+    g.add(box(kit.dark, 0.08, 0.4, 0.08, 0.34, 0.4, -0.06));
+    addHead(g, kit, 0.9, 0.26, true);
+}
+
+/** Prime: tall regal frame with a floating halo and crown spires. */
+function buildPrime(g: THREE.Group, kit: Kit): void {
+    addLegs(g, kit, 0.24, 0.5, 0.14);
+    // Tapered tall torso.
+    const torso = box(kit.hull, 0.6, 0.85, 0.42, 0, 1.02, 0);
+    g.add(torso);
+    g.add(box(kit.dark, 0.72, 0.16, 0.5, 0, 1.42, 0));
+    // Chest core.
+    const core = new THREE.Mesh(
+        new THREE.IcosahedronGeometry(0.15, 0),
+        kit.core,
+    );
+    core.position.set(0, 1.12, -0.24);
+    core.name = 'catalyst-orb';
+    g.add(core);
+    addHead(g, kit, 1.72, 0.3, true);
+    // Floating halo behind the head.
+    const halo = new THREE.Mesh(
+        new THREE.TorusGeometry(0.34, 0.03, 8, 32),
+        kit.core,
+    );
+    halo.position.set(0, 1.82, 0.18);
+    halo.rotation.x = Math.PI / 12;
+    halo.name = 'catalyst-ring';
+    g.add(halo);
+    // Crown spires on the shoulder plate.
+    for (const side of [-1, 1]) {
+        const spire = new THREE.Mesh(
+            new THREE.ConeGeometry(0.06, 0.34, 6),
+            kit.dark,
+        );
+        spire.position.set(side * 0.32, 1.66, 0);
+        g.add(spire);
+    }
+}
+
 // ── Manufacturer signature attachments ──────────────────────────────────
 
 function addManufacturerKit(
@@ -353,23 +570,7 @@ function addManufacturerKit(
     kit: Kit,
 ): void {
     switch (manufacturer) {
-        case 'hexawatt': {
-            // Tesla coil on the back.
-            const rod = new THREE.Mesh(
-                new THREE.CylinderGeometry(0.03, 0.05, 0.5, 6),
-                kit.dark,
-            );
-            rod.position.set(-0.22, 1.15, 0.26);
-            g.add(rod);
-            const tip = new THREE.Mesh(
-                new THREE.SphereGeometry(0.09, 8, 8),
-                kit.core,
-            );
-            tip.position.set(-0.22, 1.44, 0.26);
-            g.add(tip);
-            break;
-        }
-        case 'ferrocrete': {
+        case 'aegisline': {
             // Angled armor slabs over the shoulders.
             for (const side of [-1, 1]) {
                 const slab = box(
@@ -387,7 +588,27 @@ function addManufacturerKit(
             }
             break;
         }
-        case 'whisperline': {
+        case 'redline': {
+            // Twin booster thrusters raked back off the shoulders.
+            for (const side of [-1, 1]) {
+                const thruster = new THREE.Mesh(
+                    new THREE.CylinderGeometry(0.08, 0.11, 0.4, 10),
+                    kit.hull,
+                );
+                thruster.rotation.x = Math.PI / 3;
+                thruster.position.set(side * 0.24, 1.0, 0.34);
+                g.add(thruster);
+                const flame = new THREE.Mesh(
+                    new THREE.CylinderGeometry(0.1, 0.05, 0.12, 10),
+                    kit.core,
+                );
+                flame.rotation.x = Math.PI / 3;
+                flame.position.set(side * 0.24, 0.87, 0.56);
+                g.add(flame);
+            }
+            break;
+        }
+        case 'blacksite': {
             // Sensor dish + whisker antennas.
             const dish = new THREE.Mesh(
                 new THREE.ConeGeometry(0.16, 0.1, 12, 1, true),
@@ -407,42 +628,79 @@ function addManufacturerKit(
             }
             break;
         }
-        case 'scrapline': {
-            // Junk backpack: a jumble of salvage boxes.
-            const junk: Array<[number, number, number, number, number]> = [
-                [0.22, 0.16, 0.14, -0.14, 0.92],
-                [0.16, 0.22, 0.12, 0.12, 0.86],
-                [0.14, 0.12, 0.16, 0.02, 1.08],
-            ];
-            for (const [w, h, d, x, y] of junk) {
-                const piece = box(kit.dark, w, h, d, x, y, 0.34);
-                piece.rotation.set(x, y, x * y);
-                g.add(piece);
+        case 'blastworks': {
+            // Shell rack: a row of ready rounds across the back.
+            for (let i = 0; i < 3; i++) {
+                const shell = new THREE.Mesh(
+                    new THREE.CapsuleGeometry(0.06, 0.16, 3, 8),
+                    i === 1 ? kit.core : kit.dark,
+                );
+                shell.position.set((i - 1) * 0.17, 0.95, 0.36);
+                g.add(shell);
             }
-            const light = new THREE.Mesh(
-                new THREE.SphereGeometry(0.05, 6, 6),
-                kit.core,
-            );
-            light.position.set(0.05, 1.14, 0.36);
-            g.add(light);
+            const rack = box(kit.dark, 0.56, 0.08, 0.14, 0, 0.82, 0.36);
+            g.add(rack);
             break;
         }
-        case 'cryostat': {
-            // Twin coolant tanks with glowing caps.
+        case 'hardlight': {
+            // Floating light panels beside the shoulders.
             for (const side of [-1, 1]) {
-                const tank = new THREE.Mesh(
-                    new THREE.CylinderGeometry(0.09, 0.09, 0.42, 10),
-                    kit.hull,
-                );
-                tank.position.set(side * 0.18, 0.92, 0.32);
-                g.add(tank);
-                const cap = new THREE.Mesh(
-                    new THREE.CylinderGeometry(0.06, 0.09, 0.08, 10),
+                const panel = new THREE.Mesh(
+                    new THREE.BoxGeometry(0.05, 0.3, 0.22),
                     kit.core,
                 );
-                cap.position.set(side * 0.18, 1.17, 0.32);
-                g.add(cap);
+                panel.position.set(side * 0.55, 1.15, 0.1);
+                panel.rotation.y = side * 0.3;
+                g.add(panel);
             }
+            break;
+        }
+        case 'vulture': {
+            // Scavenger hook craned over the shoulder + trophy spikes.
+            const boom = box(kit.dark, 0.07, 0.5, 0.07, -0.3, 1.3, 0.2);
+            boom.rotation.x = 0.5;
+            g.add(boom);
+            const hook = new THREE.Mesh(
+                new THREE.TorusGeometry(0.11, 0.03, 6, 12, Math.PI * 1.3),
+                kit.core,
+            );
+            hook.position.set(-0.3, 1.52, -0.02);
+            hook.rotation.y = Math.PI / 2;
+            g.add(hook);
+            for (let i = 0; i < 3; i++) {
+                const spike = new THREE.Mesh(
+                    new THREE.ConeGeometry(0.045, 0.2, 5),
+                    i === 1 ? kit.core : kit.dark,
+                );
+                spike.position.set(0.1 + i * 0.14, 1.02, 0.3);
+                spike.rotation.x = 0.7;
+                g.add(spike);
+            }
+            break;
+        }
+        case 'surgecore': {
+            // Reactor capacitor stack arcing off the back.
+            for (let i = 0; i < 3; i++) {
+                const coil = new THREE.Mesh(
+                    new THREE.TorusGeometry(0.12 - i * 0.025, 0.025, 6, 14),
+                    i === 1 ? kit.dark : kit.core,
+                );
+                coil.position.set(0, 0.92 + i * 0.16, 0.34);
+                coil.rotation.x = Math.PI / 2;
+                g.add(coil);
+            }
+            const rod = new THREE.Mesh(
+                new THREE.CylinderGeometry(0.03, 0.03, 0.55, 6),
+                kit.dark,
+            );
+            rod.position.set(0, 1.05, 0.34);
+            g.add(rod);
+            const tip = new THREE.Mesh(
+                new THREE.SphereGeometry(0.07, 8, 8),
+                kit.core,
+            );
+            tip.position.set(0, 1.36, 0.34);
+            g.add(tip);
             break;
         }
     }

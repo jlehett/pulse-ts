@@ -25,6 +25,12 @@ import {
     sellValue,
 } from '../config/economy';
 import { ELITE_STAT_SCALE, FLOOR_WAVES, floorScale } from '../config/enemies';
+import {
+    COMPONENTS,
+    MAX_ITEMS_PER_UNIT,
+    combineItems,
+    isComponent,
+} from '../config/items';
 import type { AugmentDef, EventOutcome, UnitDef } from '../config/types';
 import { SHOP_UNITS, UNIT_BY_ID } from '../config/units';
 import { isPlayerCell } from '../sim/grid';
@@ -43,6 +49,8 @@ export interface OwnedUnit {
     uid: string;
     defId: string;
     star: number;
+    /** Equipped item ids (components or combined; max 3). */
+    items?: string[];
 }
 
 /** An owned construct deployed on the board. */
@@ -73,6 +81,10 @@ export interface RunState {
     /** Unit def ids on offer (null = purchased slot). */
     shop: (string | null)[];
     shopLocked: boolean;
+    /** Unequipped item ids in the player's stash. */
+    items: string[];
+    /** Pending salvage picks; each entry is 3 component ids to choose from. */
+    pendingSalvage: string[][];
     /** Augment ids acquired this run. */
     augments: string[];
     /** Augment picks owed to the player (each = one pick-1-of-3 screen). */
@@ -124,6 +136,8 @@ export function createRun(seed: string): RunState {
         bench: [],
         shop: new Array(SHOP_SIZE).fill(null),
         shopLocked: false,
+        items: [],
+        pendingSalvage: [],
         augments: [],
         pendingAugments: 0,
         streak: 0,
@@ -301,8 +315,124 @@ export function buyUnit(state: RunState, slot: number): boolean {
 }
 
 /**
+ * Debug-only: grants a copy of any unit to the bench for free, running the
+ * same combine cascade a normal purchase would. Ignores gold. Respects bench
+ * capacity, except when the grant completes a combine.
+ *
+ * @param state - Run state to mutate.
+ * @param defId - Unit definition id to grant.
+ * @returns False when the id is unknown or the bench is full with no combine.
+ * @example
+ * ```ts
+ * debugGrantUnit(run, 'chock');
+ * ```
+ */
+export function debugGrantUnit(state: RunState, defId: string): boolean {
+    if (!UNIT_BY_ID.has(defId)) return false;
+    if (state.bench.length >= BENCH_SIZE) {
+        const copies = allOwned(state).filter(
+            (u) => u.defId === defId && u.star === 1,
+        ).length;
+        if (copies < COMBINE_COUNT - 1) return false;
+    }
+    state.bench.push({ uid: `u${state.nextUid++}`, defId, star: 1 });
+    tryCombine(state, defId);
+    return true;
+}
+
+/** Equipped item ids of a unit (never undefined). */
+export function equippedItems(unit: OwnedUnit): string[] {
+    return unit.items ?? [];
+}
+
+/**
+ * Fits an item onto a unit, fusing components when possible; overflow goes
+ * to the stash. Never fails — used when combining stars merges inventories.
+ */
+function absorbItem(state: RunState, unit: OwnedUnit, itemId: string): void {
+    const items = (unit.items ??= []);
+    if (isComponent(itemId)) {
+        const partner = items.findIndex((id) => isComponent(id));
+        if (partner >= 0) {
+            const combined = combineItems(items[partner], itemId);
+            if (combined) {
+                items[partner] = combined.id;
+                return;
+            }
+        }
+    }
+    if (items.length < MAX_ITEMS_PER_UNIT) items.push(itemId);
+    else state.items.push(itemId);
+}
+
+/**
+ * Resolves the oldest pending salvage pick by choosing one of its offered
+ * components, moving it into the stash.
+ *
+ * @param state - Run state (mutated).
+ * @param itemId - Component id; must be one of the current pick's options.
+ * @returns False when no pick is pending or the id is not offered.
+ *
+ * @example
+ * state.pendingSalvage = [['cell', 'core', 'flux']];
+ * chooseSalvage(state, 'core'); // true → 'core' added to state.items
+ */
+export function chooseSalvage(state: RunState, itemId: string): boolean {
+    const options = state.pendingSalvage[0];
+    if (!options || !options.includes(itemId)) return false;
+    state.pendingSalvage.shift();
+    state.items.push(itemId);
+    return true;
+}
+
+/**
+ * Equips a stash item onto an owned unit. Equipping a component onto a unit
+ * already holding an unpaired component auto-fuses them into the combined
+ * item (freeing the slot); otherwise the item takes a free slot.
+ *
+ * @param state - Run state (mutated).
+ * @param uid - Owned unit to equip.
+ * @param itemId - Item id currently in {@link RunState.items}.
+ * @returns False when the unit or stash item is missing, or all 3 slots are
+ * occupied and no fuse applies.
+ *
+ * @example
+ * state.items = ['cell', 'core'];
+ * equipItem(state, unit.uid, 'cell'); // true
+ * equipItem(state, unit.uid, 'core'); // true → unit holds Hybrid Actuator
+ */
+export function equipItem(
+    state: RunState,
+    uid: string,
+    itemId: string,
+): boolean {
+    const unit = allOwned(state).find((u) => u.uid === uid);
+    if (!unit) return false;
+    const stashIndex = state.items.indexOf(itemId);
+    if (stashIndex < 0) return false;
+
+    const items = (unit.items ??= []);
+    if (isComponent(itemId)) {
+        const partner = items.findIndex((id) => isComponent(id));
+        if (partner >= 0) {
+            const combined = combineItems(items[partner], itemId);
+            if (combined) {
+                items[partner] = combined.id;
+                state.items.splice(stashIndex, 1);
+                return true;
+            }
+        }
+    }
+    if (items.length >= MAX_ITEMS_PER_UNIT) return false;
+    items.push(itemId);
+    state.items.splice(stashIndex, 1);
+    return true;
+}
+
+/**
  * Combines three same-star copies into one higher-star unit, cascading.
- * Prefers upgrading a board copy so placements survive.
+ * Prefers upgrading a board copy so placements survive. Items from the
+ * consumed copies transfer to the upgraded unit (overflow to the stash).
  */
 export function tryCombine(state: RunState, defId: string): void {
     for (let star = 1; star < 3; star++) {
@@ -326,6 +456,11 @@ export function tryCombine(state: RunState, defId: string): void {
             state.board = state.board.filter((u) => !removed.includes(u));
             state.bench = state.bench.filter((u) => !removed.includes(u));
             keeper.star = star + 1;
+            for (const unit of removed) {
+                for (const itemId of equippedItems(unit)) {
+                    absorbItem(state, keeper, itemId);
+                }
+            }
         }
     }
 }
@@ -343,6 +478,7 @@ export function sellUnit(state: RunState, uid: string): boolean {
     state.gold += sellValue(def.cost, unit.star);
     state.pool[unit.defId] =
         (state.pool[unit.defId] ?? 0) + Math.pow(COMBINE_COUNT, unit.star - 1);
+    state.items.push(...equippedItems(unit));
     state.board = state.board.filter((u) => u.uid !== uid);
     state.bench = state.bench.filter((u) => u.uid !== uid);
     return true;
@@ -388,6 +524,7 @@ export function placeUnit(
             uid: occupant.uid,
             defId: occupant.defId,
             star: occupant.star,
+            items: occupant.items,
         });
     }
     state.board.push({ ...onBench!, row, col });
@@ -404,7 +541,12 @@ export function moveToBench(state: RunState, uid: string): boolean {
     if (!unit) return false;
     if (state.bench.length >= BENCH_SIZE) return false;
     state.board = state.board.filter((u) => u.uid !== uid);
-    state.bench.push({ uid: unit.uid, defId: unit.defId, star: unit.star });
+    state.bench.push({
+        uid: unit.uid,
+        defId: unit.defId,
+        star: unit.star,
+        items: unit.items,
+    });
     return true;
 }
 
@@ -468,6 +610,7 @@ export function playerPlacements(state: RunState): PlacedUnit[] {
         star: u.star,
         row: u.row,
         col: u.col,
+        items: u.items,
     }));
 }
 
@@ -477,28 +620,37 @@ export interface BattleResolution {
     goldEarned: number;
     coreDamage: number;
     augmentOffered: boolean;
+    /**
+     * Salvage picks earned by the victory (also queued on
+     * {@link RunState.pendingSalvage}); each entry is 3 component ids the
+     * player chooses one from via {@link chooseSalvage}.
+     */
+    salvageChoices: string[][];
     runStatus: RunStatus;
+}
+
+/** Components a win at a node drops (elites drop double). */
+function itemDropCount(nodeType: MapNode['type']): number {
+    return nodeType === 'elite' ? 2 : 1;
 }
 
 /**
  * Applies a battle result to the run.
  *
- * Wins pay out base gold + streak + interest (+ any combat bonus gold),
- * grant XP, and complete the node — elite wins and the floor-4 milestone
- * also owe an augment pick; beating the boss wins the run. Losses cost
- * core integrity and reset the streak; the node stays incomplete so the
- * player retries it (defeat at 0 core).
+ * Wins pay out base gold + streak + interest, grant XP, and complete the
+ * node — elite wins and the floor-4 milestone also owe an augment pick;
+ * beating the boss wins the run. Losses cost core integrity and reset the
+ * streak; the node stays incomplete so the player retries it (defeat at 0
+ * core).
  *
  * @param state - Run state (mutated).
  * @param won - Whether the player won the combat.
  * @param enemySurvivors - Enemy units alive at the end (loss damage).
- * @param bonusGold - Scrapline drops earned during combat.
  */
 export function resolveBattle(
     state: RunState,
     won: boolean,
     enemySurvivors: number,
-    bonusGold = 0,
 ): BattleResolution {
     const node = currentNode(state);
     if (!node) throw new Error('resolveBattle without a current node');
@@ -516,6 +668,7 @@ export function resolveBattle(
             goldEarned: 0,
             coreDamage: damage,
             augmentOffered: false,
+            salvageChoices: [],
             runStatus: state.status,
         };
     }
@@ -528,13 +681,23 @@ export function resolveBattle(
         BASE_NODE_GOLD +
         (node.type === 'elite' ? ELITE_BONUS_GOLD : 0) +
         streakBonus +
-        interestFor(state) +
-        bonusGold;
+        interestFor(state);
     state.gold += goldEarned;
     state.streak++;
     state.battlesWon++;
     addXp(state, XP_PER_NODE);
     state.completedNodes.push(node.id);
+
+    const salvageChoices = withRng(state, (rng) =>
+        Array.from({ length: itemDropCount(node.type) }, () => {
+            const pool = COMPONENTS.map((c) => c.id);
+            return Array.from(
+                { length: 3 },
+                () => pool.splice(rng.int(pool.length), 1)[0],
+            );
+        }),
+    );
+    state.pendingSalvage.push(...salvageChoices);
 
     let augmentOffered = false;
     if (node.type === 'elite' || state.battlesWon === 3) {
@@ -550,7 +713,39 @@ export function resolveBattle(
         goldEarned,
         coreDamage: 0,
         augmentOffered,
+        salvageChoices,
         runStatus: state.status,
+    };
+}
+
+/**
+ * Previews the reward a win at the current node would pay, without mutating
+ * the run. Mirrors the win branch of {@link resolveBattle}: base gold plus
+ * elite bonus, streak bonus, and interest, whether an augment pick would
+ * be offered (elite node, or this win being the third), and how many item
+ * components would drop.
+ *
+ * @param state - Run state (not mutated).
+ * @returns Previewed gold payout, augment-offer flag, and item drop count.
+ */
+export function previewReward(state: RunState): {
+    gold: number;
+    augment: boolean;
+    items: number;
+} {
+    const node = currentNode(state);
+    const streakBonus = Math.min(
+        STREAK_GOLD_CAP,
+        state.streak * STREAK_GOLD_PER,
+    );
+    return {
+        gold:
+            BASE_NODE_GOLD +
+            (node?.type === 'elite' ? ELITE_BONUS_GOLD : 0) +
+            streakBonus +
+            interestFor(state),
+        augment: node?.type === 'elite' || state.battlesWon === 2,
+        items: node ? itemDropCount(node.type) : 0,
     };
 }
 

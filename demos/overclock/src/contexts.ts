@@ -1,4 +1,5 @@
 import { createContext } from '@pulse-ts/core';
+import type { TraitId } from './config/types';
 import type { MapNode } from './run/mapGen';
 import type { RunState } from './run/runState';
 import type { CombatState, PlacedUnit } from './sim/types';
@@ -19,6 +20,8 @@ export interface BattleState {
     timeLeft: number;
     /** Currently dragged owned unit (prep only). */
     dragUid: string | null;
+    /** Stash item id being dragged toward a unit (prep only). */
+    dragItem: string | null;
     /** Ground-plane position under the pointer during a drag. */
     dragWorld: [number, number] | null;
     /** Player cell the pointer hovers during a drag. */
@@ -27,11 +30,15 @@ export interface BattleState {
     hoverBench: boolean;
     /** Owned unit under the cursor (for sell/tooltips). */
     hoverUid: string | null;
+    /** Trait whose field units get a highlight ring (synergy row hover). */
+    highlightTrait: TraitId | null;
     /** Result payout captured when combat ends (for the result overlay). */
     resolution: {
         goldEarned: number;
         coreDamage: number;
         augmentOffered: boolean;
+        /** Salvage picks earned (3 component options each). */
+        salvageChoices: string[][];
     } | null;
     /** Bumps whenever run board/bench/shop mutate, for cheap dirty checks. */
     revision: number;

@@ -34,7 +34,6 @@
         "@pulse-ts/audio": "*",
         "@pulse-ts/core": "*",
         "@pulse-ts/dom": "*",
-        "@pulse-ts/effects": "*",
         "@pulse-ts/input": "*",
         "@pulse-ts/three": "*",
         "three": "^0.179.1"

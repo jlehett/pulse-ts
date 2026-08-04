@@ -98,22 +98,53 @@ export function hexDistance(
 }
 
 /**
- * Picks the best free neighbor cell to step toward a goal, or null when no
- * step improves distance (or all improved cells are occupied).
+ * Picks the next free cell on a shortest path toward a goal, routing around
+ * occupied cells (BFS over the 8x7 board). The goal cell itself may be
+ * occupied (it is usually the target unit): reaching any cell adjacent to
+ * it counts as arrival.
+ *
+ * When the goal is fully walled off, falls back to a greedy step that
+ * closes raw hex distance, so units still press toward the fight.
  *
  * @param from - Current cell.
  * @param goal - Cell to approach.
  * @param occupied - Set of {@link cellKey} values that cannot be entered.
- * @returns The chosen neighbor, or null.
+ * @returns The chosen neighbor, or null when no useful step exists.
  */
 export function stepToward(
     from: Cell,
     goal: Cell,
     occupied: ReadonlySet<number>,
 ): Cell | null {
-    const current = hexDistance(from.row, from.col, goal.row, goal.col);
+    const fromKey = cellKey(from.row, from.col);
+    const goalKey = cellKey(goal.row, goal.col);
+    // BFS, recording each visited cell's predecessor so the first step of
+    // the shortest path can be walked back from the arrival cell.
+    const cameFrom = new Map<number, number>([[fromKey, fromKey]]);
+    const queue: Cell[] = [from];
+    let arrival: number | null = null;
+    for (let i = 0; i < queue.length && arrival === null; i++) {
+        const cell = queue[i];
+        for (const n of neighbors(cell.row, cell.col)) {
+            const key = cellKey(n.row, n.col);
+            if (key === goalKey) {
+                arrival = cellKey(cell.row, cell.col);
+                break;
+            }
+            if (cameFrom.has(key) || occupied.has(key)) continue;
+            cameFrom.set(key, cellKey(cell.row, cell.col));
+            queue.push(n);
+        }
+    }
+    if (arrival !== null) {
+        if (arrival === fromKey) return null;
+        let key = arrival;
+        while (cameFrom.get(key)! !== fromKey) key = cameFrom.get(key)!;
+        return keyCell(key);
+    }
+    // Goal walled off: greedily close distance where possible.
     let best: Cell | null = null;
-    let bestDist = current;
+    let bestDist = hexDistance(from.row, from.col, goal.row, goal.col);
     for (const n of neighbors(from.row, from.col)) {
         if (occupied.has(cellKey(n.row, n.col))) continue;
         const d = hexDistance(n.row, n.col, goal.row, goal.col);

@@ -77,18 +77,18 @@ export const AUGMENTS: AugmentDef[] = [
         effect: { type: 'coreRepair', amount: 20 },
     },
     {
-        id: 'hexawatt-contract',
-        name: 'Hexawatt Contract',
+        id: 'blastworks-contract',
+        name: 'Blastworks Contract',
         tier: 'gold',
-        description: 'Hexawatt constructs deal +18% damage.',
-        effect: { type: 'traitDamage', trait: 'hexawatt', amount: 0.18 },
+        description: 'Blastworks constructs deal +18% damage.',
+        effect: { type: 'traitDamage', trait: 'blastworks', amount: 0.18 },
     },
     {
-        id: 'longshot-doctrine',
-        name: 'Longshot Doctrine',
+        id: 'turret-doctrine',
+        name: 'Turret Doctrine',
         tier: 'gold',
-        description: 'Longshot constructs deal +18% damage.',
-        effect: { type: 'traitDamage', trait: 'longshot', amount: 0.18 },
+        description: 'Turret constructs deal +18% damage.',
+        effect: { type: 'traitDamage', trait: 'turret', amount: 0.18 },
     },
 ];
 

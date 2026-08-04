@@ -2,13 +2,22 @@ import * as THREE from 'three';
 import { useContext, useDestroy, useFrameUpdate } from '@pulse-ts/core';
 import { useObject3D, useScreenProjection } from '@pulse-ts/three';
 import { BattleCtx } from '../../contexts';
-import { FONTS, THEME } from '../../config/theme';
+import { FONTS, THEME, UI_SCALE } from '../../config/theme';
+import { TRAIT_BY_ID } from '../../config/traits';
 import type { UnitDef } from '../../config/types';
 import { UNIT_BY_ID, starScale } from '../../config/units';
 import { defOf } from '../../run/runState';
+import { effectiveAtkSpeed } from '../../sim/combat';
 import { cellToWorld } from '../../sim/grid';
 import type { Team } from '../../sim/types';
-import { BENCH_Z, HEX_R, benchSlotX } from '../arena/ArenaNode';
+import type { UnitAnimator } from './animator';
+import {
+    BENCH_COUNT,
+    BENCH_Z,
+    HEX_R,
+    benchSlotX,
+    type ArenaHandle,
+} from '../arena/ArenaNode';
 import { buildRobot } from './robotMesh';
 
 /** One tracked visual unit. */
@@ -27,6 +36,8 @@ interface Visual {
     bobPhase: number;
     /** Brief scale pulse (attack/cast feedback). */
     pulse: number;
+    /** Ground ring; recolored to show status effects during combat. */
+    ring: THREE.Mesh;
     bar: HTMLDivElement;
     hpFill: HTMLDivElement;
     shieldFill: HTMLDivElement;
@@ -40,31 +51,53 @@ export interface UnitsHandle {
     anchorOf(uid: string): THREE.Vector3 | null;
     /** Triggers a quick scale pulse (attack/cast feedback). */
     pulse(uid: string): void;
+    /** Plays a custom-model animation clip (no-op for procedural bots). */
+    trigger(uid: string, kind: 'attack' | 'cast'): void;
     /** Unit groups for raycast picking (userData.uid set). */
     groups(): THREE.Group[];
 }
 
 const LERP_SPEED = 10;
 
+/** Dependencies injected by the battle orchestrator. */
+export interface UnitsProps {
+    /** Arena handle, used to reflect bench occupancy on the slot pads. */
+    arena: ArenaHandle;
+}
+
 /**
  * Keeps robot visuals and their DOM nameplates in sync with the battle
  * state: run board/bench + enemy preview during prep, live sim units
  * during combat. Movement between cells is smoothed.
+ *
+ * @param props - Injected handles ({@link UnitsProps}).
  */
-export function UnitsNode(): UnitsHandle {
+export function UnitsNode(props: UnitsProps): UnitsHandle {
     const state = useContext(BattleCtx);
     const root = new THREE.Group();
     useObject3D(root);
     const project = useScreenProjection();
 
-    // DOM layer for health bars / nameplates.
+    // DOM layer for health bars / nameplates. Zoomed with the rest of the
+    // UI, so projected screen pixels are divided back by UI_SCALE.
     const layer = document.createElement('div');
-    layer.style.cssText =
-        'position:fixed;inset:0;pointer-events:none;overflow:hidden;z-index:50;';
+    layer.style.cssText = `position:fixed;inset:0;pointer-events:none;overflow:hidden;z-index:50;zoom:${UI_SCALE};`;
     document.body.appendChild(layer);
     useDestroy(() => layer.remove());
 
     const visuals = new Map<string, Visual>();
+
+    /** Corpses playing a death clip before removal. */
+    interface Dying {
+        uid: string;
+        group: THREE.Group;
+        animator: UnitAnimator;
+        ttl: number;
+    }
+    const dying: Dying[] = [];
+
+    const animatorOf = (group: THREE.Group): UnitAnimator | undefined =>
+        group.userData.animator as UnitAnimator | undefined;
 
     const makeBar = (
         v: Omit<Visual, 'bar' | 'hpFill' | 'shieldFill' | 'manaFill' | 'label'>,
@@ -72,14 +105,17 @@ export function UnitsNode(): UnitsHandle {
         const bar = document.createElement('div');
         const teamColor = v.team === 'player' ? THEME.ally : THEME.enemy;
         bar.style.cssText =
-            'position:absolute;left:0;top:0;transform:translate(-50%,-100%);width:64px;text-align:center;will-change:transform;';
+            `position:absolute;left:0;top:0;transform:translate(-50%,-100%);width:${v.bench ? 66 : 78}px;` +
+            `text-align:center;will-change:transform;${v.bench ? 'opacity:.9;' : ''}`;
+        const fontPx = v.bench ? 8 : 9;
         bar.innerHTML =
-            `<div data-r="label" style="font:700 8.5px ${FONTS.body};letter-spacing:1px;color:${teamColor};text-shadow:0 1px 3px #000;white-space:nowrap"></div>` +
-            `<div style="position:relative;height:5px;background:rgba(0,0,0,.55);border:1px solid rgba(255,255,255,.18);border-radius:2px;overflow:hidden;margin-top:1px">` +
+            `<div style="font:800 ${fontPx}px ${FONTS.body};letter-spacing:1px;color:${THEME.gold};text-shadow:0 1px 3px #000;line-height:1">${'★'.repeat(v.star)}</div>` +
+            `<div data-r="label" style="font:700 ${fontPx}px ${FONTS.body};letter-spacing:.5px;color:${teamColor};text-shadow:0 1px 3px #000;white-space:nowrap"></div>` +
+            `<div style="${v.bench ? 'display:none;' : ''}position:relative;height:5px;background:rgba(0,0,0,.55);border:1px solid rgba(255,255,255,.18);border-radius:2px;overflow:hidden;margin-top:1px">` +
             `<div data-r="hp" style="position:absolute;left:0;top:0;bottom:0;width:100%;background:${teamColor}"></div>` +
             `<div data-r="shield" style="position:absolute;left:0;top:0;bottom:0;width:0;background:rgba(255,255,255,.75)"></div>` +
             `</div>` +
-            `<div style="position:relative;height:3px;background:rgba(0,0,0,.55);border-radius:2px;overflow:hidden;margin-top:1px">` +
+            `<div style="${v.bench ? 'display:none;' : ''}position:relative;height:3px;background:rgba(0,0,0,.55);border-radius:2px;overflow:hidden;margin-top:1px">` +
             `<div data-r="mana" style="position:absolute;left:0;top:0;bottom:0;width:0;background:${THEME.arcane}"></div>` +
             `</div>`;
         layer.appendChild(bar);
@@ -191,8 +227,19 @@ export function UnitsNode(): UnitsHandle {
     };
 
     let time = 0;
+    let lastBenchLen = -1;
     useFrameUpdate((dt) => {
         time += dt;
+
+        // Reflect bench occupancy on the arena's slot pads.
+        const benchLen = state.run.bench.length;
+        if (benchLen !== lastBenchLen) {
+            lastBenchLen = benchLen;
+            props.arena.setBenchOccupancy(
+                Array.from({ length: BENCH_COUNT }, (_, i) => i < benchLen),
+            );
+        }
+
         const desired = desiredNow();
         const seen = new Set<string>();
 
@@ -208,9 +255,12 @@ export function UnitsNode(): UnitsHandle {
             }
             if (!v) {
                 const group = buildRobot(d.def, d.team, d.star);
-                if (d.bench) group.scale.multiplyScalar(0.62);
-                group.position.set(d.x, 0.12, d.z);
-                group.rotation.y = d.team === 'player' ? 0 : Math.PI;
+                if (d.bench) group.scale.multiplyScalar(0.58);
+                group.position.set(d.x, d.bench ? 0.2 : 0.12, d.z);
+                // Bench units turn to face the camera so their fronts show on
+                // the shelf; fielded player units face the enemy half (-Z).
+                group.rotation.y =
+                    d.team === 'player' && !d.bench ? 0 : Math.PI;
                 group.userData.uid = d.uid;
                 // Team-colored ground ring: separates units from the board.
                 const ring = new THREE.Mesh(
@@ -237,26 +287,51 @@ export function UnitsNode(): UnitsHandle {
                     team: d.team,
                     star: d.star,
                     group,
-                    target: new THREE.Vector3(d.x, 0.12, d.z),
+                    target: new THREE.Vector3(d.x, d.bench ? 0.2 : 0.12, d.z),
                     face: d.face,
                     bench: d.bench,
                     bobPhase: Math.random() * Math.PI * 2,
                     pulse: 0,
+                    ring,
                 };
                 v = { ...partial, ...makeBar(partial) };
-                v.label.textContent = `${'★'.repeat(d.star)} ${d.def.name}`;
+                v.label.textContent = d.def.name;
                 visuals.set(d.uid, v);
             }
-            v.target.set(d.x, 0.12, d.z);
+            v.target.set(d.x, d.bench ? 0.2 : 0.12, d.z);
             v.face = d.face;
         }
 
-        // Remove stale visuals (deaths, sold units).
+        // Remove stale visuals (deaths, sold units). Custom models with a
+        // death clip linger briefly as corpses instead of vanishing.
         for (const [uid, v] of visuals) {
-            if (!seen.has(uid)) {
-                v.group.removeFromParent();
-                v.bar.remove();
-                visuals.delete(uid);
+            if (seen.has(uid)) continue;
+            v.bar.remove();
+            visuals.delete(uid);
+            const animator = animatorOf(v.group);
+            const sim =
+                state.phase !== 'prep' && state.combat
+                    ? state.combat.byUid.get(uid)
+                    : null;
+            if (animator && sim && !sim.alive) {
+                const linger = animator.playDeath();
+                if (linger > 0) {
+                    v.ring.visible = false;
+                    dying.push({ uid, group: v.group, animator, ttl: linger });
+                    continue;
+                }
+            }
+            v.group.removeFromParent();
+        }
+
+        // Tick lingering corpses; purge on timeout, phase change, or revive.
+        for (let i = dying.length - 1; i >= 0; i--) {
+            const d = dying[i];
+            d.ttl -= dt;
+            d.animator.update(dt);
+            if (d.ttl <= 0 || state.phase === 'prep' || seen.has(d.uid)) {
+                d.group.removeFromParent();
+                dying.splice(i, 1);
             }
         }
 
@@ -265,7 +340,7 @@ export function UnitsNode(): UnitsHandle {
         for (const v of visuals.values()) {
             const lift = dragUid === v.uid ? 0.8 : 0;
             const hoverBob =
-                v.def.role === 'swarm'
+                v.def.manufacturer === 'hardlight'
                     ? 0.12 * Math.sin(time * 2.4 + v.bobPhase) + 0.18
                     : 0;
             const goal = v.target.clone();
@@ -274,6 +349,14 @@ export function UnitsNode(): UnitsHandle {
             }
             goal.y += lift + hoverBob;
             v.group.position.lerp(goal, Math.min(1, LERP_SPEED * dt));
+
+            const animator = animatorOf(v.group);
+            if (animator) {
+                const dx = goal.x - v.group.position.x;
+                const dz = goal.z - v.group.position.z;
+                animator.setBase(dx * dx + dz * dz > 0.02 ? 'move' : 'idle');
+                animator.update(dt);
+            }
 
             if (v.face) {
                 const angle =
@@ -305,9 +388,53 @@ export function UnitsNode(): UnitsHandle {
                 const s = 1 + 0.12 * Math.sin((1 - v.pulse) * Math.PI);
                 v.group.scale.setScalar(
                     (0.95 + v.def.cost * 0.06 + (v.star - 1) * 0.13) *
-                        (v.bench ? 0.62 : 1) *
+                        (v.bench ? 0.58 : 1) *
                         s,
                 );
+            }
+
+            // Status feedback: recolor the ground ring for active debuffs.
+            const ringMat = v.ring.material as THREE.MeshBasicMaterial;
+            const sim =
+                state.phase !== 'prep' && state.combat
+                    ? state.combat.byUid.get(v.uid)
+                    : null;
+            const ht = state.highlightTrait;
+            const traitHighlighted =
+                ht !== null &&
+                v.team === 'player' &&
+                !v.bench &&
+                (v.def.manufacturer === ht ||
+                    v.def.role === ht ||
+                    v.def.prime === ht);
+            if (traitHighlighted) {
+                const trait = TRAIT_BY_ID.get(ht!)!;
+                ringMat.color.setHex(parseInt(trait.color.slice(1), 16));
+                ringMat.opacity = 0.7 + 0.3 * Math.sin(time * 7);
+            } else if (sim && sim.stunRemaining > 0) {
+                ringMat.color.setHex(0xffd23f);
+                ringMat.opacity = 0.55 + 0.4 * Math.sin(time * 18);
+            } else if (sim && sim.slowRemaining > 0) {
+                ringMat.color.setHex(0x7fd8ff);
+                ringMat.opacity = 0.85;
+            } else if (sim && sim.burnRemaining > 0) {
+                ringMat.color.setHex(0xff7a33);
+                ringMat.opacity = 0.6 + 0.3 * Math.sin(time * 12 + v.bobPhase);
+            } else if (sim && sim.markRemaining > 0) {
+                ringMat.color.setHex(0xff3b57);
+                ringMat.opacity = 0.6 + 0.3 * Math.sin(time * 8);
+            } else if (
+                sim &&
+                sim.discordRemaining > 0 &&
+                sim.discordAmount > 0
+            ) {
+                ringMat.color.setHex(0xb45cff);
+                ringMat.opacity = 0.8;
+            } else {
+                ringMat.color.setHex(
+                    v.team === 'player' ? THEME.allyNum : THEME.enemyNum,
+                );
+                ringMat.opacity = 0.65;
             }
 
             // Bars.
@@ -319,19 +446,19 @@ export function UnitsNode(): UnitsHandle {
                 continue;
             }
             v.bar.style.display = '';
-            v.bar.style.transform = `translate(-50%,-100%) translate(${screen.x}px, ${screen.y}px)`;
+            v.bar.style.transform = `translate(-50%,-100%) translate(${screen.x / UI_SCALE}px, ${screen.y / UI_SCALE}px)`;
 
             if (state.phase !== 'prep' && state.combat) {
                 const sim = state.combat.byUid.get(v.uid);
                 if (sim) {
-                    const hpPct = (100 * sim.hp) / sim.maxHp;
-                    const shieldPct = Math.min(
-                        100,
-                        (100 * sim.shield) / sim.maxHp,
-                    );
+                    // Scale HP + shield together so a barrier is visible
+                    // even at full HP (otherwise start-of-combat shields
+                    // like Aegisline's render zero-width).
+                    const total = Math.max(sim.maxHp, sim.hp + sim.shield);
+                    const hpPct = (100 * sim.hp) / total;
                     v.hpFill.style.width = `${hpPct}%`;
                     v.shieldFill.style.left = `${hpPct}%`;
-                    v.shieldFill.style.width = `${Math.min(shieldPct, 100 - hpPct)}%`;
+                    v.shieldFill.style.width = `${(100 * sim.shield) / total}%`;
                     v.manaFill.style.width = `${(100 * sim.mana) / sim.manaMax}%`;
                     continue;
                 }
@@ -354,6 +481,20 @@ export function UnitsNode(): UnitsHandle {
         pulse: (uid) => {
             const v = visuals.get(uid);
             if (v) v.pulse = 1;
+        },
+        trigger: (uid, kind) => {
+            const v = visuals.get(uid);
+            if (!v) return;
+            const animator = animatorOf(v.group);
+            if (!animator) return;
+            // Fit the attack swing inside the unit's attack interval so
+            // fast attackers don't queue overlapping clips.
+            const sim = state.combat?.byUid.get(uid);
+            const window =
+                kind === 'attack' && sim
+                    ? 1 / Math.max(0.1, effectiveAtkSpeed(sim))
+                    : undefined;
+            animator.trigger(kind, window);
         },
         groups: () => [...visuals.values()].map((v) => v.group),
     };

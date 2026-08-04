@@ -41,11 +41,22 @@ export const THEME = {
     goodNum: 0x2fbf6f,
     /** Dark text used on bright accent buttons. */
     inkOnAccent: '#05141d',
+    /** Holographic edge/conduit cyan used on arena trim and particles. */
+    edge: '#39d0e6',
+    edgeNum: 0x39d0e6,
     /** Scene environment metal color. */
     envNum: 0x0a141c,
     tileAllyNum: 0x0e1a24,
     tileEnemyNum: 0x141a20,
 } as const;
+
+/**
+ * Global UI zoom factor applied to every DOM layer (HUD, standalone
+ * screens, nameplates). The 3D canvas is never zoomed. Screen-space
+ * pixel math (pointer coords, projections) inside zoomed layers must
+ * divide by this factor.
+ */
+export const UI_SCALE = 1.5;
 
 /** Font stacks matching the design (loaded in index.html). */
 export const FONTS = {

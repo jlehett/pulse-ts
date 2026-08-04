@@ -7,181 +7,196 @@ import type { EnemyWaveDef } from './types';
  *
  * Enemy placements use rows 0-3 (the far half of the board): row 0 is the
  * enemy backline, row 3 their frontline.
+ *
+ * Floors 0-2 field enemy-only scrap fodder (scrap/stinger/husk) — trait-less
+ * units that never cast — so the opening fights stay easy and tunable
+ * independent of player-roster balance. Real constructs phase in on floor 2.
+ *
+ * Star-tier ramp: floors 0-4 are all 1-star (a player fielding 1-star copies
+ * shouldn't face 1.8x-stat 2-star enemies before they can combine their own).
+ * Floors 5-6 seed a single 2-star "anchor" per wave for threat; the Act
+ * Guardian on floor 7 carries the fight through its Prime, not star tiers.
  */
 export const FLOOR_WAVES: EnemyWaveDef[][] = [
     // Floor 0
     [
         {
-            name: 'Scrap Pickets',
+            name: 'Scrap Strays',
             placements: [
-                { unitId: 'widget', star: 1, row: 3, col: 2 },
-                { unitId: 'widget', star: 1, row: 3, col: 4 },
-                { unitId: 'piton', star: 1, row: 3, col: 3 },
+                { unitId: 'scrap', star: 1, row: 3, col: 2 },
+                { unitId: 'scrap', star: 1, row: 3, col: 4 },
+                { unitId: 'stinger', star: 1, row: 1, col: 3 },
             ],
         },
         {
-            name: 'Stray Salvagers',
+            name: 'Salvage Pickets',
             placements: [
-                { unitId: 'frostbit', star: 1, row: 3, col: 3 },
-                { unitId: 'pips', star: 1, row: 1, col: 3 },
-                { unitId: 'widget', star: 1, row: 3, col: 5 },
+                { unitId: 'scrap', star: 1, row: 3, col: 3 },
+                { unitId: 'stinger', star: 1, row: 1, col: 2 },
+                { unitId: 'stinger', star: 1, row: 1, col: 4 },
             ],
         },
     ],
     // Floor 1
     [
         {
-            name: 'Salvage Party',
+            name: 'Scrap Column',
             placements: [
-                { unitId: 'piton', star: 1, row: 3, col: 2 },
-                { unitId: 'frostbit', star: 1, row: 3, col: 4 },
-                { unitId: 'pips', star: 1, row: 1, col: 2 },
-                { unitId: 'sparkplug', star: 1, row: 1, col: 4 },
+                { unitId: 'husk', star: 1, row: 3, col: 3 },
+                { unitId: 'scrap', star: 1, row: 3, col: 1 },
+                { unitId: 'scrap', star: 1, row: 3, col: 5 },
+                { unitId: 'stinger', star: 1, row: 1, col: 3 },
             ],
         },
         {
-            name: 'Picket Line',
+            name: 'Wasp Nest',
             placements: [
-                { unitId: 'piton', star: 1, row: 3, col: 1 },
-                { unitId: 'piton', star: 1, row: 3, col: 5 },
-                { unitId: 'widget', star: 1, row: 2, col: 3 },
-                { unitId: 'pips', star: 1, row: 1, col: 3 },
+                { unitId: 'scrap', star: 1, row: 3, col: 2 },
+                { unitId: 'scrap', star: 1, row: 3, col: 4 },
+                { unitId: 'stinger', star: 1, row: 1, col: 1 },
+                { unitId: 'stinger', star: 1, row: 1, col: 5 },
             ],
         },
     ],
-    // Floor 2
+    // Floor 2 — first real constructs, still padded with fodder
     [
         {
-            name: 'Hostile Garrison',
+            name: 'Forge Escort',
             placements: [
-                { unitId: 'piton', star: 2, row: 3, col: 3 },
-                { unitId: 'dynamo', star: 1, row: 3, col: 1 },
-                { unitId: 'pips', star: 1, row: 1, col: 2 },
-                { unitId: 'coldsnap', star: 1, row: 0, col: 4 },
+                { unitId: 'husk', star: 1, row: 3, col: 2 },
+                { unitId: 'scrap', star: 1, row: 3, col: 4 },
+                { unitId: 'tripod', star: 1, row: 1, col: 3 },
+                { unitId: 'stinger', star: 1, row: 0, col: 5 },
             ],
         },
         {
-            name: 'Coolant Runners',
+            name: 'Salvage Crew',
             placements: [
-                { unitId: 'frostbit', star: 2, row: 3, col: 2 },
-                { unitId: 'bulkhead', star: 1, row: 3, col: 4 },
-                { unitId: 'coldsnap', star: 1, row: 0, col: 3 },
-                { unitId: 'widget', star: 1, row: 2, col: 5 },
+                { unitId: 'chock', star: 1, row: 3, col: 3 },
+                { unitId: 'scrap', star: 1, row: 3, col: 1 },
+                { unitId: 'scrap', star: 1, row: 3, col: 5 },
+                { unitId: 'gauze', star: 1, row: 0, col: 3 },
             ],
         },
     ],
     // Floor 3
     [
         {
-            name: 'Junk Battery',
+            name: 'Arc Battery',
             placements: [
-                { unitId: 'bulkhead', star: 1, row: 3, col: 2 },
-                { unitId: 'piton', star: 2, row: 3, col: 4 },
-                { unitId: 'ricochet', star: 1, row: 1, col: 1 },
-                { unitId: 'ricochet', star: 1, row: 1, col: 5 },
-                { unitId: 'sparkplug', star: 2, row: 0, col: 3 },
+                { unitId: 'ramrod', star: 1, row: 3, col: 2 },
+                { unitId: 'chock', star: 1, row: 3, col: 4 },
+                { unitId: 'mortar', star: 1, row: 1, col: 1 },
+                { unitId: 'mortar', star: 1, row: 1, col: 5 },
+                { unitId: 'gauze', star: 1, row: 0, col: 3 },
             ],
         },
         {
-            name: 'Ghost Signal',
+            name: 'Refraction Cell',
             placements: [
-                { unitId: 'murmur', star: 1, row: 2, col: 2 },
-                { unitId: 'murmur', star: 1, row: 2, col: 4 },
-                { unitId: 'bulkhead', star: 1, row: 3, col: 3 },
-                { unitId: 'pips', star: 2, row: 0, col: 3 },
-                { unitId: 'coldsnap', star: 1, row: 0, col: 5 },
+                { unitId: 'wisp', star: 1, row: 2, col: 2 },
+                { unitId: 'wisp', star: 1, row: 2, col: 4 },
+                { unitId: 'ramrod', star: 1, row: 3, col: 3 },
+                { unitId: 'relay', star: 1, row: 0, col: 3 },
+                { unitId: 'static', star: 1, row: 0, col: 5 },
             ],
         },
     ],
     // Floor 4
     [
         {
-            name: 'Foundry Detachment',
+            name: 'Siege Detachment',
             placements: [
-                { unitId: 'bulkhead', star: 2, row: 3, col: 3 },
-                { unitId: 'dynamo', star: 2, row: 3, col: 1 },
-                { unitId: 'ampere', star: 1, row: 1, col: 2 },
-                { unitId: 'coldsnap', star: 1, row: 0, col: 4 },
-                { unitId: 'murmur', star: 1, row: 2, col: 5 },
+                { unitId: 'ramrod', star: 1, row: 3, col: 3 },
+                { unitId: 'gaffhook', star: 1, row: 3, col: 1 },
+                { unitId: 'bastille', star: 1, row: 1, col: 2 },
+                { unitId: 'mortar', star: 1, row: 0, col: 4 },
+                { unitId: 'sawbones', star: 1, row: 0, col: 2 },
             ],
         },
         {
-            name: 'Pressure Column',
+            name: 'Salvage Column',
             placements: [
-                { unitId: 'piton', star: 2, row: 3, col: 2 },
-                { unitId: 'bulkhead', star: 2, row: 3, col: 4 },
-                { unitId: 'ricochet', star: 2, row: 1, col: 3 },
-                { unitId: 'sparkplug', star: 2, row: 0, col: 2 },
-                { unitId: 'pips', star: 2, row: 0, col: 4 },
+                { unitId: 'chock', star: 1, row: 3, col: 2 },
+                { unitId: 'gaffhook', star: 1, row: 3, col: 4 },
+                { unitId: 'picket', star: 1, row: 1, col: 3 },
+                { unitId: 'relay', star: 1, row: 0, col: 2 },
+                { unitId: 'fuze', star: 1, row: 0, col: 4 },
             ],
         },
     ],
     // Floor 5
     [
         {
-            name: 'Blizzard Cell',
+            name: 'Overwatch Nest',
             placements: [
-                { unitId: 'deepfreeze', star: 1, row: 3, col: 3 },
-                { unitId: 'whiteout', star: 1, row: 2, col: 1 },
-                { unitId: 'whiteout', star: 1, row: 2, col: 5 },
-                { unitId: 'coldsnap', star: 2, row: 0, col: 3 },
-                { unitId: 'frostbit', star: 2, row: 3, col: 5 },
+                { unitId: 'gaffhook', star: 1, row: 3, col: 3 },
+                { unitId: 'cinder', star: 1, row: 2, col: 1 },
+                { unitId: 'cinder', star: 1, row: 2, col: 5 },
+                { unitId: 'vantage', star: 1, row: 0, col: 3 },
+                { unitId: 'wisp', star: 2, row: 3, col: 5 },
             ],
         },
         {
-            name: 'Load-Bearing Wall',
+            name: 'Sound System',
             placements: [
-                { unitId: 'bulkhead', star: 2, row: 3, col: 2 },
-                { unitId: 'gridlock', star: 1, row: 1, col: 3 },
-                { unitId: 'parallax', star: 1, row: 0, col: 5 },
-                { unitId: 'dynamo', star: 2, row: 3, col: 4 },
-                { unitId: 'ampere', star: 1, row: 1, col: 1 },
+                { unitId: 'ramrod', star: 2, row: 3, col: 2 },
+                { unitId: 'gaffhook', star: 1, row: 3, col: 4 },
+                { unitId: 'pulsar', star: 1, row: 1, col: 3 },
+                { unitId: 'loom', star: 1, row: 0, col: 5 },
+                { unitId: 'bastille', star: 1, row: 1, col: 1 },
             ],
         },
     ],
     // Floor 6
     [
         {
-            name: 'Vanguard Phalanx',
+            name: 'Gravity Phalanx',
             placements: [
-                { unitId: 'caldera', star: 1, row: 3, col: 3 },
-                { unitId: 'deepfreeze', star: 1, row: 3, col: 1 },
-                { unitId: 'parallax', star: 1, row: 0, col: 2 },
-                { unitId: 'ampere', star: 2, row: 1, col: 4 },
-                { unitId: 'ricochet', star: 2, row: 1, col: 6 },
-                { unitId: 'piton', star: 2, row: 3, col: 5 },
+                { unitId: 'gravitas', star: 1, row: 3, col: 3 },
+                { unitId: 'gaffhook', star: 1, row: 3, col: 1 },
+                { unitId: 'vantage', star: 1, row: 0, col: 2 },
+                { unitId: 'warhead', star: 1, row: 1, col: 4 },
+                { unitId: 'mortar', star: 2, row: 1, col: 6 },
+                { unitId: 'chock', star: 1, row: 3, col: 5 },
             ],
         },
         {
-            name: 'Executive Escort',
+            name: 'Night Shift',
             placements: [
-                { unitId: 'magnate', star: 1, row: 1, col: 3 },
-                { unitId: 'bulkhead', star: 2, row: 3, col: 2 },
-                { unitId: 'bulkhead', star: 2, row: 3, col: 4 },
-                { unitId: 'whiteout', star: 1, row: 2, col: 1 },
-                { unitId: 'parallax', star: 1, row: 0, col: 5 },
-                { unitId: 'sparkplug', star: 2, row: 0, col: 1 },
+                { unitId: 'nocturne', star: 1, row: 1, col: 3 },
+                { unitId: 'ramrod', star: 2, row: 3, col: 2 },
+                { unitId: 'gravitas', star: 1, row: 3, col: 4 },
+                { unitId: 'cinder', star: 1, row: 2, col: 1 },
+                { unitId: 'lifeline', star: 1, row: 0, col: 5 },
+                { unitId: 'static', star: 1, row: 0, col: 1 },
             ],
         },
     ],
     // Floor 7 — Act Guardian
     [
         {
-            name: 'NULLFRAME',
+            name: 'AXIOM',
             placements: [
-                { unitId: 'nullframe', star: 1, row: 3, col: 3 },
-                { unitId: 'deepfreeze', star: 1, row: 3, col: 1 },
-                { unitId: 'deepfreeze', star: 1, row: 3, col: 5 },
-                { unitId: 'gridlock', star: 1, row: 1, col: 2 },
-                { unitId: 'parallax', star: 1, row: 0, col: 4 },
+                { unitId: 'axiom', star: 1, row: 3, col: 3 },
+                { unitId: 'gravitas', star: 1, row: 3, col: 1 },
+                { unitId: 'gravitas', star: 1, row: 3, col: 5 },
+                { unitId: 'lifeline', star: 1, row: 1, col: 2 },
+                { unitId: 'vantage', star: 1, row: 0, col: 4 },
             ],
         },
     ],
 ];
 
-/** Per-floor multiplier applied to enemy hp/atk. */
+/** Gentle on-ramp for the first floors (player board is still tiny). */
+const EARLY_FLOOR_SCALE = [0.8, 0.9, 1];
+
+/**
+ * Per-floor multiplier applied to enemy hp/atk. Flat through the padded
+ * early floors, then a gentle linear ramp (floor 7 lands at ~1.3×).
+ */
 export function floorScale(floor: number): number {
-    return 1 + floor * 0.08;
+    return EARLY_FLOOR_SCALE[floor] ?? 1 + (floor - 2) * 0.06;
 }
 
 /** Extra multiplier and naming applied to elite encounters. */

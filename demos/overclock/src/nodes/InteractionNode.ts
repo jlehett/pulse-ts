@@ -137,7 +137,9 @@ export function InteractionNode(deps: InteractionDeps): void {
         // Hover inspect (both teams).
         state.hoverUid = state.dragUid ?? pickAnyUnit();
 
-        if (select().pressed && !state.dragUid) {
+        // While an item drag is in flight the HUD owns the pointer gesture;
+        // keep hover updating but don't start unit drags or sells.
+        if (select().pressed && !state.dragUid && !state.dragItem) {
             const uid = pickOwnUnit();
             if (uid) {
                 state.dragUid = uid;
@@ -162,7 +164,7 @@ export function InteractionNode(deps: InteractionDeps): void {
         }
 
         // Right-click sells the hovered owned construct.
-        if (cancel().pressed && !state.dragUid) {
+        if (cancel().pressed && !state.dragUid && !state.dragItem) {
             const uid = pickOwnUnit();
             if (uid && sellUnit(state.run, uid)) {
                 sellSfx.play();

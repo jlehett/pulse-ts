@@ -5,6 +5,8 @@
  * reactive @pulse-ts/dom JSX layer (which the in-battle HUD uses).
  */
 
+import { UI_SCALE } from '../config/theme';
+
 /**
  * Creates an element with inline CSS text and optional inner HTML.
  *
@@ -62,7 +64,7 @@ export function mountScreen(
 ): { root: HTMLDivElement; dispose: () => void } {
     ensureKeyframes();
     const root = div(
-        `position:fixed;inset:0;overflow:hidden;z-index:5000;user-select:none;-webkit-user-select:none;` +
+        `position:fixed;inset:0;overflow:hidden;z-index:5000;user-select:none;-webkit-user-select:none;zoom:${UI_SCALE};` +
             `font-family:'Rajdhani',system-ui,sans-serif;animation:ovcFadeIn .25s ease;${css}`,
     );
     container.appendChild(root);

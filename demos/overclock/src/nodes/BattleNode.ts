@@ -1,13 +1,6 @@
 import * as THREE from 'three';
-import {
-    useChild,
-    useFixedUpdate,
-    useFrameUpdate,
-    useProvideContext,
-} from '@pulse-ts/core';
-import { useObject3D } from '@pulse-ts/three';
+import { useChild, useFixedUpdate, useProvideContext } from '@pulse-ts/core';
 import { useSound } from '@pulse-ts/audio';
-import { installParticles, useParticleBurst } from '@pulse-ts/effects';
 import { COMBAT_TIME_LIMIT } from '../config/economy';
 import { BattleCtx, type BattleState } from '../contexts';
 import type { MapNode } from '../run/mapGen';
@@ -21,13 +14,67 @@ import {
 } from '../run/runState';
 import { createRng, type Rng } from '../run/rng';
 import { createCombat, stepCombat } from '../sim/combat';
+import { BOARD_ROWS, cellToWorld } from '../sim/grid';
 import type { CombatEvent } from '../sim/types';
-import { ArenaNode } from './arena/ArenaNode';
+import { ArenaNode, HEX_R } from './arena/ArenaNode';
 import { CameraNode } from './CameraNode';
+import {
+    attackFx,
+    deathFx,
+    healFx,
+    hitFx,
+    playAbilityFx,
+    reviveFx,
+    shieldFx,
+    summonSpawnFx,
+} from './fx/abilityFx';
+import { FxNode } from './fx/FxNode';
 import { HudNode } from './HudNode';
 import { InteractionNode } from './InteractionNode';
 import { accentOf } from './units/robotMesh';
 import { UnitsNode } from './units/UnitsNode';
+
+/** Audio flavor of an ability cast. */
+type CastStyle = 'boom' | 'slash' | 'zap' | 'support';
+
+/** Sound flavor per ability kind; unlisted kinds fall back to 'support'. */
+const CAST_STYLE: Partial<Record<string, CastStyle>> = {
+    strike: 'slash',
+    flicker: 'slash',
+    phantom: 'slash',
+    reap: 'slash',
+    feast: 'slash',
+    guillotine: 'slash',
+    rush: 'slash',
+    gauntlet: 'slash',
+    hook: 'slash',
+    devour: 'slash',
+    nova: 'boom',
+    blast: 'boom',
+    bounce: 'boom',
+    concussive: 'boom',
+    barrage: 'boom',
+    shockwave: 'boom',
+    ram: 'boom',
+    well: 'boom',
+    scorch: 'boom',
+    emp: 'boom',
+    chain: 'zap',
+    echo: 'zap',
+    snipe: 'zap',
+    sweep: 'zap',
+    overcharge: 'zap',
+    drain: 'zap',
+};
+
+/** Kinds whose batch heal events mark the cast's visual targets. */
+const HEAL_TARGET_KINDS = new Set([
+    'triage',
+    'cleanse',
+    'rally',
+    'valkyrie',
+    'empower',
+]);
 
 /** Props for the battle orchestrator. */
 export interface BattleProps {
@@ -50,98 +97,27 @@ export function BattleNode(props: BattleProps): void {
         combat: null,
         timeLeft: COMBAT_TIME_LIMIT,
         dragUid: null,
+        dragItem: null,
         dragWorld: null,
         hoverCell: null,
         hoverBench: false,
         hoverUid: null,
+        highlightTrait: null,
         resolution: null,
         revision: 0,
     };
     useProvideContext(BattleCtx, state);
 
     // Dev-only introspection hook for debugging/driving the demo.
-    const meta = import.meta as { env?: { DEV?: boolean } };
-    if (meta.env?.DEV) {
+    if (import.meta.env.DEV) {
         (window as { __overclock?: BattleState }).__overclock = state;
     }
 
-    installParticles({ maxPerPool: 2048 });
     useChild(CameraNode);
     const arena = ArenaNode();
-    const units = UnitsNode();
+    const units = UnitsNode({ arena });
     InteractionNode({ arena, units });
-
-    // ── Combat VFX ──────────────────────────────────────────────────────
-    const hitBurst = useParticleBurst({
-        count: 14,
-        lifetime: 0.38,
-        color: 0xbfe9f7,
-        speed: [2.2, 5],
-        gravity: 4,
-        size: 0.1,
-        blending: 'additive',
-        shrink: true,
-    });
-    const critBurst = useParticleBurst({
-        count: 26,
-        lifetime: 0.5,
-        color: 0xfff2c2,
-        speed: [3, 7],
-        gravity: 4,
-        size: 0.12,
-        blending: 'additive',
-        shrink: true,
-    });
-    const castBurst = useParticleBurst({
-        count: 22,
-        lifetime: 0.55,
-        color: 0xb45cff,
-        speed: [1.5, 4.5],
-        gravity: -0.5,
-        size: 0.09,
-        blending: 'additive',
-        shrink: true,
-    });
-    const shieldBurst = useParticleBurst({
-        count: 14,
-        lifetime: 0.5,
-        color: 0x38e8ff,
-        speed: [0.8, 2.2],
-        gravity: -1.2,
-        size: 0.08,
-        blending: 'additive',
-        shrink: true,
-    });
-    const deathBurstAlly = useParticleBurst({
-        count: 30,
-        lifetime: 0.7,
-        color: 0x33d6ff,
-        speed: [2, 6],
-        gravity: 5,
-        size: 0.1,
-        blending: 'additive',
-        shrink: true,
-    });
-    const deathBurstEnemy = useParticleBurst({
-        count: 30,
-        lifetime: 0.7,
-        color: 0xff5d6c,
-        speed: [2, 6],
-        gravity: 5,
-        size: 0.1,
-        blending: 'additive',
-        shrink: true,
-    });
-    const goldBurst = useParticleBurst({
-        count: 12,
-        lifetime: 0.6,
-        color: 0xffcf5c,
-        speed: [1.5, 3.5],
-        gravity: 6,
-        size: 0.09,
-        blending: 'additive',
-        shrink: true,
-    });
+    const fx = FxNode({ units });
 
     // ── Combat audio ────────────────────────────────────────────────────
     const hitSfx = useSound('noise', {
@@ -158,6 +134,27 @@ export function BattleNode(props: BattleProps): void {
         gain: 0.06,
         group: 'sfx',
     });
+    const boomSfx = useSound('noise', {
+        filter: 'lowpass',
+        frequency: [520, 60],
+        duration: 0.3,
+        gain: 0.09,
+        group: 'sfx',
+    });
+    const slashSfx = useSound('noise', {
+        filter: 'highpass',
+        frequency: [4200, 1500],
+        duration: 0.09,
+        gain: 0.05,
+        group: 'sfx',
+    });
+    const zapSfx = useSound('arpeggio', {
+        notes: [1567.98, 1174.66, 1760],
+        interval: 0.02,
+        duration: 0.07,
+        gain: 0.05,
+        group: 'sfx',
+    });
     const deathSfx = useSound('noise', {
         filter: 'lowpass',
         frequency: [900, 120],
@@ -165,12 +162,12 @@ export function BattleNode(props: BattleProps): void {
         gain: 0.08,
         group: 'sfx',
     });
-    const goldSfx = useSound('arpeggio', {
-        notes: [1046.5, 1318.5],
+    const reviveSfx = useSound('arpeggio', {
+        notes: [523.25, 783.99, 1046.5],
         interval: 0.05,
-        duration: 0.1,
+        duration: 0.12,
         gain: 0.06,
-        group: 'ui',
+        group: 'sfx',
     });
     const startSfx = useSound('arpeggio', {
         notes: [261.63, 329.63, 392, 523.25],
@@ -194,162 +191,127 @@ export function BattleNode(props: BattleProps): void {
         group: 'ui',
     });
 
+    const castSounds: Record<CastStyle, { play: () => void }> = {
+        boom: boomSfx,
+        slash: slashSfx,
+        zap: zapSfx,
+        support: castSfx,
+    };
+
     let lastHitSfx = 0;
-
-    const at = (uid: string): [number, number, number] | null => {
-        const p = units.anchorOf(uid);
-        return p ? [p.x, p.y, p.z] : null;
-    };
-
-    // ── Tracer / beam FX layer ──────────────────────────────────────────
-    const fxGroup = new THREE.Group();
-    useObject3D(fxGroup);
-    interface Tracer {
-        mesh: THREE.Mesh;
-        from: THREE.Vector3;
-        to: THREE.Vector3;
-        t: number;
-        dur: number;
-    }
-    interface Beam {
-        mesh: THREE.Mesh;
-        t: number;
-        dur: number;
-    }
-    const tracers: Tracer[] = [];
-    const beams: Beam[] = [];
-    const tracerGeo = new THREE.BoxGeometry(0.09, 0.09, 0.55);
-    const beamGeo = new THREE.BoxGeometry(0.16, 0.16, 1);
-
-    const spawnTracer = (fromUid: string, toUid: string) => {
-        const from = units.anchorOf(fromUid);
-        const to = units.anchorOf(toUid);
-        const sim = state.combat?.byUid.get(fromUid);
-        if (!from || !to || !sim) return;
-        const mesh = new THREE.Mesh(
-            tracerGeo,
-            new THREE.MeshBasicMaterial({
-                color: accentOf(sim.def),
-                transparent: true,
-                opacity: 0.95,
-                blending: THREE.AdditiveBlending,
-                depthWrite: false,
-            }),
-        );
-        mesh.position.copy(from);
-        mesh.lookAt(to);
-        fxGroup.add(mesh);
-        tracers.push({
-            mesh,
-            from,
-            to,
-            t: 0,
-            dur: Math.max(0.09, from.distanceTo(to) * 0.03),
-        });
-    };
-
-    const spawnBeam = (casterUid: string) => {
-        const sim = state.combat?.byUid.get(casterUid);
-        const from = units.anchorOf(casterUid);
-        if (!sim || !from || !sim.targetUid) return;
-        const to = units.anchorOf(sim.targetUid);
-        if (!to) return;
-        const dir = to.clone().sub(from).normalize();
-        const end = from.clone().addScaledVector(dir, 14);
-        const mid = from.clone().add(end).multiplyScalar(0.5);
-        const mesh = new THREE.Mesh(
-            beamGeo,
-            new THREE.MeshBasicMaterial({
-                color: accentOf(sim.def),
-                transparent: true,
-                opacity: 0.9,
-                blending: THREE.AdditiveBlending,
-                depthWrite: false,
-            }),
-        );
-        mesh.position.copy(mid);
-        mesh.lookAt(end);
-        mesh.scale.z = from.distanceTo(end);
-        fxGroup.add(mesh);
-        beams.push({ mesh, t: 0, dur: 0.3 });
-    };
-
-    useFrameUpdate((dt) => {
-        for (let i = tracers.length - 1; i >= 0; i--) {
-            const tr = tracers[i];
-            tr.t += dt;
-            const k = Math.min(1, tr.t / tr.dur);
-            tr.mesh.position.lerpVectors(tr.from, tr.to, k);
-            if (k >= 1) {
-                tr.mesh.removeFromParent();
-                (tr.mesh.material as THREE.Material).dispose();
-                tracers.splice(i, 1);
-            }
-        }
-        for (let i = beams.length - 1; i >= 0; i--) {
-            const b = beams[i];
-            b.t += dt;
-            const k = b.t / b.dur;
-            (b.mesh.material as THREE.MeshBasicMaterial).opacity =
-                0.9 * (1 - k);
-            if (k >= 1) {
-                b.mesh.removeFromParent();
-                (b.mesh.material as THREE.Material).dispose();
-                beams.splice(i, 1);
-            }
-        }
-    });
 
     const drainEvents = (events: CombatEvent[]) => {
         const now = performance.now();
+        // Ability hits/heals land in the same batch as their cast event.
+        // Group them per caster so each cast draws one full composition
+        // around the positions it actually affected.
+        interface CastGroup {
+            kind: string;
+            caster: THREE.Vector3;
+            targets: THREE.Vector3[];
+        }
+        const casts = new Map<string, CastGroup>();
+        for (const e of events) {
+            if (e.type !== 'cast') continue;
+            const p = units.anchorOf(e.unit);
+            if (p) casts.set(e.unit, { kind: e.kind, caster: p, targets: [] });
+        }
         for (const e of events) {
             switch (e.type) {
-                case 'attack':
+                case 'attack': {
                     units.pulse(e.from);
-                    if (e.ranged) spawnTracer(e.from, e.to);
+                    units.trigger(e.from, 'attack');
+                    const from = units.anchorOf(e.from);
+                    const to = units.anchorOf(e.to);
+                    const sim = state.combat?.byUid.get(e.from);
+                    if (from && to && sim) {
+                        attackFx(fx, from, to, e.ranged, accentOf(sim.def));
+                    }
                     break;
+                }
                 case 'hit': {
-                    const p = at(e.target);
-                    if (p) (e.crit ? critBurst : hitBurst)(p);
+                    const p = units.anchorOf(e.target);
+                    if (p) {
+                        const from = units.anchorOf(e.source);
+                        hitFx(fx, p, from, e.crit || e.amount >= 250);
+                        casts.get(e.source)?.targets.push(p);
+                    }
                     if (now - lastHitSfx > 90) {
                         lastHitSfx = now;
                         hitSfx.play();
                     }
                     break;
                 }
-                case 'cast': {
-                    const p = at(e.unit);
-                    if (p) castBurst(p);
-                    if (e.kind === 'pierce') spawnBeam(e.unit);
-                    units.pulse(e.unit);
-                    castSfx.play();
+                case 'sweep': {
+                    const caster = units.anchorOf(e.unit);
+                    if (caster) {
+                        const column: THREE.Vector3[] = [];
+                        for (let row = 0; row < BOARD_ROWS; row++) {
+                            const [x, z] = cellToWorld(row, e.col, HEX_R);
+                            column.push(new THREE.Vector3(x, 0, z));
+                        }
+                        playAbilityFx(fx, 'sweep', {
+                            caster,
+                            targets: [],
+                            column,
+                        });
+                    }
+                    if (now - lastHitSfx > 90) {
+                        lastHitSfx = now;
+                        zapSfx.play();
+                    }
                     break;
                 }
                 case 'shield': {
-                    const p = at(e.unit);
-                    if (p) shieldBurst(p);
+                    const p = units.anchorOf(e.unit);
+                    if (p) shieldFx(fx, p);
                     break;
                 }
                 case 'death': {
-                    const p = at(e.unit);
+                    const p = units.anchorOf(e.unit);
                     if (p) {
                         const sim = state.combat?.byUid.get(e.unit);
-                        (sim?.team === 'player'
-                            ? deathBurstAlly
-                            : deathBurstEnemy)(p);
+                        deathFx(fx, p, sim ? accentOf(sim.def) : 0xffffff);
                     }
                     deathSfx.play();
                     break;
                 }
-                case 'goldDrop': {
-                    const p = at(e.unit);
-                    if (p) goldBurst(p);
-                    goldSfx.play();
+                case 'heal': {
+                    const p = units.anchorOf(e.unit);
+                    if (p) {
+                        let claimed = false;
+                        for (const c of casts.values()) {
+                            if (HEAL_TARGET_KINDS.has(c.kind)) {
+                                c.targets.push(p);
+                                claimed = true;
+                            }
+                        }
+                        if (!claimed) healFx(fx, p);
+                    }
+                    break;
+                }
+                case 'revive': {
+                    const p = units.anchorOf(e.unit);
+                    if (p) reviveFx(fx, p);
+                    reviveSfx.play();
+                    break;
+                }
+                case 'summon': {
+                    const p = units.anchorOf(e.unit);
+                    if (p) summonSpawnFx(fx, p);
                     break;
                 }
                 default:
                     break;
             }
+        }
+        for (const [uid, c] of casts) {
+            units.pulse(uid);
+            units.trigger(uid, 'cast');
+            castSounds[CAST_STYLE[c.kind] ?? 'support'].play();
+            // Sweep visuals are drawn per channel tick (`sweep` events).
+            if (c.kind === 'sweep') continue;
+            playAbilityFx(fx, c.kind, { caster: c.caster, targets: c.targets });
         }
         events.length = 0;
     };
@@ -368,7 +330,7 @@ export function BattleNode(props: BattleProps): void {
         });
         state.phase = 'combat';
         state.timeLeft = COMBAT_TIME_LIMIT;
-        arena.setRimIntensity(1.7);
+        arena.setRimIntensity(2.8);
         startSfx.play();
     };
 
@@ -381,20 +343,16 @@ export function BattleNode(props: BattleProps): void {
             state.run.rngState = combatRng.getState();
             combatRng = null;
         }
-        const resolution = resolveBattle(
-            state.run,
-            won,
-            survivors,
-            combat.bonusGold,
-        );
+        const resolution = resolveBattle(state.run, won, survivors);
         state.resolution = {
             goldEarned: resolution.goldEarned,
             coreDamage: resolution.coreDamage,
             augmentOffered: resolution.augmentOffered,
+            salvageChoices: resolution.salvageChoices,
         };
         state.phase = won ? 'victory' : 'defeat';
         state.revision++;
-        arena.setRimIntensity(1.0);
+        arena.setRimIntensity(2.0);
         (won ? victorySfx : defeatSfx).play();
         saveRun(state.run);
     };

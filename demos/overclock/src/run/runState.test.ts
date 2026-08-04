@@ -7,6 +7,7 @@ import {
     STARTING_LEVEL,
     XP_BUY_COST,
 } from '../config/economy';
+import { isComponent } from '../config/items';
 import {
     addXp,
     applyAugment,
@@ -15,9 +16,15 @@ import {
     boardCapacity,
     buyUnit,
     buyXp,
+    chooseSalvage,
     createRun,
+    debugGrantUnit,
+    currentNode,
+    previewReward,
     embark,
     embarkOptions,
+    equipItem,
+    equippedItems,
     interestFor,
     moveToBench,
     placeUnit,
@@ -57,37 +64,37 @@ describe('createRun', () => {
 
 describe('shop', () => {
     it('buying moves the unit to the bench and charges gold', () => {
-        const state = runWithShopUnit('piton');
+        const state = runWithShopUnit('pellet');
         const goldBefore = state.gold;
         expect(buyUnit(state, 0)).toBe(true);
         expect(state.gold).toBe(goldBefore - 1);
-        expect(state.bench.some((u) => u.defId === 'piton')).toBe(true);
+        expect(state.bench.some((u) => u.defId === 'pellet')).toBe(true);
         expect(state.shop[0]).toBeNull();
     });
 
     it('rejects purchases the player cannot afford', () => {
-        const state = runWithShopUnit('apogee'); // cost 5
+        const state = runWithShopUnit('meridian'); // cost 5
         state.gold = 4;
         expect(buyUnit(state, 0)).toBe(false);
         expect(state.bench).toHaveLength(0);
     });
 
     it('rejects purchases with a full bench unless completing a combine', () => {
-        const state = runWithShopUnit('piton');
+        const state = runWithShopUnit('pellet');
         state.gold = 50;
         for (let i = 0; i < BENCH_SIZE; i++) {
-            state.bench.push({ uid: `f${i}`, defId: 'widget', star: 1 });
+            state.bench.push({ uid: `f${i}`, defId: 'chock', star: 1 });
         }
         expect(buyUnit(state, 0)).toBe(false);
 
         // Two existing copies → third completes a combine despite full bench.
-        state.bench[0] = { uid: 'c1', defId: 'piton', star: 1 };
-        state.bench[1] = { uid: 'c2', defId: 'piton', star: 1 };
-        state.shop[0] = 'piton';
+        state.bench[0] = { uid: 'c1', defId: 'pellet', star: 1 };
+        state.bench[1] = { uid: 'c2', defId: 'pellet', star: 1 };
+        state.shop[0] = 'pellet';
         expect(buyUnit(state, 0)).toBe(true);
-        const pitons = state.bench.filter((u) => u.defId === 'piton');
-        expect(pitons).toHaveLength(1);
-        expect(pitons[0].star).toBe(2);
+        const pellets = state.bench.filter((u) => u.defId === 'pellet');
+        expect(pellets).toHaveLength(1);
+        expect(pellets[0].star).toBe(2);
     });
 
     it('refresh charges gold and rerolls', () => {
@@ -105,17 +112,44 @@ describe('shop', () => {
 
     it('draws respect the shared pool', () => {
         const state = freshRun();
-        // Drain everything except one widget: shop can only offer widgets
+        // Drain everything except one chock: shop can only offer chocks
         // (or nulls once exhausted).
         for (const key of Object.keys(state.pool)) state.pool[key] = 0;
         // Return current shop stock to zero too.
         state.shop = state.shop.map(() => null);
-        state.pool['widget'] = 1;
+        state.pool['chock'] = 1;
         state.gold = 100;
         rollShop(state);
         const offered = state.shop.filter((s) => s !== null);
-        expect(offered).toEqual(['widget']);
-        expect(state.pool['widget']).toBe(0);
+        expect(offered).toEqual(['chock']);
+        expect(state.pool['chock']).toBe(0);
+    });
+});
+
+describe('debugGrantUnit', () => {
+    it('grants a free copy to the bench without charging gold', () => {
+        const state = freshRun();
+        const goldBefore = state.gold;
+        expect(debugGrantUnit(state, 'chock')).toBe(true);
+        expect(state.gold).toBe(goldBefore);
+        expect(state.bench.some((u) => u.defId === 'chock')).toBe(true);
+    });
+
+    it('runs the combine cascade like a purchase', () => {
+        const state = freshRun();
+        for (let i = 0; i < 3; i++) debugGrantUnit(state, 'chock');
+        const chocks = state.bench.filter((u) => u.defId === 'chock');
+        expect(chocks).toHaveLength(1);
+        expect(chocks[0].star).toBe(2);
+    });
+
+    it('rejects unknown ids and full-bench grants with no combine', () => {
+        const state = freshRun();
+        expect(debugGrantUnit(state, 'not-a-unit')).toBe(false);
+        for (let i = 0; i < BENCH_SIZE; i++) {
+            state.bench.push({ uid: `f${i}`, defId: 'lug', star: 1 });
+        }
+        expect(debugGrantUnit(state, 'chock')).toBe(false);
     });
 });
 
@@ -124,14 +158,14 @@ describe('combining', () => {
         const state = freshRun();
         state.bench = [];
         for (let i = 0; i < 8; i++) {
-            state.bench.push({ uid: `w${i}`, defId: 'widget', star: 1 });
+            state.bench.push({ uid: `w${i}`, defId: 'chock', star: 1 });
         }
-        state.bench.push({ uid: 'w8', defId: 'widget', star: 1 });
-        tryCombine(state, 'widget');
+        state.bench.push({ uid: 'w8', defId: 'chock', star: 1 });
+        tryCombine(state, 'chock');
         // 9 copies → three 2-stars → one 3-star... but only one combine per
         // star level per call; cascade handles the chain.
         const stars = state.bench
-            .filter((u) => u.defId === 'widget')
+            .filter((u) => u.defId === 'chock')
             .map((u) => u.star)
             .sort();
         expect(stars.reduce((a, b) => a + Math.pow(3, b - 1), 0)).toBe(9);
@@ -141,17 +175,17 @@ describe('combining', () => {
         const state = freshRun();
         state.board.push({
             uid: 'b1',
-            defId: 'piton',
+            defId: 'pellet',
             star: 1,
             row: 4,
             col: 3,
         });
-        state.bench.push({ uid: 'n1', defId: 'piton', star: 1 });
-        state.bench.push({ uid: 'n2', defId: 'piton', star: 1 });
-        tryCombine(state, 'piton');
+        state.bench.push({ uid: 'n1', defId: 'pellet', star: 1 });
+        state.bench.push({ uid: 'n2', defId: 'pellet', star: 1 });
+        tryCombine(state, 'pellet');
         expect(state.board).toHaveLength(1);
         expect(state.board[0].star).toBe(2);
-        expect(state.bench.filter((u) => u.defId === 'piton')).toHaveLength(0);
+        expect(state.bench.filter((u) => u.defId === 'pellet')).toHaveLength(0);
     });
 });
 
@@ -173,7 +207,7 @@ describe('selling', () => {
 describe('board placement', () => {
     it('places bench units on the player half only', () => {
         const state = freshRun();
-        state.bench.push({ uid: 'x1', defId: 'piton', star: 1 });
+        state.bench.push({ uid: 'x1', defId: 'pellet', star: 1 });
         expect(placeUnit(state, 'x1', 3, 3)).toBe(false); // enemy half
         expect(placeUnit(state, 'x1', 4, 3)).toBe(true);
         expect(state.board).toHaveLength(1);
@@ -184,7 +218,7 @@ describe('board placement', () => {
         const state = freshRun();
         const cap = boardCapacity(state);
         for (let i = 0; i < cap + 1; i++) {
-            state.bench.push({ uid: `x${i}`, defId: 'widget', star: 1 });
+            state.bench.push({ uid: `x${i}`, defId: 'chock', star: 1 });
         }
         for (let i = 0; i < cap; i++) {
             expect(placeUnit(state, `x${i}`, 7, i)).toBe(true);
@@ -196,12 +230,12 @@ describe('board placement', () => {
         const state = freshRun();
         state.board.push({
             uid: 'b1',
-            defId: 'piton',
+            defId: 'pellet',
             star: 1,
             row: 4,
             col: 3,
         });
-        state.bench.push({ uid: 'n1', defId: 'widget', star: 1 });
+        state.bench.push({ uid: 'n1', defId: 'chock', star: 1 });
         expect(placeUnit(state, 'n1', 4, 3)).toBe(true);
         expect(state.board.find((u) => u.uid === 'n1')).toBeTruthy();
         expect(state.bench.find((u) => u.uid === 'b1')).toBeTruthy();
@@ -211,7 +245,7 @@ describe('board placement', () => {
         const state = freshRun();
         state.board.push({
             uid: 'b1',
-            defId: 'piton',
+            defId: 'pellet',
             star: 1,
             row: 4,
             col: 3,
@@ -248,7 +282,7 @@ describe('map progression and battles', () => {
         const state = freshRun();
         const node = embark(state, embarkOptions(state)[0].id)!;
         const goldBefore = state.gold;
-        const result = resolveBattle(state, true, 0, 1);
+        const result = resolveBattle(state, true, 0);
         expect(result.won).toBe(true);
         expect(state.gold).toBeGreaterThan(goldBefore);
         expect(state.completedNodes).toContain(node.id);
@@ -274,6 +308,28 @@ describe('map progression and battles', () => {
         expect(state.core).toBe(0);
     });
 
+    it('previewReward matches the payout of a win without mutating', () => {
+        const state = freshRun();
+        embark(state, embarkOptions(state)[0].id);
+        const goldBefore = state.gold;
+        const preview = previewReward(state);
+        expect(state.gold).toBe(goldBefore); // no mutation
+        const result = resolveBattle(state, true, 0);
+        expect(preview.gold).toBe(result.goldEarned);
+        expect(preview.augment).toBe(result.augmentOffered);
+    });
+
+    it('previewReward flags augments on elite nodes and the third win', () => {
+        const state = freshRun();
+        embark(state, embarkOptions(state)[0].id);
+        state.battlesWon = 2;
+        expect(previewReward(state).augment).toBe(true);
+        state.battlesWon = 0;
+        const node = currentNode(state)!;
+        node.type = 'elite';
+        expect(previewReward(state).augment).toBe(true);
+    });
+
     it('waveForNode scales elites harder than battles', () => {
         const state = freshRun();
         const node = embark(state, embarkOptions(state)[0].id)!;
@@ -281,6 +337,125 @@ describe('map progression and battles', () => {
         const elite = waveForNode({ ...node, type: 'elite' });
         expect(elite.statScale).toBeGreaterThan(battle.statScale);
         expect(battle.placements.length).toBeGreaterThan(0);
+    });
+});
+
+describe('items', () => {
+    it('battle wins queue one salvage pick of 3 distinct components', () => {
+        const state = freshRun();
+        embark(state, embarkOptions(state)[0].id);
+        currentNode(state)!.type = 'battle';
+        expect(previewReward(state).items).toBe(1);
+        const result = resolveBattle(state, true, 0);
+        expect(result.salvageChoices).toHaveLength(1);
+        const options = result.salvageChoices[0];
+        expect(options).toHaveLength(3);
+        expect(new Set(options).size).toBe(3);
+        expect(options.every((id) => isComponent(id))).toBe(true);
+        expect(state.pendingSalvage).toEqual(result.salvageChoices);
+        expect(state.items).toEqual([]);
+    });
+
+    it('elite wins queue two salvage picks', () => {
+        const state = freshRun();
+        embark(state, embarkOptions(state)[0].id);
+        currentNode(state)!.type = 'elite';
+        expect(previewReward(state).items).toBe(2);
+        const result = resolveBattle(state, true, 0);
+        expect(result.salvageChoices).toHaveLength(2);
+        expect(state.pendingSalvage).toEqual(result.salvageChoices);
+    });
+
+    it('losses drop nothing', () => {
+        const state = freshRun();
+        embark(state, embarkOptions(state)[0].id);
+        const result = resolveBattle(state, false, 2);
+        expect(result.salvageChoices).toEqual([]);
+        expect(state.pendingSalvage).toEqual([]);
+        expect(state.items).toEqual([]);
+    });
+
+    it('chooseSalvage grants only an offered component, oldest pick first', () => {
+        const state = freshRun();
+        state.pendingSalvage = [
+            ['cell', 'core', 'flux'],
+            ['plate', 'frame', 'coil'],
+        ];
+        expect(chooseSalvage(state, 'plate')).toBe(false);
+        expect(chooseSalvage(state, 'core')).toBe(true);
+        expect(state.items).toEqual(['core']);
+        expect(state.pendingSalvage).toEqual([['plate', 'frame', 'coil']]);
+        expect(chooseSalvage(state, 'coil')).toBe(true);
+        expect(state.items).toEqual(['core', 'coil']);
+        expect(chooseSalvage(state, 'cell')).toBe(false);
+    });
+
+    it('equipItem moves a stash item onto a unit', () => {
+        const state = freshRun();
+        state.bench.push({ uid: 'u1', defId: 'pellet', star: 1 });
+        state.items.push('cell');
+        expect(equipItem(state, 'u1', 'cell')).toBe(true);
+        expect(equippedItems(state.bench[0])).toEqual(['cell']);
+        expect(state.items).toEqual([]);
+    });
+
+    it('two components on one unit auto-fuse into the combined item', () => {
+        const state = freshRun();
+        state.bench.push({ uid: 'u1', defId: 'pellet', star: 1 });
+        state.items.push('cell', 'core');
+        equipItem(state, 'u1', 'cell');
+        equipItem(state, 'u1', 'core');
+        expect(equippedItems(state.bench[0])).toEqual(['hybridActuator']);
+    });
+
+    it('rejects equips onto full units, unknown units, and missing items', () => {
+        const state = freshRun();
+        state.bench.push({
+            uid: 'u1',
+            defId: 'pellet',
+            star: 1,
+            items: ['railgunChassis', 'echoProcessor', 'gatlingConversion'],
+        });
+        state.items.push('cell');
+        expect(equipItem(state, 'u1', 'cell')).toBe(false);
+        expect(equipItem(state, 'ghost', 'cell')).toBe(false);
+        expect(equipItem(state, 'u1', 'flux')).toBe(false);
+        expect(state.items).toEqual(['cell']);
+    });
+
+    it('star combines transfer consumed items, overflowing to the stash', () => {
+        const state = freshRun();
+        state.bench.push(
+            { uid: 'c1', defId: 'pellet', star: 1, items: ['cell'] },
+            { uid: 'c2', defId: 'pellet', star: 1, items: ['core'] },
+            {
+                uid: 'c3',
+                defId: 'pellet',
+                star: 1,
+                items: ['railgunChassis', 'gatlingConversion', 'ablativeStack'],
+            },
+        );
+        tryCombine(state, 'pellet');
+        const keeper = state.bench.find((u) => u.defId === 'pellet')!;
+        expect(keeper.star).toBe(2);
+        expect(equippedItems(keeper)).toEqual([
+            'hybridActuator',
+            'railgunChassis',
+            'gatlingConversion',
+        ]);
+        expect(state.items).toEqual(['ablativeStack']);
+    });
+
+    it('selling a unit returns its items to the stash', () => {
+        const state = freshRun();
+        state.bench.push({
+            uid: 'u1',
+            defId: 'pellet',
+            star: 1,
+            items: ['cell', 'railgunChassis'],
+        });
+        expect(sellUnit(state, 'u1')).toBe(true);
+        expect(state.items).toEqual(['cell', 'railgunChassis']);
     });
 });
 
