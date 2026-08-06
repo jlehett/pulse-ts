@@ -7,8 +7,8 @@ const CASTES = [PHOTO_CASTE, CARNIVORE_CASTE];
 function run(seed: number, steps: number, sampleEvery = 0) {
     const eco = new Ecosystem(DEFAULT_CONFIG, CASTES, createRng(seed));
     const c = DEFAULT_CONFIG.worldSize / 2;
-    eco.seed(0, 20, c, c, 15, 3); // prey bloom
-    eco.seed(1, 8, c, c, 15, 6); // predators
+    eco.seed(0, 20, c, c, 15, PHOTO_CASTE.spawnThreshold * 0.9); // prey bloom
+    eco.seed(1, 8, c, c, 15, CARNIVORE_CASTE.spawnThreshold * 0.9); // predators
     const prey: number[] = [];
     const pred: number[] = [];
     for (let s = 0; s < steps; s++) {
@@ -53,8 +53,8 @@ describe('predation', () => {
         const eco = new Ecosystem(DEFAULT_CONFIG, CASTES, createRng(7));
         eco.recordDeaths = true;
         const c = DEFAULT_CONFIG.worldSize / 2;
-        eco.seed(0, 30, c, c, 10, 3); // prey
-        eco.seed(1, 6, c, c, 10, 6); // predators
+        eco.seed(0, 30, c, c, 10, PHOTO_CASTE.spawnThreshold * 0.9); // prey
+        eco.seed(1, 6, c, c, 10, CARNIVORE_CASTE.spawnThreshold * 0.9); // predators
         let sawHit = false;
         for (let s = 0; s < 900 && !sawHit; s++) {
             eco.step();
@@ -80,7 +80,7 @@ describe('predation', () => {
     it('a lone predator with no prey cannot sustain itself', () => {
         const eco = new Ecosystem(DEFAULT_CONFIG, CASTES, createRng(5));
         const c = DEFAULT_CONFIG.worldSize / 2;
-        eco.seed(1, 10, c, c, 10, 6); // predators only, no prey
+        eco.seed(1, 10, c, c, 10, CARNIVORE_CASTE.spawnThreshold * 0.9); // predators only, no prey
         for (let s = 0; s < 1200; s++) eco.step();
         // With nothing to eat, upkeep drains them to extinction.
         expect(eco.countOf(1)).toBe(0);
