@@ -8,6 +8,31 @@ import type { Caste, EcosystemConfig } from './types';
 const SENSE_PREY = 0;
 const SENSE_THREAT = 1;
 
+/** True if a caste hunts at all (pure grazers never do). */
+export function hunts(c: Caste): boolean {
+    return c.metabolism === 'carnivore' || c.metabolism === 'omnivore';
+}
+
+/** True if a caste photosynthesizes at all. */
+export function grazes(c: Caste): boolean {
+    return c.metabolism === 'photo' || c.metabolism === 'omnivore';
+}
+
+/**
+ * Whether `predator` can overpower `prey`.
+ *
+ * The single source of truth for the predation size ladder — hunting, fleeing,
+ * and personal-space rules all consult it, so armour and prey-reach cards can
+ * never leave those three disagreeing about who eats whom. Prey adds its armour
+ * to its effective mass; the predator scales its own mass by how far above its
+ * weight it punches.
+ */
+export function canEat(predator: Caste, prey: Caste): boolean {
+    if (!hunts(predator)) return false;
+    const armour = prey.defense * (1 - predator.armorPiercing);
+    return prey.size + armour < predator.size * predator.preyReach;
+}
+
 // Evolutionary Pressure accrues from population *turnover*, not standing mass —
 // so a churning/struggling lineage evolves faster than a fat, static one.
 const BIRTH_WEIGHT = 1;
@@ -24,6 +49,20 @@ const KILL_WEIGHT = 2;
 // herds around good grazing and leave real gaps elsewhere.
 const SEP_RADIUS_PER_SIZE = 1.6; // separation radius ≈ this × body size
 const SEP_MIN_RADIUS = 4;
+// Fixed radius over which local crowding is measured. Deliberately *not* the
+// per-caste separation radius: measuring density in a body-sized window would
+// make the metric mean something different for every caste, and quietly punish
+// large bodies for the space they legitimately occupy.
+const CROWD_RADIUS = 9;
+// How much more a neighbour of your OWN caste crowds you than a stranger does.
+//
+// This is the condition for coexistence, not a balance knob. On a single shared
+// resource the species with the lowest break-even wins everything — competitive
+// exclusion — and the classic escape is for intraspecific competition to exceed
+// interspecific: each species must limit itself harder than it limits its
+// rivals. With this above 1, a lineage's own success is what caps it, which
+// leaves room on the map for the others.
+const SELF_CROWD_WEIGHT = 12;
 const SEP_WEIGHT = 1.6; // how strongly separation bends steering
 
 // Fraction of the way velocity eases toward its target each tick (momentum) —
@@ -84,7 +123,6 @@ export class Ecosystem {
     // Reusable neighbor-sense scratch, to avoid allocating a closure per query.
     private senseMode = SENSE_PREY;
     private senseSelf = -1;
-    private senseSelfSize = 0;
     private bestIdx = -1;
     private bestD2 = Infinity;
     private readonly visit: (id: number, d2: number) => void;
@@ -95,12 +133,17 @@ export class Ecosystem {
 
     // Reusable separation-accumulation scratch.
     private sepSelf = -1;
-    private sepSelfSize = 0;
-    private sepSelfCarn = false;
+    private sepSelfCaste = -1;
     private sepX = 0;
     private sepY = 0;
     private sepAx = 0;
     private sepAy = 0;
+    /** Local biomass within {@link CROWD_RADIUS}, from the last separation pass. */
+    private crowd = 0;
+    // Same-caste centroid accumulation, for herding (see Caste.cohesion).
+    private cohN = 0;
+    private cohX = 0;
+    private cohY = 0;
     private readonly sepVisit: (id: number, d2: number) => void;
 
     constructor(
@@ -143,11 +186,12 @@ export class Ecosystem {
             if (id === this.senseSelf) return;
             if (!this.pop.alive[id]) return;
             const oc = this.castes[this.pop.caste[id]];
+            const self = this.castes[this.pop.caste[this.senseSelf]];
             if (this.senseMode === SENSE_PREY) {
-                if (oc.size >= this.senseSelfSize) return;
+                if (!canEat(self, oc)) return;
             } else {
-                if (oc.metabolism !== 'carnivore') return;
-                if (oc.size <= this.senseSelfSize) return;
+                if (!hunts(oc)) return;
+                if (!canEat(oc, self)) return; // only flee what can actually eat me
             }
             if (d2 < this.bestD2) {
                 this.bestD2 = d2;
@@ -164,10 +208,26 @@ export class Ecosystem {
             if (id === this.sepSelf || d2 <= 1e-6) return;
             if (!this.pop.alive[id]) return;
             const oc = this.castes[this.pop.caste[id]];
-            if (this.sepSelfCarn && oc.size < this.sepSelfSize) return; // I eat it
-            if (oc.metabolism === 'carnivore' && this.sepSelfSize < oc.size) {
-                return; // it eats me
+            const self = this.castes[this.pop.caste[this.sepSelf]];
+            // Local biomass, not a head count: a patch crammed with big bodies
+            // is as contested as one crammed with small ones.
+            if (d2 <= CROWD_RADIUS * CROWD_RADIUS) {
+                this.crowd +=
+                    oc.size *
+                    (this.pop.caste[id] === this.sepSelfCaste
+                        ? SELF_CROWD_WEIGHT
+                        : 1);
             }
+            // Herding: same-caste neighbours pull instead of push, so a
+            // cohesive caste gathers into flocks.
+            if (self.cohesion > 0 && this.pop.caste[id] === this.sepSelfCaste) {
+                this.cohN++;
+                this.cohX += this.pop.x[id];
+                this.cohY += this.pop.y[id];
+                return;
+            }
+            if (canEat(self, oc)) return; // I eat it
+            if (canEat(oc, self)) return; // it eats me
             const inv = 1 / d2; // closer neighbours push harder
             this.sepAx += (this.sepX - this.pop.x[id]) * inv;
             this.sepAy += (this.sepY - this.pop.y[id]) * inv;
@@ -225,41 +285,59 @@ export class Ecosystem {
      * overlapping. Re-normalizes the result to a unit direction.
      */
     private applySeparation(i: number, c: Caste): void {
-        const radius = Math.max(SEP_MIN_RADIUS, c.size * SEP_RADIUS_PER_SIZE);
+        const sep = Math.max(SEP_MIN_RADIUS, c.size * SEP_RADIUS_PER_SIZE);
+        // Query the wider of the two so crowding is always measured over the
+        // same window whatever the body size.
+        const radius = Math.max(sep, CROWD_RADIUS);
         this.sepSelf = i;
-        this.sepSelfSize = c.size;
-        this.sepSelfCarn = c.metabolism === 'carnivore';
+        this.sepSelfCaste = this.pop.caste[i];
         this.sepX = this.pop.x[i];
         this.sepY = this.pop.y[i];
         this.sepAx = 0;
         this.sepAy = 0;
+        this.cohN = 0;
+        this.cohX = 0;
+        this.cohY = 0;
+        this.crowd = 0;
         this.sepGrid.forEachInRadius(
             this.sepX,
             this.sepY,
             radius,
             this.sepVisit,
         );
+
+        let dx = this.dirx;
+        let dy = this.diry;
         const m = Math.hypot(this.sepAx, this.sepAy);
-        if (m < 1e-6) return; // no close neighbours — keep the goal direction
-        let dx = this.dirx + (this.sepAx / m) * SEP_WEIGHT;
-        let dy = this.diry + (this.sepAy / m) * SEP_WEIGHT;
+        if (m > 1e-6) {
+            dx += (this.sepAx / m) * SEP_WEIGHT;
+            dy += (this.sepAy / m) * SEP_WEIGHT;
+        }
+        // Herding pull toward the centre of the local flock.
+        if (c.cohesion > 0 && this.cohN > 0) {
+            const cx = this.cohX / this.cohN - this.sepX;
+            const cy = this.cohY / this.cohN - this.sepY;
+            const cm = Math.hypot(cx, cy);
+            if (cm > 1e-6) {
+                dx += (cx / cm) * c.cohesion;
+                dy += (cy / cm) * c.cohesion;
+            }
+        }
         const dm = Math.hypot(dx, dy);
         if (dm > 1e-6) {
-            dx /= dm;
-            dy /= dm;
+            this.dirx = dx / dm;
+            this.diry = dy / dm;
         }
-        this.dirx = dx;
-        this.diry = dy;
     }
 
     /**
      * Find the nearest organism to `i` within `radius` matching `mode` (prey =
-     * smaller than self; threat = a larger carnivore). Returns its index or -1.
+     * something this caste can overpower; threat = something that can overpower
+     * it). Returns its index or -1.
      */
     private senseNearest(i: number, radius: number, mode: number): number {
         this.senseMode = mode;
         this.senseSelf = i;
-        this.senseSelfSize = this.castes[this.pop.caste[i]].size;
         this.bestIdx = -1;
         this.bestD2 = Infinity;
         this.grid.forEachInRadius(
@@ -275,6 +353,7 @@ export class Ecosystem {
     step(): void {
         const { dt, lightRegen } = this.config;
         const reproScale = this.config.reproCooldownScale ?? 1;
+        const crowding = this.config.crowdingPenalty ?? 0;
         const pop = this.pop;
         const light = this.light;
 
@@ -288,17 +367,20 @@ export class Ecosystem {
             if (!pop.alive[i]) continue;
             const c = this.castes[pop.caste[i]];
 
-            pop.energy[i] -= c.upkeep * dt;
+            // Dormancy: below its threshold the organism shuts down — cheap to
+            // run, but blind, still, and barren until it feeds back up.
+            const dormant = c.dormancyAt > 0 && pop.energy[i] < c.dormancyAt;
+            pop.energy[i] -= c.upkeep * (dormant ? c.dormancyUpkeep : 1) * dt;
             pop.atk[i] -= dt;
 
             const x = pop.x[i];
             const y = pop.y[i];
 
-            if (c.metabolism === 'photo') {
-                // Graze light where standing, with saturating (diminishing-
-                // returns) intake — see `Caste.harvestHalfSat`. Thin ground
-                // feeds you poorly, so grazers move on instead of scouring the
-                // field to bare rock.
+            // Grazing: photo and omnivore both feed off the field, with
+            // saturating (diminishing-returns) intake — see
+            // `Caste.harvestHalfSat`. Thin ground feeds you poorly, so grazers
+            // move on instead of scouring the field to bare rock.
+            if (grazes(c)) {
                 const here = light.sample(x, y);
                 const want =
                     c.harvestHalfSat > 0
@@ -306,36 +388,24 @@ export class Ecosystem {
                         : c.harvestRate;
                 const taken = light.consume(x, y, want * dt);
                 pop.energy[i] += taken * c.conversion;
+            }
 
-                // Flee the nearest predator, else climb the light gradient.
-                const threat = this.senseNearest(
-                    i,
-                    c.visionRadius,
-                    SENSE_THREAT,
-                );
-                if (threat >= 0) {
-                    this.unit(x - pop.x[threat], y - pop.y[threat]);
-                } else {
-                    this.gradientDir(x, y, c.visionStep);
-                }
-            } else if (pop.energy[i] >= c.huntSatiation) {
-                // Full: coast rather than hunt, so kill rate tracks hunger
-                // instead of how often prey wanders into reach.
-                const a = this.rng.range(0, Math.PI * 2);
-                this.dirx = Math.cos(a);
-                this.diry = Math.sin(a);
-            } else {
-                // Hunt the nearest smaller organism; eat it if within reach.
+            // Hunting: carnivore and omnivore, and only while hungry.
+            let hunting = false;
+            if (!dormant && hunts(c) && pop.energy[i] < c.huntSatiation) {
                 const prey = this.senseNearest(i, c.visionRadius, SENSE_PREY);
                 if (prey >= 0) {
+                    hunting = true;
+                    const pc = this.castes[pop.caste[prey]];
                     const dx = pop.x[prey] - x;
                     const dy = pop.y[prey] - y;
                     if (
                         dx * dx + dy * dy <= c.reach * c.reach &&
                         pop.atk[i] <= 0
                     ) {
-                        pop.energy[i] +=
-                            this.castes[pop.caste[prey]].size * c.killEnergy;
+                        // Toxic prey costs the eater on the way down, so a
+                        // well-defended caste can be a net loss to eat.
+                        pop.energy[i] += pc.size * (c.killEnergy - pc.toxicity);
                         this.accrue(pop.caste[i], KILL_WEIGHT);
                         this.accrue(pop.caste[prey], DEATH_WEIGHT);
                         this.recordDeath(prey);
@@ -345,6 +415,7 @@ export class Ecosystem {
                             pop.caste[i],
                             pop.caste[prey],
                         );
+                        this.fertilize(pop.x[prey], pop.y[prey], pc.size);
                         pop.kill(prey);
                         pop.atk[i] = c.attackCooldown;
                         // Recoil: the predator lurches back from the strike.
@@ -353,6 +424,25 @@ export class Ecosystem {
                         pop.vy[i] -= (dy / kd) * COMBAT_KNOCKBACK;
                     }
                     this.unit(dx, dy);
+                }
+            }
+
+            if (dormant) {
+                // Stay put and wait it out.
+                pop.vx[i] = 0;
+                pop.vy[i] = 0;
+            } else if (!hunting) {
+                // Not chasing anything: flee whatever can eat me, else go where
+                // the food is. A pure hunter with no prey in sight wanders.
+                const threat = this.senseNearest(
+                    i,
+                    c.visionRadius,
+                    SENSE_THREAT,
+                );
+                if (threat >= 0) {
+                    this.unit(x - pop.x[threat], y - pop.y[threat]);
+                } else if (grazes(c)) {
+                    this.gradientDir(x, y, c.visionStep);
                 } else {
                     const a = this.rng.range(0, Math.PI * 2);
                     this.dirx = Math.cos(a);
@@ -360,8 +450,21 @@ export class Ecosystem {
                 }
             }
 
-            this.applySeparation(i, c);
-            this.applySteer(i, c);
+            if (!dormant) {
+                this.applySeparation(i, c);
+                this.applySteer(i, c);
+                // Density dependence: crowded ground costs extra to hold. This
+                // is what caps local density and keeps the map from being paved
+                // by whichever lineage happens to be most efficient.
+                // Charged as an absolute cost, NOT scaled by the caste's own
+                // upkeep: a proportional charge would bill the cheapest species
+                // least for crowding and compound the very advantage that lets
+                // it exclude everyone else.
+                if (crowding > 0 && this.crowd > 0) {
+                    pop.energy[i] -=
+                        this.crowd * crowding * c.crowdTolerance * dt;
+                }
+            }
 
             // Move and clamp to the world; stop at walls.
             let nx = x + pop.vx[i] * dt;
@@ -384,9 +487,10 @@ export class Ecosystem {
             pop.x[i] = nx;
             pop.y[i] = ny;
 
-            // Reproduce.
+            // Reproduce. Dormant organisms are barren until they recover.
             pop.repro[i] -= dt;
             if (
+                !dormant &&
                 pop.energy[i] >= c.spawnThreshold &&
                 pop.repro[i] <= 0 &&
                 pop.count < pop.capacity
@@ -394,8 +498,9 @@ export class Ecosystem {
                 pop.energy[i] -= c.spawnCost;
                 const cooldown = c.spawnCooldown * reproScale;
                 pop.repro[i] = cooldown;
-                const ox = this.clamp(nx + this.rng.range(-2, 2));
-                const oy = this.clamp(ny + this.rng.range(-2, 2));
+                const d = c.spawnDispersal;
+                const ox = this.clamp(nx + this.rng.range(-d, d));
+                const oy = this.clamp(ny + this.rng.range(-d, d));
                 pop.spawn(
                     ox,
                     oy,
@@ -411,6 +516,7 @@ export class Ecosystem {
             if (pop.age[i] >= c.lifespan || pop.energy[i] <= 0) {
                 this.accrue(pop.caste[i], DEATH_WEIGHT);
                 this.recordDeath(i);
+                this.fertilize(pop.x[i], pop.y[i], c.size);
                 pop.kill(i);
             }
         }
@@ -495,6 +601,15 @@ export class Ecosystem {
     /** Add turnover Pressure to the lineage that owns `caste`. */
     private accrue(caste: number, weight: number): void {
         this.turnover[this.lineageOf[caste]] += weight;
+    }
+
+    /**
+     * Return a dead organism's mass to the light field, closing the nutrient
+     * loop (see {@link EcosystemConfig.corpseFertility}). No-op when unset.
+     */
+    private fertilize(x: number, y: number, size: number): void {
+        const f = this.config.corpseFertility ?? 0;
+        if (f > 0) this.light.deposit(x, y, size * f);
     }
 
     /** Record a dying organism's position for the renderer to fade out. */

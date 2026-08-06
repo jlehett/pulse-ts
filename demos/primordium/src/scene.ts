@@ -2,7 +2,8 @@ import * as THREE from 'three';
 import { useDestroy, useFixedUpdate, useFrameLate } from '@pulse-ts/core';
 import { useThreeContext } from '@pulse-ts/three';
 import { DEFAULT_ROSTER, MatchController } from './game/match';
-import { CARD_LIST } from './sim/genome';
+import { hunts } from './sim/ecosystem';
+import { CARD_BRANCHES, CARD_LIST } from './sim/genome';
 import { createRng } from './sim/rng';
 import { DEFAULT_CONFIG } from './sim/types';
 import type { EcosystemConfig } from './sim/types';
@@ -25,6 +26,10 @@ const SCENE_CONFIG: EcosystemConfig = {
     lightRegen: 0.1,
     capacity: 12000,
     reproCooldownScale: 2,
+    // Corpses enrich the ground they fall on, so grazing pressure and death
+    // leave a visible history on the map rather than only depleting it.
+    corpseFertility: 0.09,
+    crowdingPenalty: 0.05,
 };
 
 /**
@@ -161,7 +166,10 @@ export function PrimordiumScene(): void {
     const predShaped = eco.castes.map(() => false);
     const syncCasteShapes = () => {
         for (let k = 0; k < meshes.length; k++) {
-            const isPred = eco.castes[k].metabolism === 'carnivore';
+            // Anything that hunts gets the spike silhouette — including
+            // omnivores, since "does this thing eat me" is the fact a player
+            // needs to read at a glance.
+            const isPred = hunts(eco.castes[k]);
             if (isPred !== predShaped[k]) {
                 predShaped[k] = isPred;
                 meshes[k].geometry = isPred ? predGeo : geo;
@@ -234,7 +242,7 @@ export function PrimordiumScene(): void {
     // --- Card panel (shown while paused at an evolve turn) -----------------
     const panel = document.createElement('div');
     panel.style.cssText =
-        'position:fixed;top:0;right:0;height:100vh;width:340px;box-sizing:border-box;' +
+        'position:fixed;top:0;right:0;height:100vh;width:380px;box-sizing:border-box;' +
         'display:none;overflow-y:auto;color:#e8eef4;' +
         'font:13px/1.5 ui-monospace,SFMono-Regular,monospace;' +
         'background:rgba(8,12,18,.94);border-left:1px solid #223;padding:16px;';
@@ -244,7 +252,7 @@ export function PrimordiumScene(): void {
         const you = match.human;
         if (!you) return;
         const p = Math.floor(you.pressure);
-        const cards = CARD_LIST.map((c) => {
+        const cardButton = (c: (typeof CARD_LIST)[number]) => {
             const owned = you.genome.includes(c);
             const afford = !owned && c.cost <= you.pressure;
             const bg = owned ? '#12261a' : afford ? '#16324a' : '#1a1f26';
@@ -260,6 +268,16 @@ export function PrimordiumScene(): void {
                 `font:inherit">` +
                 `<b>${c.name}</b>  ${tag}` +
                 `<br><small style="color:#9fb0bf">${c.text}</small></button>`
+            );
+        };
+        // Grouped by branch — the pool is far too large to scan as a flat list.
+        const cards = CARD_BRANCHES.map((b) => {
+            const inBranch = CARD_LIST.filter((c) => c.branch === b.id);
+            if (!inBranch.length) return '';
+            return (
+                `<div style="margin:14px 0 2px;color:#7d8fa0;font-size:11px;` +
+                `letter-spacing:.08em;text-transform:uppercase">${b.label}</div>` +
+                inBranch.map(cardButton).join('')
             );
         }).join('');
         const genome = you.genome.length
