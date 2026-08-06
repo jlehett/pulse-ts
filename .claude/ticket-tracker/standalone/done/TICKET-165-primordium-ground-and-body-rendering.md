@@ -1,7 +1,7 @@
 ---
 id: TICKET-165
 title: Primordium ground palette & body grounding fixes
-status: in-progress
+status: done
 priority: medium
 created: 2026-08-06
 updated: 2026-08-06
@@ -27,13 +27,14 @@ much larger:
 
 ## Acceptance Criteria
 
-- [ ] Ground palette recedes behind the faction colours (low saturation, dark when grazed)
-- [ ] Grazed vs lush ground is still clearly readable as a resource signal
-- [ ] Wildlife is visible against the ground without being mistaken for a faction
-- [ ] Bodies rest on the ground plane rather than intersecting it, at every body size
-- [ ] Newborn grow-in and death fade-out stay grounded as they scale
-- [ ] Lint, typecheck, and the full suite pass; verified visually
+- [x] Ground palette recedes behind the faction colours (low saturation, dark when grazed)
+- [x] Grazed vs lush ground is still clearly readable as a resource signal
+- [x] Wildlife is visible against the ground without being mistaken for a faction
+- [x] Bodies rest on the ground plane rather than intersecting it, at every body size
+- [x] Newborn grow-in and death fade-out stay grounded as they scale
+- [x] Lint, typecheck, and the full suite pass; verified visually
 
 ## Notes
 
 - 2026-08-06: Created from user feedback after TICKET-164: "playfield is like a light blue... wildlife is hard to see... organisms tend to clip through the bottom of the play field".
+- 2026-08-06: Fixed. Ground swapped from a cyan light ramp to a dark near-neutral earth ramp (it was competing with the blue and green lineages); wildlife recoloured to warm bone white with a floor on rendered body radius so small castes stay visible; bodies now lifted by their own half-extent (sphere radius, cone half-height) so they rest on the plane at every scale, including grow-in and death fade. Verified visually.
