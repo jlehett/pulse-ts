@@ -27,8 +27,27 @@ const SCENE_CONFIG: EcosystemConfig = {
     reproCooldownScale: 2,
 };
 
-/** Colour for the neutral wildlife critters. */
-const WILDLIFE_COLOR = 0x9aa5b1;
+/**
+ * Colour for the neutral wildlife critters. A warm bone white: none of the four
+ * faction hues (green/yellow/blue/red) is near it, so wildlife never reads as
+ * somebody's units, and it stays legible against the dark ground.
+ */
+const WILDLIFE_COLOR = 0xe4d9c4;
+
+/** World Y of the ground plane; bodies rest on top of it. */
+const GROUND_Y = 0;
+
+/**
+ * Ground colour ramp, from fully grazed to fully lit, as RGB byte pairs
+ * `[bare, lush]`.
+ *
+ * Deliberately dark and near-neutral: the ground carries one signal (how much
+ * food is left here) and must stay behind four saturated faction colours. An
+ * earth ramp also avoids competing with the green and blue lineages the way the
+ * old cyan field did.
+ */
+const GROUND_BARE = [14, 13, 11];
+const GROUND_LUSH = [68, 58, 35];
 
 /**
  * Extra scale applied to organism bodies so they read at world scale. Body
@@ -37,6 +56,18 @@ const WILDLIFE_COLOR = 0x9aa5b1;
  * reads as a solid mat instead of individuals.
  */
 const RENDER_SCALE = 0.7;
+/**
+ * Floor on rendered body radius, in world units. Wildlife is a third the mass
+ * of a grazer, which at true scale leaves it too small to track against the
+ * ground; this keeps it visible while still clearly the smallest thing alive.
+ */
+const MIN_RENDER_RADIUS = 1.7;
+/**
+ * Half-height of the predator cone in geometry units (its geometry is centred
+ * on the origin, so this is how far its tip and base sit from its centre).
+ * Used to lift cones so they stand on the ground rather than sink into it.
+ */
+const CONE_HALF_HEIGHT = 1.3;
 /** Seconds a newborn takes to grow to full size (birth animation). */
 const GROW_TIME = 1.2;
 /** Seconds a death marker takes to shrink away (death animation). */
@@ -99,7 +130,7 @@ export function PrimordiumScene(): void {
         new THREE.MeshBasicMaterial({ map: tex }),
     );
     ground.rotation.x = -Math.PI / 2;
-    ground.position.y = -0.5;
+    ground.position.y = GROUND_Y;
     scene.add(ground);
 
     // --- One instanced mesh per caste (per-instance colour = energy) -------
@@ -288,6 +319,30 @@ export function PrimordiumScene(): void {
             : '<span style="color:#ff5a52">▼</span>';
     };
 
+    /** Rendered body radius for a caste, floored so tiny castes stay visible. */
+    const bodyRadius = (caste: number) =>
+        Math.max(eco.castes[caste].size * RENDER_SCALE, MIN_RENDER_RADIUS);
+
+    /**
+     * Place an instance so its body rests *on* the ground rather than through
+     * it. Both geometries are centred on their origin, so each has to be lifted
+     * by its own half-extent — a sphere by its radius, a cone by its half-height
+     * — scaled by however far the body has grown or faded.
+     */
+    const placeBody = (
+        x: number,
+        y: number,
+        caste: number,
+        scale: number,
+    ): number => {
+        const radius = bodyRadius(caste);
+        const lift = predShaped[caste] ? CONE_HALF_HEIGHT * radius : radius;
+        dummy.position.set(x - half, GROUND_Y + lift * scale, y - half);
+        dummy.scale.setScalar(radius * scale);
+        dummy.updateMatrix();
+        return radius;
+    };
+
     useFixedUpdate(() => {
         match.step(); // no-ops while paused for the player or finished
     });
@@ -303,9 +358,7 @@ export function PrimordiumScene(): void {
             const k = pop.caste[i];
             const cs = eco.castes[k];
             const grow = Math.min(1, pop.age[i] / GROW_TIME);
-            dummy.position.set(pop.x[i] - half, 0, pop.y[i] - half);
-            dummy.scale.setScalar(cs.size * RENDER_SCALE * grow);
-            dummy.updateMatrix();
+            placeBody(pop.x[i], pop.y[i], k, grow);
             meshes[k].setMatrixAt(counts[k], dummy.matrix);
             // Floor high enough that a starving organism still reads as its
             // faction's colour, not as an anonymous dark blob. Referenced to
@@ -359,9 +412,7 @@ export function PrimordiumScene(): void {
             const k = m.caste;
             if (counts[k] >= cfg.capacity) continue; // mesh full — skip drawing
             const fade = m.life / DEATH_FADE;
-            dummy.position.set(m.x - half, 0, m.y - half);
-            dummy.scale.setScalar(eco.castes[k].size * RENDER_SCALE * fade);
-            dummy.updateMatrix();
+            placeBody(m.x, m.y, k, fade);
             meshes[k].setMatrixAt(counts[k], dummy.matrix);
             tint.copy(baseColors[k]).multiplyScalar(0.5 * fade);
             meshes[k].setColorAt(counts[k], tint);
@@ -386,8 +437,10 @@ export function PrimordiumScene(): void {
             liveHits.push(h);
             if (hc >= HIT_CAP) continue;
             const t = 1 - h.life / HIT_FLASH; // 0 → 1 over the flash
-            dummy.position.set(h.x - half, 0.5, h.y - half);
-            dummy.scale.setScalar((1 + t * 4) * RENDER_SCALE);
+            // Centred at roughly body height so a flash reads as happening to a
+            // creature, not as a mark on the floor.
+            dummy.position.set(h.x - half, GROUND_Y + 2, h.y - half);
+            dummy.scale.setScalar((1 + t * 4) * RENDER_SCALE * 1.6);
             dummy.updateMatrix();
             hitMesh.setMatrixAt(hc, dummy.matrix);
             // Overbright at birth, fading to black (= invisible under additive).
@@ -405,9 +458,11 @@ export function PrimordiumScene(): void {
         for (let idx = 0; idx < v.length; idx++) {
             const l = v[idx] / cfg.lightCap;
             const o = idx * 4;
-            texData[o] = 8 * l;
-            texData[o + 1] = 40 * l;
-            texData[o + 2] = 52 * l;
+            texData[o] = GROUND_BARE[0] + (GROUND_LUSH[0] - GROUND_BARE[0]) * l;
+            texData[o + 1] =
+                GROUND_BARE[1] + (GROUND_LUSH[1] - GROUND_BARE[1]) * l;
+            texData[o + 2] =
+                GROUND_BARE[2] + (GROUND_LUSH[2] - GROUND_BARE[2]) * l;
             texData[o + 3] = 255;
         }
         tex.needsUpdate = true;
