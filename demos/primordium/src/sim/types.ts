@@ -10,10 +10,11 @@ export interface Caste {
     /** Display/debug label. */
     name: string;
     /**
-     * How the caste feeds. `photo` consumes the light field where it stands;
-     * `carnivore` eats other organisms smaller than itself.
+     * How the caste feeds. `photo` consumes the light field where it stands,
+     * `carnivore` eats other organisms it can overpower, and `omnivore` does
+     * both (typically worse at each than a specialist).
      */
-    metabolism: 'photo' | 'carnivore';
+    metabolism: 'photo' | 'carnivore' | 'omnivore';
     /** Max movement speed (world units / second). */
     moveSpeed: number;
     /** Energy drained per second just to stay alive. */
@@ -76,6 +77,55 @@ export interface Caste {
     lifespan: number;
     /** Body mass; biomass = sum of this over living organisms. */
     size: number;
+    /**
+     * Armour: added to body size only when deciding whether something can eat
+     * this organism. Lets a caste price itself out of a predator's menu without
+     * inflating the mass it scores, so defence is a real choice rather than a
+     * side effect of getting bigger.
+     */
+    defense: number;
+    /**
+     * Energy the *eater* loses per unit of this organism's size when it eats
+     * one. High enough and eating you costs more than you are worth, which
+     * makes a caste effectively inedible without needing armour.
+     */
+    toxicity: number;
+    /**
+     * How strongly this caste steers toward nearby organisms of its own caste.
+     * Herding pulls a population into visible flocks instead of an even spread,
+     * and concentrates its grazing pressure.
+     */
+    cohesion: number;
+    /**
+     * Multiplier on this caste's own size when judging what it can overpower.
+     * 1 means it can only eat things strictly smaller; above 1 lets it punch
+     * above its weight and take on peers.
+     */
+    preyReach: number;
+    /**
+     * Fraction of a target's armour this caste ignores when judging what it can
+     * overpower (0 = armour fully counts, 1 = armour is irrelevant). The
+     * counter-play to {@link defense}, so a defensive stack is an arms race
+     * rather than an unanswerable wall.
+     */
+    armorPiercing: number;
+    /**
+     * Multiplier on the crowding cost this caste pays (1 = normal, lower =
+     * tolerates its own density). Herding animals huddle by design, so without
+     * this a cohesion card would simply bill a flock for being a flock and make
+     * herding strictly self-defeating.
+     */
+    crowdTolerance: number;
+    /** Radius offspring are scattered within (world units). */
+    spawnDispersal: number;
+    /**
+     * Energy below which the organism goes dormant: it stops moving and
+     * reproducing and its upkeep drops to `upkeep * dormancyUpkeep`. 0 disables
+     * dormancy. A way to ride out famine instead of dying in it.
+     */
+    dormancyAt: number;
+    /** Upkeep multiplier while dormant (see {@link dormancyAt}). */
+    dormancyUpkeep: number;
 }
 
 /** World + field configuration for one match. */
@@ -100,6 +150,25 @@ export interface EcosystemConfig {
      * gradually instead of being blanketed in seconds. Default 1.
      */
     reproCooldownScale?: number;
+    /**
+     * Light returned to the field per unit of body size when an organism dies.
+     *
+     * Closes the nutrient loop: a herd that grazes an area bare and then dies
+     * there enriches it for whatever comes next, so the map develops a history
+     * instead of only ever being depleted. 0 (default) disables it.
+     */
+    corpseFertility?: number;
+    /**
+     * Extra upkeep per close neighbour, as a fraction of the caste's own upkeep.
+     *
+     * Density dependence, and the main thing stopping one lineage from paving
+     * the map. Without it the species with the lowest break-even light level
+     * wins *everything* — competitive exclusion — because nothing penalises
+     * packing more bodies into the same ground. Crowding makes each additional
+     * neighbour cost something, which caps local density and lets several
+     * lineages coexist. 0 (default) disables it.
+     */
+    crowdingPenalty?: number;
 }
 
 /**
@@ -142,6 +211,15 @@ export const PHOTO_CASTE: Caste = {
     spawnCooldown: 6,
     lifespan: 90,
     size: 4,
+    defense: 0,
+    toxicity: 0,
+    cohesion: 0,
+    preyReach: 1,
+    armorPiercing: 0,
+    crowdTolerance: 1,
+    spawnDispersal: 2,
+    dormancyAt: 0,
+    dormancyUpkeep: 1,
 };
 
 /** A carnivore that hunts and eats smaller organisms — the predator caste. */
@@ -151,14 +229,14 @@ export const CARNIVORE_CASTE: Caste = {
     // Only a shade faster than the grazers it hunts (9) — a predator that
     // simply outruns its prey turns the map into a kill box.
     moveSpeed: 10.4,
-    upkeep: 1.95,
+    upkeep: 2.2,
     harvestRate: 0,
     harvestHalfSat: 0,
     conversion: 0,
     visionStep: 8,
     visionRadius: 38,
     reach: 3.5,
-    killEnergy: 8,
+    killEnergy: 10,
     attackCooldown: 2.5,
     huntSatiation: 48,
     wander: 0.25,
@@ -168,6 +246,15 @@ export const CARNIVORE_CASTE: Caste = {
     spawnCooldown: 10,
     lifespan: 110,
     size: 6,
+    defense: 0,
+    toxicity: 0,
+    cohesion: 0,
+    preyReach: 1,
+    armorPiercing: 0,
+    crowdTolerance: 1,
+    spawnDispersal: 3,
+    dormancyAt: 0,
+    dormancyUpkeep: 1,
 };
 
 /**
@@ -205,6 +292,15 @@ export const WILDLIFE_CASTE: Caste = {
     // Well under the base grazer (4) and predator (6), so anything that hunts
     // can eat it.
     size: 1.5,
+    defense: 0,
+    toxicity: 0,
+    cohesion: 0,
+    preyReach: 1,
+    armorPiercing: 0,
+    crowdTolerance: 1,
+    spawnDispersal: 2,
+    dormancyAt: 0,
+    dormancyUpkeep: 1,
 };
 
 /**

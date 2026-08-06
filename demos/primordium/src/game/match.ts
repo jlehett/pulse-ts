@@ -148,7 +148,7 @@ export class MatchController {
             caste: id,
         }));
 
-        const rad = opts.seedRadius ?? 18;
+        const rad = opts.seedRadius ?? 46;
         rosters.forEach((r, id) => {
             this.eco.seed(
                 id,
@@ -336,30 +336,66 @@ export class MatchController {
     }
 }
 
-/** The MVP roster — four lineages that diverge from the same base via their plans. */
+/**
+ * The default roster — four lineages that diverge from the same base genome
+ * purely through the cards their AI plays. Each plan is a coherent *strategy*
+ * rather than a pile of good cards, so a match shows off distinct mechanics:
+ * a herding grazer, a scattering r-strategist, an armoured tank that prices
+ * itself off the predator's menu, and a pack-hunting predator.
+ */
 export const DEFAULT_ROSTER: LineagePlan[] = [
     {
         name: 'Bloom',
         color: 0x5ce07a,
-        plan: [], // control: a plain self-multiplier that never evolves
-        spawn: { fx: 0.25, fy: 0.25, count: 20, energy: 16 },
+        // Herding grazer: flocks up and mines thin ground the others abandon.
+        plan: [
+            CARDS.sunseeker,
+            CARDS.herdInstinct,
+            CARDS.prolific,
+            CARDS.deepRoots,
+            CARDS.longLived,
+        ],
+        spawn: { fx: 0.25, fy: 0.25, count: 85, energy: 16 },
     },
     {
         name: 'Swarm',
         color: 0xffd24a,
-        plan: [CARDS.prolific, CARDS.fast, CARDS.efficient],
-        spawn: { fx: 0.75, fy: 0.25, count: 20, energy: 16 },
+        // r-strategist: many small bodies flung far and wide.
+        plan: [
+            CARDS.prolific,
+            CARDS.dwarfism,
+            CARDS.windborneSpores,
+            CARDS.efficient,
+            CARDS.skittish,
+        ],
+        spawn: { fx: 0.75, fy: 0.25, count: 85, energy: 16 },
     },
     {
         name: 'Titan',
         color: 0x5aa0ff,
-        plan: [CARDS.biggerBody, CARDS.longLived, CARDS.keenSenses],
-        spawn: { fx: 0.25, fy: 0.75, count: 20, energy: 16 },
+        // Armoured tank: too big and too well defended to be worth eating.
+        plan: [
+            CARDS.biggerBody,
+            CARDS.prolific,
+            CARDS.carapace,
+            CARDS.toxicFlesh,
+            CARDS.longLived,
+        ],
+        spawn: { fx: 0.25, fy: 0.75, count: 85, energy: 16 },
     },
     {
         name: 'Fang',
         color: 0xff5a52,
-        plan: [CARDS.predation, CARDS.fast, CARDS.keenSenses],
-        spawn: { fx: 0.75, fy: 0.75, count: 14, energy: 43 },
+        // Pack predator: hunts in coordinated groups and escalates to peers.
+        // Pack predator that escalates: each rung multiplies what it can
+        // overpower, ending able to bring down the armoured Titans.
+        plan: [
+            CARDS.predation,
+            CARDS.packHunter,
+            CARDS.prolific,
+            CARDS.apexJaws,
+            CARDS.shellCracker,
+        ],
+        spawn: { fx: 0.75, fy: 0.75, count: 30, energy: 43 },
     },
 ];

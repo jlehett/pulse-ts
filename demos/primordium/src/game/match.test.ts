@@ -49,11 +49,21 @@ describe('MatchController', () => {
     it('lineages evolve by spending Pressure on their plans', () => {
         const m = runMatch(7);
         const byName = Object.fromEntries(m.lineages.map((l) => [l.name, l]));
-        // The control lineage has an empty plan and never evolves.
-        expect(byName.Bloom.genome.length).toBe(0);
-        // Evolving lineages played at least one card by the buzzer.
+        // Every roster lineage has a plan, and each played at least one card.
+        for (const lin of m.lineages) {
+            expect(lin.plan.length).toBeGreaterThan(0);
+        }
         expect(byName.Swarm.genome.length).toBeGreaterThan(0);
         expect(byName.Fang.genome.length).toBeGreaterThan(0);
+    });
+
+    it('a lineage with an empty plan never evolves', () => {
+        const roster = DEFAULT_ROSTER.map((r, i) =>
+            i === 0 ? { ...r, plan: [] } : r,
+        );
+        const m = new MatchController(roster, createRng(7), TEST_CONFIG, OPTS);
+        m.runToEnd();
+        expect(m.lineages[0].genome.length).toBe(0);
     });
 
     it('Fang becomes a carnivore once it can afford Predation', () => {
