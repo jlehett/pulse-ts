@@ -16,8 +16,14 @@ const KILL_WEIGHT = 2;
 
 // Separation ("personal space"): agents steer away from close neighbours so they
 // spread out instead of overlapping and phasing through each other.
-const SEP_RADIUS_PER_SIZE = 3.5; // separation radius ≈ this × body size
-const SEP_MIN_RADIUS = 5;
+//
+// Keep this close to body *diameter*. Personal space much wider than the body
+// makes a population at carrying capacity settle into an evenly-spaced lattice
+// — the "bacterial mat" look — because every organism is pressed against its
+// neighbours' exclusion zones. Just-touching separation lets them bunch into
+// herds around good grazing and leave real gaps elsewhere.
+const SEP_RADIUS_PER_SIZE = 1.6; // separation radius ≈ this × body size
+const SEP_MIN_RADIUS = 4;
 const SEP_WEIGHT = 1.6; // how strongly separation bends steering
 
 // Fraction of the way velocity eases toward its target each tick (momentum) —
@@ -168,7 +174,14 @@ export class Ecosystem {
         };
     }
 
-    /** Place `count` organisms of a caste in a disc around `(cx, cy)`. */
+    /**
+     * Place `count` organisms of a caste in a disc around `(cx, cy)`.
+     *
+     * Ages are spread across the caste's lifespan rather than all starting at
+     * zero. A seeded cohort that shares a birthday also shares a death day, and
+     * the synchronized die-off echoes down the generations as violent
+     * boom/bust waves instead of a settled ecosystem.
+     */
     seed(
         casteIndex: number,
         count: number,
@@ -177,12 +190,16 @@ export class Ecosystem {
         radius: number,
         energy: number,
     ): void {
+        const lifespan = this.castes[casteIndex].lifespan;
         for (let n = 0; n < count; n++) {
             const ang = this.rng.range(0, Math.PI * 2);
             const rad = radius * Math.sqrt(this.rng.next());
             const x = this.clamp(cx + Math.cos(ang) * rad);
             const y = this.clamp(cy + Math.sin(ang) * rad);
-            this.pop.spawn(x, y, energy, casteIndex);
+            const i = this.pop.spawn(x, y, energy, casteIndex);
+            if (i >= 0 && Number.isFinite(lifespan)) {
+                this.pop.age[i] = this.rng.range(0, lifespan * 0.6);
+            }
         }
     }
 
@@ -278,8 +295,16 @@ export class Ecosystem {
             const y = pop.y[i];
 
             if (c.metabolism === 'photo') {
-                // Graze light where standing.
-                const taken = light.consume(x, y, c.harvestRate * dt);
+                // Graze light where standing, with saturating (diminishing-
+                // returns) intake — see `Caste.harvestHalfSat`. Thin ground
+                // feeds you poorly, so grazers move on instead of scouring the
+                // field to bare rock.
+                const here = light.sample(x, y);
+                const want =
+                    c.harvestHalfSat > 0
+                        ? (c.harvestRate * here) / (here + c.harvestHalfSat)
+                        : c.harvestRate;
+                const taken = light.consume(x, y, want * dt);
                 pop.energy[i] += taken * c.conversion;
 
                 // Flee the nearest predator, else climb the light gradient.
@@ -293,6 +318,12 @@ export class Ecosystem {
                 } else {
                     this.gradientDir(x, y, c.visionStep);
                 }
+            } else if (pop.energy[i] >= c.huntSatiation) {
+                // Full: coast rather than hunt, so kill rate tracks hunger
+                // instead of how often prey wanders into reach.
+                const a = this.rng.range(0, Math.PI * 2);
+                this.dirx = Math.cos(a);
+                this.diry = Math.sin(a);
             } else {
                 // Hunt the nearest smaller organism; eat it if within reach.
                 const prey = this.senseNearest(i, c.visionRadius, SENSE_PREY);

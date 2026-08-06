@@ -11,34 +11,45 @@ import type { EcosystemConfig } from './sim/types';
  * A big, slow-growing world: much larger than the default so factions have room
  * to maneuver, with `reproCooldownScale` stretching the exponential bloom so the
  * map fills gradually over the match instead of being blanketed in seconds.
+ *
+ * The light budget is what sizes the ecosystem: every cell regenerates
+ * `lightRegen` per second, and at equilibrium the whole of that is spent on
+ * organism upkeep. So the standing population is roughly
+ * `fieldCells² * lightRegen / upkeep` — a few hundred macro grazers here, not
+ * thousands of specks.
  */
 const SCENE_CONFIG: EcosystemConfig = {
     ...DEFAULT_CONFIG,
     worldSize: 340,
     fieldCells: 104,
-    lightRegen: 0.05,
-    capacity: 30000,
-    reproCooldownScale: 3.5,
+    lightRegen: 0.1,
+    capacity: 12000,
+    reproCooldownScale: 2,
 };
 
 /** Colour for the neutral wildlife critters. */
 const WILDLIFE_COLOR = 0x9aa5b1;
 
-/** Extra scale applied to organism spheres so they read at world scale. */
-const RENDER_SCALE = 1.6;
+/**
+ * Extra scale applied to organism bodies so they read at world scale. Body
+ * radius is `caste.size * RENDER_SCALE`; keep the resulting diameter well under
+ * the mean spacing between organisms, or a population at carrying capacity
+ * reads as a solid mat instead of individuals.
+ */
+const RENDER_SCALE = 0.7;
 /** Seconds a newborn takes to grow to full size (birth animation). */
-const GROW_TIME = 0.5;
+const GROW_TIME = 1.2;
 /** Seconds a death marker takes to shrink away (death animation). */
-const DEATH_FADE = 0.5;
+const DEATH_FADE = 1;
 
 const HUMAN_LINEAGE = 0; // you play the first roster entry; the rest are AI
 const MATCH_OPTS = {
     eventIntervalSec: 30,
     matchLengthSec: 240,
-    pressureRate: 0.01,
+    pressureRate: 0.15,
     maxPressurePerTurn: 5,
     humanLineage: HUMAN_LINEAGE,
-    wildlifeCount: 350, // stable background target (spawner-maintained, not breeding)
+    wildlifeCount: 140, // stable background target (spawner-maintained, not breeding)
 };
 
 /**
@@ -297,8 +308,13 @@ export function PrimordiumScene(): void {
             dummy.updateMatrix();
             meshes[k].setMatrixAt(counts[k], dummy.matrix);
             // Floor high enough that a starving organism still reads as its
-            // faction's colour, not as an anonymous dark blob.
-            const ref = cs.spawnThreshold < 12 ? cs.spawnThreshold : 12;
+            // faction's colour, not as an anonymous dark blob. Referenced to
+            // the caste's own spawn threshold, so "bright" means "close to
+            // breeding" whatever the caste's energy scale (wildlife never
+            // breeds, so it gets a fixed reference).
+            const ref = Number.isFinite(cs.spawnThreshold)
+                ? cs.spawnThreshold
+                : 12;
             const b = Math.max(
                 0.5,
                 Math.min(1, 0.5 + (0.5 * pop.energy[i]) / ref),

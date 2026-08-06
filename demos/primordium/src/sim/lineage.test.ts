@@ -13,7 +13,7 @@ const CONFIG = {
 describe('Ecosystem lineage & split primitives', () => {
     it('accrues Pressure from turnover, and drain resets it', () => {
         const eco = new Ecosystem(CONFIG, [PHOTO_CASTE], createRng(1));
-        eco.seed(0, 40, 40, 40, 15, 3);
+        eco.seed(0, 40, 40, 40, 15, PHOTO_CASTE.spawnThreshold * 0.9);
         for (let s = 0; s < 300; s++) eco.step(); // births/deaths happen
         const p = eco.drainPressure(0);
         expect(p).toBeGreaterThan(0);

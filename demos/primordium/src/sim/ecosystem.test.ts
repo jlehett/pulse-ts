@@ -5,7 +5,8 @@ import { DEFAULT_CONFIG, PHOTO_CASTE } from './types';
 function run(seed: number, steps: number, sampleEvery = 0) {
     const eco = new Ecosystem(DEFAULT_CONFIG, [PHOTO_CASTE], createRng(seed));
     const c = DEFAULT_CONFIG.worldSize / 2;
-    eco.seed(0, 20, c, c, 15, 3);
+    // Seeded just under the spawn threshold, so the bloom starts promptly.
+    eco.seed(0, 20, c, c, 15, PHOTO_CASTE.spawnThreshold * 0.9);
     const history: number[] = [];
     for (let s = 0; s < steps; s++) {
         eco.step();
@@ -32,9 +33,11 @@ describe('Ecosystem', () => {
         expect(a.eco.populationCount()).not.toBe(b.eco.populationCount());
     });
 
-    it('biomass equals living count for a unit-size caste', () => {
+    it('biomass is the living count scaled by body size', () => {
         const { eco } = run(7, 300);
-        expect(eco.biomass()).toBeCloseTo(eco.populationCount());
+        expect(eco.biomass()).toBeCloseTo(
+            eco.populationCount() * PHOTO_CASTE.size,
+        );
     });
 
     it('blooms from the seed then stays bounded by carrying capacity', () => {

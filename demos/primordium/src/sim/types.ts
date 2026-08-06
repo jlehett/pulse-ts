@@ -20,6 +20,23 @@ export interface Caste {
     upkeep: number;
     /** Max light consumed per second when standing on a full-light spot (photo). */
     harvestRate: number;
+    /**
+     * Light level at which grazing runs at half {@link harvestRate} (photo).
+     *
+     * Feeding saturates rather than scaling linearly: intake is
+     * `harvestRate * light / (light + harvestHalfSat)`. Without this an
+     * organism strips whatever cell it stands on to zero, so the population
+     * grows until the *entire* field is bare and everything lives at
+     * subsistence — a uniform famine mat. With it, intake falls off as a patch
+     * thins, so grazers abandon thin ground before scouring it and the field
+     * settles at a visible, patchy equilibrium.
+     *
+     * The equilibrium light level is set by the `harvestRate / upkeep` ratio:
+     * `L* = upkeep * harvestHalfSat / (harvestRate - upkeep)`. A caste that
+     * harvests far faster than it burns drives the field near zero regardless
+     * of this value, so keep that ratio modest (~2x) for a lush world.
+     */
+    harvestHalfSat: number;
     /** Energy gained per unit of resource consumed (photo). */
     conversion: number;
     /** Offset (world units) used to estimate the light gradient for steering. */
@@ -35,6 +52,16 @@ export interface Caste {
     killEnergy: number;
     /** Seconds between attacks (carnivore). */
     attackCooldown: number;
+    /**
+     * Energy at/above which a carnivore stops hunting (carnivore).
+     *
+     * Without satiation a predator kills every time prey is in reach and its
+     * cooldown is up — a kill rate set by geometry rather than by hunger, which
+     * is orders of magnitude above what it needs to live and strips the map of
+     * prey. Sated predators ignoring prey is what produces real predator-prey
+     * cycles: they thin the herd, fill up, coast while prey recovers.
+     */
+    huntSatiation: number;
     /** Fraction of a random-direction jitter added to steering (0 = none). */
     wander: number;
     /** Energy at/above which the organism will reproduce. */
@@ -75,48 +102,72 @@ export interface EcosystemConfig {
     reproCooldownScale?: number;
 }
 
-/** A photosynthetic self-multiplier — the "dumb bloom" base caste. */
+/**
+ * A photosynthetic self-multiplier — the "dumb bloom" base caste.
+ *
+ * Tuned for a *macro* ecosystem: few, large, long-lived grazers rather than a
+ * dense mat of tiny ones. Three ratios do the work, and they are what to keep
+ * hold of when retuning:
+ *
+ * - `upkeep` sets the standing population. At equilibrium the world's whole
+ *   light regen is spent on upkeep, so `population ≈ totalLightRegen / upkeep`.
+ * - `harvestRate / upkeep` sets how lush the world looks. Keep it near 2 so
+ *   the field settles around 40% of cap (visibly patchy). Crank it and grazers
+ *   strip the map to bare rock and live at subsistence.
+ * - `size` is mass (and score); it drives both biomass and the predation
+ *   size ladder.
+ */
 export const PHOTO_CASTE: Caste = {
     name: 'Bloom',
     metabolism: 'photo',
-    moveSpeed: 6,
-    upkeep: 0.15,
-    harvestRate: 1.5,
+    moveSpeed: 9,
+    // Upkeep sets the standing population against the world's light budget.
+    // Harvest is kept comfortably above it (~2.8x) so the surplus a grazer
+    // breeds on is not a knife-edge difference of two similar numbers — when
+    // it is, any card that nudges either side decides the whole match.
+    upkeep: 1.2,
+    harvestRate: 5,
+    harvestHalfSat: 1.2,
     conversion: 1,
-    visionStep: 4,
-    visionRadius: 12,
+    visionStep: 8,
+    visionRadius: 26,
     reach: 0,
     killEnergy: 0,
     attackCooldown: 0,
-    wander: 0.3,
-    spawnThreshold: 3,
-    spawnCost: 2,
+    huntSatiation: 0,
+    wander: 0.25,
+    spawnThreshold: 18,
+    spawnCost: 11.5,
     childEnergyFrac: 0.75,
-    spawnCooldown: 2,
-    lifespan: 30,
-    size: 1,
+    spawnCooldown: 6,
+    lifespan: 90,
+    size: 4,
 };
 
 /** A carnivore that hunts and eats smaller organisms — the predator caste. */
 export const CARNIVORE_CASTE: Caste = {
     name: 'Fang',
     metabolism: 'carnivore',
-    moveSpeed: 8,
-    upkeep: 0.25,
+    // Only a shade faster than the grazers it hunts (9) — a predator that
+    // simply outruns its prey turns the map into a kill box.
+    moveSpeed: 10.4,
+    upkeep: 1.95,
     harvestRate: 0,
+    harvestHalfSat: 0,
     conversion: 0,
-    visionStep: 4,
-    visionRadius: 22,
-    reach: 2.5,
-    killEnergy: 6,
-    attackCooldown: 1,
+    visionStep: 8,
+    visionRadius: 38,
+    reach: 3.5,
+    killEnergy: 8,
+    attackCooldown: 2.5,
+    huntSatiation: 48,
     wander: 0.25,
-    spawnThreshold: 8,
-    spawnCost: 5,
+    spawnThreshold: 48,
+    spawnCost: 30,
     childEnergyFrac: 0.7,
-    spawnCooldown: 4,
-    lifespan: 40,
-    size: 1.5,
+    spawnCooldown: 10,
+    lifespan: 110,
+    size: 6,
 };
 
 /**
@@ -128,34 +179,56 @@ export const CARNIVORE_CASTE: Caste = {
 export const WILDLIFE_CASTE: Caste = {
     name: 'Wildlife',
     metabolism: 'photo',
-    moveSpeed: 5,
-    upkeep: 0.1,
-    harvestRate: 1,
+    moveSpeed: 7,
+    // Survives on thinner ground than the factions (lower harvest-to-upkeep
+    // break-even), so it persists at the margins as a food source for
+    // predators instead of being competed to extinction.
+    upkeep: 0.8,
+    harvestRate: 2.6,
+    harvestHalfSat: 1.2,
     conversion: 1,
-    visionStep: 4,
-    visionRadius: 14,
+    visionStep: 6,
+    visionRadius: 20,
     reach: 0,
     killEnergy: 0,
     attackCooldown: 0,
+    huntSatiation: 0,
     wander: 0.35,
     // Wildlife does NOT reproduce (unreachable threshold) — it's a stable
     // background kept topped up by a spawner (see MatchController), so it never
     // blooms. It mostly leaves the map by being eaten.
     spawnThreshold: Number.POSITIVE_INFINITY,
-    spawnCost: 2,
+    spawnCost: 8,
     childEnergyFrac: 0.75,
     spawnCooldown: 2,
     lifespan: 240,
-    size: 0.5,
+    // Well under the base grazer (4) and predator (6), so anything that hunts
+    // can eat it.
+    size: 1.5,
 };
 
-/** Default world tuned so a single bloom rises and then hits carrying capacity. */
+/**
+ * Default world tuned so a single bloom rises and then hits carrying capacity.
+ *
+ * Two field knobs shape the ecosystem independently, which is what lets the
+ * world be both lush-looking and sparsely populated:
+ *
+ * - `lightCap` is how rich one patch gets, and therefore how fast a grazer
+ *   standing on good ground can feed. It sets the *ceiling* on upkeep a caste
+ *   can sustain.
+ * - `lightRegen * fieldCells²` is the whole world's energy budget per second,
+ *   and with upkeep it sets the standing population
+ *   (`population ≈ totalRegen / upkeep`).
+ *
+ * Raising the cap without raising regen buys richer patches and healthier
+ * margins without adding organisms.
+ */
 export const DEFAULT_CONFIG: EcosystemConfig = {
     worldSize: 200,
     fieldCells: 64,
-    lightInitial: 1,
-    lightCap: 1,
-    lightRegen: 0.05,
+    lightInitial: 2,
+    lightCap: 2,
+    lightRegen: 0.1,
     capacity: 20000,
     dt: 1 / 30,
 };

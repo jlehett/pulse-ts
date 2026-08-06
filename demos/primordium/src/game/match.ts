@@ -42,9 +42,11 @@ export interface MatchOptions {
     seedRadius?: number;
     /**
      * Multiplier from raw turnover (births/deaths/kills) to Evolutionary Pressure.
-     * Small, because a healthy population generates a lot of turnover; this paces
-     * how fast a lineage can afford cards. Default tuned so plans roll out over
-     * several evolve turns.
+     * Paces how fast a lineage can afford cards, and must be retuned whenever the
+     * ecosystem's *scale* changes: a world of a few hundred macro organisms
+     * generates orders of magnitude less turnover than one of thousands of
+     * short-lived specks, and at too low a rate no lineage ever affords a card
+     * and the match plays out as four unevolved base genomes.
      */
     pressureRate?: number;
     /**
@@ -176,7 +178,7 @@ export class MatchController {
     private scatterWildlife(n: number): void {
         if (this.wildlifeCaste === null || n <= 0) return;
         const w = this.config.worldSize;
-        this.eco.seed(this.wildlifeCaste, n, w / 2, w / 2, w * 0.48, 3);
+        this.eco.seed(this.wildlifeCaste, n, w / 2, w / 2, w * 0.48, 12);
     }
 
     /** True once the match clock has reached the buzzer. */
@@ -340,24 +342,24 @@ export const DEFAULT_ROSTER: LineagePlan[] = [
         name: 'Bloom',
         color: 0x5ce07a,
         plan: [], // control: a plain self-multiplier that never evolves
-        spawn: { fx: 0.25, fy: 0.25, count: 20, energy: 3 },
+        spawn: { fx: 0.25, fy: 0.25, count: 20, energy: 16 },
     },
     {
         name: 'Swarm',
         color: 0xffd24a,
         plan: [CARDS.prolific, CARDS.fast, CARDS.efficient],
-        spawn: { fx: 0.75, fy: 0.25, count: 20, energy: 3 },
+        spawn: { fx: 0.75, fy: 0.25, count: 20, energy: 16 },
     },
     {
         name: 'Titan',
         color: 0x5aa0ff,
         plan: [CARDS.biggerBody, CARDS.longLived, CARDS.keenSenses],
-        spawn: { fx: 0.25, fy: 0.75, count: 20, energy: 3 },
+        spawn: { fx: 0.25, fy: 0.75, count: 20, energy: 16 },
     },
     {
         name: 'Fang',
         color: 0xff5a52,
         plan: [CARDS.predation, CARDS.fast, CARDS.keenSenses],
-        spawn: { fx: 0.75, fy: 0.75, count: 12, energy: 5 },
+        spawn: { fx: 0.75, fy: 0.75, count: 14, energy: 43 },
     },
 ];
