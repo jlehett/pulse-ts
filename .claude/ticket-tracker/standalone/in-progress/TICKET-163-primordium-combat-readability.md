@@ -22,15 +22,16 @@ which species is winning — both in-world and on the HUD.
 
 ## Acceptance Criteria
 
-- [ ] Combat kill events carry attacker/victim identity out of the sim (not just position)
-- [ ] Kill flashes are colored by the attacker's lineage so combat zones read as "who is winning here"
-- [ ] Predator castes are visually distinct from photosynthesizers (different silhouette, not just color)
-- [ ] Energy-based dimming no longer muddies faction identity (raise brightness floor / preserve hue)
-- [ ] HUD shows a rolling combat feed: who is killing whom, with counts and faction colors
-- [ ] HUD leaderboard shows biomass trend (rising/falling) per lineage
-- [ ] Sim changes covered by tests; lint passes on the demo
+- [x] Combat kill events carry attacker/victim identity out of the sim (not just position)
+- [x] Kill flashes are colored by the attacker's lineage so combat zones read as "who is winning here"
+- [x] Predator castes are visually distinct from photosynthesizers (different silhouette, not just color)
+- [x] Energy-based dimming no longer muddies faction identity (raise brightness floor / preserve hue)
+- [x] HUD shows a rolling combat feed: who is killing whom, with counts and faction colors
+- [x] HUD leaderboard shows biomass trend (rising/falling) per lineage
+- [x] Sim changes covered by tests; lint passes on the demo
 
 ## Notes
 
 - 2026-08-05: Created from user feedback: "it's not clear which species is winning during combat".
 - 2026-08-05: Starting implementation. Branch based on evo-demo (primordium only exists there, not on main).
+- 2026-08-05: Implementation complete: sim records killer/victim castes per hit; renderer gives carnivores cone silhouettes, attacker-colored additive kill flashes, brighter energy tint floor; HUD gains rolling combat feed + biomass trend arrows. 64/64 tests pass, lint clean. Visual verification via headless Chrome in progress.

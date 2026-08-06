@@ -49,6 +49,34 @@ describe('predation', () => {
         expect(predPeak).toBeLessThan(DEFAULT_CONFIG.capacity);
     });
 
+    it('records attacker and victim castes with each combat hit', () => {
+        const eco = new Ecosystem(DEFAULT_CONFIG, CASTES, createRng(7));
+        eco.recordDeaths = true;
+        const c = DEFAULT_CONFIG.worldSize / 2;
+        eco.seed(0, 30, c, c, 10, 3); // prey
+        eco.seed(1, 6, c, c, 10, 6); // predators
+        let sawHit = false;
+        for (let s = 0; s < 900 && !sawHit; s++) {
+            eco.step();
+            if (eco.hitX.length > 0) {
+                sawHit = true;
+                // One killer/victim entry per hit, attributed correctly: only
+                // caste 1 hunts, and only caste 0 is small enough to be eaten.
+                expect(eco.hitKillerCaste.length).toBe(eco.hitX.length);
+                expect(eco.hitVictimCaste.length).toBe(eco.hitX.length);
+                for (let d = 0; d < eco.hitX.length; d++) {
+                    expect(eco.hitKillerCaste[d]).toBe(1);
+                    expect(eco.hitVictimCaste[d]).toBe(0);
+                }
+            }
+            eco.clearDeaths();
+        }
+        expect(sawHit).toBe(true);
+        // clearDeaths drains the combat buffers along with the death buffers.
+        expect(eco.hitKillerCaste.length).toBe(0);
+        expect(eco.hitVictimCaste.length).toBe(0);
+    });
+
     it('a lone predator with no prey cannot sustain itself', () => {
         const eco = new Ecosystem(DEFAULT_CONFIG, CASTES, createRng(5));
         const c = DEFAULT_CONFIG.worldSize / 2;

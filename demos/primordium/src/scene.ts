@@ -63,12 +63,13 @@ export function PrimordiumScene(): void {
     const eco = match.eco;
     eco.recordDeaths = true; // so we can animate deaths (fade-out) in the renderer
     const humanName = DEFAULT_ROSTER[HUMAN_LINEAGE].name;
-    const casteColor = (k: number) => {
-        const lin = eco.lineageOf[k];
-        return lin < DEFAULT_ROSTER.length
+    const lineageColor = (lin: number) =>
+        lin < DEFAULT_ROSTER.length
             ? DEFAULT_ROSTER[lin].color
             : WILDLIFE_COLOR; // neutral wildlife
-    };
+    const lineageName = (lin: number) =>
+        lin < DEFAULT_ROSTER.length ? DEFAULT_ROSTER[lin].name : 'Wildlife';
+    const casteColor = (k: number) => lineageColor(eco.lineageOf[k]);
     const hex = (c: number) => `#${c.toString(16).padStart(6, '0')}`;
 
     // --- Lighting ---------------------------------------------------------
@@ -91,9 +92,17 @@ export function PrimordiumScene(): void {
     scene.add(ground);
 
     // --- One instanced mesh per caste (per-instance colour = energy) -------
+    // Grazers are domes, carnivores are upright spikes — silhouette tells you
+    // what something *does* before colour tells you whose it is.
     const geo = new THREE.SphereGeometry(1, 6, 5);
+    const predGeo = new THREE.ConeGeometry(0.9, 2.6, 5);
     const meshes = eco.castes.map(() => {
-        const mesh = new THREE.InstancedMesh(
+        // Explicit BufferGeometry generic: the geometry is swapped between the
+        // sphere and the cone when a caste's metabolism changes.
+        const mesh = new THREE.InstancedMesh<
+            THREE.BufferGeometry,
+            THREE.MeshStandardMaterial
+        >(
             geo,
             // Base colour is white; per-instance colour carries caste colour dimmed
             // by the organism's energy, so healthy = bright, starving = dark.
@@ -105,23 +114,45 @@ export function PrimordiumScene(): void {
         scene.add(mesh);
         return mesh;
     });
+    // A caste's metabolism can flip at an evolve turn (Predation card), so
+    // re-check each frame and swap the mesh's geometry when it changes.
+    const predShaped = eco.castes.map(() => false);
+    const syncCasteShapes = () => {
+        for (let k = 0; k < meshes.length; k++) {
+            const isPred = eco.castes[k].metabolism === 'carnivore';
+            if (isPred !== predShaped[k]) {
+                predShaped[k] = isPred;
+                meshes[k].geometry = isPred ? predGeo : geo;
+            }
+        }
+    };
 
     // Per-caste base colour as a THREE.Color, for tinting by energy.
     const baseColors = eco.castes.map((_, k) => new THREE.Color(casteColor(k)));
     const tint = new THREE.Color();
 
     // --- Combat hit flashes ----------------------------------------------
-    const HIT_FLASH = 0.28; // seconds
+    // Each kill flashes in the *attacker's* colour (additive, so it pops over
+    // everything): a glance at a melee tells you whose colour is flaring —
+    // i.e. who is winning there. The victim's colour is already told by the
+    // fading corpse marker underneath.
+    const HIT_FLASH = 0.4; // seconds
     const HIT_CAP = 1500;
     const hitMesh = new THREE.InstancedMesh(
         new THREE.SphereGeometry(1, 8, 6),
-        new THREE.MeshBasicMaterial({ color: 0xffffff }),
+        new THREE.MeshBasicMaterial({
+            color: 0xffffff,
+            blending: THREE.AdditiveBlending,
+            transparent: true,
+            depthWrite: false,
+        }),
         HIT_CAP,
     );
     hitMesh.frustumCulled = false;
     hitMesh.count = 0;
+    hitMesh.renderOrder = 2;
     scene.add(hitMesh);
-    let hits: { x: number; y: number; life: number }[] = [];
+    let hits: { x: number; y: number; life: number; color: THREE.Color }[] = [];
 
     // --- Orthographic isometric camera ------------------------------------
     const camera = new THREE.OrthographicCamera(
@@ -222,6 +253,30 @@ export function PrimordiumScene(): void {
     // Transient death markers: shrinking ghosts left where organisms died.
     let markers: { x: number; y: number; caste: number; life: number }[] = [];
 
+    // Rolling combat ledger (who killed whom, by lineage) for the HUD feed.
+    const KILL_WINDOW = 15; // seconds of kills the feed summarizes
+    let killEvents: { killer: number; victim: number; t: number }[] = [];
+
+    // Biomass history per lineage (sampled every few sim-seconds) for the
+    // leaderboard's rising/falling trend arrows.
+    const TREND_SAMPLE = 2; // seconds between samples
+    const TREND_SPAN = 6; // compare against the sample from this long ago
+    const biomassHist = new Map<string, { t: number; biomass: number }[]>();
+    let nextTrendSample = 0;
+    const trendArrow = (name: string, biomass: number): string => {
+        const hist = biomassHist.get(name) ?? [];
+        const past = hist.find((s) => eco.time - s.t <= TREND_SPAN);
+        if (!past || eco.time - past.t < TREND_SPAN * 0.5) {
+            return '<span style="color:#5a6672">─</span>';
+        }
+        const delta = biomass - past.biomass;
+        const rel = Math.abs(delta) / Math.max(past.biomass, 1);
+        if (rel < 0.03) return '<span style="color:#5a6672">─</span>';
+        return delta > 0
+            ? '<span style="color:#5ce07a">▲</span>'
+            : '<span style="color:#ff5a52">▼</span>';
+    };
+
     useFixedUpdate(() => {
         match.step(); // no-ops while paused for the player or finished
     });
@@ -229,6 +284,7 @@ export function PrimordiumScene(): void {
     useFrameLate((dt) => {
         const pop = eco.pop;
 
+        syncCasteShapes();
         counts.fill(0);
         // Living organisms — newborns grow in over GROW_TIME; per-instance colour
         // is the caste colour dimmed by energy (bright = healthy, dark = starving).
@@ -240,10 +296,12 @@ export function PrimordiumScene(): void {
             dummy.scale.setScalar(cs.size * RENDER_SCALE * grow);
             dummy.updateMatrix();
             meshes[k].setMatrixAt(counts[k], dummy.matrix);
+            // Floor high enough that a starving organism still reads as its
+            // faction's colour, not as an anonymous dark blob.
             const ref = cs.spawnThreshold < 12 ? cs.spawnThreshold : 12;
             const b = Math.max(
-                0.28,
-                Math.min(1, 0.28 + (0.72 * pop.energy[i]) / ref),
+                0.5,
+                Math.min(1, 0.5 + (0.5 * pop.energy[i]) / ref),
             );
             tint.copy(baseColors[k]).multiplyScalar(b);
             meshes[k].setColorAt(counts[k], tint);
@@ -259,11 +317,23 @@ export function PrimordiumScene(): void {
                 life: DEATH_FADE,
             });
         }
-        // Collect this frame's combat kills as expanding flashes.
+        // Collect this frame's combat kills: an attacker-coloured flash in the
+        // world, plus a ledger entry for the HUD's who-kills-whom feed.
         for (let d = 0; d < eco.hitX.length; d++) {
-            hits.push({ x: eco.hitX[d], y: eco.hitY[d], life: HIT_FLASH });
+            hits.push({
+                x: eco.hitX[d],
+                y: eco.hitY[d],
+                life: HIT_FLASH,
+                color: new THREE.Color(casteColor(eco.hitKillerCaste[d])),
+            });
+            killEvents.push({
+                killer: eco.lineageOf[eco.hitKillerCaste[d]],
+                victim: eco.lineageOf[eco.hitVictimCaste[d]],
+                t: eco.time,
+            });
         }
         eco.clearDeaths();
+        killEvents = killEvents.filter((e) => eco.time - e.t <= KILL_WINDOW);
 
         const survivors: typeof markers = [];
         for (const m of markers) {
@@ -290,7 +360,8 @@ export function PrimordiumScene(): void {
                 meshes[k].instanceColor!.needsUpdate = true;
         }
 
-        // Combat flashes: bright spheres that expand and dim quickly.
+        // Combat flashes: attacker-coloured bursts that expand and dim quickly
+        // (additive, so overlapping fights read as a glow of the winning colour).
         const liveHits: typeof hits = [];
         let hc = 0;
         for (const h of hits) {
@@ -300,10 +371,11 @@ export function PrimordiumScene(): void {
             if (hc >= HIT_CAP) continue;
             const t = 1 - h.life / HIT_FLASH; // 0 → 1 over the flash
             dummy.position.set(h.x - half, 0.5, h.y - half);
-            dummy.scale.setScalar((1 + t * 3) * RENDER_SCALE);
+            dummy.scale.setScalar((1 + t * 4) * RENDER_SCALE);
             dummy.updateMatrix();
             hitMesh.setMatrixAt(hc, dummy.matrix);
-            tint.setScalar(1 - t); // white → black (fades on the dark ground)
+            // Overbright at birth, fading to black (= invisible under additive).
+            tint.copy(h.color).multiplyScalar(1.5 * (1 - t));
             hitMesh.setColorAt(hc, tint);
             hc++;
         }
@@ -336,8 +408,22 @@ export function PrimordiumScene(): void {
             panel.style.display = 'none';
         }
 
-        // Leaderboard.
+        // Leaderboard, with a rising/falling biomass arrow per lineage.
         const rows = match.standings();
+        if (eco.time >= nextTrendSample) {
+            nextTrendSample = eco.time + TREND_SAMPLE;
+            for (const r of rows) {
+                const hist = biomassHist.get(r.name) ?? [];
+                hist.push({ t: eco.time, biomass: r.biomass });
+                while (
+                    hist.length &&
+                    eco.time - hist[0].t > TREND_SPAN + TREND_SAMPLE
+                ) {
+                    hist.shift();
+                }
+                biomassHist.set(r.name, hist);
+            }
+        }
         const header = match.finished
             ? `<b>PRIMORDIUM</b>   FINAL   winner: ${rows[0].name}`
             : match.awaitingPlayer
@@ -348,11 +434,40 @@ export function PrimordiumScene(): void {
                 const you = r.name === humanName ? ' (you)' : '';
                 return (
                     `<span style="color:${hex(r.color)}">●</span> ` +
-                    `${(r.name + you).padEnd(11)} ${r.biomass.toFixed(0).padStart(6)}  ` +
+                    `${(r.name + you).padEnd(11)} ${r.biomass.toFixed(0).padStart(6)} ` +
+                    `${trendArrow(r.name, r.biomass)}  ` +
                     `⚡${String(Math.floor(r.pressure)).padStart(3)}  ${r.cards}c`
                 );
             })
             .join('\n');
+
+        // Combat feed: the rolling kill ledger aggregated into who-eats-whom
+        // lines, biggest matchup first — the "who is winning combat" readout.
+        const tally = new Map<
+            string,
+            { killer: number; victim: number; n: number }
+        >();
+        for (const e of killEvents) {
+            const key = `${e.killer}>${e.victim}`;
+            const row = tally.get(key);
+            if (row) row.n++;
+            else tally.set(key, { killer: e.killer, victim: e.victim, n: 1 });
+        }
+        const feedRows = [...tally.values()].sort((a, b) => b.n - a.n);
+        const feed = feedRows.length
+            ? `\n\n<b>⚔ Combat (last ${KILL_WINDOW}s):</b>\n` +
+              feedRows
+                  .slice(0, 4)
+                  .map(
+                      (f) =>
+                          `<span style="color:${hex(lineageColor(f.killer))}">` +
+                          `${lineageName(f.killer).padEnd(9)}</span>▶ ` +
+                          `<span style="color:${hex(lineageColor(f.victim))}">` +
+                          `${lineageName(f.victim).padEnd(9)}</span>` +
+                          `×${f.n}`,
+                  )
+                  .join('\n')
+            : '';
 
         // Round log — what each lineage evolved last turn, so the game is readable
         // at the strategy level, not just the sphere soup.
@@ -369,7 +484,7 @@ export function PrimordiumScene(): void {
                       .join('\n')
                 : '';
 
-        hud.innerHTML = header + '\n\n' + board + log;
+        hud.innerHTML = header + '\n\n' + board + feed + log;
     });
 
     useDestroy(() => {
@@ -379,6 +494,7 @@ export function PrimordiumScene(): void {
         for (const m of meshes) m.dispose();
         hitMesh.dispose();
         geo.dispose();
+        predGeo.dispose();
         tex.dispose();
     });
 }

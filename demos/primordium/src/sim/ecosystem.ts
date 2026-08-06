@@ -65,9 +65,15 @@ export class Ecosystem {
     readonly deathX: number[] = [];
     readonly deathY: number[] = [];
     readonly deathCaste: number[] = [];
-    /** Positions of combat kills this frame, for a renderer to flash. */
+    /**
+     * Combat kills this frame, for a renderer to flash and tally: position of
+     * the kill plus the caste of the attacker and of the victim, so the event
+     * can be attributed (colored, counted) per lineage via {@link lineageOf}.
+     */
     readonly hitX: number[] = [];
     readonly hitY: number[] = [];
+    readonly hitKillerCaste: number[] = [];
+    readonly hitVictimCaste: number[] = [];
 
     // Reusable neighbor-sense scratch, to avoid allocating a closure per query.
     private senseMode = SENSE_PREY;
@@ -302,7 +308,12 @@ export class Ecosystem {
                         this.accrue(pop.caste[i], KILL_WEIGHT);
                         this.accrue(pop.caste[prey], DEATH_WEIGHT);
                         this.recordDeath(prey);
-                        this.recordHit(pop.x[prey], pop.y[prey]);
+                        this.recordHit(
+                            pop.x[prey],
+                            pop.y[prey],
+                            pop.caste[i],
+                            pop.caste[prey],
+                        );
                         pop.kill(prey);
                         pop.atk[i] = c.attackCooldown;
                         // Recoil: the predator lurches back from the strike.
@@ -463,11 +474,18 @@ export class Ecosystem {
         this.deathCaste.push(this.pop.caste[i]);
     }
 
-    /** Record a combat kill position for the renderer to flash. */
-    private recordHit(x: number, y: number): void {
+    /** Record a combat kill (position + attacker/victim castes) for the renderer. */
+    private recordHit(
+        x: number,
+        y: number,
+        killerCaste: number,
+        victimCaste: number,
+    ): void {
         if (!this.recordDeaths || this.hitX.length >= 5000) return;
         this.hitX.push(x);
         this.hitY.push(y);
+        this.hitKillerCaste.push(killerCaste);
+        this.hitVictimCaste.push(victimCaste);
     }
 
     /** Clear the per-frame death and combat buffers (a renderer drains them). */
@@ -477,6 +495,8 @@ export class Ecosystem {
         this.deathCaste.length = 0;
         this.hitX.length = 0;
         this.hitY.length = 0;
+        this.hitKillerCaste.length = 0;
+        this.hitVictimCaste.length = 0;
     }
 
     /**
