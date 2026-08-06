@@ -1,7 +1,7 @@
 ---
 id: TICKET-163
 title: Primordium combat readability & graphics pass
-status: in-progress
+status: done
 priority: high
 created: 2026-08-05
 updated: 2026-08-05
@@ -34,4 +34,5 @@ which species is winning — both in-world and on the HUD.
 
 - 2026-08-05: Created from user feedback: "it's not clear which species is winning during combat".
 - 2026-08-05: Starting implementation. Branch based on evo-demo (primordium only exists there, not on main).
-- 2026-08-05: Implementation complete: sim records killer/victim castes per hit; renderer gives carnivores cone silhouettes, attacker-colored additive kill flashes, brighter energy tint floor; HUD gains rolling combat feed + biomass trend arrows. 64/64 tests pass, lint clean. Visual verification via headless Chrome in progress.
+- 2026-08-05: Implementation complete: sim records killer/victim castes per hit; renderer gives carnivores cone silhouettes, attacker-colored additive kill flashes, brighter energy tint floor; HUD gains rolling combat feed + biomass trend arrows. 64/64 tests pass, lint clean.
+- 2026-08-05: Done. Visually verified via puppeteer-driven Chrome (headless Chrome throttles rAF, so headful): predator spikes, attacker-colored flashes, combat feed, and trend arrows all confirmed on screen mid-match.
